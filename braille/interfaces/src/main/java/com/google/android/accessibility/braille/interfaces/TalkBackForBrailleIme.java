@@ -43,6 +43,12 @@ public interface TalkBackForBrailleIme {
   boolean performAction(ScreenReaderAction action, Object... arg);
 
   /**
+   * Moves accessibility focus to the input focused edit field if it is on another node, so that
+   * text navigation acts on the field being typed in.
+   */
+  void focusInputField();
+
+  /**
    * BrailleIme invokes this when it becomes active. When TalkBack gets this signal, it should enter
    * an IME-friendly mode (by disabling Explore-by-Touch, for example).
    */

@@ -1,5 +1,7 @@
 package com.google.android.accessibility.talkback.braille;
 
+import static android.view.accessibility.AccessibilityNodeInfo.FOCUS_ACCESSIBILITY;
+import static android.view.accessibility.AccessibilityNodeInfo.FOCUS_INPUT;
 import static com.google.android.accessibility.talkback.Feedback.PassThroughMode.Action.LOCK_PASS_THROUGH;
 import static com.google.android.accessibility.talkback.selector.SelectorController.Setting.GRANULARITY_CHARACTERS;
 import static com.google.android.accessibility.talkback.selector.SelectorController.Setting.GRANULARITY_LINES;
@@ -16,6 +18,7 @@ import android.content.SharedPreferences;
 import android.graphics.Region;
 import android.view.WindowManager;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import com.google.android.accessibility.braille.interfaces.BrailleImeForTalkBack;
 import com.google.android.accessibility.braille.interfaces.ScreenReaderActionPerformer;
 import com.google.android.accessibility.braille.interfaces.ScreenReaderActionPerformer.ScreenReaderAction;
@@ -26,6 +29,7 @@ import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.TalkBackService;
 import com.google.android.accessibility.talkback.actor.DimScreenActor;
 import com.google.android.accessibility.talkback.compositor.GlobalVariables;
+import com.google.android.accessibility.talkback.focusmanagement.record.FocusActionInfo;
 import com.google.android.accessibility.talkback.monitor.ProximitySensorMonitor;
 import com.google.android.accessibility.talkback.selector.SelectorController;
 import com.google.android.accessibility.talkback.selector.SelectorController.AnnounceType;
@@ -35,6 +39,7 @@ import com.google.android.accessibility.utils.ArrayUtils;
 import com.google.android.accessibility.utils.FeatureSupport;
 import com.google.android.accessibility.utils.FocusFinder;
 import com.google.android.accessibility.utils.Performance;
+import com.google.android.accessibility.utils.Role;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.input.TextEventFilter.KeyboardEchoType;
 import java.util.Arrays;
@@ -122,6 +127,28 @@ public class TalkBackForBrailleImeImpl implements TalkBackForBrailleIme {
         return screenReaderActionPerformer.performAction(action, INPUT_MODE_BRAILLE_KEYBOARD, args);
       }
     }
+  }
+
+  @Override
+  public void focusInputField() {
+    FocusFinder focusFinder = createFocusFinder();
+    AccessibilityNodeInfoCompat inputFocus = focusFinder.findFocusCompat(FOCUS_INPUT);
+    if (inputFocus == null
+        || !(inputFocus.isEditable() || Role.getRole(inputFocus) == Role.ROLE_EDIT_TEXT)
+        || inputFocus.equals(focusFinder.findFocusCompat(FOCUS_ACCESSIBILITY))) {
+      return;
+    }
+    // Text navigation and the available reading controls follow accessibility focus, which is on
+    // another node if the user swiped away from the field or the app moved focus.
+    feedbackReturner.returnFeedback(
+        EVENT_ID_UNTRACKED,
+        Feedback.focus(
+            inputFocus,
+            new FocusActionInfo.Builder()
+                .setSourceAction(FocusActionInfo.FOCUS_SYNCHRONIZATION)
+                .setInitialFocusType(FocusActionInfo.SYNCED_INPUT_FOCUS)
+                .setForceMuteFeedback(true)
+                .build()));
   }
 
   @Override

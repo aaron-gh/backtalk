@@ -43,6 +43,7 @@ For TalkBack usage instructions, see the [TalkBack User Guide](https://support.g
 ### Braille keyboard
 
 *   **Better haptics.** The braille keyboard uses the same crisp vibration effects as the rest of TalkBack. Submitting text feels the same as closing or switching the keyboard. Deleting in an empty field gives a soft vibration that fades out, so that you know there was nothing to delete.
+*   **Navigation stays in the text field.** If you swiped to another control while the braille keyboard opened, moving by character, word, or line read that control instead of the text field. The braille keyboard now moves TalkBack's focus back to the text field before each command.
 
 ## Build
 

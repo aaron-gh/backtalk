@@ -135,6 +135,8 @@ public class BrailleImeActor {
       return false;
     }
     talkBackForBrailleIme.interruptSpeak();
+    // Before the granularity checks below, which also depend on the focused node.
+    talkBackForBrailleIme.focusInputField();
     ImeConnection imeConnection = callback.getImeConnection();
     boolean result = true;
     switch (action) {
