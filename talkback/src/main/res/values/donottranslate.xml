@@ -1094,6 +1094,7 @@
   <string name="shortcut_value_decrease_touch_focus_latency" translatable="false">DECREASE_TOUCH_FOCUS_LATENCY</string>
   <string name="shortcut_value_announce_current_time_and_date" translatable="false">ANNOUNCE_CURRENT_TIME_AND_DATE</string>
   <string name="shortcut_value_announce_battery_state" translatable="false">ANNOUNCE_BATTERY_STATE</string>
+  <string name="shortcut_value_announce_status" translatable="false">ANNOUNCE_STATUS</string>
   <string name="shortcut_value_announce_current_title" translatable="false">ANNOUNCE_CURRENT_TITLE</string>
   <string name="shortcut_value_repeat_last_spoken_phrase" translatable="false">REPEAT_LAST_SPOKEN_PHRASE</string>
   <string name="shortcut_value_spell_last_spoken_phrase" translatable="false">SPELL_LAST_SPOKEN_PHRASE</string>
@@ -1453,7 +1454,7 @@
 
     <string name="pref_shortcut_2finger_1tap_default">@string/shortcut_value_pause_or_resume_feedback</string>
     <string name="pref_shortcut_2finger_2tap_default">@string/shortcut_value_media_control_or_voice_input</string>
-    <string name="pref_shortcut_2finger_3tap_default">@string/shortcut_value_read_from_current</string>
+    <string name="pref_shortcut_2finger_3tap_default">@string/shortcut_value_announce_status</string>
     <string name="pref_shortcut_3finger_1tap_default">@string/shortcut_value_talkback_breakout</string>
     <string name="pref_shortcut_3finger_2tap_default">@string/shortcut_value_copy</string>
     <string name="pref_shortcut_3finger_3tap_default">@string/shortcut_value_copy_last_spoken_phrase</string>

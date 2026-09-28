@@ -647,6 +647,15 @@ public class GestureController {
       result =
           pipeline.returnFeedback(
               eventId, Feedback.speech(batteryMonitor.getBatteryStateDescription()));
+    } else if (action.equals(service.getString(R.string.shortcut_value_announce_status))) {
+      result =
+          pipeline.returnFeedback(
+              eventId,
+              Feedback.speech(
+                  service.getString(
+                      R.string.template_time_and_battery_state,
+                      DateTimeUtils.getCurrentTime(service),
+                      batteryMonitor.getBatteryStateDescription())));
     } else if (FeatureFlagReader.enableAnnounceCurrentTitle(service)
         && action.equals(service.getString(R.string.shortcut_value_announce_current_title))) {
       result =

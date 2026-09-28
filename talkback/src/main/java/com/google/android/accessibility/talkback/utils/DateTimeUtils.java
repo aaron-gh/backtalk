@@ -58,6 +58,11 @@ public final class DateTimeUtils {
     return formatCurrentTime(context, clock.millis(), timeFlags, timeFormat);
   }
 
+  /** Returns the current time in text using the time format in advanced settings. */
+  public static String getCurrentTime(Context context) {
+    return getCurrentTime(context, getTimeFeedbackFormat(context));
+  }
+
   /** Returns the current time and date in text using the local format. */
   public static String getCurrentTimeAndDate(Context context) {
     int timeFlags =
@@ -67,6 +72,11 @@ public final class DateTimeUtils {
             | DateUtils.FORMAT_SHOW_YEAR
             | DateUtils.FORMAT_CAP_NOON_MIDNIGHT;
 
+    return formatCurrentDateTime(context, timeFlags, getTimeFeedbackFormat(context));
+  }
+
+  /** Returns the time format chosen in advanced settings. */
+  private static @TimeFeedbackFormat int getTimeFeedbackFormat(Context context) {
     Resources resources = context.getResources();
     final SharedPreferences prefs = SharedPreferencesUtils.getSharedPreferences(context);
     final String timeFeedbackFormat =
@@ -76,10 +86,7 @@ public final class DateTimeUtils {
             R.string.pref_time_feedback_format_key,
             R.string.pref_time_feedback_format_default);
 
-    int timeFormat =
-        RingerModeAndScreenMonitor.prefValueToTimeFeedbackFormat(resources, timeFeedbackFormat);
-
-    return formatCurrentDateTime(context, timeFlags, timeFormat);
+    return RingerModeAndScreenMonitor.prefValueToTimeFeedbackFormat(resources, timeFeedbackFormat);
   }
 
   // Formats the output in a way that the time comes first and the date comes second.

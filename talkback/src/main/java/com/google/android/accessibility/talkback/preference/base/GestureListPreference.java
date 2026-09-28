@@ -470,6 +470,12 @@ public final class GestureListPreference extends AccessibilitySuiteDialogPrefere
               TYPE_ACTION_ITEM));
     }
 
+    builder.add(
+        new ActionItem(
+            resources.getString(R.string.shortcut_announce_status),
+            resources.getString(R.string.shortcut_value_announce_status),
+            TYPE_ACTION_ITEM));
+
     if (FeatureFlagReader.enableAnnounceCurrentTimeAndDate(getContext())) {
       builder.add(
           new ActionItem(

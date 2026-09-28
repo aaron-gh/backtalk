@@ -32,6 +32,7 @@ For TalkBack usage instructions, see the [TalkBack User Guide](https://support.g
 
 *   **4-finger taps by default.** Tap with 4 fingers to go back. Double-tap with 4 fingers to go home. Triple-tap with 4 fingers to open recent apps. If you changed these gestures before, your settings stay.
 *   **Braille keyboard and copy gestures by default.** Double-tap and hold with 2 fingers to switch to the braille keyboard. Triple-tap with 3 fingers to copy the last spoken phrase. Paste moves to triple-tap and hold with 3 fingers, and selection mode has no gesture by default. If you changed these gestures before, your settings stay.
+*   **Time and battery gesture.** Triple-tap with 2 fingers to hear the time and the battery level, like a glance at the status bar. This action is also in the gesture list as **Speak time and battery**. Before, this gesture started reading from the current item, which is still in the TalkBack menu as **Read from next item**.
 
 ### TalkBack menu
 

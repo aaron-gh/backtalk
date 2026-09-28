@@ -137,6 +137,8 @@
       Description: This is spoken to the user. [CHAR LIMIT=NONE]
     -->
     <string name="template_battery_state">Power <xliff:g id="charging_status" example="connected">%1$s</xliff:g> <xliff:g id="battery_level" example="73">%2$s</xliff:g> percent <xliff:g id="battery_saver_mode_status" example="Battery saver on">%3$s</xliff:g></string>
+    <!-- Template for announcing the current time and the battery status. [CHAR LIMIT=NONE] -->
+    <string name="template_time_and_battery_state"><xliff:g id="time" example="3:42 PM">%1$s</xliff:g>, <xliff:g id="battery_state" example="Power 73 percent">%2$s</xliff:g></string>
 
   <!-- Template for language options menu item-->
   <string name="template_language_options_menu_item"><xliff:g id="language">%1$s</xliff:g> (<xliff:g id="country">%2$s</xliff:g>)</string>
@@ -1572,6 +1574,8 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <string name="shortcut_announce_current_time_and_date">Speak current date and time</string>
     <!-- Label for the shortcut of announcing battery status [CHAR LIMIT=80]-->
     <string name="shortcut_announce_battery_state">Speak battery percentage</string>
+    <!-- Label for the shortcut of announcing the current time and battery status [CHAR LIMIT=80]-->
+    <string name="shortcut_announce_status">Speak time and battery</string>
     <!-- Label for the shortcut of announcing current title [CHAR LIMIT=40]-->
     <string name="shortcut_announce_current_title">Speak window title</string>
     <!-- Keyboard key combination assignment for increasing speech pitch [CHAR LIMIT=40]-->
