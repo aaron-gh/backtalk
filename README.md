@@ -31,6 +31,7 @@ For TalkBack usage instructions, see the [TalkBack User Guide](https://support.g
 ### Gestures
 
 *   **4-finger taps by default.** Tap with 4 fingers to go back. Double-tap with 4 fingers to go home. Triple-tap with 4 fingers to open recent apps. If you changed these gestures before, your settings stay.
+*   **Braille keyboard and copy gestures by default.** Double-tap and hold with 2 fingers to switch to the braille keyboard. Triple-tap with 3 fingers to copy the last spoken phrase. Paste moves to triple-tap and hold with 3 fingers, and selection mode has no gesture by default. If you changed these gestures before, your settings stay.
 
 ### TalkBack menu
 
