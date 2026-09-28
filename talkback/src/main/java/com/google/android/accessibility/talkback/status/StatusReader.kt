@@ -28,6 +28,7 @@ import android.telephony.TelephonyCallback
 import android.telephony.TelephonyDisplayInfo
 import android.telephony.TelephonyManager
 import androidx.annotation.RequiresApi
+import androidx.annotation.StringRes
 import com.google.android.accessibility.talkback.R
 import com.google.android.accessibility.talkback.monitor.BatteryMonitor
 import com.google.android.accessibility.talkback.permission.PermissionUtils
@@ -35,14 +36,14 @@ import com.google.android.accessibility.talkback.utils.DateTimeUtils
 import com.google.android.accessibility.utils.SharedPreferencesUtils
 import com.google.android.libraries.accessibility.utils.log.LogUtils
 
-/** A part of the status readout. */
-enum class StatusItem {
-  TIME,
-  BATTERY,
-  WIFI,
-  MOBILE,
-  RINGER,
-  AIRPLANE_MODE,
+/** A part of the status readout. The names are saved in preferences, so do not rename them. */
+enum class StatusItem(@StringRes val title: Int, @StringRes val summary: Int) {
+  TIME(R.string.status_item_time, R.string.status_item_time_summary),
+  BATTERY(R.string.status_item_battery, R.string.status_item_battery_summary),
+  WIFI(R.string.status_item_wifi, R.string.status_item_wifi_summary),
+  MOBILE(R.string.status_item_mobile, R.string.status_item_mobile_summary),
+  RINGER(R.string.status_item_ringer, R.string.status_item_ringer_summary),
+  AIRPLANE_MODE(R.string.status_item_airplane_mode, R.string.status_item_airplane_mode_summary),
 }
 
 /**
@@ -84,8 +85,12 @@ class StatusReader(private val context: Context, private val batteryMonitor: Bat
     overrideNetworkType = TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NONE
   }
 
+  /** Describes the items turned on in the status readout settings, in their order. */
   @JvmOverloads
-  fun describe(items: List<StatusItem> = DEFAULT_ITEMS): String =
+  fun describe(
+    items: List<StatusItem> =
+      StatusSettings.enabledItems(SharedPreferencesUtils.getSharedPreferences(context))
+  ): String =
     items.mapNotNull(::describe).filter { it.isNotBlank() }.joinToString(", ")
 
   private fun describe(item: StatusItem): String? =
