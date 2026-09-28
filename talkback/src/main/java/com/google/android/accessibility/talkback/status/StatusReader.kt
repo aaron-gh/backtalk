@@ -21,6 +21,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.media.AudioManager
+import android.net.wifi.SupplicantState
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.provider.Settings
@@ -111,7 +112,8 @@ class StatusReader(private val context: Context, private val batteryMonitor: Bat
       return context.getString(R.string.status_wifi_off)
     }
     val info = wifiManager.connectionInfo
-    if (info == null || info.networkId == -1) {
+    // networkId is hidden (-1) without location permission, but the supplicant state is not.
+    if (info == null || info.supplicantState != SupplicantState.COMPLETED) {
       return context.getString(R.string.status_wifi_not_connected)
     }
     val bars = describeBars(wifiSignalLevel(wifiManager, info.rssi), wifiMaxSignalLevel(wifiManager))
