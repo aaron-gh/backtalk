@@ -1,0 +1,37 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    "schedule:weekly"
+  ],
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "AGP, Kotlin and the Compose compiler plugin must move together",
+      "matchPackageNames": [
+        "com.android.tools.build:gradle",
+        "com.android.application",
+        "com.android.library",
+        "/^org\\.jetbrains\\.kotlin/"
+      ],
+      "groupName": "build toolchain"
+    },
+    {
+      "description": "One PR for routine AndroidX and Compose updates",
+      "matchPackageNames": ["androidx.**"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "AndroidX"
+    },
+    {
+      "description": "Keep prereleases out unless we pin one by hand",
+      "matchDatasources": ["maven"],
+      "ignoreUnstable": true
+    },
+    {
+      "description": "Guava publishes -jre and -android flavors; stay on -android",
+      "matchPackageNames": ["com.google.guava:guava"],
+      "allowedVersions": "/-android$/"
+    }
+  ]
+}

@@ -46,17 +46,23 @@ For TalkBack usage instructions, see the [TalkBack User Guide](https://support.g
 
 ## Build
 
+You need JDK 17 or newer, the Android SDK with platform 37, and NDK 27.3.13750724. The Gradle wrapper downloads the correct Gradle version, so you do not need to install Gradle.
+
 ### Linux or macOS
 
-Run `./build.sh`. This produces an APK file.
+Set `ANDROID_SDK` to your SDK path, then run `./build.sh`. This produces an APK file.
 
 ### Windows
 
-You need JDK 17, the Android SDK, and NDK 27.3.13750724. Set `ANDROID_HOME` to your SDK path, then run:
+Set `ANDROID_HOME` to your SDK path, then run:
 
 ```
 .\gradlew.bat assemblePhoneDebug
 ```
+
+### Dependencies
+
+Library and plugin versions are in `gradle/libs.versions.toml`. Renovate opens pull requests to update them each week, and GitHub Actions builds each pull request.
 
 ### Image descriptions with Gemini
 
