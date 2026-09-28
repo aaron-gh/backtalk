@@ -8,7 +8,7 @@ ext {
 }
 
 android {
-    compileSdk = 36
+    compileSdk = 37
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -62,6 +62,11 @@ dependencies {
     implementation libs.androidx.preference
     implementation libs.androidx.recyclerview
     implementation libs.androidx.viewpager2
+
+    // Guava and annotations used directly by the sources
+    implementation libs.guava
+    implementation libs.checker.qual
+    implementation libs.errorprone.annotations
 
     // Auto-value
     implementation libs.auto.value.annotations

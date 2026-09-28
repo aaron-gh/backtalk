@@ -47,7 +47,7 @@ import com.google.android.accessibility.talkback.preference.base.GestureListPref
 import com.google.android.accessibility.utils.PreferenceSettingsUtils;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A fragment contains a customized wear material list view for TalkBack supported actions.
