@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Label for the shortcut that speaks the time, battery, and network state. [CHAR LIMIT=40] -->
+    <string name="shortcut_announce_status">Speak status</string>
+
+    <!-- Status readout: signal strength of a network. [CHAR LIMIT=NONE] -->
+    <string name="template_status_bars"><xliff:g id="level" example="3">%1$d</xliff:g> of <xliff:g id="max_level" example="4">%2$d</xliff:g> bars</string>
+    <!-- Status readout: Wi-Fi is turned off. [CHAR LIMIT=NONE] -->
+    <string name="status_wifi_off">Wi-Fi off</string>
+    <!-- Status readout: Wi-Fi is on but not connected to a network. [CHAR LIMIT=NONE] -->
+    <string name="status_wifi_not_connected">Wi-Fi not connected</string>
+    <!-- Status readout: connected to Wi-Fi when the network name is not available. [CHAR LIMIT=NONE] -->
+    <string name="template_status_wifi">Wi-Fi, <xliff:g id="bars" example="3 of 4 bars">%1$s</xliff:g></string>
+    <!-- Status readout: connected to a named Wi-Fi network. [CHAR LIMIT=NONE] -->
+    <string name="template_status_wifi_named">Wi-Fi <xliff:g id="network_name" example="Home">%1$s</xliff:g>, <xliff:g id="bars" example="3 of 4 bars">%2$s</xliff:g></string>
+    <!-- Status readout: mobile network, with the carrier and network type. [CHAR LIMIT=NONE] -->
+    <string name="template_status_mobile"><xliff:g id="network" example="T-Mobile 5G">%1$s</xliff:g>, <xliff:g id="bars" example="2 of 4 bars">%2$s</xliff:g></string>
+    <!-- Status readout: name for the mobile network when the carrier is unknown. [CHAR LIMIT=NONE] -->
+    <string name="status_mobile">Mobile</string>
+    <!-- Status readout: there is no mobile service. [CHAR LIMIT=NONE] -->
+    <string name="status_mobile_no_service">No mobile service</string>
+    <!-- Status readout: Do Not Disturb is on. [CHAR LIMIT=NONE] -->
+    <string name="status_do_not_disturb">Do Not Disturb</string>
+    <!-- Status readout: the ringer is set to vibrate. [CHAR LIMIT=NONE] -->
+    <string name="status_ringer_vibrate">Vibrate</string>
+    <!-- Status readout: the ringer is silent. [CHAR LIMIT=NONE] -->
+    <string name="status_ringer_silent">Silent</string>
+    <!-- Status readout: airplane mode is on. [CHAR LIMIT=NONE] -->
+    <string name="status_airplane_mode">Airplane mode</string>
+</resources>

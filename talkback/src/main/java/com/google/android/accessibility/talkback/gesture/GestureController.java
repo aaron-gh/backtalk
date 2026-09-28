@@ -107,6 +107,7 @@ import com.google.android.accessibility.talkback.monitor.VolumeMonitor.VolumeCha
 import com.google.android.accessibility.talkback.selector.SelectorController;
 import com.google.android.accessibility.talkback.selector.SelectorController.AnnounceType;
 import com.google.android.accessibility.talkback.selector.SelectorController.Setting;
+import com.google.android.accessibility.talkback.status.StatusReader;
 import com.google.android.accessibility.talkback.trainingcommon.TrainingActivity;
 import com.google.android.accessibility.talkback.utils.DateTimeUtils;
 import com.google.android.accessibility.talkback.utils.DebugProperties;
@@ -157,6 +158,7 @@ public class GestureController {
   private final TalkBackAnalytics analytics;
   private final VolumeMonitor volumeMonitor;
   private final BatteryMonitor batteryMonitor;
+  private final StatusReader statusReader;
   private final SpeechRateAndPitchActor speechRateAndPitchActor;
   private final SpeechControllerImpl speaker;
   private final ScreenStateMonitor.State screenState;
@@ -181,6 +183,7 @@ public class GestureController {
       TalkBackAnalytics analytics,
       VolumeMonitor volumeMonitor,
       BatteryMonitor batteryMonitor,
+      StatusReader statusReader,
       SpeechRateAndPitchActor speechRateAndPitchActor,
       SpeechControllerImpl speaker,
       ScreenStateMonitor.State screenState,
@@ -206,6 +209,7 @@ public class GestureController {
     this.analytics = analytics;
     this.volumeMonitor = volumeMonitor;
     this.batteryMonitor = batteryMonitor;
+    this.statusReader = statusReader;
     this.speechRateAndPitchActor = speechRateAndPitchActor;
     this.speaker = speaker;
     this.screenState = screenState;
@@ -649,13 +653,7 @@ public class GestureController {
               eventId, Feedback.speech(batteryMonitor.getBatteryStateDescription()));
     } else if (action.equals(service.getString(R.string.shortcut_value_announce_status))) {
       result =
-          pipeline.returnFeedback(
-              eventId,
-              Feedback.speech(
-                  service.getString(
-                      R.string.template_time_and_battery_state,
-                      DateTimeUtils.getCurrentTime(service),
-                      batteryMonitor.getBatteryStateDescription())));
+          pipeline.returnFeedback(eventId, Feedback.speech(statusReader.describe()));
     } else if (FeatureFlagReader.enableAnnounceCurrentTitle(service)
         && action.equals(service.getString(R.string.shortcut_value_announce_current_title))) {
       result =

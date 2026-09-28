@@ -208,6 +208,7 @@ import com.google.android.accessibility.talkback.selector.SelectorController;
 import com.google.android.accessibility.talkback.selector.SelectorController.SelectorEventNotifier;
 import com.google.android.accessibility.talkback.speech.SpeechCacheController;
 import com.google.android.accessibility.talkback.speechbubble.DisableTalkBackDialog;
+import com.google.android.accessibility.talkback.status.StatusReader;
 import com.google.android.accessibility.talkback.training.OnboardingInitiator;
 import com.google.android.accessibility.talkback.training.TutorialInitiator;
 import com.google.android.accessibility.talkback.trainingcommon.PageConfig;
@@ -644,6 +645,7 @@ public class TalkBackService extends AccessibilityServiceCompat
 
   /** {@link android.content.BroadcastReceiver} for tracking battery status changes. */
   private BatteryMonitor batteryMonitor;
+  private StatusReader statusReader;
 
   /** {@link BroadcastReceiver} for tracking headphone connected status changes. */
   private HeadphoneStateMonitor headphoneStateMonitor;
@@ -1820,6 +1822,7 @@ public class TalkBackService extends AccessibilityServiceCompat
 
     // Construct system-monitors.
     batteryMonitor = new BatteryMonitor(this);
+    statusReader = new StatusReader(this, batteryMonitor);
     callStateMonitor = new CallStateMonitor(this);
     inputMethodMonitor = new InputMethodMonitor(this);
     audioPlaybackMonitor = new AudioPlaybackMonitor(this);
@@ -2182,6 +2185,7 @@ public class TalkBackService extends AccessibilityServiceCompat
             analytics,
             volumeMonitor,
             batteryMonitor,
+            statusReader,
             speechRateAndPitchActor,
             speechController,
             screenStateMonitor.state,
@@ -2618,6 +2622,10 @@ public class TalkBackService extends AccessibilityServiceCompat
           this, batteryMonitor, batteryMonitor.getFilter(), RECEIVER_EXPORTED);
     }
 
+    if (statusReader != null) {
+      statusReader.start();
+    }
+
     if (labelManager != null) {
       labelManager.onResume(/* context= */ this);
     }
@@ -2732,6 +2740,10 @@ public class TalkBackService extends AccessibilityServiceCompat
     prefs.unregisterOnSharedPreferenceChangeListener(analytics);
 
     unregisterReceivers(batteryMonitor, volumeMonitor);
+
+    if (statusReader != null) {
+      statusReader.stop();
+    }
 
     if (labelManager != null) {
       labelManager.onSuspend(/* context= */ this);
