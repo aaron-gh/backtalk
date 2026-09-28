@@ -1,6 +1,10 @@
 // For building the open-source release of TalkBack.
 
-apply plugin: 'com.android.application'
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+}
 
 apply from: 'shared.gradle'
 
@@ -12,58 +16,32 @@ dependencies {
     implementation project(':talkback')
 }
 
-buildscript {
-    ext.gradle_plugin_version = "8.11.1"
-    ext.kotlin_version = "1.9.23"
-    repositories {
-        mavenCentral()
-        google()
-    }
-    dependencies {
-        classpath "org.aspectj:aspectjtools:1.8.1"
-        // Here we set the version of the Android Gradle Plugin used by this
-        // script. It is best to use as new a version as possible, but beware
-        // that each version of the Gradle Plugin requires that the version of
-        // Gradle (used to drive the build) be a certain version or above. The
-        // correspondence is tracked here:
-        // https://developer.android.com/build/releases/gradle-plugin#updating-gradle
-        classpath "com.android.tools.build:gradle:$gradle_plugin_version"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
-allprojects {
-    repositories {
-        mavenCentral()
-        google()
-    }
-}
-
 android {
-    namespace "com.android.talkback"
+    namespace = "com.android.talkback"
     defaultConfig {
-        applicationId talkbackApplicationId
-        versionName talkbackVersionName + "-" + BUILD_TIMESTAMP
-        minSdkVersion 26
-        targetSdkVersion 30
-        testInstrumentationRunner 'android.test.InstrumentationTestRunner'
-        multiDexEnabled true
+        applicationId = talkbackApplicationId
+        versionName = talkbackVersionName + "-" + BUILD_TIMESTAMP
+        minSdk = 26
+        targetSdk = 30
+        testInstrumentationRunner = 'android.test.InstrumentationTestRunner'
+        multiDexEnabled = true
     }
-    packagingOptions {
-        exclude 'LICENSE'
-        exclude 'README'
+    packaging {
+        resources {
+            excludes += ['LICENSE', 'README']
+        }
     }
-    lintOptions {
-        checkReleaseBuilds false
-        abortOnError false
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
     }
     productFlavors {
         phone {
-            dimension "target"
+            dimension = "target"
         }
         wear {
-            dimension "target"
-            versionNameSuffix "-wear"
+            dimension = "target"
+            versionNameSuffix = "-wear"
         }
     }
 }

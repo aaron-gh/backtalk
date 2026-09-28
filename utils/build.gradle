@@ -1,5 +1,7 @@
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+plugins {
+    id 'com.android.library'
+}
+
 
 apply from: "../shared.gradle"
 
@@ -9,7 +11,7 @@ dependencies {
 }
 
 android {
-    namespace "com.google.android.accessibility.utils"
+    namespace = "com.google.android.accessibility.utils"
     defaultConfig {
         buildConfigField("String", "TALKBACK_APPLICATION_ID", '"' + talkbackApplicationId + '"')
         buildConfigField("String", "IS_SYSTEM_PRELOAD", "\"False\"")

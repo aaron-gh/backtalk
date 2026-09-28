@@ -37,25 +37,25 @@ if ! java -version; then
   exit 1
 fi
 
-if ! gradle -version; then
-  echo "#### gradle command not found in PATH"
+if ! ./gradlew -version; then
+  echo "#### gradlew failed to start"
   exit 1
 fi
 
 if [[ "$GRADLE_DEBUG" = "--debug" ]]; then
   echo "#### gradle buildEnvironment"
-  gradle buildEnvironment
+  ./gradlew buildEnvironment
   echo
   echo "#### gradle dependencies"
-  gradle dependencies
+  ./gradlew dependencies
   echo
   echo "#### gradle properties"
-  gradle properties
+  ./gradlew properties
   echo
 fi
 
-echo "#### gradle $GRADLE_DEBUG $GRADLE_STACKTRACE assembleDebug"
-gradle ${GRADLE_DEBUG} ${GRADLE_STACKTRACE} assembleDebug
+echo "#### gradlew $GRADLE_DEBUG $GRADLE_STACKTRACE assembleDebug"
+./gradlew ${GRADLE_DEBUG} ${GRADLE_STACKTRACE} assembleDebug
 BUILD_EXIT_CODE=$?
 echo
 

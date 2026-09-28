@@ -1,9 +1,11 @@
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+plugins {
+    id 'com.android.library'
+}
+
 apply from: "../../shared.gradle"
 
 android {
-    namespace "com.google.android.accessibility.material.theme"
+    namespace = "com.google.android.accessibility.material.theme"
 }
 
 dependencies {
