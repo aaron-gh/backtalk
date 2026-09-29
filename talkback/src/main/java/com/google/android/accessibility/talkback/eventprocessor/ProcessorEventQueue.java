@@ -17,6 +17,7 @@
 package com.google.android.accessibility.talkback.eventprocessor;
 
 import android.os.Message;
+import android.os.SystemClock;
 import android.view.accessibility.AccessibilityEvent;
 import com.google.android.accessibility.talkback.compositor.Compositor;
 import com.google.android.accessibility.talkback.compositor.EventFilter;
@@ -94,6 +95,7 @@ public class ProcessorEventQueue implements AccessibilityEventListener {
   }
 
   private static final int WHAT_SPEAK = 1;
+  private static final long TIME_SLICE_MS = 16;
 
   private static class ProcessorEventHandler extends WeakReferenceHandler<ProcessorEventQueue> {
     /** Speak action. */
@@ -110,8 +112,14 @@ public class ProcessorEventQueue implements AccessibilityEventListener {
       }
     }
 
-    /** Attempts to process all events in the queue. */
+    /**
+     * Processes the events in the queue, in order, for about {@link #TIME_SLICE_MS}. A busy app can
+     * queue events faster than they are handled, and each takes a round trip to the app to read its
+     * source, so handling them all in one message kept gestures waiting behind the whole backlog.
+     * The rest of the queue is handled in a later message, after the ones already waiting.
+     */
     private void processAllEvents(ProcessorEventQueue parent) {
+      long sliceEnd = SystemClock.uptimeMillis() + TIME_SLICE_MS;
       while (true) {
         final AccessibilityEvent event;
 
@@ -128,6 +136,15 @@ public class ProcessorEventQueue implements AccessibilityEventListener {
         EventId eventId = Performance.getInstance().toEventId(event);
 
         parent.processEvent(event, eventId);
+
+        if (SystemClock.uptimeMillis() >= sliceEnd) {
+          synchronized (parent.eventQueue) {
+            if (!parent.eventQueue.isEmpty()) {
+              postSpeak();
+            }
+          }
+          return;
+        }
       }
     }
 
