@@ -51,8 +51,10 @@ import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.os.Trace;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Pair;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityWindowInfo;
@@ -1130,6 +1132,7 @@ public class FocusProcessorForLogicalNavigation {
     }
     boolean usedSavedTree = traversalStrategy != null;
     if (traversalStrategy == null) {
+      long buildStart = BuildConfig.DEBUG ? SystemClock.uptimeMillis() : 0;
       if (BuildConfig.DEBUG) {
         Trace.beginSection("BuildTraversalStrategy");
       }
@@ -1137,6 +1140,9 @@ public class FocusProcessorForLogicalNavigation {
           TraversalStrategyUtils.getTraversalStrategy(rootNode, focusFinder, searchDirection);
       if (BuildConfig.DEBUG) {
         Trace.endSection();
+        Log.d(
+            "BacktalkTreeCache",
+            "Built order in " + (SystemClock.uptimeMillis() - buildStart) + " ms");
       }
       if (traversalStrategy instanceof OrderedTraversalStrategy orderedStrategy) {
         TraversalTreeCache.put(rootNode, orderedStrategy);
