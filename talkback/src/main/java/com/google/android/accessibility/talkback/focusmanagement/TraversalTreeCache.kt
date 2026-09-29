@@ -16,6 +16,7 @@
 
 package com.google.android.accessibility.talkback.focusmanagement
 
+import android.os.SystemClock
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
@@ -51,6 +52,21 @@ object TraversalTreeCache {
       AccessibilityEvent.TYPE_ASSIST_READING_CONTEXT or
       AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED
 
+  /**
+   * Content changes that leave the nodes and their order as they are, such as a progress bar or a
+   * clock that ticks. An app that shows one sends these events all the time, which would otherwise
+   * throw the order away before every swipe.
+   */
+  private const val NON_STRUCTURAL_CHANGES =
+    AccessibilityEvent.CONTENT_CHANGE_TYPE_TEXT or
+      AccessibilityEvent.CONTENT_CHANGE_TYPE_STATE_DESCRIPTION
+
+  /**
+   * How long the order is kept after one of those changes. A text change can, rarely, make a node
+   * speak that did not before, so the order is not trusted for long after one.
+   */
+  private const val MAX_AGE_AFTER_TEXT_CHANGE_MS = 1500L
+
   /** Node actions that only move focus, and so do not change the nodes or their order. */
   private val FOCUS_ACTIONS =
     setOf(
@@ -65,6 +81,7 @@ object TraversalTreeCache {
   private var root: AccessibilityNodeInfoCompat? = null
   private var strategy: OrderedTraversalStrategy? = null
   private var lastClearReason = "start"
+  private var firstIgnoredChangeTime = 0L
   private var hits = 0
   private var misses = 0
 
@@ -74,6 +91,12 @@ object TraversalTreeCache {
     root: AccessibilityNodeInfoCompat,
     pivot: AccessibilityNodeInfoCompat,
   ): OrderedTraversalStrategy? {
+    if (
+      firstIgnoredChangeTime != 0L &&
+        SystemClock.uptimeMillis() - firstIgnoredChangeTime > MAX_AGE_AFTER_TEXT_CHANGE_MS
+    ) {
+      clear("text changes")
+    }
     val saved = strategy
     val result = saved?.takeIf { root == this.root && it.containsNode(pivot) }
     if (BuildConfig.DEBUG) {
@@ -99,6 +122,7 @@ object TraversalTreeCache {
   fun put(root: AccessibilityNodeInfoCompat, strategy: OrderedTraversalStrategy) {
     this.root = root
     this.strategy = strategy
+    firstIgnoredChangeTime = 0L
   }
 
   /** Throws away the saved order. */
@@ -109,6 +133,7 @@ object TraversalTreeCache {
     }
     root = null
     strategy = null
+    firstIgnoredChangeTime = 0L
     lastClearReason = reason
   }
 
@@ -139,7 +164,24 @@ object TraversalTreeCache {
         windowId == NO_WINDOW_ID ||
         windowId == savedRoot.windowId
     ) {
-      clear(if (BuildConfig.DEBUG) AccessibilityEvent.eventTypeToString(type) else "")
+      val changes = event.contentChangeTypes
+      if (
+        type == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED &&
+          changes != 0 &&
+          changes and NON_STRUCTURAL_CHANGES.inv() == 0
+      ) {
+        if (firstIgnoredChangeTime == 0L) {
+          firstIgnoredChangeTime = SystemClock.uptimeMillis()
+        }
+        return
+      }
+      clear(
+        if (BuildConfig.DEBUG) {
+          AccessibilityEvent.eventTypeToString(type) + " 0x" + Integer.toHexString(changes)
+        } else {
+          ""
+        }
+      )
     }
   }
 }
