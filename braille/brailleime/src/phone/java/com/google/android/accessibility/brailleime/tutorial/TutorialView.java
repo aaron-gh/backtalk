@@ -175,6 +175,8 @@ public class TutorialView extends FrameLayout implements OrientationSensitive {
                 tutorialCallback.onBrailleImeActivated();
                 switchState(nextState(), 0);
               });
+      findViewById(R.id.skip_tutorial_button)
+          .setOnClickListener(view -> contextMenuDialogCallback.onTutorialClosed());
       findViewById(R.id.leave_keyboard_button)
           .setOnClickListener(
               view -> {

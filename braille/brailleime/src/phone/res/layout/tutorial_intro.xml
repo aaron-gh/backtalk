@@ -44,6 +44,15 @@
       android:text="@string/next_step"
       android:textSize="@dimen/tutorial_description_text_size" />
   <Button
+      android:id="@+id/skip_tutorial_button"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="@dimen/tutorial_button_margin"
+      android:background="@color/google_transparent"
+      android:text="@string/skip_tutorial"
+      android:textColor="@color/tutorial_leave_button_text_color"
+      android:textSize="@dimen/tutorial_description_text_size" />
+  <Button
       android:id="@+id/leave_keyboard_button"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"

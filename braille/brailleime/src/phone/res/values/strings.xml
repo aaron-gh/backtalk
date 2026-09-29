@@ -318,6 +318,8 @@
   <string name="next_step">Next</string>
   <!-- Title of a tutorial button. [CHAR_LIMIT=100] -->
   <string name="leave_keyboard">Leave braille keyboard</string>
+  <!-- Title of a tutorial button that skips the tutorial and opens the braille keyboard. [CHAR_LIMIT=50] -->
+  <string name="skip_tutorial">Skip tutorial</string>
   <!-- Step of hold six fingers. [CHAR_LIMIT=400] -->
   <string name="hold_six_fingers_description">You won’t be able to use regular Backtalk gestures in the braille keyboard.\n\nTo get started, let’s set up the position of the 6 braille dots when you type.</string>
   <!-- Step of rotating to orientation landscape. [CHAR_LIMIT=400] -->
