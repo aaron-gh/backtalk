@@ -20,6 +20,7 @@ android {
     namespace = "com.android.talkback"
     defaultConfig {
         applicationId = talkbackApplicationId
+        versionCode = gitCommitCount
         versionName = talkbackVersionName + "-" + BUILD_TIMESTAMP
         minSdk = 26
         targetSdk = 30

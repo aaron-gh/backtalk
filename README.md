@@ -98,6 +98,14 @@ On Windows, `.\deploy.ps1` builds the APK and installs it with adb. This script 
 
 Backtalk installs as `com.android.talkback`, so it does not replace Google's TalkBack. The two apps have separate settings.
 
+## Updates
+
+Each change to Backtalk is built on GitHub as a development build, on the [latest release](https://github.com/trypsynth/backtalk/releases/tag/latest) page. Backtalk checks for a new build when it starts and about once a day. When there is one, it shows a notification with the list of changes. Tap the notification to download and install the new build. The first time, Android asks you to allow Backtalk to install apps.
+
+To check now, go to **Check for updates** in Backtalk settings. To stop the daily checks, turn off **Automatically check for updates**.
+
+Android only installs an update that is signed with the same key as the installed app. If you build Backtalk yourself, your build is signed with your own debug key, so it cannot be updated by the builds from GitHub. To use them, uninstall your build first.
+
 ## Run
 
 After you install Backtalk, go to **Settings > Accessibility**. Backtalk is listed as **Backtalk** and is off by default. Turn off Google's TalkBack first, then turn on Backtalk.

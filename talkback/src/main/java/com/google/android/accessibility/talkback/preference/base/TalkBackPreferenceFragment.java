@@ -43,6 +43,7 @@ import com.google.android.accessibility.talkback.training.OnboardingInitiator;
 import com.google.android.accessibility.talkback.training.TutorialInitiator;
 import com.google.android.accessibility.talkback.trainingcommon.tv.TvTutorialInitiator;
 import com.google.android.accessibility.talkback.trainingcommon.tv.VendorConfigReader;
+import com.google.android.accessibility.talkback.update.Updater;
 import com.google.android.accessibility.utils.FeatureSupport;
 import com.google.android.accessibility.utils.FormFactorUtils;
 import com.google.android.accessibility.utils.NetworkUtils;
@@ -151,6 +152,7 @@ public class TalkBackPreferenceFragment extends TalkbackBaseFragment {
       removePreference(R.string.pref_category_audio_key, R.string.pref_auto_image_captioning_key);
     }
     updateGeminiPreferenceState();
+    Updater.setUpPreferences(this);
   }
 
   private void updateGeminiPreferenceState() {

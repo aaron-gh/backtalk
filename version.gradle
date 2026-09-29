@@ -1,1 +1,19 @@
 ext { talkbackVersionName = "TfPu_release_16_2" }
+
+// Git details for the in-app updater. Builds outside a git checkout fall back to build 1 and no hash.
+def gitOutput = { List<String> args ->
+    try {
+        return providers.exec {
+            commandLine(['git'] + args)
+            ignoreExitValue = true
+        }.standardOutput.asText.get().trim()
+    } catch (Exception ignored) {
+        return ''
+    }
+}
+def commitCount = gitOutput(['rev-list', '--count', 'HEAD'])
+def commitHash = gitOutput(['rev-parse', 'HEAD'])
+ext {
+    gitCommitCount = commitCount.isInteger() ? commitCount.toInteger() : 1
+    gitCommitHash = commitHash ==~ /[0-9a-f]{40}/ ? commitHash : ''
+}

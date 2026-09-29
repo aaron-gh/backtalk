@@ -213,6 +213,7 @@ import com.google.android.accessibility.talkback.training.OnboardingInitiator;
 import com.google.android.accessibility.talkback.training.TutorialInitiator;
 import com.google.android.accessibility.talkback.trainingcommon.PageConfig;
 import com.google.android.accessibility.talkback.trainingcommon.PageConfig.PageId;
+import com.google.android.accessibility.talkback.update.Updater;
 import com.google.android.accessibility.talkback.updatetasks.TalkBackUpdateHelper;
 import com.google.android.accessibility.talkback.utils.DiagnosticOverlayControllerImpl;
 import com.google.android.accessibility.talkback.utils.ExperimentalUtils;
@@ -930,6 +931,7 @@ public class TalkBackService extends AccessibilityServiceCompat
       suspendInfrastructure();
     }
 
+    Updater.stopAutomaticChecks();
     instance = null;
     // Shutdown and unregister all components.
     shutdownInfrastructure();
@@ -1591,6 +1593,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     // Handle any update actions.
     helper = new TalkBackUpdateHelper(this);
     helper.checkUpdate();
+    Updater.startAutomaticChecks(this);
 
     compositor.handleEvent(Compositor.EVENT_SPOKEN_FEEDBACK_ON, talkbackOnEventId);
 

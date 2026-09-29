@@ -94,5 +94,13 @@
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:key="@string/pref_help_and_feedback_key"
         android:title="@string/title_pref_help_and_feedback" />
+    <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
+        android:key="@string/pref_check_for_updates_key"
+        android:title="@string/title_pref_check_for_updates" />
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+        android:defaultValue="@bool/pref_auto_update_check_default"
+        android:key="@string/pref_auto_update_check_key"
+        android:summary="@string/summary_pref_auto_update_check"
+        android:title="@string/title_pref_auto_update_check" />
   </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
 </PreferenceScreen>

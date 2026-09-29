@@ -39,6 +39,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- Used by the updater to install new development builds. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <!-- Used by the status readout for the Wi-Fi state, signal, and network name. Android shows
     the network name only with location permission. The braille display declares location only
     up to API 30 for Bluetooth scans, so remove that limit. -->
@@ -267,6 +270,10 @@
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"
             android:value="ocr" />
+
+        <receiver
+            android:name="com.google.android.accessibility.talkback.update.UpdateReceiver"
+            android:exported="false" />
 
         <receiver
             android:name="com.google.android.libraries.appdoctor.AppDoctorReceiver"
