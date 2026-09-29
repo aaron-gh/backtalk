@@ -42,6 +42,11 @@
         android:summary="@string/summary_pref_reverse_dots"
         android:title="@string/title_pref_reverse_dots" />
 
+    <SwitchPreferenceCompat
+        android:key="@string/pref_brailleime_flip_dots_vertically"
+        android:summary="@string/summary_pref_flip_dots_vertically"
+        android:title="@string/title_pref_flip_dots_vertically" />
+
   </PreferenceCategory>
 
 </PreferenceScreen>

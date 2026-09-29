@@ -341,7 +341,24 @@ public abstract class BrailleInputPlane {
     if (options.reverseDots()) {
       dotNumberOrder = reverseDotNumberOrder(dotNumberOrder);
     }
+    if (options.flipDotsVertically()) {
+      dotNumberOrder = flipDotNumberOrderVertically(dotNumberOrder);
+    }
     return dotNumberOrder;
+  }
+
+  /**
+   * Reverses the order within each hand, so that the top and bottom dots of each column trade
+   * places. For example, dot 1 trades places with dot 3.
+   */
+  private static int[] flipDotNumberOrderVertically(int[] dotNumberOrder) {
+    int[] result = new int[dotNumberOrder.length];
+    int half = dotNumberOrder.length / 2;
+    for (int i = 0; i < half; i++) {
+      result[i] = dotNumberOrder[half - 1 - i];
+      result[half + i] = dotNumberOrder[dotNumberOrder.length - 1 - i];
+    }
+    return result;
   }
 
   private InputDotType getInputDotType(boolean tableTopMode) {

@@ -28,6 +28,9 @@ public abstract class BrailleInputOptions {
   /** Whether dots should reverse. */
   public abstract boolean reverseDots();
 
+  /** Whether the top and bottom dots of each column trade places. */
+  public abstract boolean flipDotsVertically();
+
   /** The amount of braille dots. Classic braille is 6 while computer braille is 8. */
   public abstract BrailleType brailleType();
 
@@ -35,7 +38,8 @@ public abstract class BrailleInputOptions {
     return new AutoValue_BrailleInputOptions.Builder()
         .setTutorialMode(false)
         .setBrailleType(BrailleType.SIX_DOT)
-        .setReverseDots(false);
+        .setReverseDots(false)
+        .setFlipDotsVertically(false);
   }
 
   /** Builder for {@link BrailleInputOptions}. */
@@ -44,6 +48,8 @@ public abstract class BrailleInputOptions {
     public abstract Builder setTutorialMode(boolean tutorialMode);
 
     public abstract Builder setReverseDots(boolean reverseDots);
+
+    public abstract Builder setFlipDotsVertically(boolean flipDotsVertically);
 
     public abstract Builder setBrailleType(BrailleType brailleType);
 

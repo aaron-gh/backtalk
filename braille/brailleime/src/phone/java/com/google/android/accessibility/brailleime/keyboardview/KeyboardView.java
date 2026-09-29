@@ -432,6 +432,7 @@ public abstract class KeyboardView {
   private BrailleInputOptions obtainBrailleInputOptions() {
     return BrailleInputOptions.builder()
         .setReverseDots(BrailleUserPreferences.readReverseDotsMode(context))
+        .setFlipDotsVertically(BrailleUserPreferences.readFlipDotsVertically(context))
         .setBrailleType(BrailleUserPreferences.getCurrentTypingLanguageType(context))
         .setTutorialMode(false)
         .build();

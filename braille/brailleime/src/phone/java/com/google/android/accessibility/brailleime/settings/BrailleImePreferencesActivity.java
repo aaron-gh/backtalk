@@ -234,6 +234,20 @@ public class BrailleImePreferencesActivity extends PreferencesActivity {
       }
 
       {
+        // Swap top and bottom dots preference.
+        SwitchPreferenceCompat flipDotsVerticallyPref =
+            findPreference(getString(R.string.pref_brailleime_flip_dots_vertically));
+        flipDotsVerticallyPref.setChecked(
+            BrailleUserPreferences.readFlipDotsVertically(getContext()));
+        flipDotsVerticallyPref.setOnPreferenceClickListener(
+            preference -> {
+              BrailleUserPreferences.writeFlipDotsVertically(
+                  getContext(), ((SwitchPreferenceCompat) preference).isChecked());
+              return true;
+            });
+      }
+
+      {
         // Layout settings preference.
         ListPreference layoutModePref =
             findPreference(getString(R.string.pref_brailleime_layout_mode));

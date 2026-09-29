@@ -14,6 +14,7 @@
   <string name="pref_show_switch_input_code_gesture_tip" translatable="false">pref_show_switch_input_code_gesture_tip</string>
   <string name="pref_brailleime_accumulate_mode" translatable="false">pref_brailleime_accumulate_mode</string>
   <string name="pref_brailleime_reverse_dots_mode" translatable="false">pref_brailleime_reverse_dots_mode</string>
+  <string name="pref_brailleime_flip_dots_vertically" translatable="false">pref_brailleime_flip_dots_vertically</string>
   <string name="pref_brailleime_layout_mode" translatable="false">pref_brailleime_layout_mode</string>
   <!-- Auto launch tutorial when opens Braille keyboard. -->
   <string name="pref_brailleime_auto_launch_tutorial" translatable="false">pref_brailleime_auto_launch_tutorial</string>

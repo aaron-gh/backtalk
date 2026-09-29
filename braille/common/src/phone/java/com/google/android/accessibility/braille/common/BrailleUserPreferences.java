@@ -69,6 +69,7 @@ public class BrailleUserPreferences {
   private static final boolean SHOW_SWITCH_INPUT_CODE_GESTURE_TIP = true;
   private static final boolean ACCUMULATE_MODE_DEFAULT = true;
   private static final boolean REVERSE_DOTS_MODE_DEFAULT = false;
+  private static final boolean FLIP_DOTS_VERTICALLY_DEFAULT = false;
   private static final boolean LAUNCH_TUTORIAL_DEFAULT = true;
   private static final int EXIT_KEYBOARD_DEFAULT = 0;
   private static final int SHOW_OPTION_DIALOG_DEFAULT = 0;
@@ -300,6 +301,23 @@ public class BrailleUserPreferences {
     getSharedPreferences(context, BRAILLE_SHARED_PREFS_FILENAME)
         .edit()
         .putBoolean(context.getString(R.string.pref_brailleime_reverse_dots_mode), reverseDotsMode)
+        .apply();
+  }
+
+  /** Reads whether the top and bottom dots trade places. */
+  public static boolean readFlipDotsVertically(Context context) {
+    return getSharedPreferences(context, BRAILLE_SHARED_PREFS_FILENAME)
+        .getBoolean(
+            context.getString(R.string.pref_brailleime_flip_dots_vertically),
+            FLIP_DOTS_VERTICALLY_DEFAULT);
+  }
+
+  /** Writes whether the top and bottom dots trade places. */
+  public static void writeFlipDotsVertically(Context context, boolean flipDotsVertically) {
+    getSharedPreferences(context, BRAILLE_SHARED_PREFS_FILENAME)
+        .edit()
+        .putBoolean(
+            context.getString(R.string.pref_brailleime_flip_dots_vertically), flipDotsVertically)
         .apply();
   }
 
