@@ -1474,10 +1474,10 @@
     <string name="pref_shortcut_4finger_2tap_default">@string/shortcut_value_home</string>
     <string name="pref_shortcut_4finger_3tap_default">@string/shortcut_value_overview</string>
     <string name="pref_shortcut_2finger_1tap_hold_default">@string/shortcut_long_press_talkback_exit</string>
-    <string name="pref_shortcut_3finger_1tap_hold_default">@string/shortcut_value_screen_search</string>
+    <string name="pref_shortcut_3finger_1tap_hold_default">@string/shortcut_value_pass_through_next_gesture</string>
     <string name="pref_shortcut_2finger_2tap_hold_default">@string/shortcut_value_braille_keyboard</string>
     <string name="pref_shortcut_3finger_2tap_hold_default">@string/shortcut_value_cut</string>
-    <string name="pref_shortcut_4finger_2tap_hold_default">@string/shortcut_value_pass_through_next_gesture</string>
+    <string name="pref_shortcut_4finger_2tap_hold_default">@string/shortcut_value_notifications</string>
     <string name="pref_shortcut_2finger_3tap_hold_default">@string/shortcut_value_toggle_voice_feedback</string>
     <string name="pref_shortcut_3finger_3tap_hold_default">@string/shortcut_value_paste</string>
 

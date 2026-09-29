@@ -32,6 +32,7 @@ For TalkBack usage instructions, see the [TalkBack User Guide](https://support.g
 
 *   **4-finger taps by default.** Tap with 4 fingers to go back. Double-tap with 4 fingers to go home. Triple-tap with 4 fingers to open recent apps. If you changed these gestures before, your settings stay.
 *   **Braille keyboard and copy gestures by default.** Double-tap and hold with 2 fingers to switch to the braille keyboard. Triple-tap with 3 fingers to copy the last spoken phrase. Paste moves to triple-tap and hold with 3 fingers, and selection mode has no gesture by default. If you changed these gestures before, your settings stay.
+*   **Notification shade gesture.** Double-tap and hold with 4 fingers to open the notification shade. Pass through the next gesture moves to tap and hold with 3 fingers. Screen search stays on swipe left then down. If you changed these gestures before, your settings stay.
 *   **Status gesture.** Triple-tap with 2 fingers to hear what the status bar shows: the time, battery, Wi-Fi, and mobile signal, and the ringer, Do Not Disturb, and airplane mode when they are not in their usual state. To hear the Wi-Fi network name, allow location access when Backtalk asks the first time. To choose what it says and in what order, go to **Status readout** in TalkBack settings. Each item has **Move up** and **Move down** actions. This action is also in the gesture list as **Speak status**. Before, this gesture started reading from the current item, which is still in the TalkBack menu as **Read from next item**.
 
 ### TalkBack menu
