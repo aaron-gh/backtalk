@@ -45,6 +45,41 @@
     -->
     <string name="tts_preferences_title">Text-to-speech</string>
     <!--
+      Source: Title for the TTS engine selection preference in TalkBack settings.
+      Description: Allows the user to choose which TTS engine TalkBack uses. [CHAR LIMIT=NONE]
+    -->
+    <string name="title_pref_tts_engine">Text-to-speech engine</string>
+    <!--
+      Source: Title for the preference that opens the Android system text-to-speech settings.
+      Description: Distinguishes the system settings from TalkBack's own speech settings. [CHAR LIMIT=NONE]
+    -->
+    <string name="title_pref_system_tts_settings">System text-to-speech settings</string>
+    <!-- Title for the "switch TTS engine" reading control selector item. [CHAR LIMIT=NONE] -->
+    <string name="title_selector_switch_tts_engine">Switch TTS engine</string>
+    <!-- Summary for the "switch TTS engine" reading control selector item. [CHAR LIMIT=NONE] -->
+    <string name="summary_selector_switch_tts_engine">Cycle through installed text-to-speech engines</string>
+    <!--
+      Source: Summary shown under the TTS engine preference when no engine is selected (use system default).
+      Description: Indicates TalkBack is using the system default TTS engine. [CHAR LIMIT=NONE]
+    -->
+    <string name="summary_pref_tts_engine_default">System default</string>
+    <!--
+      Source: Title for the speech pitch preference.
+      Description: Controls how high or low TalkBack's voice sounds. [CHAR LIMIT=NONE]
+    -->
+    <string name="title_pref_speech_pitch">Speech pitch</string>
+    <!--
+      Source: Title for the "use accessibility audio stream" toggle.
+      Description: When on, TalkBack speech uses the dedicated accessibility audio stream. [CHAR LIMIT=NONE]
+    -->
+    <string name="title_pref_use_accessibility_stream">Use accessibility stream</string>
+    <!--
+      Source: Summary for the "use accessibility audio stream" toggle.
+      Description: Explains that enabling this routes TalkBack speech through the accessibility stream,
+      allowing independent volume control. [CHAR LIMIT=NONE]
+    -->
+    <string name="summary_pref_use_accessibility_stream">Route TalkBack speech through the accessibility audio stream for independent volume control</string>
+    <!--
       Source: Title for the menu item that opens the dialog with TTS  languages installed by the user.
       Description: This is presented to the user. [CHAR LIMIT=NONE]
     -->

@@ -1996,8 +1996,9 @@ public class SpeechControllerImpl implements SpeechController {
     }
 
     // Utterance ID, stream, and volume override item params.
+    final int stream = FailoverTextToSpeech.getSpeechAudioStream(mContext);
     params.put(Engine.KEY_PARAM_UTTERANCE_ID, feedbackItem.getUtteranceId());
-    params.put(Engine.KEY_PARAM_STREAM, String.valueOf(DEFAULT_STREAM));
+    params.put(Engine.KEY_PARAM_STREAM, String.valueOf(stream));
     params.put(Engine.KEY_PARAM_VOLUME, String.valueOf(speechVolume));
     HashMap<String, Integer> customFlags = new HashMap<>();
 
@@ -2069,7 +2070,7 @@ public class SpeechControllerImpl implements SpeechController {
         rate,
         params,
         customFlags,
-        DEFAULT_STREAM,
+        stream,
         speechVolume,
         preventDeviceSleep,
         feedbackItem.shouldFlushGlobalTtsQueue(),

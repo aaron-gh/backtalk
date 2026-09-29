@@ -268,7 +268,6 @@ public class TalkBackPreferenceFilter {
     CUSTOMIZE_FOCUS_INDICATOR(
         R.string.pref_category_manage_focus_indicator_key, SHOW_FOCUS_INDICATOR),
     AUTOMATIC_DESCRIPTIONS(R.string.pref_auto_image_captioning_key, HIDDEN_ON_TV | HIDDEN_ON_XR),
-    SPEECH_RATE_IN_SOUND(R.string.pref_speech_rate_seekbar_key_int, HIDDEN_ON_TV),
     GEMINI_SUPPORT(
         R.string.pref_gemini_settings_key, HIDDEN_ON_WATCH | HIDDEN_ON_TV | HIDE_GEMINI_SETTINGS),
     ICON_DETECTION(R.string.pref_icon_detection_key, HIDDEN_ON_WATCH | HIDE_ICON_DETECTION),

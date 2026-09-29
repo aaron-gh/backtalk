@@ -29,6 +29,9 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.ContentObserver;
 import android.media.AudioAttributes;
@@ -45,7 +48,6 @@ import android.os.SystemClock;
 import android.provider.Settings.Secure;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.Engine;
-import android.speech.tts.TextToSpeech.OnInitListener;
 import android.speech.tts.UtteranceProgressListener;
 import android.speech.tts.Voice;
 import android.telephony.TelephonyManager;
@@ -63,6 +65,7 @@ import com.google.android.accessibility.utils.Logger;
 import com.google.android.accessibility.utils.Performance;
 import com.google.android.accessibility.utils.Performance.ChangeLocaleAction;
 import com.google.android.accessibility.utils.Performance.EventId;
+import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.SpannableUtils.IdentifierSpan;
 import com.google.android.accessibility.utils.WeakReferenceHandler;
 import com.google.android.accessibility.utils.broadcast.SameThreadBroadcastReceiver;
@@ -226,6 +229,21 @@ public class FailoverTextToSpeech {
   /** The engine loaded into the current TTS. */
   private String ttsEngine;
 
+  public static final String PREF_TTS_ENGINE_KEY = "pref_tts_engine";
+  public static final String PREF_USE_ACCESSIBILITY_STREAM_KEY = "pref_use_accessibility_stream";
+  private static final boolean USE_ACCESSIBILITY_STREAM_DEFAULT = true;
+  private @Nullable String preferredTtsEngine;
+
+  private final OnSharedPreferenceChangeListener preferenceChangeListener =
+      (sharedPrefs, key) -> {
+        if (PREF_TTS_ENGINE_KEY.equals(key)) {
+          preferredTtsEngine = readPreferredEngine(sharedPrefs);
+          updateDefaultEngine();
+        } else if (PREF_USE_ACCESSIBILITY_STREAM_KEY.equals(key)) {
+          applyAudioAttributes();
+        }
+      };
+
   /** The number of time the current TTS has failed consecutively. */
   private int ttsFailures;
 
@@ -240,6 +258,8 @@ public class FailoverTextToSpeech {
 
   /** The engine loading into the temporary TTS. */
   private @Nullable String tempTtsEngine;
+
+  private int tempTtsGeneration;
 
   /** The rate adjustment specified in {@link Settings}. */
   private float defaultRate;
@@ -304,6 +324,10 @@ public class FailoverTextToSpeech {
     updateDefaultPitch();
     updateDefaultRate();
 
+    SharedPreferences prefs = SharedPreferencesUtils.getSharedPreferences(context);
+    preferredTtsEngine = readPreferredEngine(prefs);
+    prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
+
     // Updating the default engine reloads the list of installed engines and
     // the system engine. This also loads the default engine.
     updateDefaultEngine();
@@ -360,6 +384,40 @@ public class FailoverTextToSpeech {
    */
   public @Nullable CharSequence getEngineLabel() {
     return TextToSpeechUtils.getLabelForEngine(context, ttsEngine);
+  }
+
+  public static List<String> getInstalledTtsEngines(PackageManager pm) {
+    List<String> engines = new ArrayList<>();
+    TextToSpeechUtils.reloadInstalledTtsEngines(pm, engines);
+    return engines;
+  }
+
+  public static String getEngineDisplayName(Context context, String enginePackage) {
+    CharSequence label = TextToSpeechUtils.getLabelForEngine(context, enginePackage);
+    return (label == null) ? enginePackage : label.toString();
+  }
+
+  public static boolean shouldUseAccessibilityStream(Context context) {
+    return SharedPreferencesUtils.getSharedPreferences(context)
+        .getBoolean(PREF_USE_ACCESSIBILITY_STREAM_KEY, USE_ACCESSIBILITY_STREAM_DEFAULT);
+  }
+
+  public static int getSpeechAudioStream(Context context) {
+    return shouldUseAccessibilityStream(context)
+        ? AudioManager.STREAM_ACCESSIBILITY
+        : AudioManager.STREAM_MUSIC;
+  }
+
+  public static @Nullable String getSelectedEngine(Context context) {
+    String preferred = readPreferredEngine(SharedPreferencesUtils.getSharedPreferences(context));
+    return (preferred != null)
+        ? preferred
+        : Secure.getString(context.getContentResolver(), Secure.TTS_DEFAULT_SYNTH);
+  }
+
+  private static @Nullable String readPreferredEngine(SharedPreferences prefs) {
+    String engine = prefs.getString(PREF_TTS_ENGINE_KEY, "");
+    return TextUtils.isEmpty(engine) ? null : engine;
   }
 
   /**
@@ -567,6 +625,9 @@ public class FailoverTextToSpeech {
     resolver.unregisterContentObserver(mSynthObserver);
     resolver.unregisterContentObserver(mPitchObserver);
     resolver.unregisterContentObserver(mRateObserver);
+
+    SharedPreferencesUtils.getSharedPreferences(context)
+        .unregisterOnSharedPreferenceChangeListener(preferenceChangeListener);
 
     TextToSpeechUtils.attemptTtsShutdown(tts);
     tts = null;
@@ -902,26 +963,15 @@ public class FailoverTextToSpeech {
       ttsFailures = 0;
     }
 
-    // Always try to stop the current engine before switching.
-    TextToSpeechUtils.attemptTtsShutdown(tts);
     TextToSpeechUtils.attemptTtsShutdown(tempTts);
-
-    if (tempTts == null || tempTts.getLanguage() == null) {
-      // The TTS instance is not existing or not responding, the service has likely stopped, so
-      // dispose of our handle and create another one below.
-      LogUtils.i(TAG, "Bad TextToSpeech instance detected. Re-creating.");
-    } else {
-      // We use the fact that a getLanguage() call should never return null unless there is a
-      // failure talking to the service. This is tested on tv, but not on other platforms yet.
-      LogUtils.e(TAG, "Can't start TTS engine %s while still loading previous engine", engine);
-      return;
-    }
 
     LogUtils.logWithLimit(
         TAG, Log.INFO, ttsFailures, MAX_LOG_MESSAGES, "Switching to TTS engine: %s", engine);
 
+    final int generation = ++tempTtsGeneration;
     tempTtsEngine = engine;
-    tempTts = new TextToSpeech(context, mTtsChangeListener, engine);
+    tempTts =
+        new TextToSpeech(context, status -> mHandler.onTtsInitialized(status, generation), engine);
   }
 
   /**
@@ -965,7 +1015,11 @@ public class FailoverTextToSpeech {
    * @param status The status returned by the TTS engine.
    */
   @SuppressWarnings("deprecation")
-  private void handleTtsInitialized(int status) {
+  private void handleTtsInitialized(int status, int generation) {
+    if (generation != tempTtsGeneration) {
+      LogUtils.v(TAG, "Ignoring init of an abandoned TTS engine");
+      return;
+    }
     if (tempTts == null) {
       LogUtils.e(TAG, "Attempted to initialize TTS more than once!");
       return;
@@ -1003,11 +1057,7 @@ public class FailoverTextToSpeech {
 
     updateDefaultLocale();
 
-    tts.setAudioAttributes(
-        new AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
-            .setFlags(AudioAttributes.FLAG_LOW_LATENCY)
-            .build());
+    applyAudioAttributes();
 
     LogUtils.i(TAG, "Switched to TTS engine: %s", tempTtsEngine);
 
@@ -1131,12 +1181,34 @@ public class FailoverTextToSpeech {
     }
 
     if (Intent.ACTION_MEDIA_MOUNTED.equals(action)) {
-      if (!TextUtils.equals(defaultTtsEngine, ttsEngine)) {
-        // Try to switch back to the default engine.
+      final String targetEngine = getTargetEngine();
+      if (!TextUtils.equals(targetEngine, ttsEngine)) {
+        // Try to switch back to the preferred or default engine.
         LogUtils.v(TAG, "Saw media mount");
-        setTtsEngine(defaultTtsEngine, true);
+        setTtsEngine(targetEngine, true);
       }
     }
+  }
+
+  private void applyAudioAttributes() {
+    if (tts == null) {
+      return;
+    }
+    int usage =
+        shouldUseAccessibilityStream(context)
+            ? AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY
+            : AudioAttributes.USAGE_MEDIA;
+    tts.setAudioAttributes(
+        new AudioAttributes.Builder()
+            .setUsage(usage)
+            .setFlags(AudioAttributes.FLAG_LOW_LATENCY)
+            .build());
+  }
+
+  private @Nullable String getTargetEngine() {
+    return (preferredTtsEngine != null && installedTtsEngines.contains(preferredTtsEngine))
+        ? preferredTtsEngine
+        : defaultTtsEngine;
   }
 
   public void updateDefaultEngine() {
@@ -1152,11 +1224,14 @@ public class FailoverTextToSpeech {
     // This may be null if the user hasn't specified an engine.
     defaultTtsEngine = Secure.getString(resolver, Secure.TTS_DEFAULT_SYNTH);
 
-    // Switch engines when the system default changes and it's not the current engine.
-    if (ttsEngine == null || !ttsEngine.equals(defaultTtsEngine)) {
-      if (installedTtsEngines.contains(defaultTtsEngine)) {
-        // Can load the default engine.
-        setTtsEngine(defaultTtsEngine, true);
+    // Switch engines when the target engine changes and it's not the current engine.
+    final String targetEngine = getTargetEngine();
+    if (targetEngine != null && targetEngine.equals(tempTtsEngine)) {
+      return;
+    }
+    if (ttsEngine == null || !ttsEngine.equals(targetEngine)) {
+      if (installedTtsEngines.contains(targetEngine)) {
+        setTtsEngine(targetEngine, true);
       } else if (!installedTtsEngines.isEmpty()) {
         // We'll take whatever TTS we can get.
         setTtsEngine(installedTtsEngines.getFirst(), true);
@@ -1620,17 +1695,6 @@ public class FailoverTextToSpeech {
   private final UtteranceProgressCallback utteranceProgressCallback =
       new UtteranceProgressCallback();
 
-  /**
-   * When changing TTS engines, switches the active TTS engine when the new engine is initialized.
-   */
-  private final OnInitListener mTtsChangeListener =
-      new OnInitListener() {
-        @Override
-        public void onInit(int status) {
-          mHandler.onTtsInitialized(status);
-        }
-      };
-
   /** Callbacks used to observe configuration changes. */
   private final ComponentCallbacks mComponentCallbacks =
       new ComponentCallbacks() {
@@ -1693,7 +1757,7 @@ public class FailoverTextToSpeech {
     @Override
     public void handleMessage(Message msg, FailoverTextToSpeech parent) {
       switch (msg.what) {
-        case MSG_INITIALIZED -> parent.handleTtsInitialized(msg.arg1);
+        case MSG_INITIALIZED -> parent.handleTtsInitialized(msg.arg1, msg.arg2);
         case MSG_UTTERANCE_STARTED -> {
           long talkbackDelay = SystemClock.uptimeMillis() - msg.getWhen();
           parent.handleUtteranceStarted((String) msg.obj, talkbackDelay);
@@ -1710,8 +1774,8 @@ public class FailoverTextToSpeech {
       }
     }
 
-    public void onTtsInitialized(int status) {
-      obtainMessage(MSG_INITIALIZED, status, 0).sendToTarget();
+    public void onTtsInitialized(int status, int generation) {
+      obtainMessage(MSG_INITIALIZED, status, generation).sendToTarget();
     }
 
     public void onUtteranceStarted(String utteranceId) {

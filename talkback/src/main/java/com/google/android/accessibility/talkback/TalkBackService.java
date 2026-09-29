@@ -3119,13 +3119,12 @@ public class TalkBackService extends AccessibilityServiceCompat
         getBooleanPref(R.string.pref_use_audio_focus_key, R.bool.pref_use_audio_focus_default);
     pipeline.setUseAudioFocus(useAudioFocus);
 
-    // Speech volume is stored as int [0,100] and scaled to float [0,1].
-    if (!FeatureSupport.hasAccessibilityAudioStream(this)) {
-      pipeline.setSpeechVolume(
-          SharedPreferencesUtils.getIntFromStringPref(
-                  prefs, res, R.string.pref_speech_volume_key, R.string.pref_speech_volume_default)
-              / 100.0f);
-    }
+    int speechVolume =
+        Math.max(
+            SharedPreferencesUtils.getIntFromStringPref(
+                prefs, res, R.string.pref_speech_volume_key, R.string.pref_speech_volume_default),
+            res.getInteger(R.integer.pref_speech_volume_min));
+    pipeline.setSpeechVolume(speechVolume / 100.0f);
 
     // Reload feedback preferences.
     int adjustment =

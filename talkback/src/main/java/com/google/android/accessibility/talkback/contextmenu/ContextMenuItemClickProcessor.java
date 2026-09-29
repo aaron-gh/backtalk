@@ -44,6 +44,7 @@ import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.TalkBackService;
 import com.google.android.accessibility.talkback.analytics.TalkBackAnalytics;
 import com.google.android.accessibility.talkback.menurules.CustomActionMenu;
+import com.google.android.accessibility.talkback.preference.base.TextToSpeechSettingsFragment;
 import com.google.android.accessibility.talkback.preference.base.VerbosityPrefFragment;
 import com.google.android.accessibility.utils.Performance.EventId;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
@@ -151,10 +152,9 @@ public class ContextMenuItemClickProcessor {
       final Intent settingsIntent = createSettingsIntent();
       service.startActivity(settingsIntent);
     } else if (itemId == R.id.tts_settings) {
-      Intent ttsSettingsIntent = new Intent(TalkBackService.INTENT_TTS_SETTINGS);
-      ttsSettingsIntent.addFlags(
-          Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-      service.startActivity(ttsSettingsIntent);
+      Intent intent = createSettingsIntent();
+      intent.putExtra(FRAGMENT_NAME, TextToSpeechSettingsFragment.class.getName());
+      service.startActivity(intent);
     } else if (itemId == R.id.enable_dimming) {
       pipeline.returnFeedback(eventId, Feedback.dimScreen(DIM));
     } else if (itemId == R.id.disable_dimming) {

@@ -47,7 +47,6 @@ import com.google.android.accessibility.utils.FeatureSupport;
 import com.google.android.accessibility.utils.FormFactorUtils;
 import com.google.android.accessibility.utils.NetworkUtils;
 import com.google.android.accessibility.utils.PreferenceSettingsUtils;
-import com.google.android.accessibility.utils.SettingsUtils;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.monitor.InputDeviceMonitor;
 import java.util.Optional;
@@ -94,19 +93,6 @@ public class TalkBackPreferenceFragment extends TalkbackBaseFragment {
         listener -> listener.setOnSurveyAvailableListener(() -> updateSurveyOption()));
 
     assignNewFeaturesIntent();
-
-    // Hiding Speech Rate Settings for all surfaces except Android TV.
-    if (!FormFactorUtils.isAndroidTv()) {
-      PreferenceSettingsUtils.hidePreference(
-          context, getPreferenceScreen(), R.string.pref_speech_rate_key);
-    }
-
-    if (SettingsUtils.allowLinksOutOfSettings(context) || FormFactorUtils.isAndroidTv()) {
-      assignTtsSettingsIntent();
-    } else {
-      // During setup, do not allow access to main settings via text-to-speech settings.
-      removePreference(R.string.pref_category_audio_key, R.string.pref_tts_settings_key);
-    }
 
     // Changes title from Sound and Vibration to Sound if this device doesn't support vibration.
     if (!FeatureSupport.isVibratorSupported(context)) {
@@ -260,31 +246,6 @@ public class TalkBackPreferenceFragment extends TalkbackBaseFragment {
     if (category != null) {
       PreferenceSettingsUtils.hidePreference(context, category, preferenceKeyId);
     }
-  }
-
-  /** Assigns the intent to open text-to-speech settings. */
-  private void assignTtsSettingsIntent() {
-    PreferenceGroup category =
-        (PreferenceGroup) findPreferenceByResId(R.string.pref_category_audio_key);
-    Preference ttsSettingsPreference = findPreferenceByResId(R.string.pref_tts_settings_key);
-
-    if (category == null || ttsSettingsPreference == null) {
-      return;
-    }
-
-    // Removing Text-to-Speech Settings for TV.
-    if (FormFactorUtils.isAndroidTv()) {
-      category.removePreference(ttsSettingsPreference);
-      return;
-    }
-
-    Intent ttsSettingsIntent = new Intent(TalkBackService.INTENT_TTS_SETTINGS);
-    if (!PreferenceSettingsUtils.canHandleIntent(context, ttsSettingsIntent)) {
-      // Need to remove preference item if no TTS Settings intent filter in settings app.
-      category.removePreference(ttsSettingsPreference);
-    }
-
-    ttsSettingsPreference.setIntent(ttsSettingsIntent);
   }
 
   private void assignNewFeaturesIntent() {

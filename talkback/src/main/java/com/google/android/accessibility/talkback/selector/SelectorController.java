@@ -109,6 +109,7 @@ import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.WebInterfaceUtils;
 import com.google.android.accessibility.utils.input.CursorGranularity;
 import com.google.android.accessibility.utils.monitor.CollectionState;
+import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.accessibility.utils.output.FeedbackItem;
 import com.google.android.accessibility.utils.output.SpeechController;
 import com.google.android.accessibility.utils.output.SpeechController.SpeakOptions;
@@ -352,7 +353,11 @@ public class SelectorController implements UserInputEventListener {
     FORMATTING(
         R.string.pref_selector_text_formatting_inline_key,
         R.string.title_switch_text_formatting,
-        R.bool.pref_selector_text_formatting_inline_default);
+        R.bool.pref_selector_text_formatting_inline_default),
+    SWITCH_TTS_ENGINE(
+        R.string.pref_selector_switch_tts_engine_key,
+        R.string.selector_switch_tts_engine,
+        R.bool.pref_selector_switch_tts_engine_default);
 
     /** The preference key of the filter in the selector settings page. */
     final int prefKeyResId;
@@ -613,7 +618,8 @@ public class SelectorController implements UserInputEventListener {
           Setting.CHANGE_TOUCH_FOCUS_LATENCY,
           Setting.CHANGE_TYPING_FOCUS_LATENCY,
           Setting.ADJUSTABLE_WIDGET,
-          Setting.CONTROL_TELLING_TIME);
+          Setting.CONTROL_TELLING_TIME,
+          Setting.SWITCH_TTS_ENGINE);
 
   /** Lists all {@link Setting} that should be hidden for users. */
   private final ImmutableList<Setting> hiddenSettings;
@@ -923,6 +929,10 @@ public class SelectorController implements UserInputEventListener {
       }
       case CONTROL_TELLING_TIME -> {
         actionDescription = context.getString(R.string.title_control_speak_time);
+        hint = getAdjustSelectedSettingGestures();
+      }
+      case SWITCH_TTS_ENGINE -> {
+        actionDescription = context.getString(R.string.title_selector_switch_tts_engine);
         hint = getAdjustSelectedSettingGestures();
       }
       case ACTIONS -> {
@@ -1689,6 +1699,10 @@ public class SelectorController implements UserInputEventListener {
         switchTellingTimeOnOrOff(eventId);
         return;
       }
+      case SWITCH_TTS_ENGINE -> {
+        changeTtsEngine(eventId, isNext);
+        return;
+      }
       case GRANULARITY -> {
         // Granularity is phased out. Assigns to the character setting.
         updateSettingPref(context, GRANULARITY_CHARACTERS);
@@ -1904,6 +1918,30 @@ public class SelectorController implements UserInputEventListener {
         context.getString(
             R.string.template_speech_rate_change,
             actorState.getSpeechRateState().getSpeechRatePercentage());
+    announceSetting(eventId, displayText, getSelectSettingGestures());
+    showQuickMenuActionOverlay(eventId, displayText);
+  }
+
+  private void changeTtsEngine(EventId eventId, boolean isNext) {
+    List<String> engines =
+        FailoverTextToSpeech.getInstalledTtsEngines(context.getPackageManager());
+    if (engines.size() <= 1) {
+      announceSetting(
+          eventId,
+          context.getString(R.string.title_selector_switch_tts_engine),
+          getSelectSettingGestures());
+      return;
+    }
+
+    int currentIndex = engines.indexOf(FailoverTextToSpeech.getSelectedEngine(context));
+    int nextIndex =
+        (currentIndex < 0)
+            ? (isNext ? 0 : engines.size() - 1)
+            : Math.floorMod(currentIndex + (isNext ? 1 : -1), engines.size());
+    String nextEngine = engines.get(nextIndex);
+    prefs.edit().putString(context.getString(R.string.pref_tts_engine_key), nextEngine).apply();
+
+    String displayText = FailoverTextToSpeech.getEngineDisplayName(context, nextEngine);
     announceSetting(eventId, displayText, getSelectSettingGestures());
     showQuickMenuActionOverlay(eventId, displayText);
   }

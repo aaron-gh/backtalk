@@ -31,7 +31,7 @@ import com.google.android.accessibility.utils.Performance.EventId;
 import com.google.android.accessibility.utils.ServiceKeyEventListener;
 import com.google.android.accessibility.utils.WeakReferenceHandler;
 import com.google.android.accessibility.utils.compat.media.AudioManagerCompatUtils;
-import com.google.android.accessibility.utils.output.SpeechController;
+import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.accessibility.utils.volumebutton.VolumeButtonPatternDetector;
 
 /**
@@ -50,9 +50,6 @@ public class ProcessorVolumeStream
   private static final int DEFAULT_FLAGS_FOR_DEFAULT_STREAM =
       (AudioManager.FLAG_SHOW_UI | AudioManager.FLAG_VIBRATE | AudioManager.FLAG_PLAY_SOUND);
 
-  /** TalkBack audio stream. */
-  private static final int STREAM_TALKBACK_AUDIO = SpeechController.DEFAULT_STREAM;
-
   /** System default audio stream. */
   private static final int STREAM_DEFAULT = AudioManager.USE_DEFAULT_STREAM_TYPE;
 
@@ -63,6 +60,8 @@ public class ProcessorVolumeStream
   private static final int MASK_EVENTS_HANDLED_BY_PROCESSOR_VOL_STREAM =
       AccessibilityEvent.TYPE_TOUCH_INTERACTION_START
           | AccessibilityEvent.TYPE_TOUCH_INTERACTION_END;
+
+  private final Context context;
 
   /** The audio manager, used to adjust speech volume. */
   private final AudioManager audioManager;
@@ -118,6 +117,7 @@ public class ProcessorVolumeStream
       TalkBackService service,
       TouchInteractingIndicator touchInteractingIndicator) {
 
+    context = service;
     audioManager = (AudioManager) service.getSystemService(Context.AUDIO_SERVICE);
     this.actorState = actorState;
     this.touchInteractingIndicator = touchInteractingIndicator;
@@ -169,35 +169,36 @@ public class ProcessorVolumeStream
         ((button == VolumeButtonPatternDetector.VOLUME_UP)
             ? AudioManager.ADJUST_RAISE
             : AudioManager.ADJUST_LOWER);
-    boolean shouldRouteToAccessibilityStream;
+    final int talkBackStream = FailoverTextToSpeech.getSpeechAudioStream(context);
+    boolean shouldRouteToTalkBackStream;
 
     // While continuous reading is active, we do not want to show the UI and interrupt continuous
     // reading.
     if (isTouchInteracting
         || actorState.getContinuousRead().isActive()
         || touchInteractingIndicator.isTouchInteracting()) {
-      shouldRouteToAccessibilityStream = true;
+      shouldRouteToTalkBackStream = true;
     } else {
       boolean mostRecentAdjustmentJustHappened = mostRecentVolumeKeyAdjustment.onKeyPressed();
 
       if (mostRecentAdjustmentJustHappened
-              && (mostRecentVolumeKeyAdjustment.stream == STREAM_TALKBACK_AUDIO)
+              && (mostRecentVolumeKeyAdjustment.stream == talkBackStream)
           || (!mostRecentAdjustmentJustHappened
               && actorState
                   .getSpeechState()
                   .isSpeakingOrQueuedAndNotSourceIsVolumeAnnouncement())) {
-        shouldRouteToAccessibilityStream = true;
-        mostRecentVolumeKeyAdjustment.stream = STREAM_TALKBACK_AUDIO;
+        shouldRouteToTalkBackStream = true;
+        mostRecentVolumeKeyAdjustment.stream = talkBackStream;
       } else {
-        shouldRouteToAccessibilityStream = false;
+        shouldRouteToTalkBackStream = false;
         mostRecentVolumeKeyAdjustment.stream = STREAM_DEFAULT;
       }
     }
 
-    if (shouldRouteToAccessibilityStream) {
+    if (shouldRouteToTalkBackStream) {
       AudioManagerCompatUtils.adjustStreamVolume(
           audioManager,
-          STREAM_TALKBACK_AUDIO,
+          talkBackStream,
           direction,
           DEFAULT_FLAGS_FOR_TALKBACK_STREAM,
           getClass().getName());

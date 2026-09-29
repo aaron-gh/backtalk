@@ -3,15 +3,8 @@
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
         android:key="@string/pref_category_audio_key"
         android:title="@string/title_pref_category_audio" >
-        <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
-            android:defaultValue="@string/pref_speech_volume_default"
-            android:dialogTitle="@string/title_pref_speech_volume"
-            android:entries="@array/pref_speech_volume_entries"
-            android:entryValues="@array/pref_speech_volume_values"
-            android:key="@string/pref_speech_volume_key"
-            android:summary="%s"
-            android:title="@string/title_pref_speech_volume" />
         <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
+            android:fragment="com.google.android.accessibility.talkback.preference.base.TextToSpeechSettingsFragment"
             android:key="@string/pref_tts_settings_key"
             android:title="@string/tts_preferences_title" />
         <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
