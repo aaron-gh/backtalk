@@ -304,9 +304,6 @@ public class WindowEventInterpreter implements WindowsDelegate, DisplayStateChan
   // Announcement from event TYPE_WINDOW_STATE_CHANGED, to be spoken with next event-interpretation.
   private @Nullable Announcement announcement;
 
-  /** Preference to reduce delay before considering windows stable. */
-  private boolean reduceDelayPref = false;
-
   private long screenTransitionStartTime = 0;
 
   /** Flag whether IME transition happened recently. */
@@ -347,10 +344,6 @@ public class WindowEventInterpreter implements WindowsDelegate, DisplayStateChan
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   // Methods
-
-  public void setReduceDelayPref(boolean reduceDelayPref) {
-    this.reduceDelayPref = reduceDelayPref;
-  }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   // Methods
@@ -710,11 +703,10 @@ public class WindowEventInterpreter implements WindowsDelegate, DisplayStateChan
 
   /** Returns the current window-transition delay in milliseconds. */
   private long getWindowTransitionDelayMs() {
-    long delayMs = WINDOW_CHANGE_DELAY_MS;
-    if (reduceDelayPref && SettingsUtils.isAnimationDisabled(service)) {
-      delayMs = WINDOW_CHANGE_DELAY_NO_ANIMATION_MS;
-    }
-    return delayMs;
+    // Windows appear at once when animations are off, however they were turned off.
+    return SettingsUtils.isAnimationDisabled(service)
+        ? WINDOW_CHANGE_DELAY_NO_ANIMATION_MS
+        : WINDOW_CHANGE_DELAY_MS;
   }
 
   /** Step 4: Delay event interpretation. */

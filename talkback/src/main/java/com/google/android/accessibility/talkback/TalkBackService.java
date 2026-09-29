@@ -2924,12 +2924,11 @@ public class TalkBackService extends AccessibilityServiceCompat
         PreferencesActivityUtils.isDiagnosisModeOn(prefs, res),
         key);
 
-    // Preference to reduce window announcement delay.
+    // Preference to turn off animations, so that windows are announced sooner.
     boolean reduceDelayPref =
         getBooleanPref(
             R.string.pref_reduce_window_delay_key, R.bool.pref_reduce_window_delay_default);
     if (windowEventInterpreter != null) {
-      windowEventInterpreter.setReduceDelayPref(reduceDelayPref);
       enableAnimation(!reduceDelayPref);
     }
 
