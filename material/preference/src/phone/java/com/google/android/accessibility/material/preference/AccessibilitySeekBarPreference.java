@@ -52,6 +52,13 @@ public class AccessibilitySeekBarPreference extends SeekBarPreference {
         seekbar.setContentDescription(title);
       }
       ViewCompat.setLabelFor(titleView, View.NO_ID);
+      // The slider speaks the title and value itself, so the title and value text are not separate
+      // items in the swipe order.
+      titleView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+      final View valueView = holder.findViewById(androidx.preference.R.id.seekbar_value);
+      if (valueView != null) {
+        valueView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+      }
     }
 
     holder.itemView.setClickable(false);
