@@ -47,6 +47,7 @@ Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), t
 
 ### Speech
 
+*   **Speak notifications setting.** To stop Backtalk from reading new notifications when they arrive, go to **Verbosity** in Backtalk settings and turn off **Speak notifications**. Incoming calls are still read, and you can still read notifications in the notification shade.
 *   **No "collapsed" on notifications.** Backtalk does not say "collapsed" for each notification on the lock screen and in the notification shade. It still says "expanded" when you open one, and it still says "collapsed" in other apps.
 
 ### Braille keyboard

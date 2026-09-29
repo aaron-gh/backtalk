@@ -135,7 +135,10 @@ public class EventFilter {
       // REFERTO. If the user is touching on screen, skip event.
       // For toast events, the notification parcel is null. (Use event text instead.)
       Notification notification = AccessibilityEventUtils.extractNotification(event);
-      if ((notification != null) && !globalVariables.getSpeakNotifications()) {
+      // Incoming calls are still announced, so that the user hears who is calling.
+      if ((notification != null)
+          && !globalVariables.getSpeakNotifications()
+          && !Notification.CATEGORY_CALL.equals(notification.category)) {
         LogUtils.d(TAG, "Do not announce notification: disabled in settings");
         return;
       }
