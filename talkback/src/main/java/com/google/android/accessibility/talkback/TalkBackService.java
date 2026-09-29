@@ -2962,6 +2962,9 @@ public class TalkBackService extends AccessibilityServiceCompat
     reloadPreferenceLogLevel();
 
     globalVariables.setIsDndEnabled(SettingsUtils.getDoNotDisturbState(this) > 0);
+    globalVariables.setSpeakNotifications(
+        getBooleanPref(
+            R.string.pref_speak_notifications_key, R.bool.pref_speak_notifications_default));
 
     final boolean useSingleTap =
         getBooleanPref(R.string.pref_single_tap_key, R.bool.pref_single_tap_default);

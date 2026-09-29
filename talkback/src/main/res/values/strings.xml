@@ -397,6 +397,16 @@
       Description: Explains that element IDs will be spoken for unlabeled buttons. [CHAR LIMIT=NONE]
     -->
     <string name="summary_pref_speak_element_ids">For unlabeled buttons</string>
+    <!--
+      Source: Preference for speaking notifications as they arrive.
+      Description: The user can turn this off to stop new notifications from being read aloud. [CHAR LIMIT=NONE]
+    -->
+    <string name="title_pref_speak_notifications">Speak notifications</string>
+    <!--
+      Source: Summary subtext for the speak notifications setting.
+      Description: Explains that new notifications are read aloud when they arrive. [CHAR LIMIT=NONE]
+    -->
+    <string name="summary_pref_speak_notifications">Read new notifications aloud when they arrive</string>
 
     <!--
       Source: Preference for speaking window title when the focus changes due to window transition.

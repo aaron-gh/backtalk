@@ -135,6 +135,10 @@ public class EventFilter {
       // REFERTO. If the user is touching on screen, skip event.
       // For toast events, the notification parcel is null. (Use event text instead.)
       Notification notification = AccessibilityEventUtils.extractNotification(event);
+      if ((notification != null) && !globalVariables.getSpeakNotifications()) {
+        LogUtils.d(TAG, "Do not announce notification: disabled in settings");
+        return;
+      }
       if ((notification != null) && touchMonitor.isUserTouchingScreen()) {
         return;
       }

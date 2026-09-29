@@ -62,9 +62,10 @@ public final class HeadsUpNotificationAppearedFeedbackRule {
           final CharSequence notificationCategory =
               EventTypeNotificationStateChangedFeedbackRule.getNotificationCategoryStateText(
                   context, AccessibilityEventUtils.extractNotification(eventOptions.eventObject));
-          // Disable the hint if usage hints are disabled.
+          // Disable the hint if usage hints or notification speech are disabled.
           // Disable the hint for calls since calls have the media control hint.
           if (!globalVariables.getUsageHintEnabled()
+              || !globalVariables.getSpeakNotifications()
               || notificationCategory
                   .toString()
                   .equals(context.getString(R.string.notification_category_call))) {

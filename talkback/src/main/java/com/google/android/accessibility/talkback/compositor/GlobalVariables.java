@@ -181,6 +181,7 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
   private final boolean enableMediaControlHintForCall;
   private final boolean enableShortAndLongDurationsForSpecificApps;
   private volatile boolean isDndEnabled;
+  private volatile boolean speakNotifications = true;
   private final boolean deviceScreenNoTouch;
 
   public GlobalVariables(
@@ -377,6 +378,14 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
   /** Returns if DND do-not disturb is enabled. Some feedback should be silenced for DND. */
   public boolean isDndEnabled() {
     return isDndEnabled;
+  }
+
+  public void setSpeakNotifications(boolean speakNotifications) {
+    this.speakNotifications = speakNotifications;
+  }
+
+  public boolean getSpeakNotifications() {
+    return speakNotifications;
   }
 
   /** Returns if TalkBack usage hint is enabled. */
@@ -920,6 +929,7 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
             .append(String.format("speakSysWindowTitles=%s, ", getSpeakSystemWindowTitles()))
             .append(String.format("textChangeRateUnlimited=%s, ", getTextChangeRateUnlimited()))
             .append(String.format("dndEnabled=%s, ", isDndEnabled()))
+            .append(String.format("speakNotifications=%s, ", getSpeakNotifications()))
             .append(String.format("usageHintEnabled=%s, ", getUsageHintEnabled()))
             .append(
                 String.format(
