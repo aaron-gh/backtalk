@@ -1002,7 +1002,7 @@
      Source: Preference for showing user how to control talkback speech settings.
      Description: This is used as a footer. [CHAR LIMIT=500]
     -->
-    <string name="title_pref_speech_footer">You can quickly adjust some of Backtalk\'s sound settings from any screen.\n\nAccessibility volume: Hold 1 finger on the screen and press the volume up or volume down key.\nTalkBack speech rate: Swipe up or down with 3 fingers. When you hear \"speech rate\", swipe up or down with 1 finger.</string>
+    <string name="title_pref_speech_footer">You can quickly adjust some of Backtalk\'s sound settings from any screen.\n\nAccessibility volume: Hold 1 finger on the screen and press the volume up or volume down key.\nBacktalk speech rate: Swipe up or down with 3 fingers. When you hear \"speech rate\", swipe up or down with 1 finger.</string>
     <!--
       Source: Preference for whether to provide vibration feedback in response to system events.
       Description: The user can check or not check this. [CHAR LIMIT=25]

@@ -175,7 +175,7 @@
   <!-- Braille display command preference: Title of talkBack features. [CHAR LIMIT=30] -->
   <string name="bd_commands_bindings_category_talkback_features_title">Backtalk features</string>
   <!-- Braille display command preference: Summary of talkBack features. [CHAR LIMIT=40] -->
-  <string name="bd_commands_bindings_category_talkback_features_summary">Talkback menus and settings</string>
+  <string name="bd_commands_bindings_category_talkback_features_summary">Backtalk menus and settings</string>
   <!-- Braille display command preference: Title of braille settings. [CHAR LIMIT=30] -->
   <string name="bd_commands_bindings_category_braille_settings_title">Braille settings</string>
   <!-- Braille display command preference: Summary of braille settings. [CHAR LIMIT=60] -->

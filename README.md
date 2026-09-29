@@ -2,11 +2,9 @@
 
 Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), the screen reader for blind and visually-impaired users of Android. It adds fixes and features on top of Google's source releases. It is not affiliated with Google.
 
-For TalkBack usage instructions, see the [TalkBack User Guide](https://support.google.com/accessibility/android/answer/6283677?hl=en).
-
 ## Goals
 
-*   Make TalkBack faster and more responsive for people who use their phone quickly.
+*   Make Backtalk faster and more responsive for people who use their phone quickly.
 *   Bring back useful behavior from older TalkBack and other screen readers.
 *   Keep the build working on Windows, Linux, and macOS.
 *   Move the code to Kotlin over time. New code is written in Kotlin. Google's Java files are converted only when they already need large changes, so that new Google releases stay easy to merge.
@@ -16,37 +14,44 @@ For TalkBack usage instructions, see the [TalkBack User Guide](https://support.g
 
 ### Speed
 
-*   **Time between taps setting.** In TalkBack settings, go to **Advanced settings > Reduce delay > Time between taps** to set how long TalkBack waits for another tap. The default is 0.25 seconds, and you can lower it to 0.1 seconds. A shorter time makes all multi-tap gestures respond faster, but a slow double tap can count as two single taps.
-*   **Less lag while scrolling.** After each scroll event, TalkBack searched the list for a new item to focus. This blocked touch exploration and could make gestures fail. TalkBack now does this search once, after scrolling stops.
-*   **Faster swiping in lists.** To find the next item in a list, TalkBack built the reading order of the whole screen three times: once to check whether you were at the end of the list, once to find the item, and once to check whether the item needed scrolling into view. It now builds it once and reuses it.
+*   **Time between taps setting.** In Backtalk settings, go to **Advanced settings > Reduce delay > Time between taps** to set how long Backtalk waits for another tap. The default is 0.25 seconds, and you can lower it to 0.1 seconds. A shorter time makes all multi-tap gestures respond faster, but a slow double tap can count as two single taps.
+*   **Less lag while scrolling.** After each scroll event, TalkBack searched the list for a new item to focus. This blocked touch exploration and could make gestures fail. Backtalk now does this search once, after scrolling stops.
+*   **Faster swiping in lists.** To find the next item in a list, TalkBack built the reading order of the whole screen three times: once to check whether you were at the end of the list, once to find the item, and once to check whether the item needed scrolling into view. Backtalk now builds it once and reuses it.
 *   **Faster swiping on screens that do not change.** TalkBack asked the app for every item on the screen on each swipe, and waited for each answer. Backtalk now keeps the reading order between swipes, and builds it again only when the screen changes or Backtalk scrolls or clicks. In a test on a Realme phone, 3 of 4 swipes reused the order, and the longest pause during swiping went from about 450 ms to about 150 ms.
 
 ### Screen and brightness
 
-*   **Brightness reading control.** Swipe up or down to change the screen brightness in steps of about 10%. This works when the screen is hidden, so you can set the brightness before you give the phone to someone. The first time you use it, TalkBack asks for the "Modify system settings" permission.
+*   **Brightness reading control.** Swipe up or down to change the screen brightness in steps of about 10%. This works when the screen is hidden, so you can set the brightness before you give the phone to someone. The first time you use it, Backtalk asks for the "Modify system settings" permission.
 *   **Shorter hide screen message.** If you turn off **Always show this** in the hide screen dialog, Backtalk only says "Screen hidden" and skips the instructions for showing the screen again.
-*   **Hide screen brightness fix.** For 3 minutes after you hide the screen, TalkBack set the screen to full brightness. It now keeps your brightness.
-*   **Proximity sensor off by default.** TalkBack no longer stops speech when something covers the proximity sensor. To turn it back on, go to **Advanced settings > Cover proximity sensor to stop speech** in TalkBack settings.
+*   **Hide screen brightness fix.** For 3 minutes after you hide the screen, TalkBack set the screen to full brightness. Backtalk keeps your brightness.
+*   **Proximity sensor off by default.** Backtalk does not stop speech when something covers the proximity sensor. To turn it back on, go to **Advanced settings > Cover proximity sensor to stop speech** in Backtalk settings.
 
 ### Gestures
 
-*   **4-finger taps by default.** Tap with 4 fingers to go back. Double-tap with 4 fingers to go home. Triple-tap with 4 fingers to open recent apps. If you changed these gestures before, your settings stay.
-*   **Braille keyboard and copy gestures by default.** Double-tap and hold with 2 fingers to switch to the braille keyboard. Triple-tap with 3 fingers to copy the last spoken phrase. Paste moves to triple-tap and hold with 3 fingers, and selection mode has no gesture by default. If you changed these gestures before, your settings stay.
-*   **Notification shade gesture.** Double-tap and hold with 4 fingers to open the notification shade. Pass through the next gesture moves to tap and hold with 3 fingers. Screen search stays on swipe left then down. If you changed these gestures before, your settings stay.
-*   **Status gesture.** Triple-tap with 2 fingers to hear what the status bar shows: the time, battery, Wi-Fi, and mobile signal, and the ringer, Do Not Disturb, and airplane mode when they are not in their usual state. To hear the Wi-Fi network name, allow location access when Backtalk asks the first time. To choose what it says and in what order, go to **Status readout** in TalkBack settings. Each item has **Move up** and **Move down** actions. This action is also in the gesture list as **Speak status**. Before, this gesture started reading from the current item, which is still in the TalkBack menu as **Read from next item**.
+*   **New default gestures.**
+    *   Tap with 4 fingers: go back.
+    *   Double-tap with 4 fingers: go home.
+    *   Triple-tap with 4 fingers: open recent apps.
+    *   Double-tap and hold with 4 fingers: open the notification shade.
+    *   Double-tap and hold with 2 fingers: switch to the braille keyboard.
+    *   Tap and hold with 3 fingers: pass through the next gesture.
+    *   Triple-tap with 3 fingers: copy the last spoken phrase.
+    *   Triple-tap and hold with 3 fingers: paste.
+    *   Selection mode has no gesture.
+*   **Status gesture.** Triple-tap with 2 fingers to hear what the status bar shows: the time, battery, Wi-Fi, and mobile signal, and the ringer, Do Not Disturb, and airplane mode when they are not in their usual state. To hear the Wi-Fi network name, allow location access when Backtalk asks the first time. To choose what it says and in what order, go to **Status readout** in Backtalk settings. Each item has **Move up** and **Move down** actions. This action is also in the gesture list as **Speak status**. To read from the current item, use **Read from next item** in the Backtalk menu.
 
-### TalkBack menu
+### Backtalk menu
 
-*   **Shorter menu by default.** These items are off by default: Actions, Screen search, Add or edit labels, Describe text formatting, Copy last spoken phrase, Spoken language, Voice commands, Keyboard shortcuts, and Braille display settings. Actions stay available with the actions reading control. Text-to-speech stays on, so that you can get to speech settings if your speech engine crashes. To turn them back on, go to **Customize menus** in TalkBack settings.
+*   **Shorter menu by default.** These items are off by default: Actions, Screen search, Add or edit labels, Describe text formatting, Copy last spoken phrase, Spoken language, Voice commands, Keyboard shortcuts, and Braille display settings. Actions stay available with the actions reading control. Text-to-speech stays on, so that you can get to speech settings if your speech engine crashes. To turn them back on, go to **Customize menus** in Backtalk settings.
 
 ### Speech
 
-*   **No "collapsed" on notifications.** TalkBack no longer says "collapsed" for each notification on the lock screen and in the notification shade. It still says "expanded" when you open one, and it still says "collapsed" in other apps.
+*   **No "collapsed" on notifications.** Backtalk does not say "collapsed" for each notification on the lock screen and in the notification shade. It still says "expanded" when you open one, and it still says "collapsed" in other apps.
 
 ### Braille keyboard
 
-*   **Better haptics.** The braille keyboard uses the same crisp vibration effects as the rest of TalkBack. Submitting text feels the same as closing or switching the keyboard. Deleting in an empty field gives a soft vibration that fades out, so that you know there was nothing to delete.
-*   **Navigation stays in the text field.** If you swiped to another control while the braille keyboard opened, moving by character, word, or line read that control instead of the text field. The braille keyboard now moves TalkBack's focus back to the text field before each command.
+*   **Better haptics.** The braille keyboard uses the same crisp vibration effects as the rest of Backtalk. Submitting text feels the same as closing or switching the keyboard. Deleting in an empty field gives a soft vibration that fades out, so that you know there was nothing to delete.
+*   **Navigation stays in the text field.** If you swiped to another control while the braille keyboard opened, moving by character, word, or line read that control instead of the text field. The braille keyboard now moves Backtalk's focus back to the text field before each command.
 
 ## Build
 
@@ -98,5 +103,5 @@ After you install Backtalk, go to **Settings > Accessibility**. Backtalk is list
 Debug builds include tools to find lag:
 
 *   The `BacktalkStall` logcat tag logs each time the main thread is blocked for more than 100 ms, with the code that was running.
-*   The `BacktalkGesture` logcat tag logs touch state changes and each gesture that TalkBack detects.
+*   The `BacktalkGesture` logcat tag logs touch state changes and each gesture that Backtalk detects.
 *   Event processing has trace sections, which show in [Perfetto](https://perfetto.dev) system traces.

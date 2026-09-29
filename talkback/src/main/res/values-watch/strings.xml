@@ -20,7 +20,7 @@
       Source: Description of a notification that TalkBack's gestures have been changed.
       Description: Displays a more detailed notification with information about gesture changes [CHAR_LIMIT=70]
     -->
-    <string name="notification_message_talkback_gestures_changed">Open Talkback for more details</string>
+    <string name="notification_message_talkback_gestures_changed">Open Backtalk for more details</string>
 
     <!-- The context of notification to notify users that TalkBack has been updated. [CHAR_LIMIT=120]-->
     <string name="talkback_updated_notification_content">Open Backtalk for details</string>
