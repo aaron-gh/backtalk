@@ -28,7 +28,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.Preference.OnPreferenceChangeListener;
-import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceGroup;
 import androidx.preference.TwoStatePreference;
 import com.google.android.accessibility.talkback.preference.TalkBackPreferencesActivity.HatsRequesterViewModel;
@@ -119,10 +118,11 @@ public class TalkBackPreferenceFragment extends TalkbackBaseFragment {
 
     updatePhysicalKeyboardPreference();
 
-    // Remove braille category if none of braille feature supported.
+    // Remove braille settings if none of braille feature supported.
     if (!FeatureSupport.supportBrailleDisplay(context)
         && !FeatureSupport.supportBrailleKeyboard(context)) {
-      removeCategory(R.string.pref_category_braille_key);
+      removePreference(R.string.pref_category_typing_key, R.string.pref_brailleime_key);
+      removePreference(R.string.pref_category_typing_key, R.string.pref_brailledisplay_key);
     } else {
       boolean isMultiTouchSupported =
           context
@@ -259,13 +259,6 @@ public class TalkBackPreferenceFragment extends TalkbackBaseFragment {
     final PreferenceGroup category = (PreferenceGroup) findPreferenceByResId(categoryKeyId);
     if (category != null) {
       PreferenceSettingsUtils.hidePreference(context, category, preferenceKeyId);
-    }
-  }
-
-  private void removeCategory(int categoryKeyId) {
-    final PreferenceCategory category = (PreferenceCategory) findPreferenceByResId(categoryKeyId);
-    if (category != null) {
-      getPreferenceScreen().removePreference(category);
     }
   }
 

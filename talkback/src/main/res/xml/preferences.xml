@@ -8,7 +8,7 @@
       android:title="@string/survey_setting_title" />
   <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
       android:key="@string/pref_category_audio_key"
-      android:title="@string/title_pref_category_audio">
+      android:title="@string/title_pref_category_feedback">
     <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
         android:defaultValue="@string/pref_speech_volume_default"
         android:dialogTitle="@string/title_pref_speech_volume"
@@ -41,10 +41,6 @@
         android:fragment="com.google.android.accessibility.talkback.preference.base.SoundAndVibrationFragment"
         android:key="@string/pref_sound_and_vibration_key"
         android:title="@string/title_pref_sound_and_vibration" />
-  </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
-  <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
-      android:key="@string/pref_category_visual_key"
-      android:title="@string/title_pref_category_visual">
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:fragment="com.google.android.accessibility.talkback.preference.base.FocusIndicatorPrefFragment"
         android:key="@string/pref_category_manage_focus_indicator_key"
@@ -76,7 +72,7 @@
   </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
   <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
       android:key="@string/pref_category_typing_key"
-      android:title="@string/title_pref_category_typing"
+      android:title="@string/title_pref_category_typing_and_braille"
       app:allowDividerAbove="true" >
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:fragment="com.google.android.accessibility.talkback.preference.base.OnScreenKeyboardFragment"
@@ -85,10 +81,6 @@
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:key="@string/pref_physical_keyboard_key"
         android:title="@string/title_pref_physical_keyboard" />
-  </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
-  <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
-      android:key="@string/pref_category_braille_key"
-      android:title="@string/title_pref_category_braille">
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:key="@string/pref_brailleime_key"
         android:title="@string/title_pref_brailleime">
@@ -106,15 +98,11 @@
   </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
   <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
       android:key="@string/pref_category_advanced_key"
-      android:title="@string/title_pref_category_advanced">
+      android:title="@string/title_pref_category_more">
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:fragment="com.google.android.accessibility.talkback.preference.base.AdvancedSettingFragment"
         android:key="@string/pref_advanced_settings_key"
         android:title="@string/title_pref_advanced_settings" />
-  </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
-  <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
-      android:key="@string/pref_category_tutorial_and_help_key"
-      android:title="@string/title_pref_category_tutorial_and_help">
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:key="@string/pref_tutorial_and_help_key"
         android:title="@string/title_pref_category_tutorial" />
