@@ -47,6 +47,10 @@ public class ClassLoadingCache {
     }
 
     Class<?> insideClazz = null;
+    if (!canBeLoaded(className)) {
+      mCachedClasses.put(className, null);
+      return null;
+    }
     try {
       ClassLoader classLoader = ClassLoadingCache.class.getClassLoader();
       if (classLoader != null) {
@@ -62,6 +66,26 @@ public class ClassLoadingCache {
     mCachedClasses.put(className, insideClazz);
     return insideClazz;
   }
+
+  /**
+   * Returns whether the class loader can find a class, going by its package. A class that belongs
+   * to another app is never found, but looking it up throws an exception with a message that lists
+   * every dex file and library path, which takes long enough to stall the main thread when a screen
+   * has many custom views.
+   */
+  private static boolean canBeLoaded(String className) {
+    for (String prefix : LOADABLE_PACKAGE_PREFIXES) {
+      if (className.startsWith(prefix)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static final String[] LOADABLE_PACKAGE_PREFIXES = {
+    "android.", "androidx.", "java.", "javax.", "kotlin.", "kotlinx.", "dalvik.", "libcore.",
+    "com.android.", "com.google.", "org.",
+  };
 
   /** Returns whether a target class is an instance of a reference class. */
   public static boolean checkInstanceOf(
