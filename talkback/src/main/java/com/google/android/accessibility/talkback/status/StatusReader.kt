@@ -146,9 +146,10 @@ class StatusReader(private val context: Context, private val batteryMonitor: Bat
       return null
     }
     val network =
-      listOf(telephonyManager.networkOperatorName, networkTypeName(telephonyManager))
+      // A comma keeps speech engines from reading the carrier and network type as one word.
+      listOf(telephonyManager.networkOperatorName?.trim(), networkTypeName(telephonyManager))
         .filterNot { it.isNullOrBlank() }
-        .joinToString(" ")
+        .joinToString(", ")
     val level =
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) telephonyManager.signalStrength?.level
       else null
