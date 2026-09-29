@@ -49,10 +49,6 @@
         android:fragment="com.google.android.accessibility.talkback.preference.base.FocusIndicatorPrefFragment"
         android:key="@string/pref_category_manage_focus_indicator_key"
         android:title="@string/title_pref_category_manage_focus_indicator" />
-    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
-        android:defaultValue="@bool/pref_tts_overlay_default"
-        android:key="@string/pref_tts_overlay_key"
-        android:title="@string/title_pref_tts_overlay"/>
   </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
   <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
       android:key="@string/pref_category_controls_key"
