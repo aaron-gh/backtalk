@@ -68,6 +68,9 @@ import java.util.List;
 public class TalkBackUpdateHelper {
   private static final String TAG = TalkBackUpdateHelper.class.getSimpleName();
   public static final String PREF_APP_VERSION = "app_version";
+
+  /** Version codes below this are earlier Backtalk builds, not TalkBack versions. */
+  private static final int BACKTALK_VERSION_CODE_MIN = 1_000_000;
   public static final String PREF_APP_PREV_VERSION_NAME = "app_prev_version_name";
 
   /** The undefined previous version indicating that a user haven't upgraded TalkBack yet. */
@@ -123,6 +126,13 @@ public class TalkBackUpdateHelper {
     final Editor editor = sharedPreferences.edit();
     editor.putInt(PREF_APP_VERSION, currentVersion);
     editor.putString(PREF_APP_PREV_VERSION_NAME, packageInfo.versionName);
+
+    // Earlier Backtalk builds used small version codes, which look like very old TalkBack versions.
+    // Their settings are already current, so the upgrade steps below must not run for them.
+    if (previousVersion != VERSION_CODE_UNKNOWN && previousVersion < BACKTALK_VERSION_CODE_MIN) {
+      editor.apply();
+      return;
+    }
 
     // Revision 74 changes the gesture model added in revision 68.
     if ((previousVersion >= 68) && (previousVersion < 74)) {

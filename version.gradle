@@ -15,5 +15,7 @@ def commitCount = gitOutput(['rev-list', '--count', 'HEAD'])
 def commitHash = gitOutput(['rev-parse', 'HEAD'])
 ext {
     gitCommitCount = commitCount.isInteger() ? commitCount.toInteger() : 1
+    // Version codes start above TalkBack's, so that its upgrade steps for old versions never run.
+    backtalkVersionCodeBase = 70000000
     gitCommitHash = commitHash ==~ /[0-9a-f]{40}/ ? commitHash : ''
 }
