@@ -718,6 +718,9 @@ public class GestureController {
     if (disabledGestures.contains(gestureId)) {
       return;
     }
+    if (menuManager.consumeGestureForRadialMenu()) {
+      return;
+    }
 
     String action = gestureShortcutMapping.getActionKeyFromGestureId(gestureId);
     // Override the action if the current granularity is row/column.

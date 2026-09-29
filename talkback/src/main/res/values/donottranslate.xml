@@ -298,6 +298,7 @@
     <string name="pref_manage_customize_menus_key" translatable="false">pref_manage_customize_menus</string>
     <string name="pref_category_manage_context_menu_key" translatable="false">pref_category_manage_context_menu</string>
     <string name="pref_category_manage_selector_menu_key" translatable="false">pref_category_manage_selector_menu</string>
+    <string name="pref_radial_menu_key" translatable="false">pref_radial_menu</string>
     <string name="pref_category_navigation_options_menu_key" translatable="false">pref_category_manage_navigation_options_menu</string>
     <string name="pref_show_context_menu_contextual_actions_category_key" translatable="false">pref_show_context_menu_contextual_actions_category</string>
     <string name="pref_show_context_menu_navigation_category_key" translatable="false">pref_show_context_menu_navigation_category</string>
@@ -1287,6 +1288,7 @@
     <bool name="pref_allow_frequent_content_change_announcement_default">true</bool>
     <bool name="pref_explore_by_touch_default">true</bool>
     <bool name="pref_single_tap_default">false</bool>
+    <bool name="pref_radial_menu_default">false</bool>
     <bool name="pref_dim_when_talkback_enabled_default">false</bool>
     <bool name="pref_shake_to_read_default">false</bool>
     <string name="pref_shake_to_read_threshold_default">-1</string>

@@ -15,4 +15,10 @@
         android:title="@string/title_pref_category_selector_menu"
         android:fragment="com.google.android.accessibility.talkback.preference.base.SelectorMenuFragment">
     </com.google.android.accessibility.material.preference.AccessibilitySuitePreference>
+
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+        android:defaultValue="@bool/pref_radial_menu_default"
+        android:key="@string/pref_radial_menu_key"
+        android:summary="@string/summary_pref_radial_menu"
+        android:title="@string/title_pref_radial_menu" />
 </PreferenceScreen>
