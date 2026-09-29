@@ -452,6 +452,11 @@ public class SpeechControllerImpl implements SpeechController {
 
   @Override
   public boolean readyToPause() {
+    // Speech is still playing when the pause gesture did not start a new touch interaction, for
+    // example right after a swipe. Then pause the current speech, not an older saved copy.
+    if (currentFeedbackItem != null) {
+      return true;
+    }
     long delta = SystemClock.uptimeMillis() - feedbackSavedTime;
     return cachedFeedbackItem != null && delta <= SAVED_FEEDBACK_FOR_PAUSE_TIME;
   }
@@ -1705,6 +1710,10 @@ public class SpeechControllerImpl implements SpeechController {
   /** Check the last request status and then stop or resume utterance. */
   public void pauseOrResumeUtterance(boolean doPause) {
     if (doPause) {
+      if (currentFeedbackItem != null) {
+        // Save and clear the current speech, as an interrupt at touch start would have.
+        clearCurrentAndQueuedUtterances(/* notifyObserver= */ true);
+      }
       savedFeedbackQueue = new ArrayList<>(cachedFeedbackQueue);
       savedFeedbackItem = cachedFeedbackItem;
       savedFragmentIterator =

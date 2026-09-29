@@ -151,6 +151,10 @@ public class TouchInteractionMonitor
   private Thread executorThread;
   private final GestureManifold gestureDetector;
   private boolean gestureStarted = false;
+  // A gesture was dispatched before the controller cleared the interaction. The rest of that
+  // gesture's events cancel the gesture matchers, so a new first finger down in the same
+  // interaction must clear them again.
+  private boolean clearGestureDetectorOnNextDown = false;
   // Whether double tap and double tap and hold will be dispatched to the service or handled in
   // the framework.
   private boolean serviceHandlesDoubleTap = false;
@@ -486,6 +490,14 @@ public class TouchInteractionMonitor
         eventId = Performance.getInstance().onGestureEventReceived(displayId, event);
         waitFirstMotionEvent = false;
       }
+      if (clearGestureDetectorOnNextDown && event.getActionMasked() == ACTION_DOWN) {
+        if (BuildConfig.DEBUG) {
+          Log.d(DEBUG_GESTURE_TAG, "New touch after a dispatched gesture, clearing matchers");
+        }
+        clearGestureDetectorOnNextDown = false;
+        gestureDetector.clear();
+        eventId = Performance.getInstance().onGestureEventReceived(displayId, event);
+      }
       gestureDetector.onMotionEvent(eventId, event);
     }
     if (!gestureStarted) {
@@ -650,6 +662,7 @@ public class TouchInteractionMonitor
 
   private void clear() {
     gestureStarted = false;
+    clearGestureDetectorOnNextDown = false;
     stateChangeRequested = false;
     gestureDetector.clear();
     receivedPointerTracker.clear();
@@ -989,6 +1002,7 @@ public class TouchInteractionMonitor
           boolean unused = service.onGesture(gestureEvent);
         });
     clear();
+    clearGestureDetectorOnNextDown = true;
   }
 
   /** Dispatch a gesture event to the main thread of the service, but do not clear state. */
