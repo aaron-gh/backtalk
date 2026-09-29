@@ -1094,7 +1094,9 @@
       Source: Preference title.
       Description: This preference reduces window title announcement delay.
     -->
-    <string name="pref_reduce_window_delay_title">Reduce window announcement delay</string>
+    <string name="pref_reduce_window_delay_title">Turn off animations</string>
+    <!-- Summary of the setting that turns off animations so that Backtalk reads new screens faster. [CHAR LIMIT=NONE] -->
+    <string name="pref_reduce_window_delay_summary">Backtalk reads new screens faster when animations are off. This turns off animations for the whole phone.</string>
 
     <!--
       Source: Preference title.
