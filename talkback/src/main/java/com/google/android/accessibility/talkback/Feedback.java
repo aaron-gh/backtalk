@@ -1859,7 +1859,9 @@ public abstract class Feedback {
       // is necessary.
       PASSTHROUGH_CONFIRM_DIALOG,
       STOP_TIMER,
-      LOCK_PASS_THROUGH
+      LOCK_PASS_THROUGH,
+      // Direct touch region: lower priority than the gesture and the braille lock.
+      DIRECT_TOUCH_REGION
     }
 
     /**

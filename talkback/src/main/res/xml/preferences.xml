@@ -47,6 +47,10 @@
         android:key="pref_status_readout"
         android:title="@string/title_pref_status_readout" />
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
+        android:fragment="com.google.android.accessibility.talkback.directtouch.DirectTouchFragment"
+        android:key="pref_direct_touch"
+        android:title="@string/title_pref_direct_touch" />
+    <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:key="@string/pref_category_manage_keyboard_shortcut_key"
         android:title="@string/title_pref_manage_keyboard_shortcuts"
         android:fragment="com.google.android.accessibility.talkback.preference.base.TalkBackKeyboardShortcutPreferenceFragment" />

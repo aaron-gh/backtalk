@@ -50,6 +50,33 @@ Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), t
 *   **Speak notifications setting.** To stop Backtalk from reading new notifications when they arrive, go to **Verbosity** in Backtalk settings and turn off **Speak notifications**. Incoming calls are still read, and you can still read notifications in the notification shade.
 *   **No "collapsed" on notifications.** Backtalk does not say "collapsed" for each notification on the lock screen and in the notification shade. It still says "expanded" when you open one, and it still says "collapsed" in other apps.
 
+### Direct touch
+
+Audio games need raw touch, but Explore by Touch captures taps and swipes before the game sees them. With direct touch, Backtalk passes your touches straight to the games you choose, and you do not have to suspend Backtalk.
+
+Direct touch is all of [NVGT Bridge](https://github.com/trypsynth/nvgt-bridge), the accessibility service that gives audio games direct touch, built into Backtalk. It works better in games than running NVGT Bridge next to Backtalk, because Backtalk is the screen reader and already knows what is on the screen:
+
+*   **One service, not two.** There is nothing extra to install, sideload, or turn on in Accessibility settings, and no second service that can undo Backtalk's touch setting. Direct touch shares that setting with the pass-through gesture and the braille keyboard, so none of them cancels another.
+*   **No searching the screen.** NVGT Bridge searches each window's view tree for dialogs and text fields, and only looks five levels deep. Backtalk already follows the windows, the keyboard and the screen state, so it hands touch back to your screen reader as soon as they change, and there is no depth limit.
+*   **Announcements through Backtalk.** "Direct touch on" and "Direct touch off" are spoken by Backtalk's own speech, even while the game is playing audio, and it can vibrate on each change.
+
+To use it:
+
+*   **Choose your games.** Go to **Direct touch** in TalkBack settings and turn on each game in the **Apps** list. Backtalk says "Direct touch on" when a game you chose comes to the front, and "Direct touch off" when it gives touch back. You can turn the speech off, and turn on a short vibration instead or as well.
+*   **Backtalk takes touch back when it is needed.** Touch returns to Backtalk when a dialog appears, another app opens on top of the game, you open the notification shade or quick settings, a text field takes focus, or the screen turns off. It goes back to the game when they are gone. The keyboard always stays with Backtalk, so you can explore it while the rest of the screen stays in direct touch.
+*   **Direct typing.** By default the keyboard area keeps working with Backtalk. For a game that draws its own keyboard, open the actions menu on the game in the list and choose **Turn on direct typing**.
+*   **Quick settings tile.** Add the **Direct touch** tile to pause and resume direct touch without leaving your game.
+*   **Backup and restore.** **Back up settings** saves your choices to a file, and **Restore settings** loads them on another device.
+*   **For game developers.** Add this `<meta-data>` tag inside your `<application>` or your main `<activity>`, and Backtalk turns your game on the first time it sees it. Players can still turn it off.
+
+    ```xml
+    <meta-data
+        android:name="dev.nvgt.capability.DIRECT_TOUCH"
+        android:value="true" />
+    ```
+
+*   **Not covered.** A dialog or text field that a game draws inside its own screen is invisible to Backtalk. Use the quick settings tile to pause direct touch when that happens.
+
 ### Braille keyboard
 
 *   **Swap top and bottom dots.** In braille keyboard settings, **Swap top and bottom dots** makes dot 1 trade places with dot 3, and dot 4 with dot 6. **Reverse dots** is now called **Swap left and right dots**. You can turn on both.

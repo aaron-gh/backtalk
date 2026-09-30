@@ -150,6 +150,7 @@ import com.google.android.accessibility.talkback.compositor.GlobalVariables;
 import com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DescriptionOrder;
 import com.google.android.accessibility.talkback.contextmenu.ListMenuManager;
 import com.google.android.accessibility.talkback.controller.TelevisionNavigationController;
+import com.google.android.accessibility.talkback.directtouch.DirectTouchController;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor.TalkBackListener;
 import com.google.android.accessibility.talkback.eventprocessor.ProcessorEventQueue;
@@ -724,6 +725,7 @@ public class TalkBackService extends AccessibilityServiceCompat
   private InputFocusInterpreter inputFocusInterpreter;
   private ScrollPositionInterpreter scrollPositionInterpreter;
   private ScreenStateMonitor screenStateMonitor;
+  private DirectTouchController directTouchController;
   private InputMethodMonitor inputMethodMonitor;
   private DisplayMonitor displayMonitor;
   private ProcessorEventQueue processorEventQueue;
@@ -908,6 +910,11 @@ public class TalkBackService extends AccessibilityServiceCompat
       bootReceiver = null;
     }
 
+    if (directTouchController != null) {
+      directTouchController.shutdown();
+      directTouchController = null;
+    }
+
     if (passThroughModeActor != null) {
       passThroughModeActor.onDestroy();
     }
@@ -1019,6 +1026,9 @@ public class TalkBackService extends AccessibilityServiceCompat
     EventId eventId = perf.onEventReceived(event);
     int eventType = event.getEventType();
     TraversalTreeCache.onAccessibilityEvent(event);
+    if (directTouchController != null) {
+      directTouchController.onAccessibilityEvent(event);
+    }
     if (eventType == AccessibilityEvent.TYPE_TOUCH_INTERACTION_START) {
       // TODO: Could move the logic of TOUCH_INTERACTION related event handling out of
       // TalkBackService, and concentrated in a dedicated module such as ?
@@ -2265,6 +2275,11 @@ public class TalkBackService extends AccessibilityServiceCompat
       windowEventInterpreter.addListener(screenStateMonitor);
       windowEventInterpreter.addListener(uiChangeEventInterpreter);
       windowEventInterpreter.addListener(imageCaptioner);
+      directTouchController =
+          new DirectTouchController(this, prefs, pipeline.getFeedbackReturner());
+      windowEventInterpreter.addListener(directTouchController);
+      ringerModeAndScreenMonitor.addScreenChangedListener(directTouchController);
+      displayMonitor.addDisplayStateChangedListener(directTouchController);
     }
 
     addEventListener(new ProcessorGestureVibrator(pipeline.getFeedbackReturner()));

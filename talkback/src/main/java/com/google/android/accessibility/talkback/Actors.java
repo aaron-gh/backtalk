@@ -628,6 +628,8 @@ class Actors {
         case STOP_TIMER -> passThroughModeActor.cancelPassThroughGuardTimer();
         case LOCK_PASS_THROUGH ->
             passThroughModeActor.lockTouchExplorePassThrough(passThroughMode.region());
+        case DIRECT_TOUCH_REGION ->
+            passThroughModeActor.setDirectTouchRegion(passThroughMode.region());
         default -> {}
       }
     }

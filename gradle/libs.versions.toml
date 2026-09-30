@@ -11,6 +11,10 @@ activity = "1.13.0"
 mlkit-text-recognition = "com.google.android.gms:play-services-mlkit-text-recognition:19.0.1"
 material = "com.google.android.material:material:1.14.0"
 
+# Testing
+junit = "junit:junit:4.13.2"
+json = "org.json:json:20250517"
+
 # AndroidX
 androidx-annotation = "androidx.annotation:annotation:1.11.0"
 androidx-appcompat = "androidx.appcompat:appcompat:1.8.0"

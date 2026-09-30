@@ -1,0 +1,55 @@
+/*
+ * Copyright 2026 Backtalk contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package com.google.android.accessibility.talkback.directtouch
+
+import android.graphics.Rect
+import android.graphics.Region
+import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityWindowInfo
+
+object DirectTouchRegions {
+  /**
+   * Whether touches in a window of [windowType] stay with the screen reader. System windows and
+   * accessibility overlays always do, and the keyboard does unless [directTyping] is on.
+   */
+  fun shouldExcludeWindow(windowType: Int, directTyping: Boolean): Boolean {
+    if (
+      windowType == AccessibilityWindowInfo.TYPE_SYSTEM ||
+        windowType == AccessibilityWindowInfo.TYPE_ACCESSIBILITY_OVERLAY
+    ) {
+      return true
+    }
+    return !directTyping && windowType == AccessibilityWindowInfo.TYPE_INPUT_METHOD
+  }
+
+  /**
+   * Whether an event of [eventType] should make direct touch look at the screen again once things
+   * settle, and send its region again if it is on. The system keeps one passthrough region per
+   * display for all services, and some clear it on every window change (Narwhal does, 50 ms after
+   * the event), so the last writer wins.
+   */
+  fun reassertsRegion(eventType: Int): Boolean =
+    eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED ||
+      eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+
+  /** The whole display minus the [excluded] rectangles. */
+  fun passthroughRegion(displayBounds: Rect, excluded: List<Rect>): Region {
+    val region = Region(displayBounds)
+    excluded.forEach { region.op(it, Region.Op.DIFFERENCE) }
+    return region
+  }
+}

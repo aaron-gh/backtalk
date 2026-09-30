@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spoken when direct touch turns on: touches now go straight to the app in front. [CHAR LIMIT=40] -->
+    <string name="direct_touch_on">Direct touch on</string>
+    <!-- Spoken when direct touch turns off: touches go back to the screen reader. [CHAR LIMIT=40] -->
+    <string name="direct_touch_off">Direct touch off</string>
+
+    <!-- Label of the quick settings tile that pauses and resumes direct touch. [CHAR LIMIT=20] -->
+    <string name="direct_touch_tile_label">Direct touch</string>
+
+    <!-- Title of the direct touch settings screen. [CHAR LIMIT=40] -->
+    <string name="title_pref_direct_touch">Direct touch</string>
+    <!-- Direct touch settings: master switch title. [CHAR LIMIT=40] -->
+    <string name="pref_direct_touch_master">Direct touch</string>
+    <!-- Direct touch settings: master switch summary. [CHAR LIMIT=NONE] -->
+    <string name="pref_direct_touch_master_summary">Pass touches straight to the apps you choose below, and give them back to Backtalk for dialogs, text fields, the keyboard and system screens.</string>
+    <!-- Direct touch settings: switch that makes Backtalk speak when direct touch changes. [CHAR LIMIT=60] -->
+    <string name="pref_direct_touch_speech">Speak when direct touch changes</string>
+    <!-- Direct touch settings: switch that makes the phone vibrate when direct touch changes. [CHAR LIMIT=60] -->
+    <string name="pref_direct_touch_haptics">Vibrate when direct touch changes</string>
+    <!-- Direct touch settings: saves the settings to a file. [CHAR LIMIT=40] -->
+    <string name="pref_direct_touch_backup">Back up settings</string>
+    <!-- Direct touch settings: loads the settings from a file. [CHAR LIMIT=40] -->
+    <string name="pref_direct_touch_restore">Restore settings</string>
+    <!-- Direct touch settings: heading of the list of apps. [CHAR LIMIT=30] -->
+    <string name="direct_touch_apps_category">Apps</string>
+    <!-- Direct touch settings: accessibility action that turns direct typing on for an app. [CHAR LIMIT=40] -->
+    <string name="direct_touch_action_typing_on">Turn on direct typing</string>
+    <!-- Direct touch settings: accessibility action that turns direct typing off for an app. [CHAR LIMIT=40] -->
+    <string name="direct_touch_action_typing_off">Turn off direct typing</string>
+    <!-- Direct touch settings: summary of an app that has direct typing on. [CHAR LIMIT=40] -->
+    <string name="direct_touch_typing_summary_on">Direct typing on</string>
+    <!-- Direct touch settings: shown after the settings were saved to a file. [CHAR LIMIT=40] -->
+    <string name="direct_touch_backup_done">Settings saved</string>
+    <!-- Direct touch settings: shown when the settings could not be saved. [CHAR LIMIT=40] -->
+    <string name="direct_touch_backup_failed">Could not save the settings</string>
+    <!-- Direct touch settings: shown after the settings were loaded from a file. [CHAR LIMIT=40] -->
+    <string name="direct_touch_restore_done">Settings restored</string>
+    <!-- Direct touch settings: shown when the chosen file is not a direct touch backup. [CHAR LIMIT=40] -->
+    <string name="direct_touch_restore_failed">Could not read that file</string>
+</resources>
