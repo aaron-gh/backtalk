@@ -513,6 +513,7 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
     VOICE_COMMANDS(R.string.shortcut_value_voice_commands, R.string.shortcut_voice_commands),
     SCREEN_SEARCH(R.string.shortcut_value_screen_search, R.string.title_show_screen_search),
     SHOW_HIDE_SCREEN(R.string.shortcut_value_show_hide_screen, R.string.title_show_hide_screen),
+    PAUSE_BACKTALK(R.string.shortcut_value_pause_backtalk, R.string.title_pause_backtalk),
     PASS_THROUGH_NEXT_GESTURE(
         R.string.shortcut_value_pass_through_next_gesture, R.string.shortcut_pass_through_next),
     PRINT_NODE_TREE(R.string.shortcut_value_print_node_tree, R.string.shortcut_print_node_tree),

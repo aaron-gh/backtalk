@@ -154,6 +154,9 @@
             android:key="@string/keycombo_shortcut_global_hide_or_show_screen"
             android:title="@string/keycombo_menu_global_hide_or_show_screen"/>
         <com.google.android.accessibility.talkback.preference.base.KeyboardShortcutDialogPreference
+            android:key="@string/keycombo_shortcut_global_pause_backtalk"
+            android:title="@string/keycombo_menu_global_pause_backtalk"/>
+        <com.google.android.accessibility.talkback.preference.base.KeyboardShortcutDialogPreference
             android:key="@string/keycombo_shortcut_global_toggle_key_combo_pass_through_once"
             android:title="@string/keycombo_menu_global_toggle_key_combo_pass_through_once" />
         <com.google.android.accessibility.talkback.preference.base.KeyboardShortcutDialogPreference

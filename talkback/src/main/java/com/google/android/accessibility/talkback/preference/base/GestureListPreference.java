@@ -423,6 +423,12 @@ public final class GestureListPreference extends AccessibilitySuiteDialogPrefere
             resources.getString(R.string.shortcut_value_show_hide_screen),
             TYPE_ACTION_ITEM));
 
+    builder.add(
+        new ActionItem(
+            resources.getString(R.string.title_pause_backtalk),
+            resources.getString(R.string.shortcut_value_pause_backtalk),
+            TYPE_ACTION_ITEM));
+
     if (FeatureSupport.supportPassthrough()) {
       builder.add(
           new ActionItem(

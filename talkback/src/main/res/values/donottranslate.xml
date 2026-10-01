@@ -1771,4 +1771,28 @@
     <item>@string/shortcut_value_column_left</item>
     <item>@string/shortcut_value_column_right</item>
   </string-array>
+
+  <!-- Pause Backtalk. -->
+  <string name="keycombo_shortcut_global_pause_backtalk">keycombo_shortcut_global_pause_backtalk</string>
+  <string name="shortcut_value_pause_backtalk" translatable="false">PAUSE_BACKTALK</string>
+  <string name="pref_show_pause_confirmation_dialog">pref_show_pause_confirmation_dialog</string>
+  <string name="pref_show_context_menu_pause_backtalk_setting_key" translatable="false">pref_pause_backtalk_menu_setting_key</string>
+  <bool name="pref_show_context_menu_pause_backtalk_default">true</bool>
+  <string name="pref_resume_backtalk_key" translatable="false">pref_resume_talkback</string>
+  <string name="resume_screen_keyguard" translatable="false">KEYGUARD</string>
+  <string name="resume_screen_on" translatable="false">SCREEN_ON</string>
+  <string name="resume_screen_manual" translatable="false">MANUAL</string>
+  <string name="pref_resume_backtalk_default" translatable="false">@string/resume_screen_keyguard</string>
+  <string-array name="pref_resume_backtalk_entries">
+    <item>@string/value_resume_keyguard</item>
+    <item>@string/value_resume_screen_on</item>
+    <item>@string/value_resume_manual</item>
+  </string-array>
+  <string-array name="pref_resume_backtalk_values">
+    <item>@string/resume_screen_keyguard</item>
+    <item>@string/resume_screen_on</item>
+    <item>@string/resume_screen_manual</item>
+  </string-array>
+  <item type="id" name="pause_backtalk" />
+  <item type="id" name="notification_backtalk_paused" />
 </resources>

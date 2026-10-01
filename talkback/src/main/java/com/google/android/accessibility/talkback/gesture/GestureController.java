@@ -471,6 +471,10 @@ public class GestureController {
       } else {
         result = pipeline.returnFeedback(eventId, Feedback.dimScreen(DIM));
       }
+    } else if (action.equals(service.getString(R.string.shortcut_value_pause_backtalk))) {
+      if (service.getPauseController() != null) {
+        service.getPauseController().requestPause();
+      }
     } else if (action.equals(
         service.getString(R.string.shortcut_value_pass_through_next_gesture))) {
       result =

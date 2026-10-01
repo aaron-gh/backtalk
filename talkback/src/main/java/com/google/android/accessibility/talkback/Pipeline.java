@@ -32,6 +32,7 @@ import com.google.android.accessibility.talkback.Feedback.InterruptLevel;
 import com.google.android.accessibility.talkback.compositor.Compositor;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor.AccessibilityEventIdleListener;
 import com.google.android.accessibility.talkback.monitor.ProximitySensorMonitor;
+import com.google.android.accessibility.talkback.pause.PauseController;
 import com.google.android.accessibility.talkback.utils.DiagnosticOverlayControllerImpl;
 import com.google.android.accessibility.talkback.utils.VerbosityPreferences;
 import com.google.android.accessibility.utils.AccessibilityEventListener;
@@ -346,6 +347,10 @@ public class Pipeline implements AccessibilityEventListener, AccessibilityEventI
 
   /** Execute feedback returned by feedback-mappers. Returns success flag. */
   boolean execute(Feedback feedback) {
+    if (PauseController.isPaused()) {
+      // Paused Backtalk gives no feedback and takes no actions.
+      return false;
+    }
 
     LogUtils.d(LOG, "execute() feedback=%s", feedback);
 
@@ -490,7 +495,9 @@ public class Pipeline implements AccessibilityEventListener, AccessibilityEventI
       @SuppressWarnings("unchecked")
       EventIdAnd<Feedback.Part> eventIdAndFeedback = (EventIdAnd<Feedback.Part>) message.obj;
       Feedback.Part part = eventIdAndFeedback.object;
-      actors.act(eventIdAndFeedback.eventId, part);
+      if (!PauseController.isPaused()) {
+        actors.act(eventIdAndFeedback.eventId, part);
+      }
       if (getParent() != null) {
         getParent().clearCompletedDelayedFeedback(message.what, part);
       }
