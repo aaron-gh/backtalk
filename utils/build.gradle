@@ -8,6 +8,7 @@ apply from: "../shared.gradle"
 
 dependencies {
     implementation project(':proguard')
+    testImplementation libs.junit
 }
 
 android {
