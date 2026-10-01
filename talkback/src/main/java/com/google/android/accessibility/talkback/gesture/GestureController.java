@@ -290,6 +290,14 @@ public class GestureController {
                   .setDefaultToInputFocus(true)
                   .setScroll(true)
                   .setWrap(true));
+    } else if (NavigationGestureActions.isAction(action)) {
+      result =
+          NavigationGestureActions.perform(
+              service,
+              action,
+              pipeline,
+              actorState.getDirectionNavigation().hasNavigableWebContent(),
+              eventId);
     } else if (action.equals(service.getString(R.string.shortcut_value_scroll_back))) {
       result = pipeline.returnFeedback(eventId, Feedback.focusDirection(PREVIOUS_PAGE));
     } else if (action.equals(service.getString(R.string.shortcut_value_scroll_forward))) {

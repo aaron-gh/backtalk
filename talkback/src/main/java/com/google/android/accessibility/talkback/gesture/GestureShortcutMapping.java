@@ -994,6 +994,10 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
         return context.getString(action.actionNameResId);
       }
     }
+    @Nullable String navigationLabel = NavigationGestureActions.label(context, actionKeyString);
+    if (navigationLabel != null) {
+      return navigationLabel;
+    }
     return context.getString(R.string.shortcut_unassigned);
   }
 
