@@ -143,7 +143,8 @@ class OnDeviceAiFragment : TalkbackBaseFragment() {
 
     val support = manager.support(model)
     enablePref.isChecked = OnDeviceAiSettings.isOnDevice(prefs) && manager.isReady()
-    enablePref.isEnabled = support == Support.OK && !busy
+    // Without a model there is nothing to turn on, so the summary says to get one first.
+    enablePref.isEnabled = support == Support.OK && !busy && manager.isReady()
     enablePref.setSummary(
       when {
         support == Support.UNSUPPORTED_CPU -> R.string.pref_on_device_ai_unsupported_cpu
