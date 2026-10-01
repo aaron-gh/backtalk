@@ -51,6 +51,36 @@ class OnDeviceAiSettingsTest {
   }
 
   @Test
+  fun modelsThatNeedMoreMemoryAreHidden() {
+    val models = OnDeviceAiSettings.modelsFor(8 * gib) { false }
+    assertTrue(LocalModel.E4B in models)
+    assertFalse(models.any { it.id == "gemma4-12b" })
+    assertTrue(models.all { OnDeviceAiSettings.fits(it, 8 * gib) })
+  }
+
+  @Test
+  fun installedModelsStayListedEvenWhenTooBig() {
+    val models = OnDeviceAiSettings.modelsFor(4 * gib) { it == LocalModel.E4B }
+    assertTrue(LocalModel.E4B in models)
+    assertFalse(LocalModel.E2B in models)
+  }
+
+  @Test
+  fun defaultIsE2bWhenItFits() {
+    assertEquals(LocalModel.E2B, OnDeviceAiSettings.defaultModel(8 * gib))
+    assertEquals(LocalModel.E2B, OnDeviceAiSettings.preferredModel(FakeSharedPreferences(), 6 * gib))
+  }
+
+  @Test
+  fun defaultIsTheLargestModelThatFitsOnSmallPhones() {
+    val model = OnDeviceAiSettings.defaultModel(4 * gib)
+    assertTrue(OnDeviceAiSettings.fits(model, 4 * gib))
+    val largest =
+      LocalModel.entries.filter { OnDeviceAiSettings.fits(it, 4 * gib) }.maxOf { it.sizeBytes }
+    assertEquals(largest, model.sizeBytes)
+  }
+
+  @Test
   fun a32BitPhoneIsUnsupported() {
     assertEquals(
       Support.UNSUPPORTED_CPU,

@@ -79,14 +79,24 @@ class LocalModelManager private constructor(context: Context) {
   }
 
   /** The installed model that will answer, or null when none is installed. */
-  fun activeModel(): LocalModel? = store.installed(OnDeviceAiSettings.preferredModel(prefs))
+  fun activeModel(): LocalModel? = store.installed(preferredModel())
+
+  /** The model the user chose, or the best one for this phone when they have not chosen. */
+  fun preferredModel(): LocalModel = OnDeviceAiSettings.preferredModel(prefs, totalRamBytes())
+
+  /** The models to offer on this phone. */
+  fun availableModels(): List<LocalModel> =
+    OnDeviceAiSettings.modelsFor(totalRamBytes()) { store.isInstalled(it) }
 
   fun isReady(): Boolean = activeModel() != null
 
-  fun support(model: LocalModel): OnDeviceAiSettings.Support {
+  fun support(model: LocalModel): OnDeviceAiSettings.Support =
+    OnDeviceAiSettings.support(model, totalRamBytes(), Build.SUPPORTED_ABIS.toList())
+
+  private fun totalRamBytes(): Long {
     val memory = ActivityManager.MemoryInfo()
     (appContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(memory)
-    return OnDeviceAiSettings.support(model, memory.totalMem, Build.SUPPORTED_ABIS.toList())
+    return memory.totalMem
   }
 
   /**

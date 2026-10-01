@@ -137,7 +137,7 @@ class OnDeviceAiFragment : TalkbackBaseFragment() {
 
   private fun refresh() {
     val context = requireContext()
-    val model = OnDeviceAiSettings.preferredModel(prefs)
+    val model = manager.preferredModel()
     val state = manager.state
     val busy = state is State.Downloading || state == State.Importing
 
@@ -241,7 +241,7 @@ class OnDeviceAiFragment : TalkbackBaseFragment() {
   }
 
   private fun onStatusClicked() {
-    val model = OnDeviceAiSettings.preferredModel(prefs)
+    val model = manager.preferredModel()
     when {
       manager.state is State.Downloading -> manager.cancelDownload()
       // Deleting is done in Manage models, so a stray tap here cannot remove a 3 GB download.
@@ -263,9 +263,9 @@ class OnDeviceAiFragment : TalkbackBaseFragment() {
   }
 
   private fun chooseModel() {
-    val models = LocalModel.entries
+    val models = manager.availableModels()
     val labels = models.map { modelLabel(it) }.toTypedArray()
-    val current = models.indexOf(OnDeviceAiSettings.preferredModel(prefs))
+    val current = models.indexOf(manager.preferredModel())
     AlertDialog.Builder(requireContext())
       .setTitle(R.string.on_device_ai_choose_model)
       .setSingleChoiceItems(labels, current) { dialog, which ->

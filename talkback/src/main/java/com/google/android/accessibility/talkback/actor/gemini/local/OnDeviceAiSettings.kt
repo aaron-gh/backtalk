@@ -39,8 +39,39 @@ object OnDeviceAiSettings {
     prefs.edit().putString(PREF_PROVIDER, if (onDevice) PROVIDER_DEVICE else PROVIDER_CLOUD).apply()
   }
 
-  fun preferredModel(prefs: SharedPreferences): LocalModel =
-    LocalModel.fromId(prefs.getString(PREF_MODEL, null)) ?: LocalModel.E2B
+  /**
+   * The model the user chose. When they have not chosen one, this is [defaultModel] for a phone
+   * with [totalRamBytes] of RAM, or Gemma 4 E2B when the RAM is not known.
+   */
+  fun preferredModel(prefs: SharedPreferences, totalRamBytes: Long? = null): LocalModel =
+    LocalModel.fromId(prefs.getString(PREF_MODEL, null))
+      ?: totalRamBytes?.let { defaultModel(it) }
+      ?: LocalModel.E2B
+
+  /** Whether a phone with [totalRamBytes] of RAM has enough memory for [model]. */
+  fun fits(model: LocalModel, totalRamBytes: Long): Boolean =
+    totalRamBytes >= model.minTotalRamBytes * RAM_SLACK
+
+  /**
+   * The models to offer on a phone with [totalRamBytes] of RAM: the ones that fit, and any that
+   * are already on the phone, so that they can still be chosen or deleted.
+   */
+  fun modelsFor(totalRamBytes: Long, isInstalled: (LocalModel) -> Boolean): List<LocalModel> =
+    LocalModel.entries.filter { fits(it, totalRamBytes) || isInstalled(it) }
+
+  /**
+   * The model to use when the user has not chosen one: Gemma 4 E2B when it fits, otherwise the
+   * largest model that fits, preferring ones that are not experimental.
+   */
+  fun defaultModel(totalRamBytes: Long): LocalModel {
+    if (fits(LocalModel.E2B, totalRamBytes)) {
+      return LocalModel.E2B
+    }
+    return LocalModel.entries
+      .filter { fits(it, totalRamBytes) }
+      .sortedWith(compareBy<LocalModel> { it.experimental }.thenByDescending { it.sizeBytes })
+      .firstOrNull() ?: LocalModel.E2B
+  }
 
   fun setPreferredModel(prefs: SharedPreferences, model: LocalModel) {
     prefs.edit().putString(PREF_MODEL, model.id).apply()
@@ -84,7 +115,7 @@ object OnDeviceAiSettings {
   fun support(model: LocalModel, totalRamBytes: Long, supportedAbis: List<String>): Support =
     when {
       "arm64-v8a" !in supportedAbis -> Support.UNSUPPORTED_CPU
-      totalRamBytes < model.minTotalRamBytes * RAM_SLACK -> Support.NOT_ENOUGH_RAM
+      !fits(model, totalRamBytes) -> Support.NOT_ENOUGH_RAM
       else -> Support.OK
     }
 }
