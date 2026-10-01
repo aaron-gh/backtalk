@@ -136,7 +136,7 @@ public class AutoScrollSuccessCheckerImpl implements AutoScrollSuccessChecker {
         maxScrollY);
     if (maxScrollX == 0 && maxScrollY == 0) {
       LogUtils.w(TAG, "invalid maxScroll");
-      return false;
+      return reachEdgeByIndex(scrolledEvent);
     }
     if (scrollAction == AccessibilityNodeInfo.ACTION_SCROLL_FORWARD) {
       if (scrollDeltaY > 0) {
@@ -153,6 +153,29 @@ public class AutoScrollSuccessCheckerImpl implements AutoScrollSuccessChecker {
       if (scrollDeltaX < 0) {
         return scrollX < REACH_EDGE_MIN_TOLERANCE_DISTANCE_PX;
       }
+    }
+    return false;
+  }
+
+  /**
+   * RecyclerView reports no scroll range, so a scroll that stops at the end of the list moves less
+   * than the threshold and was only accepted after the 110 ms wait. It does report which items
+   * show, so the end is reached once the first or last item does.
+   */
+  private boolean reachEdgeByIndex(AccessibilityEvent scrolledEvent) {
+    int itemCount = scrolledEvent.getItemCount();
+    int fromIndex = scrolledEvent.getFromIndex();
+    int toIndex = scrolledEvent.getToIndex();
+    LogUtils.d(
+        TAG, "reachEdgeByIndex - from=%s, to=%s, count=%s", fromIndex, toIndex, itemCount);
+    if (itemCount <= 0 || fromIndex < 0 || toIndex < 0) {
+      return false;
+    }
+    if (scrollAction == AccessibilityNodeInfo.ACTION_SCROLL_FORWARD) {
+      return toIndex >= itemCount - 1;
+    }
+    if (scrollAction == AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD) {
+      return fromIndex == 0;
     }
     return false;
   }
