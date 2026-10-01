@@ -38,6 +38,7 @@ Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), t
     *   Triple-tap with 3 fingers: copy the last spoken phrase.
     *   Triple-tap and hold with 3 fingers: paste.
     *   Selection mode has no gesture.
+*   **Navigation gestures.** You can assign a gesture to move to the next or previous character, word, line, paragraph, heading, link, control, landmark, button, checkbox, radio button, edit field, combo box, focusable item, graphic, list, list item, table, visited link, unvisited link, or heading of a given level. The reading control does not change. Find these actions under **Navigate by text**, **Navigate by element**, and **Navigate by heading level** when you choose an action for a gesture. Headings, links, and controls work in apps and on web pages. The other elements work only on web pages, and elsewhere Backtalk says so.
 *   **Status gesture.** Triple-tap with 2 fingers to hear what the status bar shows: the time, battery, Wi-Fi, and mobile signal, and the ringer, Do Not Disturb, and airplane mode when they are not in their usual state. To hear the Wi-Fi network name, allow location access when Backtalk asks the first time. To choose what it says and in what order, go to **Status readout** in Backtalk settings. Each item has **Move up** and **Move down** actions. This action is also in the gesture list as **Speak status**. To read from the current item, use **Read from next item** in the Backtalk menu.
 
 ### Backtalk menu

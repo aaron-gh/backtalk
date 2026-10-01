@@ -33,6 +33,7 @@ import com.google.android.accessibility.talkback.actor.ImageCaptioner;
 import com.google.android.accessibility.talkback.actor.gemini.GeminiConfiguration;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.talkback.gesture.GestureShortcutMapping;
+import com.google.android.accessibility.talkback.gesture.NavigationGestureActions;
 import com.google.android.accessibility.talkback.utils.TalkbackFeatureSupport;
 import com.google.android.accessibility.utils.FeatureSupport;
 import com.google.android.accessibility.utils.FormFactorUtils;
@@ -175,6 +176,9 @@ public final class GestureListPreference extends AccessibilitySuiteDialogPrefere
             getContext().getResources().getString(R.string.shortcut_value_unassigned),
             TYPE_ACTION_ITEM));
     addActionItemsToList(builder, createBasicNavigation());
+    for (NavigationGestureActions.Category category : NavigationGestureActions.CATEGORIES) {
+      addActionItemsToList(builder, createNavigationCategory(category));
+    }
     addActionItemsToList(builder, createSystemActions());
     addActionItemsToList(builder, createReadingControl());
     addActionItemsToList(builder, createMenuControl());
@@ -255,6 +259,19 @@ public final class GestureListPreference extends AccessibilitySuiteDialogPrefere
               TYPE_ACTION_ITEM));
     }
 
+    return builder.build();
+  }
+
+  private ImmutableList<ActionItem> createNavigationCategory(
+      NavigationGestureActions.Category category) {
+    ImmutableList.Builder<ActionItem> builder =
+        createActionListBuilder(category.getTitleRes(), 0, 0);
+    Resources resources = getContext().getResources();
+    for (NavigationGestureActions.Action action : category.getActions()) {
+      builder.add(
+          new ActionItem(
+              resources.getString(action.getLabelRes()), action.getValue(), TYPE_ACTION_ITEM));
+    }
     return builder.build();
   }
 
