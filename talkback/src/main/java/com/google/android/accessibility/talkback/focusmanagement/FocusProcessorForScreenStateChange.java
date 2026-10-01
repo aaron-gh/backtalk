@@ -16,7 +16,6 @@
 
 package com.google.android.accessibility.talkback.focusmanagement;
 
-import static com.google.android.accessibility.utils.input.WindowEventInterpreter.WINDOW_CHANGE_DELAY_MS;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -35,6 +34,7 @@ import com.google.android.accessibility.talkback.focusmanagement.record.FocusAct
 import com.google.android.accessibility.talkback.interpreters.AccessibilityFocusInterpreter;
 import com.google.android.accessibility.utils.AccessibilityNodeInfoUtils;
 import com.google.android.accessibility.utils.Performance.EventId;
+import com.google.android.accessibility.utils.input.WindowEventInterpreter;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
 
 /** The event-interpreter for window-events affecting focus. */
@@ -78,7 +78,7 @@ public class FocusProcessorForScreenStateChange {
   /**
    * Called by {@link AccessibilityFocusInterpreter} to process focus and return the result of focus
    * status. The focus action may be delayed if the window transition waiting time doesn't reach out
-   * to {@link WINDOW_CHANGE_DELAY_MS}.
+   * to {@link WindowEventInterpreter#getWindowChangeDelayMs()}.
    *
    * @param screenState current screen state
    * @param eventId event id
@@ -92,8 +92,9 @@ public class FocusProcessorForScreenStateChange {
         "Screen state changed : Duration=%s, From: %s",
         windowEventInterpreterDelayTimeMs,
         screenState);
+    long windowChangeDelayMs = WindowEventInterpreter.getWindowChangeDelayMs();
     if (windowEventInterpreterDelayTimeMs <= 0
-        || windowEventInterpreterDelayTimeMs >= WINDOW_CHANGE_DELAY_MS) {
+        || windowEventInterpreterDelayTimeMs >= windowChangeDelayMs) {
       FocusResult result = onScreenStateChangedInternal(screenState, eventId);
       LogUtils.d(TAG, "Screen state changed with result=%s", result);
       return (result == FocusResult.SUCCESS);
@@ -102,7 +103,7 @@ public class FocusProcessorForScreenStateChange {
     // Delay the action of assigning the initial focus for screen state changed. Since TalkBack will
     // announce the window title first, users shouldn't feel this delay and it allows us to steal
     // some time waiting for the window transition.
-    long delayTime = WINDOW_CHANGE_DELAY_MS - windowEventInterpreterDelayTimeMs;
+    long delayTime = windowChangeDelayMs - windowEventInterpreterDelayTimeMs;
     screenStateDelayer.removeCallbacksAndMessages(/* token= */ null);
     screenStateDelayer.postDelayed(
         () -> {

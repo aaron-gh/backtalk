@@ -2949,6 +2949,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     if (windowEventInterpreter != null) {
       enableAnimation(!reduceDelayPref);
     }
+    WindowEventInterpreter.setReduceWindowDelay(reduceDelayPref);
 
     // If performance statistics changing enabled setting... clear collected stats.
     boolean performanceEnabled =
