@@ -173,6 +173,7 @@ import com.google.android.accessibility.talkback.gesture.GestureShortcutMapping;
 import com.google.android.accessibility.talkback.imagecaption.ImageCaptionStorage;
 import com.google.android.accessibility.talkback.imagecaption.ImageCaptionUtils.CaptionType;
 import com.google.android.accessibility.talkback.imagecaption.ImageContents;
+import com.google.android.accessibility.talkback.individualfeedback.IndividualFeedbackSettings;
 import com.google.android.accessibility.talkback.interpreters.AccessibilityEventIdleInterpreter;
 import com.google.android.accessibility.talkback.interpreters.AccessibilityFocusInterpreter;
 import com.google.android.accessibility.talkback.interpreters.AutoScrollInterpreter;
@@ -3160,6 +3161,10 @@ public class TalkBackService extends AccessibilityServiceCompat
     boolean auditoryEnabled =
         getBooleanPref(R.string.pref_soundback_key, R.bool.pref_soundback_default);
     feedbackController.setAuditoryEnabled(auditoryEnabled);
+    feedbackController.setMutedAuditory(
+        IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs));
+    feedbackController.setMutedHaptic(
+        IndividualFeedbackSettings.INSTANCE.mutedVibrationResources(prefs));
 
     // Update preference: time feedback format.
     String timeFeedbackFormat =

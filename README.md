@@ -50,6 +50,10 @@ Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), t
 *   **Speak notifications setting.** To stop Backtalk from reading new notifications when they arrive, go to **Verbosity** in Backtalk settings and turn off **Speak notifications**. Incoming calls are still read, and you can still read notifications in the notification shade.
 *   **No "collapsed" on notifications.** Backtalk does not say "collapsed" for each notification on the lock screen and in the notification shade. It still says "expanded" when you open one, and it still says "collapsed" in other apps.
 
+### Sound and vibration
+
+*   **Individual sounds and vibrations.** To turn off one sound or one vibration and keep the rest, go to **Sound and vibration** in Backtalk settings and open **Individual sounds and vibrations**. There is a switch for each sound and each vibration, including the braille display and braille keyboard sounds. To hear or feel one, open the actions menu on its switch and choose **Preview**. Changing a switch plays nothing. **Sound feedback** and **Vibration feedback** still turn all of them off at once.
+
 ### Direct touch
 
 Audio games need raw touch, but Explore by Touch captures taps and swipes before the game sees them. With direct touch, Backtalk passes your touches straight to the games you choose, and you do not have to suspend Backtalk.
