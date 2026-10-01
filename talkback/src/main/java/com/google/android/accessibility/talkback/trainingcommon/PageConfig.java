@@ -68,6 +68,7 @@ import com.google.android.accessibility.talkback.utils.TalkbackFeatureSupport;
 import com.google.android.accessibility.utils.Consumer;
 import com.google.android.accessibility.utils.FeatureSupport;
 import com.google.android.accessibility.utils.PackageManagerUtils;
+import com.google.android.accessibility.utils.gestures.GestureManifold;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -1179,6 +1180,10 @@ public abstract class PageConfig {
           AccessibilityService.GESTURE_2_FINGER_TRIPLE_TAP, ANNOUNCE_REAL_ACTION);
       this.captureGestureIdToAnnouncements.put(
           AccessibilityService.GESTURE_2_FINGER_TRIPLE_TAP_AND_HOLD, ANNOUNCE_REAL_ACTION);
+      this.captureGestureIdToAnnouncements.put(
+          GestureManifold.GESTURE_2_FINGER_ROTATE_CLOCKWISE, ANNOUNCE_REAL_ACTION);
+      this.captureGestureIdToAnnouncements.put(
+          GestureManifold.GESTURE_2_FINGER_ROTATE_COUNTERCLOCKWISE, ANNOUNCE_REAL_ACTION);
 
       // 3 fingers.
       this.captureGestureIdToAnnouncements.put(

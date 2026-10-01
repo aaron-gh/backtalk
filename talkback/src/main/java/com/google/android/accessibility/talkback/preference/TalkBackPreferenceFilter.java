@@ -56,6 +56,7 @@ public class TalkBackPreferenceFilter {
     SHOW_IF_FINGER_PRINT,
     SHOW_SYSTEM_ACTION,
     SHOW_IF_MULTI_FINGER_TAP_AND_HOLD,
+    SHOW_IF_SERVICE_GESTURE_DETECTION,
     SHOW_FOCUS_INDICATOR,
     HIDE_NO_ACCESSIBILITY_AUDIO_STREAM,
     HIDDEN_NO_MEDIA_CONTROL,
@@ -101,6 +102,8 @@ public class TalkBackPreferenceFilter {
   private static final int SHOW_SYSTEM_ACTION = 0x2000;
   /** Flag to show multi-finger gesture extended. */
   private static final int SHOW_IF_MULTI_FINGER_TAP_AND_HOLD = 0x4000;
+  /** Flag to hide gestures that only TalkBack's own gesture detection recognizes. */
+  private static final int SHOW_IF_SERVICE_GESTURE_DETECTION = 0x40;
   /** Flag to show focus indicator. */
   private static final int SHOW_FOCUS_INDICATOR = 0x8000;
   /** Flag to hide if the runtime is a release build. */
@@ -265,6 +268,12 @@ public class TalkBackPreferenceFilter {
         R.string.pref_shortcut_3finger_1tap_hold_key, SHOW_IF_MULTI_FINGER_TAP_AND_HOLD),
     CUSTOMIZE_GESTURE_3FINGER_3TAP_HOLD(
         R.string.pref_shortcut_3finger_3tap_hold_key, SHOW_IF_MULTI_FINGER_TAP_AND_HOLD),
+    CUSTOMIZE_GESTURE_2FINGER_ROTATE_CLOCKWISE(
+        R.string.pref_shortcut_2finger_rotate_clockwise_key,
+        SHOW_IF_SERVICE_GESTURE_DETECTION | HIDDEN_ON_WATCH),
+    CUSTOMIZE_GESTURE_2FINGER_ROTATE_COUNTERCLOCKWISE(
+        R.string.pref_shortcut_2finger_rotate_counterclockwise_key,
+        SHOW_IF_SERVICE_GESTURE_DETECTION | HIDDEN_ON_WATCH),
     CUSTOMIZE_FOCUS_INDICATOR(
         R.string.pref_category_manage_focus_indicator_key, SHOW_FOCUS_INDICATOR),
     AUTOMATIC_DESCRIPTIONS(R.string.pref_auto_image_captioning_key, HIDDEN_ON_TV | HIDDEN_ON_XR),
@@ -407,6 +416,11 @@ public class TalkBackPreferenceFilter {
 
     if (hasFlag(pref.get(), SHOW_IF_MULTI_FINGER_TAP_AND_HOLD)
         && !FeatureSupport.multiFingerTapAndHold()) {
+      return true;
+    }
+
+    if (hasFlag(pref.get(), SHOW_IF_SERVICE_GESTURE_DETECTION)
+        && !FeatureSupport.supportGestureDetection()) {
       return true;
     }
 

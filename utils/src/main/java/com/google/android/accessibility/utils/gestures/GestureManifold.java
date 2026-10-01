@@ -49,6 +49,10 @@ public class GestureManifold implements GestureMatcher.StateChangeListener {
   public static final int GESTURE_TOUCH_EXPLORE = -6;
   public static final int GESTURE_TAP_UP_TOUCH_EXPLORE = -7;
   public static final int GESTURE_FAKED_SPLIT_TYPING_AND_HOLD = -8;
+  // Two fingers turning around each other. Reported once per step of rotation, while the fingers
+  // are still down, by TalkBack's TouchInteractionMonitor rather than by a gesture matcher.
+  public static final int GESTURE_2_FINGER_ROTATE_CLOCKWISE = -9;
+  public static final int GESTURE_2_FINGER_ROTATE_COUNTERCLOCKWISE = -10;
 
   // Match the value of GESTURE_ID_2FINGER_1TAP_HOLD in TalkBack.
   public static final int GESTURE_2_FINGER_SINGLE_TAP_AND_HOLD = 63;

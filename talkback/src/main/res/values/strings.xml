@@ -2049,6 +2049,11 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <!-- Label for the preference that assigns an action to the "two-finger triple-tap and hold" gesture. [CHAR_LIMIT=90] -->
     <string name="title_pref_shortcut_2finger_3tap_hold">Triple-tap and hold with 2 fingers</string>
 
+    <!-- Label for the preference that assigns an action to turning two fingers clockwise on the screen, like turning a dial. [CHAR_LIMIT=90] -->
+    <string name="title_pref_shortcut_2finger_rotate_clockwise">Rotate clockwise with 2 fingers</string>
+    <!-- Label for the preference that assigns an action to turning two fingers counterclockwise on the screen, like turning a dial. [CHAR_LIMIT=90] -->
+    <string name="title_pref_shortcut_2finger_rotate_counterclockwise">Rotate counterclockwise with 2 fingers</string>
+
     <!-- Label for the preference that assigns an action to the "three-finger triple-tap and hold" gesture. [CHAR_LIMIT=90] -->
     <string name="title_pref_shortcut_3finger_3tap_hold">Triple-tap and hold with 3 fingers</string>
 

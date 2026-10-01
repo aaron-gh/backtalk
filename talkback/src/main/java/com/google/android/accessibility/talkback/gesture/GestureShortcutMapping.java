@@ -16,6 +16,8 @@
 
 package com.google.android.accessibility.talkback.gesture;
 
+import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_2_FINGER_ROTATE_CLOCKWISE;
+import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_2_FINGER_ROTATE_COUNTERCLOCKWISE;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_2_FINGER_SINGLE_TAP_AND_HOLD;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_FAKED_SPLIT_TYPING;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_TAP_HOLD_AND_2ND_FINGER_BACKWARD_DOUBLE_TAP;
@@ -348,6 +350,17 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
         MULTI_FINGER,
         R.string.pref_shortcut_2finger_3tap_hold_key,
         R.string.pref_shortcut_2finger_3tap_hold_default),
+    // Only recognized when TalkBack detects gestures itself.
+    TWO_FINGER_ROTATE_CLOCKWISE(
+        GESTURE_2_FINGER_ROTATE_CLOCKWISE,
+        MULTI_FINGER,
+        R.string.pref_shortcut_2finger_rotate_clockwise_key,
+        R.string.pref_shortcut_2finger_rotate_clockwise_default),
+    TWO_FINGER_ROTATE_COUNTERCLOCKWISE(
+        GESTURE_2_FINGER_ROTATE_COUNTERCLOCKWISE,
+        MULTI_FINGER,
+        R.string.pref_shortcut_2finger_rotate_counterclockwise_key,
+        R.string.pref_shortcut_2finger_rotate_counterclockwise_default),
 
     // Fingerprint.
     FINGERPRINT_SWIPE_UP(
@@ -1133,6 +1146,10 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
           context.getString(R.string.title_pref_shortcut_3finger_2tap_hold);
       case AccessibilityService.GESTURE_4_FINGER_DOUBLE_TAP_AND_HOLD ->
           context.getString(R.string.title_pref_shortcut_4finger_2tap_hold);
+      case GESTURE_2_FINGER_ROTATE_CLOCKWISE ->
+          context.getString(R.string.title_pref_shortcut_2finger_rotate_clockwise);
+      case GESTURE_2_FINGER_ROTATE_COUNTERCLOCKWISE ->
+          context.getString(R.string.title_pref_shortcut_2finger_rotate_counterclockwise);
       case GESTURE_TOUCH_EXPLORATION ->
           FeatureSupport.supportGestureMotionEvents()
               ? context.getString(R.string.gesture_name_touch_explore)
