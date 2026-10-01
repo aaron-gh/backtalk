@@ -270,7 +270,7 @@
   <!-- Braille Learning Mode -->
   <!-- Label for the Braille learning mode preference title. Also displays as title of activity. [CHAR_LIMIT=40] -->
   <!-- TODO: Update the string after approval. -->
-  <string name="bd_preference_key_learning_mode_title" translatable="false">Practice Braille display commands</string>
+  <string name="bd_preference_key_learning_mode_title" translatable="false">Practice braille display commands</string>
   <!-- Label for the Braille learning mode preference summary when the user has a device connected. [CHAR_LIMIT=100] -->
   <!-- TODO: Update the string after approval. -->
   <string name="bd_preference_key_learning_mode_summary_active" translatable="false">Learn commands available on your braille display</string>

@@ -55,9 +55,9 @@
     -->
     <string name="title_pref_system_tts_settings">System text-to-speech settings</string>
     <!-- Title for the "switch TTS engine" reading control selector item. [CHAR LIMIT=NONE] -->
-    <string name="title_selector_switch_tts_engine">Switch TTS engine</string>
+    <string name="title_selector_switch_tts_engine">Speech engine</string>
     <!-- Summary for the "switch TTS engine" reading control selector item. [CHAR LIMIT=NONE] -->
-    <string name="summary_selector_switch_tts_engine">Cycle through installed text-to-speech engines</string>
+    <string name="summary_selector_switch_tts_engine">Switch between installed speech engines</string>
     <!--
       Source: Summary shown under the TTS engine preference when no engine is selected (use system default).
       Description: Indicates TalkBack is using the system default TTS engine. [CHAR LIMIT=NONE]
@@ -72,13 +72,13 @@
       Source: Title for the "use accessibility audio stream" toggle.
       Description: When on, TalkBack speech uses the dedicated accessibility audio stream. [CHAR LIMIT=NONE]
     -->
-    <string name="title_pref_use_accessibility_stream">Use accessibility stream</string>
+    <string name="title_pref_use_accessibility_stream">Use accessibility volume</string>
     <!--
       Source: Summary for the "use accessibility audio stream" toggle.
       Description: Explains that enabling this routes TalkBack speech through the accessibility stream,
       allowing independent volume control. [CHAR LIMIT=NONE]
     -->
-    <string name="summary_pref_use_accessibility_stream">Route TalkBack speech through the accessibility audio stream for independent volume control</string>
+    <string name="summary_pref_use_accessibility_stream">Speech uses the accessibility volume, so you can set it apart from media. When off, speech uses the media volume.</string>
     <!--
       Source: Title for the menu item that opens the dialog with TTS  languages installed by the user.
       Description: This is presented to the user. [CHAR LIMIT=NONE]
@@ -235,7 +235,7 @@
       Source: Summary subtext for speaking the number of items on the screen when the setting is on.
       Description: Explains that the number of items on the screen is always spoken. [CHAR LIMIT=NONE]
     -->
-    <string name="summary_pref_verbose_scroll_announcement">Speak count for all scrolling methods</string>
+    <string name="summary_pref_verbose_scroll_announcement">Say which items are showing after every scroll</string>
     <!--
       Source: Preference for using the proximity sensor to silence speech output.
       Description: The user can check or not check this. [CHAR LIMIT=120]
@@ -276,7 +276,7 @@
     <!--
       Source: Summary subtext for count repeated symbols. [CHAR LIMIT=100]
     -->
-    <string name="summary_pref_count_repeated_symbols">Announces the count of repeated symbols when there are 4 or more</string>
+    <string name="summary_pref_count_repeated_symbols">Say how many times a symbol repeats when it repeats 4 or more times</string>
     <!-- Click the button will open the instruction activity that educate the users. [CHAR LIMIT=40] [BACKUP_MESSAGE_ID: 6077728955878539581]-->
     <string name="learn_more">Learn more</string>
     <!--
@@ -308,7 +308,7 @@
       Source: Summary subtext for the accessibility hints setting.
       Description: Explains when usage hints will be spoken. [CHAR LIMIT=NONE]
     -->
-    <string name="summary_pref_a11y_hints">After describing content, suggest how to use</string>
+    <string name="summary_pref_a11y_hints">After an item is described, say how to use it</string>
 
     <!--
       Source: Preference for speaking positions of element in lists or grids or containers when moving accessibility focus.
@@ -331,7 +331,7 @@
       Source: Summary subtext for speak container info setting.
       Description: Explains that container information will be spoken for list, grid or container . [CHAR LIMIT=NONE]
      -->
-    <string name="summary_speak_container_element_positions">Includes info while entering and exiting lists, grids, and other containers</string>
+    <string name="summary_speak_container_element_positions">Say when you enter or leave lists, grids, and other containers</string>
 
     <!-- Title of dialog to confirm the Focus delay reading control items being added. [CHAR LIMIT=NONE] -->
     <string name="confirm_focus_delay_reading_control_added_dialog_title">Focus delay added to reading control</string>
@@ -380,12 +380,12 @@
     Source: Preference for speaking types of elements with  accessibility focus.
     Description: The user can check or not check this. [CHAR LIMIT=40]
   -->
-    <string name="pref_speak_roles_title">Speak element type</string>
+    <string name="pref_speak_roles_title">Speak item type</string>
     <!--
       Source: Summary subtext for preference to speak roles of elements.
       Description: Explains that TalkBack will speak the element type of a focused item. [CHAR LIMIT=NONE]
     -->
-    <string name="pref_speak_roles_summary">For focused items</string>
+    <string name="pref_speak_roles_summary">Like button or checkbox</string>
 
     <!--
       Source: Preference for speaking element IDs instead of unlabeled buttons.
@@ -396,7 +396,7 @@
       Source: Summary subtext for the element ID announcement setting.
       Description: Explains that element IDs will be spoken for unlabeled buttons. [CHAR LIMIT=NONE]
     -->
-    <string name="summary_pref_speak_element_ids">For unlabeled buttons</string>
+    <string name="summary_pref_speak_element_ids">Say the ID of buttons that have no label</string>
     <!--
       Source: Preference for speaking notifications as they arrive.
       Description: The user can turn this off to stop new notifications from being read aloud. [CHAR LIMIT=NONE]
@@ -449,7 +449,7 @@
     <!-- Category for tutorial & help. [CHAR LIMIT=40] -->
     <string name="title_pref_category_tutorial_and_help">Tutorial &#38; help</string>
     <!-- Category summary for reduce latency. [CHAR LIMIT=NONE] -->
-    <string name="title_pref_category_reduce_latency_summary">These settings can reduce the delay before Backtalk announcements</string>
+    <string name="title_pref_category_reduce_latency_summary">These settings make Backtalk respond faster after you touch the screen</string>
     <!-- Label for the reset latency settings. [CHAR LIMIT=NONE]-->
     <string name="reset_latency_settings_title">Reset all delay settings</string>
     <!-- Preference for single-tap activation. When enabled, the user can place accessibility focus on an item and activate it using a single tap, rather than the default double-tap. [CHAR LIMIT=NONE]-->
@@ -464,7 +464,7 @@
     -->
     <string name="pref_punctuation_title">Speak punctuation and symbols</string>
     <!-- Label for the PreferenceScreen used to manage TalkBack's focus indicator. [CHAR LIMIT=40] -->
-    <string name="title_pref_category_manage_focus_indicator">Change focus indicator</string>
+    <string name="title_pref_category_manage_focus_indicator">Focus indicator</string>
     <!-- Label for the PreferenceScreen used to manage TalkBack's gesture mapping. [CHAR LIMIT=40] -->
     <string name="title_pref_category_manage_gestures">Gestures</string>
     <!-- Label for the button to launch an activity for managing TalkBack's custom view labels. [CHAR LIMIT=70] -->
@@ -550,7 +550,7 @@
       Source: Summary subtext for showing mis-trigger prevention watermark on screen.
       Description: Explains whether to show the banner. [CHAR LIMIT=NONE]
     -->
-    <string name="summary_pref_show_exit_watermark">A message shows when Backtalk is turned on, to help you quickly turn it off</string>
+    <string name="summary_pref_show_exit_watermark">When Backtalk turns on, show how to turn it off</string>
     <!-- The text of TalkBack mis-trigger-prevention watermark. [CHAR_LIMIT=NONE]-->
     <string name="talkback_exit_watermark_text">Backtalk on. Hold 2 fingers on screen for 5 seconds to turn off. To stop showing this message, tap with 3 fingers to open the Backtalk menu.</string>
     <!-- The hint text of TalkBack mis-trigger-prevention watermark. [CHAR_LIMIT=NONE]-->
@@ -796,7 +796,7 @@
     <string name="keycombo_menu_other_show_table_list">Show tables list</string>
     <!-- Keyboard key combination assignment for Show TalkBack Menu action
     TalkBack menu actions are related to whole application [CHAR LIMIT=130] [BACKUP_MESSAGE_ID: 8053375494161376217] -->
-    <string name="keycombo_menu_other_talkback_context_menu">Show Backtalk Menu</string>
+    <string name="keycombo_menu_other_talkback_context_menu">Show Backtalk menu</string>
     <!-- Keyboard key combination assignment for opening the list of custom actions [CHAR LIMIT=60] -->
     <string name="keycombo_menu_other_custom_actions">Show actions</string>
     <!-- Keyboard key combination assignment for opening the list of TTS languages installed by the user. [CHAR LIMIT=60] -->
@@ -1019,7 +1019,7 @@
     <!-- Label for preference that changes whether typed keyboard keys are spoken aloud. -->
     <string name="title_pref_keyboard_echo">Keyboard echo</string>
     <!-- Label for preference that changes order of describing user-interface elements. -->
-    <string name="pref_node_desc_order_title">Element description order</string>
+    <string name="pref_node_desc_order_title">Order of item details</string>
     <!-- Label for preference that changes the format of time feedback. [CHAR LIMIT=60] -->
     <string name="pref_time_feedback_format_title">Time format</string>
     <!-- Label for preferences that changes type typing related attributes. [CHAR LIMIT=60] -->
@@ -1028,7 +1028,7 @@
       Source: Summary subtext for the "Reduce latency" setting.
       Description: go to a sub-page which contains settings for TalkBack latency. [CHAR LIMIT=NONE]
     -->
-    <string name="talkback_latency_reduction_summary">Settings to reduce the delay before Backtalk announcements</string>
+    <string name="talkback_latency_reduction_summary">Make Backtalk respond faster after you touch the screen</string>
     <!--
       Source: Summary subtext for the "Use pitch changes" setting.
       Description: Explains that feedback from the keyboard, e.g. when a user deletes an "A" and the phone speaks "A deleted", will be spoken in a higer pitched voice. [CHAR LIMIT=NONE]
@@ -1146,7 +1146,7 @@
       Source: Preference title.
       Description: This preference that shows current supported typing confirmation type. [CHAR_LIMIT=60]
     -->
-    <string name="title_pref_typing_confirmation">Typing preference</string>
+    <string name="title_pref_typing_confirmation">Typing method</string>
 
     <!--
       Source: Preference title.
@@ -1162,7 +1162,9 @@
       Source: Message for the preference that allows user to type focus latency.
       Description: The user can check or not check this. In another seekbar preference, the user can adjust the slider to change latency value. [CHAR LIMIT=NONE]
      -->
-    <string name="message_pref_touch_explore_latency">Shorter typing focus delay means Backtalk announcements are made faster after touching the keyboard.\n\nSelect a delay</string>
+    <string name="message_pref_touch_explore_latency">A shorter delay makes Backtalk speak sooner after you touch the keyboard.
+
+Choose a delay</string>
     <!--
       Source: Preference title.
       Description: This preference that shows current touch focus time out to exploration. [CHAR_LIMIT=35]
@@ -1203,7 +1205,7 @@ Delays below 0.3 seconds will change double-tap to activate to two-finger tap to
     Source: Preference title.
     Description: This preference to control Gemini feature. [CHAR_LIMIT=NONE]
     -->
-    <string name="title_pref_gemini_enabled">Gemini Voice Command</string>
+    <string name="title_pref_gemini_enabled">Gemini voice commands</string>
 
   <!--
   Source: Preference title.
@@ -2083,7 +2085,7 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <string name="title_pref_shortcut_fingerprint_right">Swipe right on fingerprint sensor</string>
 
     <!-- Label for the prefernce that displays version code. [CHAR_LIMIT=99] -->
-    <string name="title_pref_version_code">Version Code</string>
+    <string name="title_pref_version_code">Version code</string>
 
     <!-- Preference label for volume the same as the accessibility-stream volume. [CHAR_LIMIT=NONE] -->
     <string name="value_volume_100_percent" formatted="false">Match speech volume</string>
@@ -2480,7 +2482,7 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     Source: Message for the preference that allows user to focus latency.
     Description: The user can check or not check this. In another seekbar preference, the user can adjust the slider to change latency value. [CHAR LIMIT=NONE]
    -->
-  <string name="message_pref_touch_focus_latency">Shorter focus delay means Backtalk announcements are made faster after touching the screen</string>
+  <string name="message_pref_touch_focus_latency">A shorter delay makes Backtalk speak sooner after you touch the screen</string>
   <!--
     Source: Message for the preference that allows user to focus latency.
     Description: The user can check or not check this. In another seekbar preference, the user can adjust the slider to change latency value. [CHAR LIMIT=NONE]
@@ -2495,7 +2497,7 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     Source: Title for the preference that allows user to adjust talkback speech rate.
     Description: The user can adjust the slider to change talkback speech rate. [CHAR LIMIT=81]
    -->
-  <string name="title_pref_talkback_speech_rate">Backtalk speech rate</string>
+  <string name="title_pref_talkback_speech_rate">Speech rate</string>
   <!--
   Source: Adjusting slider is the current setting of quick menu.
   Description: Notify user it's ready to adjust slider [CHAR LIMIT=45]
@@ -3822,7 +3824,7 @@ Do not use any markdown in your response."</string>
       Source: Preference title.
       Description: This preference controlling whether automatically enters the table navigation. [CHAR_LIMIT=NONE]
     -->
-  <string name="pref_auto_enter_table_navigation_title">Automatically switch to table navigation reading control when entering a table</string>
+  <string name="pref_auto_enter_table_navigation_title">Switch to table navigation in tables</string>
 
   <!-- The title of menu item to provide text formatting information from a text. [CHAR_LIMIT=60] -->
   <string name="title_text_formatting_menu">Describe text formatting</string>
@@ -3831,10 +3833,10 @@ Do not use any markdown in your response."</string>
   <!-- The title of settings to provide text formatting information from a text. [CHAR_LIMIT=60] -->
   <string name="title_text_formatting_inline">Speak text formatting</string>
   <!-- The title of settings to turn on/off text formatting information feature. [CHAR_LIMIT=80] -->
-  <string name="title_switch_text_formatting">Turn speak text formatting on or off</string>
+  <string name="title_switch_text_formatting">Speak text formatting</string>
   <!-- The summary for the settings to provide text formatting information from a text. [CHAR_LIMIT=150]-->
   <string name="summary_text_formatting_verbosity">For changes like bold and italic</string>
-  <string name="summary_text_formatting_selector">Change whether formatting, like bold and italic, are read aloud</string>
+  <string name="summary_text_formatting_selector">Change whether formatting, like bold and italic, is read aloud</string>
   <!-- The title of the settings to provide the advanced text formatting options. [CHAR_LIMIT=60] -->
   <string name="title_text_formatting_verbosity_options">Text formatting options</string>
   <!-- The title of the settings to provide the advanced text formatting options. [CHAR_LIMIT=60] -->
