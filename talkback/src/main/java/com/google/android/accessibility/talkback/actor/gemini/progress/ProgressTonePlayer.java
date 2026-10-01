@@ -20,7 +20,7 @@ public class ProgressTonePlayer {
   private final Consumer<Tone> tonePlayer;
   private final Runnable onTimeoutListener;
   private final Supplier<Long> currentTimeMsSupplier;
-  private final long timeoutDelayMs;
+  private final Supplier<Long> timeoutDelayMsSupplier;
 
   @Nullable private InfiniteIterator<Tone> tones;
   private long endTimeMs;
@@ -29,19 +29,19 @@ public class ProgressTonePlayer {
    * @param toneProvider provides the set of tones to play for each invocation of {@link
    *     #play(boolean)}
    * @param tonePlayer given a Tone, actually plays the sound via the feedback {@link Pipeline}
-   * @param timeoutDelayMs how long to play tones before timing out
+   * @param timeoutDelayMsSupplier how long to play tones before timing out, read on each play
    * @param onTimeoutListener called after timeoutDelayMs is reached after calling {@link
    *     #play(boolean)}
    */
   public ProgressTonePlayer(
       ProgressToneProvider toneProvider,
       Consumer<Tone> tonePlayer,
-      long timeoutDelayMs,
+      Supplier<Long> timeoutDelayMsSupplier,
       Runnable onTimeoutListener) {
     this(
         toneProvider,
         tonePlayer,
-        timeoutDelayMs,
+        timeoutDelayMsSupplier,
         onTimeoutListener,
         new Handler(Looper.getMainLooper()),
         SystemClock::elapsedRealtime);
@@ -51,7 +51,7 @@ public class ProgressTonePlayer {
    * @param toneProvider provides the set of tones to play for each invocation of {@link
    *     #play(boolean)}
    * @param tonePlayer given a Tone, actually plays the sound via the feedback {@link Pipeline}
-   * @param timeoutDelayMs how long to play tones before timing out
+   * @param timeoutDelayMsSupplier how long to play tones before timing out, read on each play
    * @param onTimeoutListener called after timeoutDelayMs is reached
    * @param handler handler to use for testing
    * @param currentTimeMsSupplier returns the current elapsed system realtime in milliseconds
@@ -60,7 +60,7 @@ public class ProgressTonePlayer {
   public ProgressTonePlayer(
       ProgressToneProvider toneProvider,
       Consumer<Tone> tonePlayer,
-      long timeoutDelayMs,
+      Supplier<Long> timeoutDelayMsSupplier,
       Runnable onTimeoutListener,
       Handler handler,
       Supplier<Long> currentTimeMsSupplier) {
@@ -69,7 +69,7 @@ public class ProgressTonePlayer {
     this.tonePlayer = tonePlayer;
     this.onTimeoutListener = onTimeoutListener;
     this.currentTimeMsSupplier = currentTimeMsSupplier;
-    this.timeoutDelayMs = timeoutDelayMs;
+    this.timeoutDelayMsSupplier = timeoutDelayMsSupplier;
   }
 
   /**
@@ -81,6 +81,7 @@ public class ProgressTonePlayer {
    */
   public void play(boolean playTone, boolean delayPlayTone) {
     stop();
+    long timeoutDelayMs = timeoutDelayMsSupplier.get();
     long timeoutMs = currentTimeMsSupplier.get() + timeoutDelayMs;
     if (!playTone) {
       tones = null;

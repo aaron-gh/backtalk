@@ -31,6 +31,7 @@ import com.google.android.accessibility.talkback.actor.gemini.GeminiActor.Gemini
 import com.google.android.accessibility.talkback.actor.gemini.GeminiActor.GeminiResponseListener;
 import com.google.android.accessibility.talkback.actor.gemini.GeminiCommand.CommonRequest;
 import com.google.android.accessibility.talkback.actor.gemini.GeminiRestRequestPerformer.GeminiRestResponseCallback;
+import com.google.android.accessibility.talkback.actor.gemini.local.OnDeviceAiSettings;
 import com.google.android.accessibility.talkback.actor.gemini.screenqa.OverviewResponse;
 import com.google.android.accessibility.utils.NetworkUtils;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
@@ -81,6 +82,15 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
     prefixPrompt = GeminiConfiguration.getPrefixPrompt(context);
     screenOverviewRequester =
         new ScreenOverviewRequester(
+            () -> {
+              SharedPreferences settings = SharedPreferencesUtils.getSharedPreferences(context);
+              if (!OnDeviceAiSettings.INSTANCE.isOnDevice(settings)) {
+                return PromptStyle.CLOUD;
+              }
+              return OnDeviceAiSettings.INSTANCE.shortPrompts(settings)
+                  ? PromptStyle.ON_DEVICE_SHORT
+                  : PromptStyle.ON_DEVICE;
+            },
             (postData, callback) -> {
               requestPerformer.performRequest(
                   TextUtils.isEmpty(urlWithApiKey) ? url : urlWithApiKey, postData, callback);

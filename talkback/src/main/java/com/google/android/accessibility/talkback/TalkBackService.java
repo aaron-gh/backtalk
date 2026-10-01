@@ -132,7 +132,7 @@ import com.google.android.accessibility.talkback.actor.gemini.GeminiActor;
 import com.google.android.accessibility.talkback.actor.gemini.GeminiConfiguration;
 import com.google.android.accessibility.talkback.actor.gemini.GeminiFunctionUtils;
 import com.google.android.accessibility.talkback.actor.gemini.GeminiRestEndpoint;
-import com.google.android.accessibility.talkback.actor.gemini.GeminiRestRequestPerformer;
+import com.google.android.accessibility.talkback.actor.gemini.LocalGemmaRequestPerformer;
 import com.google.android.accessibility.talkback.actor.search.UniversalSearchActor;
 import com.google.android.accessibility.talkback.actor.search.UniversalSearchManager;
 import com.google.android.accessibility.talkback.actor.voicecommands.VoiceCommandActor;
@@ -1970,7 +1970,7 @@ public class TalkBackService extends AccessibilityServiceCompat
             GeminiConfiguration.useAratea(this)
                 ? new ArateaEndpoint(this, getApplication())
                 : new GeminiRestEndpoint(
-                    this, BuildConfig.GEMINI_API_KEY, new GeminiRestRequestPerformer(this)),
+                    this, BuildConfig.GEMINI_API_KEY, new LocalGemmaRequestPerformer(this)),
             new AiCoreEndpoint(this));
 
     KeyboardActor keyboardActor = new KeyboardActor(this);
