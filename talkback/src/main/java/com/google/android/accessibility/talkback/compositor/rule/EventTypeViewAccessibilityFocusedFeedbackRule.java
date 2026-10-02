@@ -123,21 +123,23 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
     boolean isEventNavigateByUser = accessibilityFocusEventInterpretation.getIsNavigateByUser();
     boolean isDeviceScreenNoTouch = globalVariables.isDeviceScreenNoTouch();
 
-    // A control sound takes the place of the focus sound, but not of the sounds for moving in and
-    // out of lists, which instead come from where the focus lands. Only while a control sound
-    // plays is the kind of control left out of the speech.
+    // With control sounds on, the focus and list sounds come from where the focus lands, and a
+    // control sound takes the place of the focus sound. Only while a control sound plays is the
+    // kind of control left out of the speech. Typing on the keyboard sounds as it always did.
     int earcon = earcon(srcNode, globalVariables);
     float[] earconPosition = null;
-    if (earcon == R.raw.focus || earcon == R.raw.focus_actionable) {
+    boolean isFocusSound = earcon == R.raw.focus || earcon == R.raw.focus_actionable;
+    if (globalVariables.areControlSoundsOn()
+        && AccessibilityNodeInfoUtils.getWindowType(srcNode) != TYPE_INPUT_METHOD
+        && (isFocusSound || earcon == R.raw.chime_up || earcon == R.raw.chime_down)) {
+      earconPosition = ControlSounds.screenPosition(srcNode, context);
+    }
+    if (isFocusSound) {
       int controlSound = globalVariables.getControlSoundForFocus(srcNode);
       if (controlSound != 0) {
         earcon = controlSound;
-        earconPosition = ControlSounds.screenPosition(srcNode, context);
         globalVariables.setRoleSoundOfFocus(controlSound);
       }
-    } else if ((earcon == R.raw.chime_up || earcon == R.raw.chime_down)
-        && globalVariables.areControlSoundsOn()) {
-      earconPosition = ControlSounds.screenPosition(srcNode, context);
     }
 
     // TYPE_VIEW_HOVER_ENTER handled the feedback in this case.
