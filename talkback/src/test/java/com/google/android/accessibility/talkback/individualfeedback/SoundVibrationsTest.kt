@@ -29,9 +29,28 @@ class SoundVibrationsTest {
   private val vibrationNames = IndividualFeedbackSettings.VIBRATIONS.flatMap { it.resourceNames }
 
   @Test
-  fun everySoundHasAVibration() {
+  fun everySoundHasAVibrationUnlessItShouldNot() {
     val sounds = IndividualFeedbackSettings.SOUNDS.flatMap { it.resourceNames }.toSet()
-    assertEquals(sounds, SoundVibrations.PATTERNS.keys)
+    assertEquals(sounds, SoundVibrations.PATTERNS.keys + SoundVibrations.WITHOUT_VIBRATION)
+    assertTrue(SoundVibrations.PATTERNS.keys.none { it in SoundVibrations.WITHOUT_VIBRATION })
+  }
+
+  @Test
+  fun brailleSoundsDoNotVibrate() {
+    for (sound in listOf("display_connected", "double_beep", "calibration_done")) {
+      assertTrue(sound, sound !in SoundVibrations.PATTERNS)
+    }
+  }
+
+  @Test
+  fun theRepeatingLoadingVibrationIsFaintAndShort() {
+    val loading = patterns.getValue(SoundVibrations.PATTERNS.getValue("loading"))
+    val onTimes = loading.onOff.filterIndexed { i, _ -> i % 2 == 1 }
+    assertTrue("too long", onTimes.sum() <= 20)
+    val amplitudes = loading.amplitudes.filterIndexed { i, _ -> i % 2 == 1 }
+    assertTrue("too strong", amplitudes.all { it <= 100 })
+    val scales = loading.premium.filterIndexed { i, _ -> i % 3 == 1 }
+    assertTrue("too strong", scales.all { it <= 100 })
   }
 
   @Test

@@ -498,6 +498,9 @@ public class Compositor {
         nonSpeechParams.putFloat(Utterance.KEY_METADATA_EARCON_X, (float) eventFeedback.earconX());
         nonSpeechParams.putFloat(Utterance.KEY_METADATA_EARCON_Y, (float) eventFeedback.earconY());
       }
+      if (!eventFeedback.earconVibrates()) {
+        nonSpeechParams.putBoolean(Utterance.KEY_METADATA_EARCON_VIBRATES, false);
+      }
       speakOptions.setNonSpeechParams(nonSpeechParams);
     }
 
