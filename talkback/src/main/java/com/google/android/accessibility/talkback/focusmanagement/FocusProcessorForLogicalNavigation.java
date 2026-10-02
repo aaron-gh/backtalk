@@ -51,6 +51,8 @@ import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.os.Trace;
 import android.text.TextUtils;
@@ -58,6 +60,7 @@ import android.util.Log;
 import android.util.Pair;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityWindowInfo;
+import androidx.annotation.IntDef;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat;
@@ -118,6 +121,8 @@ import com.google.android.accessibility.utils.traversal.TraversalStrategy.Search
 import com.google.android.accessibility.utils.traversal.TraversalStrategyUtils;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -172,6 +177,16 @@ public class FocusProcessorForLogicalNavigation {
 
   /** Callback to handle scroll success or failure. */
   private @Nullable AutoScrollCallback scrollCallback;
+
+  /** Set while searching again after showing an off-screen item, so it is tried only once. */
+  private boolean revealingOffscreen;
+
+  // Checks once a frame for about 100 ms, when Android would send the scroll event anyway.
+  private static final long EARLY_SCROLL_RETRY_MS = 16;
+  private static final int EARLY_SCROLL_RETRIES = 6;
+
+  // Checks whether a page scroll has already moved the list, before its scroll event arrives.
+  private final Handler earlyScrollCheckHandler = new Handler(Looper.getMainLooper());
 
   // Target to put focus on on the next window navigation action
   private @Nullable AccessibilityNodeInfoCompat stealWindowNavigationTarget = null;
@@ -1149,13 +1164,43 @@ public class FocusProcessorForLogicalNavigation {
       }
     }
 
-    // Perform auto-scroll action if necessary.
-    if (autoScrollAtEdge(
-        pivot,
-        ignoreDescendantsOfPivot,
-        navigationAction,
-        reusableOrderedStrategy(traversalStrategy, rootNode, pivot),
-        eventId)) {
+    // In a scroll view the next item is already in the tree, just off screen. Show the next screen
+    // at once and search again, rather than scrolling a page and waiting for the scroll event.
+    if (!revealingOffscreen) {
+      @RevealResult
+      int reveal =
+          revealNextOffscreenItem(
+              pivot,
+              ignoreDescendantsOfPivot,
+              navigationAction,
+              logicalDirection,
+              reusableOrderedStrategy(traversalStrategy, rootNode, pivot),
+              eventId);
+      if (reveal == REVEAL_SHOWN) {
+        revealingOffscreen = true;
+        try {
+          return navigateToDefaultOrMacroGranularityTarget(
+              pivot, ignoreDescendantsOfPivot, navigationAction, eventId);
+        } finally {
+          revealingOffscreen = false;
+        }
+      }
+      if (reveal == REVEAL_MOVED) {
+        // The view moved, but the item is still not on screen. A page scroll now would pass what
+        // the move brought on screen, so stop here, and let the next swipe carry on.
+        return true;
+      }
+    }
+
+    // Perform auto-scroll action if necessary. Not after showing the next item, which has already
+    // scrolled the view: a page scroll on top would pass content that never came on screen.
+    if (!revealingOffscreen
+        && autoScrollAtEdge(
+            pivot,
+            ignoreDescendantsOfPivot,
+            navigationAction,
+            reusableOrderedStrategy(traversalStrategy, rootNode, pivot),
+            eventId)) {
       return true;
     }
 
@@ -1274,7 +1319,19 @@ public class FocusProcessorForLogicalNavigation {
       // REFERTO If ensureOnScreen caused scrolling, we need use the scroll callback
       // to set focus on the next node (from the pivot) inside scrollable parent. This is helpful
       // to find focus that was invisible before scrolling.
-      if (scrolled && (scrollCallback == null || !scrollCallback.assumeScrollSuccess())) {
+      // A plain swipe already knows its target, which is in the tree because it is at least partly
+      // on screen. Focus it now and let the scroll finish behind the speech, instead of waiting
+      // about 200 ms for the scroll event and searching again. Other targets, such as headings and
+      // table cells, still search again after the scroll.
+      boolean focusBeforeScrollEnds =
+          scrolled
+              && navigationAction.actionType == NavigationAction.DIRECTIONAL_NAVIGATION
+              && navigationAction.targetType == NavigationTarget.TARGET_DEFAULT
+              && target.isVisibleToUser();
+      if (focusBeforeScrollEnds) {
+        scrollCallback = null;
+      } else if (scrolled
+          && (scrollCallback == null || !scrollCallback.assumeScrollSuccess())) {
         // REFERTO Framework might not send TYPE_VIEW_SCROLLED event back after
         // ensureOnScreen. Register a scrollCallBack may make the scroll timeout and thus
         // searching nodes outside the scrollable and fail. So we ignore scroll fail in this case
@@ -2330,6 +2387,105 @@ public class FocusProcessorForLogicalNavigation {
     return orderedStrategy;
   }
 
+  /** What {@link #revealNextOffscreenItem} did. */
+  @IntDef({REVEAL_NONE, REVEAL_SHOWN, REVEAL_MOVED})
+  @Retention(RetentionPolicy.SOURCE)
+  private @interface RevealResult {}
+
+  /** Nothing scrolled, so the usual page scroll can go ahead. */
+  private static final int REVEAL_NONE = 0;
+
+  /** The next item is on screen, so the caller can search again at once. */
+  private static final int REVEAL_SHOWN = 1;
+
+  /** The view scrolled, but the next item is still not on screen. */
+  private static final int REVEAL_MOVED = 2;
+
+  /**
+   * Shows the next screen of a scroll view when the pivot is the last item on screen. Scroll views
+   * keep all of their content in the tree, and they scroll for ACTION_SHOW_ON_SCREEN before the
+   * action returns, so the caller can search again at once. It shows an item about a screen on,
+   * and then the next item, if that went past the edge, so the next item starts the screen.
+   * Showing only the next item would leave every later swipe at the edge, and a page scroll can
+   * pass an item that was partly on screen, as it moves a whole screen and animates.
+   *
+   * <p>The framework's node cache keeps the scroll view as it was until the scroll events reach
+   * this thread, after this call, so the search would still find the pivot at the edge and scroll
+   * a page too. Clearing the scroll view from the cache, which needs Android 14, makes the search
+   * read where everything is now. On older versions, this leaves it to the page scroll.
+   */
+  private @RevealResult int revealNextOffscreenItem(
+      @NonNull AccessibilityNodeInfoCompat pivot,
+      boolean ignoreDescendantsOfPivot,
+      NavigationAction navigationAction,
+      @SearchDirection int logicalDirection,
+      @Nullable OrderedTraversalStrategy windowOrderedStrategy,
+      EventId eventId) {
+    if (!BuildVersionUtils.isAtLeastU()
+        || !navigationAction.shouldScroll
+        || navigationAction.actionType != NavigationAction.DIRECTIONAL_NAVIGATION
+        || (logicalDirection != SEARCH_FOCUS_FORWARD && logicalDirection != SEARCH_FOCUS_BACKWARD)
+        || WebInterfaceUtils.supportsWebActions(pivot)) {
+      return REVEAL_NONE;
+    }
+    ScrollableNodeInfo scrollableNodeInfo =
+        ScrollableNodeInfo.findScrollableNodeForDirection(
+            navigationAction.searchDirection,
+            pivot,
+            /* includeSelf= */ false,
+            WindowUtils.isScreenLayoutRTL(service));
+    if (scrollableNodeInfo == null
+        || !OffscreenContent.keepsAllContent(scrollableNodeInfo.getNode())
+        || !TraversalStrategyUtils.isAutoScrollEdgeListItem(
+            pivot,
+            scrollableNodeInfo,
+            ignoreDescendantsOfPivot,
+            navigationAction.searchDirection,
+            focusFinder,
+            windowOrderedStrategy)) {
+      return REVEAL_NONE;
+    }
+    AccessibilityNodeInfoCompat scrollable = scrollableNodeInfo.getNode();
+    OffscreenContent.Ahead ahead =
+        OffscreenContent.findAhead(scrollable, pivot, logicalDirection == SEARCH_FOCUS_FORWARD);
+    if (ahead == null) {
+      return REVEAL_NONE;
+    }
+    AccessibilityNodeInfoCompat next = ahead.next();
+    Rect pivotBefore = new Rect();
+    pivot.getBoundsInScreen(pivotBefore);
+    if (!showOnScreen(ahead.pageEnd(), eventId)) {
+      return REVEAL_NONE;
+    }
+    service.clearCachedSubtree(scrollable.unwrap());
+    if (!ahead.pageEnd().equals(next)
+        && !(next.refresh() && next.isVisibleToUser())
+        && showOnScreen(next, eventId)) {
+      // The screen held fewer items than guessed, so the next item went past the edge. Showing it
+      // brings it back to the edge the swipe heads away from.
+      service.clearCachedSubtree(scrollable.unwrap());
+    }
+    if (!pivot.refresh()) {
+      LogUtils.d(TAG, "revealNextOffscreenItem: pivot is gone");
+      return REVEAL_MOVED;
+    }
+    Rect pivotAfter = new Rect();
+    pivot.getBoundsInScreen(pivotAfter);
+    if (pivotAfter.equals(pivotBefore)) {
+      LogUtils.d(TAG, "revealNextOffscreenItem: nothing moved, next=%s", next);
+      return REVEAL_NONE;
+    }
+    boolean shown = next.refresh() && next.isVisibleToUser();
+    LogUtils.d(TAG, "revealNextOffscreenItem shown=%s next=%s", shown, next);
+    return shown ? REVEAL_SHOWN : REVEAL_MOVED;
+  }
+
+  private boolean showOnScreen(AccessibilityNodeInfoCompat node, EventId eventId) {
+    return pipeline.returnFeedback(
+        eventId,
+        Feedback.nodeAction(node, AccessibilityActionCompat.ACTION_SHOW_ON_SCREEN.getId()));
+  }
+
   /**
    * Tries to perform scroll if the pivot is at the edge of a scrollable container and suitable
    * autoscroll.
@@ -2449,18 +2605,67 @@ public class FocusProcessorForLogicalNavigation {
     AutoScrollSuccessChecker autoScrollChecker =
         createAutoScrollCheckerIfNeeded(
             scrollableNodeInfo.getNode(), navigationAction, scrollAction);
+    Rect pivotBefore = new Rect();
+    pivot.getBoundsInScreen(pivotBefore);
     // Use SCROLL_TIMEOUT_LONG_MS since auto scroll may find some scrollable containers that request
     // a longer time to finish the scrolling action(like home screen), a short timeout will make
     // TalkBack detects the scroll action always fail, even through it's actually success.
-    return performScrollActionInternal(
-        ScrollActionRecord.ACTION_AUTO_SCROLL,
-        scrollableNodeInfo.getNode(),
-        pivot,
-        scrollAction,
-        navigationAction,
-        ScrollTimeout.SCROLL_TIMEOUT_LONG,
-        autoScrollChecker,
-        eventId);
+    boolean scrolled =
+        performScrollActionInternal(
+            ScrollActionRecord.ACTION_AUTO_SCROLL,
+            scrollableNodeInfo.getNode(),
+            pivot,
+            scrollAction,
+            navigationAction,
+            ScrollTimeout.SCROLL_TIMEOUT_LONG,
+            autoScrollChecker,
+            eventId);
+    if (scrolled && scrollCallback != null) {
+      AutoScrollCallback callback = scrollCallback;
+      AccessibilityNodeInfoCompat scrollable = scrollableNodeInfo.getNode();
+      earlyScrollCheckHandler.post(
+          () ->
+              checkScrollEarly(
+                  callback, scrollable, pivotBefore, eventId, EARLY_SCROLL_RETRIES));
+    }
+    return scrolled;
+  }
+
+  /**
+   * Continues the navigation as soon as the pivot has moved, instead of waiting for the scroll
+   * event. Android sends scroll events at most every 100 ms, but lists usually scroll before the
+   * action returns or within a few frames. If nothing has moved yet, checks again every {@link
+   * #EARLY_SCROLL_RETRY_MS}, up to {@code retries} times, and then leaves it to the scroll event,
+   * which is ignored if this check already handled the scroll.
+   */
+  private void checkScrollEarly(
+      AutoScrollCallback callback,
+      AccessibilityNodeInfoCompat scrollable,
+      Rect pivotBefore,
+      EventId eventId,
+      int retries) {
+    if (scrollCallback != callback) {
+      return;
+    }
+    AccessibilityNodeInfoCompat pivotNow = AccessibilityNodeInfoCompat.obtain(callback.pivot);
+    Rect pivotAfter = new Rect();
+    boolean pivotPresent = pivotNow.refresh();
+    if (pivotPresent) {
+      pivotNow.getBoundsInScreen(pivotAfter);
+      if (pivotAfter.equals(pivotBefore)) {
+        if (retries > 0) {
+          earlyScrollCheckHandler.postDelayed(
+              () -> checkScrollEarly(callback, scrollable, pivotBefore, eventId, retries - 1),
+              EARLY_SCROLL_RETRY_MS);
+        }
+        return;
+      }
+    }
+    int deltaX = pivotPresent ? pivotBefore.left - pivotAfter.left : DELTA_UNDEFINED;
+    int deltaY = pivotPresent ? pivotBefore.top - pivotAfter.top : DELTA_UNDEFINED;
+    LogUtils.d(TAG, "checkScrollEarly: scrolled, deltaX=%s deltaY=%s", deltaX, deltaY);
+    scrollable.refresh();
+    onAutoScrolled(scrollable, eventId, deltaX, deltaY);
   }
 
   /**
@@ -2493,7 +2698,10 @@ public class FocusProcessorForLogicalNavigation {
     final Rect nodeBounds = new Rect();
     scrollableNode.getBoundsInScreen(nodeBounds);
     return new AutoScrollSuccessCheckerImpl(
-        scrollAction, nodeBounds, getSuccessAutoScrollPercentageThreshold(service));
+        scrollAction,
+        nodeBounds,
+        getSuccessAutoScrollPercentageThreshold(service),
+        AutoScrollSuccessCheckerImpl.indexesRunUpward(scrollableNode));
   }
 
   private boolean performScrollActionInternal(
