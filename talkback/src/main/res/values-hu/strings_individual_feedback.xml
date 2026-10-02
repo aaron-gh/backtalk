@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Braille-billentyűzet kalibrálva</string>
   <string name="individual_vibration_focus">Fókusz egy elemen</string>
   <string name="individual_vibration_focus_actionable">Fókusz egy aktiválható elemen</string>
-  <string name="individual_vibration_selected">Kijelölés</string>
   <string name="individual_vibration_clicked">Kattintás</string>
   <string name="individual_vibration_long_clicked">Hosszú nyomás</string>
   <string name="individual_vibration_window_state">Ablakváltás</string>

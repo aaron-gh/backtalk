@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Брајовата тастатура е калибрирана</string>
   <string name="individual_vibration_focus">Фокус на ставка</string>
   <string name="individual_vibration_focus_actionable">Фокус на ставка што може да се активира</string>
-  <string name="individual_vibration_selected">Избор</string>
   <string name="individual_vibration_clicked">Клик</string>
   <string name="individual_vibration_long_clicked">Долго притискање</string>
   <string name="individual_vibration_window_state">Промена на прозорец</string>

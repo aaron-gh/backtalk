@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">ბრაილის კლავიატურა დაკალიბრებულია</string>
   <string name="individual_vibration_focus">ფოკუსი ერთეულზე</string>
   <string name="individual_vibration_focus_actionable">ფოკუსი აქტიურ ერთეულზე</string>
-  <string name="individual_vibration_selected">არჩევა</string>
   <string name="individual_vibration_clicked">დაწკაპუნება</string>
   <string name="individual_vibration_long_clicked">ხანგრძლივი დაჭერა</string>
   <string name="individual_vibration_window_state">ფანჯრის ცვლილება</string>

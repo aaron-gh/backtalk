@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">ಬ್ರೈಲ್ ಕೀಬೋರ್ಡ್ ಕ್ಯಾಲಿಬ್ರೇಟ್ ಆಗಿದೆ</string>
   <string name="individual_vibration_focus">ಐಟಂ ಮೇಲೆ ಫೋಕಸ್</string>
   <string name="individual_vibration_focus_actionable">ಕ್ರಿಯೆ ಮಾಡಬಹುದಾದ ಐಟಂ ಮೇಲೆ ಫೋಕಸ್</string>
-  <string name="individual_vibration_selected">ಆಯ್ಕೆ</string>
   <string name="individual_vibration_clicked">ಕ್ಲಿಕ್</string>
   <string name="individual_vibration_long_clicked">ದೀರ್ಘವಾಗಿ ಒತ್ತುವುದು</string>
   <string name="individual_vibration_window_state">ವಿಂಡೋ ಬದಲಾವಣೆ</string>

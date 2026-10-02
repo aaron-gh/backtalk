@@ -174,6 +174,7 @@ import com.google.android.accessibility.talkback.imagecaption.ImageCaptionStorag
 import com.google.android.accessibility.talkback.imagecaption.ImageCaptionUtils.CaptionType;
 import com.google.android.accessibility.talkback.imagecaption.ImageContents;
 import com.google.android.accessibility.talkback.individualfeedback.IndividualFeedbackSettings;
+import com.google.android.accessibility.talkback.individualfeedback.SoundVibrations;
 import com.google.android.accessibility.talkback.interpreters.AccessibilityEventIdleInterpreter;
 import com.google.android.accessibility.talkback.interpreters.AccessibilityFocusInterpreter;
 import com.google.android.accessibility.talkback.interpreters.AutoScrollInterpreter;
@@ -1784,6 +1785,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     displayMonitor = new DisplayMonitor(this);
     accessibilityEventProcessor = new AccessibilityEventProcessor(this, displayMonitor);
     feedbackController = new FeedbackController(this);
+    feedbackController.setSoundHaptics(SoundVibrations.patternIds(this));
     speechController =
         new SpeechControllerImpl(
             this,

@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Brayl klaviaturasi kalibrlandi</string>
   <string name="individual_vibration_focus">Elementga fokus</string>
   <string name="individual_vibration_focus_actionable">Amal bajariladigan elementga fokus</string>
-  <string name="individual_vibration_selected">Tanlov</string>
   <string name="individual_vibration_clicked">Bosish</string>
   <string name="individual_vibration_long_clicked">Uzoq bosish</string>
   <string name="individual_vibration_window_state">Oyna almashishi</string>

@@ -70,16 +70,48 @@ object IndividualFeedbackSettings {
       FeedbackItem("calibration_done", R.string.individual_sound_calibration_done),
     )
 
+  /**
+   * One switch for each sound's vibration, in the same order and with the same titles as the
+   * sounds, and one for announcements, which vibrate without a sound.
+   */
   val VIBRATIONS =
     listOf(
       FeedbackItem("view_hovered_pattern", R.string.individual_vibration_focus),
       FeedbackItem("view_actionable_pattern", R.string.individual_vibration_focus_actionable),
-      FeedbackItem("view_focused_or_selected_pattern", R.string.individual_vibration_selected),
+      FeedbackItem("view_entered_pattern", R.string.individual_sound_view_entered),
       FeedbackItem("view_clicked_pattern", R.string.individual_vibration_clicked),
       FeedbackItem("view_long_clicked_pattern", R.string.individual_vibration_long_clicked),
+      FeedbackItem("scroll_pattern", R.string.individual_sound_scroll_tone),
+      FeedbackItem("list_entered_pattern", R.string.individual_sound_chime_up),
+      FeedbackItem("list_exited_pattern", R.string.individual_sound_chime_down),
+      FeedbackItem("complete_pattern", R.string.individual_sound_complete),
       FeedbackItem("window_state_pattern", R.string.individual_vibration_window_state),
       FeedbackItem("gesture_detection_repeated_pattern", R.string.individual_vibration_gesture),
+      FeedbackItem("gesture_end_pattern", R.string.individual_sound_gesture_end),
       FeedbackItem("typo_pattern", R.string.individual_vibration_typo),
+      FeedbackItem("hyperlink_pattern", R.string.individual_sound_hyperlink),
+      FeedbackItem("formatting_pattern", R.string.individual_sound_formatting),
+      FeedbackItem("volume_pattern", R.string.individual_sound_volume_beep),
+      FeedbackItem("loading_pattern", R.string.individual_sound_loading),
+      FeedbackItem("browse_mode_on_pattern", R.string.individual_sound_browse_mode_on),
+      FeedbackItem("browse_mode_off_pattern", R.string.individual_sound_browse_mode_off),
+      FeedbackItem(
+        "radial_menu_pattern",
+        R.string.individual_sound_radial_menu,
+        (1..8).map { "radial_menu_${it}_pattern" },
+      ),
+      FeedbackItem(
+        "braille_display_connected_pattern",
+        R.string.individual_sound_display_connected,
+      ),
+      FeedbackItem(
+        "braille_display_disconnected_pattern",
+        R.string.individual_sound_display_disconnected,
+      ),
+      FeedbackItem("braille_command_failed_pattern", R.string.individual_sound_double_beep),
+      FeedbackItem("braille_auto_scroll_on_pattern", R.string.individual_sound_turn_on),
+      FeedbackItem("braille_auto_scroll_off_pattern", R.string.individual_sound_turn_off),
+      FeedbackItem("braille_calibrated_pattern", R.string.individual_sound_calibration_done),
       FeedbackItem("notification_pattern", R.string.individual_vibration_notification),
     )
 

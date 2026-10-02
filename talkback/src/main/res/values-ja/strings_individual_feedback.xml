@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">点字キーボードの調整完了</string>
   <string name="individual_vibration_focus">項目にフォーカス</string>
   <string name="individual_vibration_focus_actionable">操作可能な項目にフォーカス</string>
-  <string name="individual_vibration_selected">選択</string>
   <string name="individual_vibration_clicked">クリック</string>
   <string name="individual_vibration_long_clicked">長押し</string>
   <string name="individual_vibration_window_state">ウィンドウの切り替え</string>
