@@ -70,13 +70,17 @@ object IndividualFeedbackSettings {
       FeedbackItem("calibration_done", R.string.individual_sound_calibration_done),
       FeedbackItem("control_button", R.string.individual_sound_control_button),
       FeedbackItem("control_checkbox", R.string.individual_sound_control_checkbox),
-      FeedbackItem("control_switch", R.string.individual_sound_control_switch),
       FeedbackItem("control_radio_button", R.string.individual_sound_control_radio_button),
       FeedbackItem("control_edit_text", R.string.individual_sound_control_edit_text),
       FeedbackItem("control_combo_box", R.string.individual_sound_control_combo_box),
       FeedbackItem("control_slider", R.string.individual_sound_control_slider),
-      FeedbackItem("control_image", R.string.individual_sound_control_image),
       FeedbackItem("control_link", R.string.individual_sound_control_link),
+      FeedbackItem("control_image", R.string.individual_sound_control_image),
+      FeedbackItem("control_clock", R.string.individual_sound_control_clock),
+      FeedbackItem("control_tab", R.string.individual_sound_control_tab),
+      FeedbackItem("control_menu_item", R.string.individual_sound_control_menu_item),
+      FeedbackItem("control_list_item", R.string.individual_sound_control_list_item),
+      FeedbackItem("control_tree_item", R.string.individual_sound_control_tree_item),
     )
 
   val VIBRATIONS =

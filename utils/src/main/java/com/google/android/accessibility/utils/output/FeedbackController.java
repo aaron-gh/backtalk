@@ -22,9 +22,9 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.Resources.NotFoundException;
 import android.media.AudioAttributes;
+import android.media.AudioDeviceCallback;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
-import android.os.Build;
 import android.media.SoundPool;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
@@ -38,7 +38,6 @@ import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -121,6 +120,11 @@ public class FeedbackController {
 
   /** Created the first time a sound is played in 3D. */
   private @Nullable SpatialSoundPlayer mSpatialSoundPlayer;
+
+  /** Follows headphones connecting, from the first time it matters. */
+  private @Nullable AudioDeviceCallback mAudioDeviceCallback;
+
+  private volatile boolean mHeadphonesConnected;
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Construction
@@ -262,7 +266,8 @@ public class FeedbackController {
 
   /**
    * Plays a sound as if it came from a place on the screen, in 3D or panned between the speakers
-   * according to {@link #setSpatialMode}. Only mono, 16 bit, 44.1 kHz WAV sounds can play in 3D.
+   * according to {@link #setSpatialMode}. In 3D mode the sound is played in 3D on the phone's
+   * speaker too. Only mono, 16 bit, 44.1 kHz WAV sounds can play in 3D.
    *
    * @param x The place from the left edge of the screen, from 0 to 1, or negative for no place.
    * @param y The place from the top edge of the screen, from 0 to 1, or negative for no place.
@@ -324,22 +329,36 @@ public class FeedbackController {
     }
   }
 
-  /** Returns whether feedback sounds go to headphones, wired or wireless, or hearing aids. */
+  /**
+   * Returns whether headphones are connected: any Bluetooth audio device, wired or USB headphones,
+   * or hearing aids. The answer is kept up to date by a callback from the first time it is asked.
+   */
   private boolean isHeadphoneOutput() {
-    AudioManager audioManager = mContext.getSystemService(AudioManager.class);
-    if (audioManager == null) {
-      return false;
-    }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      // Where feedback really goes, so a headset that is connected but not in use does not count.
-      List<AudioDeviceInfo> devices = audioManager.getAudioDevicesForAttributes(FEEDBACK_ATTRIBUTES);
-      for (AudioDeviceInfo device : devices) {
-        if (isHeadphone(device)) {
-          return true;
-        }
+    if (mAudioDeviceCallback == null) {
+      AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+      if (audioManager == null) {
+        return false;
       }
-      return false;
+      mAudioDeviceCallback =
+          new AudioDeviceCallback() {
+            @Override
+            public void onAudioDevicesAdded(AudioDeviceInfo[] addedDevices) {
+              mHeadphonesConnected = hasHeadphones(audioManager);
+            }
+
+            @Override
+            public void onAudioDevicesRemoved(AudioDeviceInfo[] removedDevices) {
+              mHeadphonesConnected = hasHeadphones(audioManager);
+            }
+          };
+      // Registering reports the devices already connected, but only later on the main thread.
+      mHeadphonesConnected = hasHeadphones(audioManager);
+      audioManager.registerAudioDeviceCallback(mAudioDeviceCallback, null);
     }
+    return mHeadphonesConnected;
+  }
+
+  private static boolean hasHeadphones(AudioManager audioManager) {
     for (AudioDeviceInfo device : audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
       if (isHeadphone(device)) {
         return true;
@@ -352,10 +371,13 @@ public class FeedbackController {
     switch (device.getType()) {
       case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
       case AudioDeviceInfo.TYPE_WIRED_HEADSET:
-      case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
       case AudioDeviceInfo.TYPE_USB_HEADSET:
       case AudioDeviceInfo.TYPE_HEARING_AID:
+      case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
+      case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
       case AudioDeviceInfo.TYPE_BLE_HEADSET:
+      case AudioDeviceInfo.TYPE_BLE_SPEAKER:
+      case AudioDeviceInfo.TYPE_BLE_BROADCAST:
         return true;
       default:
         return false;
@@ -378,6 +400,13 @@ public class FeedbackController {
     if (mSpatialSoundPlayer != null) {
       mSpatialSoundPlayer.shutdown();
       mSpatialSoundPlayer = null;
+    }
+    if (mAudioDeviceCallback != null) {
+      AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+      if (audioManager != null) {
+        audioManager.unregisterAudioDeviceCallback(mAudioDeviceCallback);
+      }
+      mAudioDeviceCallback = null;
     }
     mVibrator.cancel();
     mAuditoryEnabled = false;

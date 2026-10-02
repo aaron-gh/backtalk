@@ -1,14 +1,16 @@
 # Control sounds
 
-Scripts that make the files behind control sounds. Run them again after changing them.
+The sounds in `talkback/src/main/res/raw/control_*.wav` are from the
+[Unspoken](https://github.com/ahicks92/Unspoken) add-on for NVDA, by Bryan Smart and Austin Hicks,
+which is under the GNU General Public License, version 2. They were converted to mono, 16 bit,
+44.1 kHz WAV, the format that plays in 3D, with:
 
-*   `make_sounds.py` synthesizes the sounds for each kind of control into
-    `talkback/src/main/res/raw/control_*.wav`. They are made from sine waves and noise, so they are
-    original and fall under Backtalk's license.
-*   `make_hrtf.py` packs the head-related transfer functions that play the sounds in 3D into
-    `utils/src/main/res/raw/hrtf_kemar.bin`. Its comments say how to download the measurements.
+    afconvert -f WAVE -d LEI16@44100 -c 1 button.wav control_button.wav
 
-The HRTFs are the compact set of the MIT Media Lab KEMAR measurements:
+`make_hrtf.py` packs the head-related transfer functions that play the sounds in 3D into
+`utils/src/main/res/raw/hrtf_kemar.bin`. Its comments say how to download the measurements.
+
+The HRTFs are the compact set of the MIT Media Lab KEMAR measurements, which Unspoken also used:
 
 > Bill Gardner and Keith Martin, "HRTF Measurements of a KEMAR Dummy-Head Microphone", MIT Media
 > Lab Perceptual Computing Technical Report #280, 1994.
