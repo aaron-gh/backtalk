@@ -245,10 +245,9 @@ public class TalkBackForBrailleImeImpl implements TalkBackForBrailleIme {
   }
 
   @Override
-  public boolean shouldAnnounceCharacterForOnScreenKeyboard() {
-    @KeyboardEchoType
-    int echoType = VerbosityPreferences.readOnScreenKeyboardEcho(prefs, service.getResources());
-    return echoType == PREF_ECHO_CHARACTERS || echoType == PREF_ECHO_CHARACTERS_AND_WORDS;
+  @KeyboardEchoType
+  public int getOnScreenKeyboardEcho() {
+    return VerbosityPreferences.readOnScreenKeyboardEcho(prefs, service.getResources());
   }
 
   @Override
