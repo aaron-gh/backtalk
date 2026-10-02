@@ -14,6 +14,11 @@
       android:key="@string/pref_use_accessibility_stream_key"
       android:title="@string/title_pref_use_accessibility_stream"
       android:summary="@string/summary_pref_use_accessibility_stream" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+      android:defaultValue="@bool/pref_speak_in_phrases_default"
+      android:key="@string/pref_speak_in_phrases_key"
+      android:title="@string/title_pref_speak_in_phrases"
+      android:summary="@string/summary_pref_speak_in_phrases" />
   <com.google.android.accessibility.material.preference.AccessibilitySeekBarPreference
       android:key="@string/pref_speech_volume_seekbar_key_int"
       android:persistent="false"

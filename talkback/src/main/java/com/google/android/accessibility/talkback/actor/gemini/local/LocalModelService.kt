@@ -18,6 +18,7 @@ package com.google.android.accessibility.talkback.actor.gemini.local
 
 import android.app.ActivityManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -47,19 +48,14 @@ class LocalModelService : Service() {
     val maxTokens: Int?,
   )
 
-  private val worker =
-    Executors.newSingleThreadExecutor { Thread(it, "on-device-ai").apply { isDaemon = true } }
   private lateinit var ipcThread: HandlerThread
   private lateinit var messenger: Messenger
-  // Only the worker thread changes these.
-  @Volatile private var llm: LiteRtLmLocalLlm? = null
-  private var llmConfig: Config? = null
-  @Volatile private var runningId = 0
-  @Volatile private var checkMemory = true
-  private val cancelledUpTo = AtomicInteger(0)
+  // The requests that came through this instance. The model and its thread are in the companion.
+  private val requests = RequestCancellation()
 
   override fun onCreate() {
     super.onCreate()
+    instances.incrementAndGet()
     ipcThread = HandlerThread("on-device-ai-ipc").apply { start() }
     messenger =
       Messenger(
@@ -73,12 +69,17 @@ class LocalModelService : Service() {
   override fun onBind(intent: Intent): IBinder = messenger.binder
 
   override fun onDestroy() {
-    llm?.cancel()
+    val id = requests.runningId
+    if (id != 0 && requests.cancel(id)) llm?.cancel()
+    instances.decrementAndGet()
     worker.execute {
-      llm?.close()
-      llm = null
+      // A new instance may already be using the model. Then it unloads when idle.
+      if (instances.get() == 0) {
+        llm?.close()
+        llm = null
+        llmConfig = null
+      }
     }
-    worker.shutdown()
     ipcThread.quitSafely()
     super.onDestroy()
   }
@@ -92,9 +93,7 @@ class LocalModelService : Service() {
         worker.execute { generate(id, data, replyTo) }
       }
       MSG_CANCEL -> {
-        val id = message.arg1
-        cancelledUpTo.accumulateAndGet(id, ::maxOf)
-        if (runningId == id) llm?.cancel()
+        if (requests.cancel(message.arg1)) llm?.cancel()
       }
     }
   }
@@ -102,12 +101,16 @@ class LocalModelService : Service() {
   private fun generate(id: Int, data: Bundle, replyTo: Messenger) {
     val reply =
       try {
-        if (id <= cancelledUpTo.get()) throw LocalLlmCancelledException()
-        runningId = id
+        if (!requests.start(id)) throw LocalLlmCancelledException()
         checkMemory = data.getBoolean(KEY_CHECK_MEMORY, true)
         val jpeg = data.getString(KEY_IMAGE_PATH)?.let { File(it).readBytes() }
-        val answer = llmFor(data).generate(data.getString(KEY_PROMPT).orEmpty(), jpeg)
-        if (id <= cancelledUpTo.get()) throw LocalLlmCancelledException()
+        if (requests.isCancelled(id)) throw LocalLlmCancelledException()
+        // Replacing the model can take a while, and a cancel meanwhile reaches no model.
+        val model = llmFor(data)
+        if (requests.isCancelled(id)) throw LocalLlmCancelledException()
+        val answer =
+          model.generate(data.getString(KEY_PROMPT).orEmpty(), jpeg) { requests.isCancelled(id) }
+        if (requests.isCancelled(id)) throw LocalLlmCancelledException()
         Message.obtain(null, MSG_ANSWER).apply { this.data.putString(KEY_TEXT, answer) }
       } catch (_: LocalLlmCancelledException) {
         Message.obtain(null, MSG_CANCELLED)
@@ -118,7 +121,7 @@ class LocalModelService : Service() {
           this.data.putString(KEY_TEXT, e.message ?: e.toString())
         }
       } finally {
-        runningId = 0
+        requests.finish()
       }
     reply.arg1 = id
     try {
@@ -135,14 +138,18 @@ class LocalModelService : Service() {
     val config = Config(file.path, file.lastModified(), data.getBoolean(KEY_USE_GPU), maxTokens)
     llm?.let {
       if (config == llmConfig) return it
+      // Forget it before closing it, so that a cancel meanwhile does not go to it.
+      llm = null
+      llmConfig = null
       it.close()
     }
+    val appContext = applicationContext
     return LiteRtLmLocalLlm(
-        this,
+        appContext,
         file,
         config.useGpu,
         maxTokens,
-        beforeLoad = { if (checkMemory) checkFreeMemory(file.length()) },
+        beforeLoad = { if (checkMemory) checkFreeMemory(appContext, file.length()) },
       )
       .also {
         llm = it
@@ -150,18 +157,30 @@ class LocalModelService : Service() {
       }
   }
 
-  private fun checkFreeMemory(modelBytes: Long) {
-    val memory = ActivityManager.MemoryInfo()
-    getSystemService(ActivityManager::class.java).getMemoryInfo(memory)
-    Log.i(TAG, "${memory.availMem / MIB} MB free for a ${modelBytes / MIB} MB model")
-    if (!OnDeviceAiSettings.hasFreeMemoryFor(modelBytes, memory.availMem, memory.lowMemory)) {
-      throw LocalLlmMemoryException("Not enough free memory")
-    }
-  }
-
   companion object {
     private const val TAG = "LocalModelService"
     private const val MIB = 1024L * 1024L
+
+    // One thread and one model for the whole process, not for each instance of the service. When
+    // Backtalk unbinds while a model loads, the load goes on, and the next bind makes a new
+    // instance. Its requests then wait for that load, instead of loading a second model beside it.
+    private val worker =
+      Executors.newSingleThreadExecutor { Thread(it, "on-device-ai").apply { isDaemon = true } }
+    // Only the worker thread changes these.
+    @Volatile private var llm: LiteRtLmLocalLlm? = null
+    private var llmConfig: Config? = null
+    @Volatile private var checkMemory = true
+    // How many instances of the service exist, so that the model closes only when none is left.
+    private val instances = AtomicInteger(0)
+
+    private fun checkFreeMemory(context: Context, modelBytes: Long) {
+      val memory = ActivityManager.MemoryInfo()
+      context.getSystemService(ActivityManager::class.java).getMemoryInfo(memory)
+      Log.i(TAG, "${memory.availMem / MIB} MB free for a ${modelBytes / MIB} MB model")
+      if (!OnDeviceAiSettings.hasFreeMemoryFor(modelBytes, memory.availMem, memory.lowMemory)) {
+        throw LocalLlmMemoryException("Not enough free memory")
+      }
+    }
 
     /** Backtalk asks for an answer. arg1 is the request ID, replyTo gets the answer. */
     const val MSG_GENERATE = 1
@@ -192,5 +211,48 @@ class LocalModelService : Service() {
     const val KEY_IMAGE_PATH = "image_path"
     const val KEY_TEXT = "text"
     const val NO_MAX_TOKENS = -1
+  }
+}
+
+/**
+ * Which requests are cancelled, and which one is running, for one instance of
+ * [LocalModelService]. Request IDs only grow, and a cancel covers its request and any before it.
+ * Safe to use from any thread.
+ */
+internal class RequestCancellation {
+  private val cancelledUpTo = AtomicInteger(0)
+
+  /** The request the model is working on, or 0. */
+  @Volatile
+  var runningId = 0
+    private set
+
+  /**
+   * Cancels [id] and any request before it. Returns true when one of them is running, so the model
+   * should stop. Otherwise the request stops when it checks [isCancelled].
+   */
+  fun cancel(id: Int): Boolean {
+    cancelledUpTo.accumulateAndGet(id, ::maxOf)
+    val running = runningId
+    return running != 0 && running <= id
+  }
+
+  fun isCancelled(id: Int): Boolean = id <= cancelledUpTo.get()
+
+  /**
+   * Marks [id] as running, and returns false when it is already cancelled. Checks after marking it,
+   * so a cancel at the same time either sees it running or is seen here.
+   */
+  fun start(id: Int): Boolean {
+    runningId = id
+    if (isCancelled(id)) {
+      runningId = 0
+      return false
+    }
+    return true
+  }
+
+  fun finish() {
+    runningId = 0
   }
 }

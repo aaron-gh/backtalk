@@ -233,6 +233,9 @@ public class FailoverTextToSpeech {
   public static final String PREF_TTS_ENGINE_KEY = "pref_tts_engine";
   public static final String PREF_USE_ACCESSIBILITY_STREAM_KEY = "pref_use_accessibility_stream";
   private static final boolean USE_ACCESSIBILITY_STREAM_DEFAULT = true;
+  public static final String PREF_SPEAK_IN_PHRASES_KEY = "pref_speak_in_phrases";
+  private static final boolean SPEAK_IN_PHRASES_DEFAULT = true;
+  private volatile boolean speakInPhrases = SPEAK_IN_PHRASES_DEFAULT;
   private @Nullable String preferredTtsEngine;
 
   private final OnSharedPreferenceChangeListener preferenceChangeListener =
@@ -242,6 +245,8 @@ public class FailoverTextToSpeech {
           updateDefaultEngine();
         } else if (PREF_USE_ACCESSIBILITY_STREAM_KEY.equals(key)) {
           applyAudioAttributes();
+        } else if (PREF_SPEAK_IN_PHRASES_KEY.equals(key)) {
+          speakInPhrases = sharedPrefs.getBoolean(key, SPEAK_IN_PHRASES_DEFAULT);
         }
       };
 
@@ -327,6 +332,7 @@ public class FailoverTextToSpeech {
 
     SharedPreferences prefs = SharedPreferencesUtils.getSharedPreferences(context);
     preferredTtsEngine = readPreferredEngine(prefs);
+    speakInPhrases = prefs.getBoolean(PREF_SPEAK_IN_PHRASES_KEY, SPEAK_IN_PHRASES_DEFAULT);
     prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
 
     // Updating the default engine reloads the list of installed engines and
@@ -945,14 +951,14 @@ public class FailoverTextToSpeech {
   private final Map<String, SpeechChunk> speechChunks = new ConcurrentHashMap<>();
 
   /**
-   * Speaks long text as pieces of about a sentence, so a later utterance can interrupt it quickly.
-   * See {@link SpeechChunker}. The pieces report progress as the one original utterance: see
-   * {@link #toOriginal}.
+   * Speaks long text as pieces of a sentence or phrase, so a later utterance can interrupt it
+   * quickly. See {@link SpeechChunker}. The pieces report progress as the one original utterance:
+   * see {@link #toOriginal}. The {@link #PREF_SPEAK_IN_PHRASES_KEY} setting turns this off.
    */
   private int speakInChunks(
       CharSequence text, int queueMode, Bundle bundle, String utteranceId, Locale locale) {
     List<Integer> starts =
-        utteranceId == null
+        utteranceId == null || !speakInPhrases
             ? Collections.singletonList(0)
             : SpeechChunker.chunkStarts(text, locale == null ? Locale.getDefault() : locale);
     if (starts.size() <= 1) {
@@ -1707,7 +1713,18 @@ public class FailoverTextToSpeech {
       }
       SpeechChunk chunk = toOriginal(utteranceId);
       if (chunk != null) {
-        if (chunk.utteranceId() == null || !chunk.first()) {
+        if (chunk.utteranceId() == null) {
+          return;
+        }
+        if (!chunk.first()) {
+          // A later piece starting to play is progress through the utterance. Report it as a
+          // range, so pausing resumes from this piece with engines that report no word ranges.
+          if (shouldHandleTtsCallbackInHandlerThread) {
+            mHandler.onUtteranceRangeStarted(chunk.utteranceId(), chunk.offset(), chunk.offset());
+          } else {
+            FailoverTextToSpeech.this.handleUtteranceRangeStarted(
+                chunk.utteranceId(), chunk.offset(), chunk.offset());
+          }
           return;
         }
         utteranceId = chunk.utteranceId();
