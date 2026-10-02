@@ -61,15 +61,17 @@ class RemoteLocalLlm(
   private val replies =
     Messenger(
       Handler(Looper.getMainLooper()) {
-        pending[it.arg1]?.complete(Reply(it.what, it.data.getString(LocalModelService.KEY_TEXT)))
+        pending.complete(it.arg1, Reply(it.what, it.data.getString(LocalModelService.KEY_TEXT)))
         true
       }
     )
-  private val pending = ConcurrentHashMap<Int, CompletableFuture<Reply>>()
+  private val pending = PendingRequests<Reply>()
   private val lock = Any()
   // Guarded by lock.
   private var service: Messenger? = null
   private var bound = false
+  // Counts the times this has bound, so that a request is failed only when its own process stops.
+  private var binding = 0
   private var connected = CountDownLatch(1)
   @Volatile private var currentId = 0
   @Volatile private var cancelRequested = false
@@ -88,12 +90,10 @@ class RemoteLocalLlm(
         // The process stopped, most likely because Android ran out of memory. Drop the binding,
         // so it is not started again until the next request.
         Log.w(TAG, "The on-device AI process stopped")
-        unbind()
         stopAll()
       }
 
       override fun onBindingDied(name: ComponentName) {
-        unbind()
         stopAll()
       }
     }
@@ -102,12 +102,11 @@ class RemoteLocalLlm(
     cancelRequested = false
     main.removeCallbacks(unbindIdle)
     val id = NEXT_ID.incrementAndGet()
-    val future = CompletableFuture<Reply>()
-    pending[id] = future
+    val future = pending.add(id)
     currentId = id
     var imageFile: File? = null
     try {
-      val messenger = connect()
+      val (messenger, sentOn) = connect()
       imageFile = jpeg?.let { File(appContext.cacheDir, "on-device-ai-$id.jpg").apply { writeBytes(it) } }
       val request = Message.obtain(null, LocalModelService.MSG_GENERATE)
       request.arg1 = id
@@ -123,6 +122,8 @@ class RemoteLocalLlm(
         putString(LocalModelService.KEY_PROMPT, prompt)
         imageFile?.let { putString(LocalModelService.KEY_IMAGE_PATH, it.path) }
       }
+      // When that process already stopped, no answer will come.
+      if (!pending.sent(id, sentOn)) throw stopped()
       messenger.send(request)
       if (cancelRequested) cancel()
       val reply = future.get()
@@ -152,7 +153,7 @@ class RemoteLocalLlm(
     val id = currentId
     if (id == 0) return
     // Let Backtalk go on at once. The service drops the answer when it comes.
-    pending[id]?.complete(Reply(LocalModelService.MSG_CANCELLED, null))
+    pending.complete(id, Reply(LocalModelService.MSG_CANCELLED, null))
     val messenger = synchronized(lock) { service } ?: return
     try {
       messenger.send(Message.obtain(null, LocalModelService.MSG_CANCEL).apply { arg1 = id })
@@ -168,14 +169,15 @@ class RemoteLocalLlm(
     unbind()
   }
 
-  /** Binds to the service if needed, and waits for it. */
-  private fun connect(): Messenger {
+  /** Binds to the service if needed, waits for it, and returns it with its binding number. */
+  private fun connect(): Pair<Messenger, Int> {
     val latch =
       synchronized(lock) {
         service?.let {
-          return it
+          return it to binding
         }
         if (!bound) {
+          binding++
           connected = CountDownLatch(1)
           // Not perceptible: when memory runs out, Android stops the model before Backtalk.
           val flags =
@@ -197,7 +199,7 @@ class RemoteLocalLlm(
     if (!latch.await(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
       throw LocalLlmException("On-device AI did not start")
     }
-    return synchronized(lock) { service } ?: throw stopped()
+    return synchronized(lock) { service?.let { it to binding } } ?: throw stopped()
   }
 
   private fun unbind() {
@@ -215,9 +217,17 @@ class RemoteLocalLlm(
     }
   }
 
-  /** Ends every request in progress, because the process that was answering them is gone. */
+  /**
+   * Drops the binding and ends the requests sent through it, because the process that was answering
+   * them is gone. A request sent after this goes to a new process, and is left alone.
+   */
   private fun stopAll() {
-    pending.values.forEach { it.complete(Reply(MSG_STOPPED, null)) }
+    val died =
+      synchronized(lock) {
+        unbind()
+        binding
+      }
+    pending.died(died, Reply(MSG_STOPPED, null))
   }
 
   private fun notEnoughMemory() =
@@ -239,5 +249,49 @@ class RemoteLocalLlm(
     private const val IDLE_UNBIND_MS = LiteRtLmLocalLlm.DEFAULT_IDLE_UNLOAD_MS + 10_000L
 
     private val NEXT_ID = AtomicInteger(0)
+  }
+}
+
+/**
+ * The requests waiting for an answer from [LocalModelService], with the binding each was sent
+ * through. When a binding's process stops, only the requests sent through it are ended, not one
+ * that was just sent to the process that replaced it. Safe to use from any thread.
+ */
+internal class PendingRequests<R> {
+  private class Request<R> {
+    val reply = CompletableFuture<R>()
+    // The binding it was sent through, or 0 before it is sent.
+    @Volatile var binding = 0
+  }
+
+  private val requests = ConcurrentHashMap<Int, Request<R>>()
+  // The last binding whose process stopped.
+  @Volatile private var lastDied = 0
+
+  /** Adds request [id], and returns where its reply goes. */
+  fun add(id: Int): CompletableFuture<R> = Request<R>().also { requests[id] = it }.reply
+
+  /** Answers request [id], if it is still waiting and has no answer yet. */
+  fun complete(id: Int, reply: R) {
+    requests[id]?.reply?.complete(reply)
+  }
+
+  fun remove(id: Int) {
+    requests.remove(id)
+  }
+
+  /**
+   * Records that request [id] is about to go through [binding]. Returns false when that binding's
+   * process already stopped, so no answer would come.
+   */
+  fun sent(id: Int, binding: Int): Boolean {
+    requests[id]?.binding = binding
+    return binding > lastDied
+  }
+
+  /** Ends with [reply] the requests sent through [binding], whose process stopped, or before it. */
+  fun died(binding: Int, reply: R) {
+    lastDied = maxOf(lastDied, binding)
+    requests.values.forEach { if (it.binding in 1..binding) it.reply.complete(reply) }
   }
 }
