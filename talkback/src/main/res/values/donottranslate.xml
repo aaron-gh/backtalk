@@ -30,6 +30,7 @@
     <string name="pref_system_tts_settings_key">pref_system_tts_settings</string>
     <string name="pref_tts_engine_key">pref_tts_engine</string>
     <string name="pref_use_accessibility_stream_key">pref_use_accessibility_stream</string>
+    <string name="pref_speak_in_phrases_key">pref_speak_in_phrases</string>
     <string name="pref_speech_pitch_seekbar_key_int" translatable="false">pref_speech_pitch_seekbar_key_int</string>
     <string name="pref_speech_volume_seekbar_key_int" translatable="false">pref_speech_volume_seekbar_key_int</string>
     <string name="pref_intonation_key">pref_intonation</string>
@@ -196,6 +197,19 @@
     <string name="pref_selector_change_brightness_key" translatable="false">pref_selector_change_brightness_key</string>
     <string name="pref_selector_change_touch_focus_latency_key" translatable="false">pref_selector_change_touch_focus_latency_key</string>
     <string name="pref_selector_change_typing_focus_latency_key" translatable="false">pref_selector_change_typing_focus_latency_key</string>
+    <string name="pref_selector_change_lift_to_activate_key" translatable="false">pref_selector_change_lift_to_activate_key</string>
+    <string name="pref_lift_to_activate_key" translatable="false">pref_lift_to_activate_key</string>
+    <string name="pref_lift_to_activate_default" translatable="false">0</string>
+    <string-array name="pref_lift_to_activate_entries">
+      <item>@string/value_lift_to_activate_disabled</item>
+      <item>@string/value_lift_to_activate_navigation_bar</item>
+      <item>@string/value_lift_to_activate_entire_screen</item>
+    </string-array>
+    <string-array name="pref_lift_to_activate_values">
+      <item>0</item>
+      <item>1</item>
+      <item>2</item>
+    </string-array>
     <string name="pref_selector_switch_tts_engine_key" translatable="false">pref_selector_switch_tts_engine_key</string>
     <string name="pref_selector_control_telling_time" translatable="false">pref_selector_control_telling_time</string>
     <string name="pref_selector_actions_key" translatable="false">pref_selector_actions_key </string>
@@ -1262,6 +1276,7 @@
     <integer name="pref_speech_rate_default_int">100</integer>
     <string name="pref_speech_pitch_default">1.0</string>
     <bool name="pref_use_accessibility_stream_default">true</bool>
+    <bool name="pref_speak_in_phrases_default">true</bool>
     <string name="pref_speech_volume_default">100</string>
     <integer name="pref_speech_volume_min">25</integer>
     <bool name="pref_screenoff_default">false</bool>
@@ -1341,6 +1356,7 @@
     <bool name="pref_selector_a11y_volume_default">false</bool>
     <bool name="pref_selector_brightness_default">true</bool>
     <bool name="pref_selector_typing_focus_latency_default">false</bool>
+    <bool name="pref_selector_lift_to_activate_default">true</bool>
     <bool name="pref_selector_switch_tts_engine_default">false</bool>
     <bool name="pref_selector_touch_focus_latency_default">false</bool>
     <bool name="pref_selector_control_telling_time_default">false</bool>
@@ -1654,6 +1670,7 @@
     <string name="selector_a11y_volume_change" translatable="false">SELECTOR_A11y_VOLUME_CHANGE</string>
     <string name="selector_brightness_change" translatable="false">SELECTOR_BRIGHTNESS_CHANGE</string>
     <string name="selector_typing_focus_latency_change" translatable="false">SELECTOR_TYPING_FOCUS_LATENCY_CHANGE</string>
+    <string name="selector_lift_to_activate_change" translatable="false">SELECTOR_LIFT_TO_ACTIVATE_CHANGE</string>
     <string name="selector_switch_tts_engine" translatable="false">SELECTOR_SWITCH_TTS_ENGINE</string>
     <string name="selector_touch_focus_latency_change" translatable="false">SELECTOR_TOUCH_FOCUS_LATENCY_CHANGE</string>
     <string name="selector_control_telling_time" translatable="false">SELECTOR_CONTROL_TELLING_TIME</string>
@@ -1718,6 +1735,8 @@
     <string name="pref_window_animation_scale_default">1.0</string>
 
     <string name="pref_talkback_gesture_detection_key" translatable="false">pref_talkback_gesture_detection_key</string>
+    <!-- Must match OnDeviceAiSettings.PREF_IGNORE_MEMORY_LIMITS. -->
+    <string name="pref_on_device_ai_ignore_memory_limits_key" translatable="false">pref_on_device_ai_ignore_memory_limits</string>
 
     <string name="pref_icon_detection_download_dialog_shown_times">pref_icon_detection_download_dialog_shown_times</string>
     <string name="pref_icon_detection_download_dialog_do_no_show">pref_icon_detection_download_dialog_do_no_show</string>

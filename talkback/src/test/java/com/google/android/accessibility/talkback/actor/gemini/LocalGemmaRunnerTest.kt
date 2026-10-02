@@ -20,6 +20,8 @@ import com.google.android.accessibility.talkback.actor.gemini.DataFieldUtils.Gem
 import com.google.android.accessibility.talkback.actor.gemini.GeminiRestRequestPerformer.GeminiRestResponseCallback
 import com.google.android.accessibility.talkback.actor.gemini.local.LocalLlm
 import com.google.android.accessibility.talkback.actor.gemini.local.LocalLlmCancelledException
+import com.google.android.accessibility.talkback.actor.gemini.local.LocalLlmException
+import com.google.android.accessibility.talkback.actor.gemini.local.LocalLlmMemoryException
 import java.util.Base64
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -112,7 +114,31 @@ class LocalGemmaRunnerTest {
     return body
   }
 
-  private fun runner(llm: LocalLlm?) = LocalGemmaRunner({ llm }, { llm }, worker, sameThread, sameThread)
+  private val announced = mutableListOf<String>()
+
+  private fun runner(llm: LocalLlm?) =
+    LocalGemmaRunner({ llm }, { llm }, worker, sameThread, sameThread, { announced.add(it) })
+
+  @Test
+  fun aMemoryFailureIsSpokenAndEndsQuietly() {
+    val llm = FakeLlm { throw LocalLlmMemoryException("Not enough free memory for Gemma") }
+    val recorder = Recorder()
+    runner(llm).run(request("Describe"), recorder)
+    recorder.await()
+    assertEquals(listOf("Not enough free memory for Gemma"), announced)
+    assertTrue(recorder.cancelled)
+    assertNull(recorder.failure)
+  }
+
+  @Test
+  fun otherFailuresAreNotSpokenByTheRunner() {
+    val llm = FakeLlm { throw LocalLlmException("broken") }
+    val recorder = Recorder()
+    runner(llm).run(request("Describe"), recorder)
+    recorder.await()
+    assertTrue(announced.isEmpty())
+    assertTrue(recorder.failure!!.contains("broken"))
+  }
 
   @Test
   fun passesThePromptAndImageToTheModelAndReturnsItsAnswer() {
@@ -229,6 +255,7 @@ class LocalGemmaRunnerTest {
         worker,
         blockedCanceller,
         sameThread,
+        { announced.add(it) },
       )
     val recorder = Recorder()
     runner.run(request("p"), recorder)

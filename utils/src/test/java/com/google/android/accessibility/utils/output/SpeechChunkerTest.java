@@ -30,33 +30,78 @@ public class SpeechChunkerTest {
       "Same price, current silicon, current design, and full support ahead of it. ";
 
   @Test
-  public void shortTextIsOnePiece() {
+  public void textUpToTheLimitIsOnePiece() {
     String text = "x".repeat(SpeechChunker.MAX_CHUNK);
     assertEquals(Collections.singletonList(0), SpeechChunker.chunkStarts(text, Locale.US));
   }
 
   @Test
-  public void splitsAtSentences() {
-    String text = SENTENCE.repeat(4);
-    List<Integer> starts = SpeechChunker.chunkStarts(text, Locale.US);
-    // Two sentences fit in a piece.
-    assertEquals(Arrays.asList(0, 2 * SENTENCE.length()), starts);
+  public void itemDescriptionWithClausesStaysWhole() {
+    String text = "Wi-Fi, On, Connected to Home network, Button, Double-tap to toggle";
+    assertEquals(Collections.singletonList(0), SpeechChunker.chunkStarts(text, Locale.US));
   }
 
   @Test
-  public void splitsLongSentenceAfterComma() {
-    String text = "word ".repeat(20) + "then a pause, " + "word ".repeat(20);
+  public void shortClausesStayWhole() {
+    String text = "Wi-Fi, On, Connected to Home network, Button";
+    assertEquals(Collections.singletonList(0), SpeechChunker.chunkStarts(text, Locale.US));
+  }
+
+  @Test
+  public void splitsAtEverySentence() {
+    String first = "The first sentence is long enough to be a piece on its own. ";
+    String second = "The second sentence is long enough to be a piece on its own. ";
+    String third = "The third sentence is long enough to be a piece on its own.";
+    List<Integer> starts = SpeechChunker.chunkStarts(first + second + third, Locale.US);
+    assertEquals(
+        Arrays.asList(0, first.length(), first.length() + second.length()), starts);
+  }
+
+  @Test
+  public void splitsAfterClausePunctuation() {
+    List<Integer> starts = SpeechChunker.chunkStarts(SENTENCE.repeat(3), Locale.US);
+    // "Same price," is too short a piece, so the first cut is after "current silicon,".
+    assertEquals("Same price, current silicon,".length(), (int) starts.get(1));
+  }
+
+  @Test
+  public void doesNotSplitNumbers() {
+    String text = "The population grew from 1,000,000 to 2,500,000 over the following decade.";
+    assertEquals(Collections.singletonList(0), SpeechChunker.chunkStarts(text, Locale.US));
+  }
+
+  @Test
+  public void shortSentenceJoinsNextPiece() {
+    String text = "Dr. William Moon invented an embossed alphabet in 1845.";
+    assertEquals(Collections.singletonList(0), SpeechChunker.chunkStarts(text, Locale.US));
+  }
+
+  @Test
+  public void splitsLongClauseAtSpace() {
+    String text = "word ".repeat(40);
     List<Integer> starts = SpeechChunker.chunkStarts(text, Locale.US);
     assertEquals(2, starts.size());
-    assertEquals(", ", text.substring(starts.get(1) - 1, starts.get(1) + 1));
+    assertEquals(' ', text.charAt(starts.get(1) - 1));
   }
 
   @Test
   public void splitsUnbrokenTextAtLimit() {
     String text = "x".repeat(SpeechChunker.MAX_CHUNK * 2 + 1);
+    // The second cut comes early, so that the last piece is not tiny.
     assertEquals(
-        Arrays.asList(0, SpeechChunker.MAX_CHUNK, 2 * SpeechChunker.MAX_CHUNK),
+        Arrays.asList(0, SpeechChunker.MAX_CHUNK, text.length() - SpeechChunker.MIN_CHUNK),
         SpeechChunker.chunkStarts(text, Locale.US));
+  }
+
+  @Test
+  public void lastPieceIsNeverTiny() {
+    for (String text :
+        Arrays.asList(
+            "word ".repeat(31) + "tail end.", "x".repeat(SpeechChunker.MAX_CHUNK + 10))) {
+      List<Integer> starts = SpeechChunker.chunkStarts(text, Locale.US);
+      int last = starts.get(starts.size() - 1);
+      assertTrue(text.length() - last >= SpeechChunker.MIN_CHUNK);
+    }
   }
 
   @Test

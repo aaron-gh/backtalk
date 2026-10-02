@@ -61,7 +61,7 @@ class LocalModelManager private constructor(context: Context) {
   private val closer =
     Executors.newSingleThreadExecutor { Thread(it, "on-device-ai-close").apply { isDaemon = true } }
   private val llmLock = Any()
-  @Volatile private var llm: LiteRtLmLocalLlm? = null
+  @Volatile private var llm: RemoteLocalLlm? = null
   private var llmKey: Triple<LocalModel, Boolean, Long>? = null
 
   val store = LocalModelStore(File(appContext.filesDir, "models"))
@@ -84,9 +84,13 @@ class LocalModelManager private constructor(context: Context) {
   /** The model the user chose, or the best one for this phone when they have not chosen. */
   fun preferredModel(): LocalModel = OnDeviceAiSettings.preferredModel(prefs, totalRamBytes())
 
-  /** The models to offer on this phone. */
+  /** The models to offer on this phone, or all of them when memory limits are ignored. */
   fun availableModels(): List<LocalModel> =
-    OnDeviceAiSettings.modelsFor(totalRamBytes()) { store.isInstalled(it) }
+    if (OnDeviceAiSettings.ignoreMemoryLimits(prefs)) {
+      LocalModel.entries
+    } else {
+      OnDeviceAiSettings.modelsFor(totalRamBytes()) { store.isInstalled(it) }
+    }
 
   fun isReady(): Boolean = activeModel() != null
 
@@ -112,7 +116,7 @@ class LocalModelManager private constructor(context: Context) {
       val current = llm
       if (current == null || llmKey != key) {
         current?.let { retire(it) }
-        llm = LiteRtLmLocalLlm(appContext, file, gpu, model.maxTokens)
+        llm = RemoteLocalLlm(appContext, model, file, gpu)
         llmKey = key
       }
       return llm
@@ -130,7 +134,7 @@ class LocalModelManager private constructor(context: Context) {
     }
   }
 
-  private fun retire(old: LiteRtLmLocalLlm) {
+  private fun retire(old: RemoteLocalLlm) {
     old.cancel()
     closer.execute { old.close() }
   }

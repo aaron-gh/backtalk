@@ -28,6 +28,12 @@ interface LocalLlm {
   fun cancel()
 }
 
-class LocalLlmException(message: String, cause: Throwable? = null) : Exception(message, cause)
+open class LocalLlmException(message: String, cause: Throwable? = null) : Exception(message, cause)
+
+/**
+ * The model could not run for lack of memory: the phone had too little free to load it, or the
+ * model's process stopped while it was working. [spokenMessage] tells the user what happened.
+ */
+class LocalLlmMemoryException(val spokenMessage: String) : LocalLlmException(spokenMessage)
 
 class LocalLlmCancelledException : Exception("Cancelled")

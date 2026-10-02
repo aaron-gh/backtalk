@@ -173,6 +173,7 @@ import com.google.android.accessibility.talkback.gesture.GestureShortcutMapping;
 import com.google.android.accessibility.talkback.imagecaption.ImageCaptionStorage;
 import com.google.android.accessibility.talkback.imagecaption.ImageCaptionUtils.CaptionType;
 import com.google.android.accessibility.talkback.imagecaption.ImageContents;
+import com.google.android.accessibility.talkback.individualfeedback.IndividualFeedbackSettings;
 import com.google.android.accessibility.talkback.interpreters.AccessibilityEventIdleInterpreter;
 import com.google.android.accessibility.talkback.interpreters.AccessibilityFocusInterpreter;
 import com.google.android.accessibility.talkback.interpreters.AutoScrollInterpreter;
@@ -996,6 +997,13 @@ public class TalkBackService extends AccessibilityServiceCompat
           .getFeedbackReturner()
           .returnFeedback(
               EVENT_ID_UNTRACKED, Feedback.deviceInfo(Action.CONFIG_CHANGED, newConfig));
+    }
+  }
+
+  /** Says why the model on the phone could not answer, such as low memory. */
+  private void speakOnDeviceAiProblem(String text) {
+    if (pipeline != null) {
+      pipeline.getFeedbackReturner().returnFeedback(EVENT_ID_UNTRACKED, Feedback.speech(text));
     }
   }
 
@@ -1995,7 +2003,9 @@ public class TalkBackService extends AccessibilityServiceCompat
             GeminiConfiguration.useAratea(this)
                 ? new ArateaEndpoint(this, getApplication())
                 : new GeminiRestEndpoint(
-                    this, BuildConfig.GEMINI_API_KEY, new LocalGemmaRequestPerformer(this)),
+                    this,
+                    BuildConfig.GEMINI_API_KEY,
+                    new LocalGemmaRequestPerformer(this, this::speakOnDeviceAiProblem)),
             new AiCoreEndpoint(this));
 
     KeyboardActor keyboardActor = new KeyboardActor(this);
@@ -3200,6 +3210,10 @@ public class TalkBackService extends AccessibilityServiceCompat
     boolean auditoryEnabled =
         getBooleanPref(R.string.pref_soundback_key, R.bool.pref_soundback_default);
     feedbackController.setAuditoryEnabled(auditoryEnabled);
+    feedbackController.setMutedAuditory(
+        IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs));
+    feedbackController.setMutedHaptic(
+        IndividualFeedbackSettings.INSTANCE.mutedVibrationResources(prefs));
 
     // Update preference: time feedback format.
     String timeFeedbackFormat =
