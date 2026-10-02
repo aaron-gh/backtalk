@@ -80,6 +80,16 @@
     -->
     <string name="summary_pref_use_accessibility_stream">Speech uses the accessibility volume, so you can set it apart from media. When off, speech uses the media volume.</string>
     <!--
+      Source: Title for the "speak long text in phrases" toggle.
+      Description: When on, Backtalk sends long text to the speech engine as separate phrases. [CHAR LIMIT=NONE]
+    -->
+    <string name="title_pref_speak_in_phrases">Speak long text in phrases</string>
+    <!--
+      Source: Summary for the "speak long text in phrases" toggle.
+      Description: Explains what sending long text as phrases does, and why to turn it off. [CHAR LIMIT=NONE]
+    -->
+    <string name="summary_pref_speak_in_phrases">Long text is sent to the speech engine a phrase at a time, so swiping away stops it at once, and resuming paused speech starts from the phrase you paused in. Turn off if your speech engine sounds different between phrases.</string>
+    <!--
       Source: Title for the menu item that opens the dialog with TTS  languages installed by the user.
       Description: This is presented to the user. [CHAR LIMIT=NONE]
     -->
