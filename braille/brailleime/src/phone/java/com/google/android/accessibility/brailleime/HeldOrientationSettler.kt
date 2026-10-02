@@ -39,20 +39,28 @@ class HeldOrientationSettler {
   var lastHeldSeenMs = 0L
     private set
 
-  /** Takes a reading of how the device is held at this time, with its screen rotation. */
-  fun update(orientation: Orientation, rotation: Int, nowMs: Long) {
+  /**
+   * Takes a reading of how the device is held at this time, with its screen rotation. Returns
+   * whether [lastHeld] changed.
+   */
+  fun update(orientation: Orientation, rotation: Int, nowMs: Long): Boolean {
     if (orientation == Orientation.UNKNOWN) {
       candidate = Orientation.UNKNOWN
-      return
+      return false
     }
     if (orientation != candidate) {
       candidate = orientation
       candidateSinceMs = nowMs
-    } else if (nowMs - candidateSinceMs >= SETTLE_MS) {
-      lastHeld = orientation
-      lastHeldRotation = rotation
-      lastHeldSeenMs = nowMs
+      return false
     }
+    if (nowMs - candidateSinceMs < SETTLE_MS) {
+      return false
+    }
+    val changed = orientation != lastHeld
+    lastHeld = orientation
+    lastHeldRotation = rotation
+    lastHeldSeenMs = nowMs
+    return changed
   }
 
   /** Forgets a reading that has not settled yet, as when the screen turns off. */

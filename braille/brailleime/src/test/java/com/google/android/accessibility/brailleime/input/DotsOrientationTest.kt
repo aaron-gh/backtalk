@@ -118,23 +118,16 @@ class DotsOrientationTest {
 
   @Test
   fun screenAwayLayout_expectsThePortOnTheRightInPortrait() {
-    assertTrue(DotsOrientation.screenAwayLayoutExpectsPortOnRight(true, rotation0, false))
-    assertTrue(DotsOrientation.screenAwayLayoutExpectsPortOnRight(false, rotation270, false))
-    assertFalse(DotsOrientation.screenAwayLayoutExpectsPortOnRight(false, rotation90, false))
-  }
-
-  @Test
-  fun screenAwayLayout_mirroredDotsExpectTheOtherSide() {
-    assertFalse(DotsOrientation.screenAwayLayoutExpectsPortOnRight(true, rotation0, true))
-    assertTrue(DotsOrientation.screenAwayLayoutExpectsPortOnRight(false, rotation90, true))
+    assertTrue(DotsOrientation.screenAwayLayoutExpectsPortOnRight(true, rotation0))
+    assertTrue(DotsOrientation.screenAwayLayoutExpectsPortOnRight(false, rotation270))
+    assertFalse(DotsOrientation.screenAwayLayoutExpectsPortOnRight(false, rotation90))
   }
 
   @Test
   fun tabletopLayout_expectsThePortOnTheLeftInPortrait() {
-    assertFalse(DotsOrientation.tabletopLayoutExpectsPortOnRight(true, rotation0, false))
-    assertTrue(DotsOrientation.tabletopLayoutExpectsPortOnRight(false, rotation90, false))
-    assertFalse(DotsOrientation.tabletopLayoutExpectsPortOnRight(false, rotation270, false))
-    assertTrue(DotsOrientation.tabletopLayoutExpectsPortOnRight(true, rotation0, true))
+    assertFalse(DotsOrientation.tabletopLayoutExpectsPortOnRight(true, rotation0))
+    assertTrue(DotsOrientation.tabletopLayoutExpectsPortOnRight(false, rotation90))
+    assertFalse(DotsOrientation.tabletopLayoutExpectsPortOnRight(false, rotation270))
   }
 
   @Test
@@ -249,22 +242,6 @@ class DotsOrientationTest {
         DotsOrientation.tabletPortPosition(rotation, false),
       )
     }
-  }
-
-  @Test
-  fun dotsMirrored_defaultLayouts() {
-    // Screen away in portrait: dot 1 above dot 4. Tabletop in portrait: dot 1 below dot 4.
-    assertFalse(DotsOrientation.dotsMirrored(true, false, 0f, 10f, 0f, 90f))
-    assertFalse(DotsOrientation.dotsMirrored(true, true, 0f, 90f, 0f, 10f))
-    // Screen away in landscape: dot 1 right of dot 4. Tabletop in landscape: dot 1 left of dot 4.
-    assertFalse(DotsOrientation.dotsMirrored(false, false, 90f, 0f, 10f, 0f))
-    assertFalse(DotsOrientation.dotsMirrored(false, true, 10f, 0f, 90f, 0f))
-  }
-
-  @Test
-  fun dotsMirrored_calibratedTheOtherWayRound() {
-    assertTrue(DotsOrientation.dotsMirrored(true, false, 0f, 90f, 0f, 10f))
-    assertTrue(DotsOrientation.dotsMirrored(false, true, 90f, 0f, 10f, 0f))
   }
 
   @Test

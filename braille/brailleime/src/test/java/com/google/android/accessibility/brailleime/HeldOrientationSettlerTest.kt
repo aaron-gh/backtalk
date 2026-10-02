@@ -18,6 +18,8 @@ package com.google.android.accessibility.brailleime
 
 import com.google.android.accessibility.brailleime.OrientationMonitor.Orientation
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HeldOrientationSettlerTest {
@@ -40,6 +42,22 @@ class HeldOrientationSettlerTest {
     assertEquals(Orientation.LANDSCAPE, settler.lastHeld)
     assertEquals(3, settler.lastHeldRotation)
     assertEquals(1000 + settle, settler.lastHeldSeenMs)
+  }
+
+  @Test
+  fun update_saysOnlyWhenTheSettledOrientationChanges() {
+    val settler = HeldOrientationSettler()
+    assertFalse(settler.update(Orientation.LANDSCAPE, 3, 0))
+    assertTrue(settler.update(Orientation.LANDSCAPE, 3, settle))
+    // Still held the same way, so nothing new to say.
+    assertFalse(settler.update(Orientation.LANDSCAPE, 3, 2 * settle))
+    // Flickering across 45 degrees for less than the settle time says nothing.
+    assertFalse(settler.update(Orientation.PORTRAIT, 0, 2 * settle + 10))
+    assertFalse(settler.update(Orientation.LANDSCAPE, 3, 2 * settle + 20))
+    assertFalse(settler.update(Orientation.LANDSCAPE, 3, 3 * settle))
+    assertFalse(settler.update(Orientation.UNKNOWN, -1, 4 * settle))
+    assertFalse(settler.update(Orientation.PORTRAIT, 0, 5 * settle))
+    assertTrue(settler.update(Orientation.PORTRAIT, 0, 6 * settle))
   }
 
   @Test

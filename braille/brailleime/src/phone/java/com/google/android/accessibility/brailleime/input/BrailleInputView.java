@@ -454,8 +454,7 @@ public class BrailleInputView extends View
     int lock = readOrientationLock();
     if (tabletopMode) {
       boolean layoutExpectsPortOnRight =
-          DotsOrientation.tabletopLayoutExpectsPortOnRight(
-              isPortrait(), displayRotation(), dotsMirrored());
+          DotsOrientation.tabletopLayoutExpectsPortOnRight(isPortrait(), displayRotation());
       boolean portOnRight =
           lock != DotsOrientation.UNLOCKED
               ? DotsOrientation.phoneLockPortOnRight(lock)
@@ -665,24 +664,7 @@ public class BrailleInputView extends View
 
   /** Which side a phone's layout expects the charging port on in screen-away mode. */
   private boolean layoutExpectsPortOnRight() {
-    return DotsOrientation.screenAwayLayoutExpectsPortOnRight(
-        isPortrait(), displayRotation(), dotsMirrored());
-  }
-
-  /** Whether the phone's saved dots are mirrored: see {@link DotsOrientation#dotsMirrored}. */
-  private boolean dotsMirrored() {
-    PointF dot1 = null;
-    PointF dot4 = null;
-    for (DotTarget target : inputPlane.getDotTargets()) {
-      if (target.getDotNumber() == 1) {
-        dot1 = target.getCenter();
-      } else if (target.getDotNumber() == 4) {
-        dot4 = target.getCenter();
-      }
-    }
-    return dot1 != null
-        && dot4 != null
-        && DotsOrientation.dotsMirrored(isPortrait(), tabletopMode, dot1.x, dot1.y, dot4.x, dot4.y);
+    return DotsOrientation.screenAwayLayoutExpectsPortOnRight(isPortrait(), displayRotation());
   }
 
   /**

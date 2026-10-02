@@ -299,11 +299,51 @@ public final class BrailleImeGestureAction {
       } else if (customizedActioGesturenMap.containsKey(defaultAction.getRootAction())) {
         list = getGesture(customizedActioGesturenMap, defaultAction.getRootAction());
       } else {
-        list = DEFAULT_ACTION_GESTURE_MIRRORED.get(defaultAction);
+        list =
+            withoutGesturesAssignedElsewhere(
+                DEFAULT_ACTION_GESTURE_MIRRORED.get(defaultAction),
+                defaultAction,
+                customizedActioGesturenMap);
       }
       currentlyUsingActionGestureMap.put(defaultAction, list);
     }
     return ImmutableMap.copyOf(currentlyUsingActionGestureMap);
+  }
+
+  /**
+   * Leaves out the default gestures that the user has assigned to another action. Assigning a
+   * gesture takes it from any action that had it, but a default added later, as by an update, could
+   * otherwise clash with a gesture the user already assigned, and then which action runs would be
+   * left to chance.
+   */
+  private static ImmutableList<Gesture> withoutGesturesAssignedElsewhere(
+      ImmutableList<Gesture> defaultGestures,
+      BrailleImeAction action,
+      Map<BrailleImeAction, List<String>> customizedActionGestureMap) {
+    ImmutableList.Builder<Gesture> gesturesBuilder = ImmutableList.builder();
+    for (Gesture gesture : defaultGestures) {
+      if (!isAssignedElsewhere(gesture, action, customizedActionGestureMap)) {
+        gesturesBuilder.add(gesture);
+      }
+    }
+    ImmutableList<Gesture> gestures = gesturesBuilder.build();
+    return gestures.isEmpty() ? ImmutableList.of(new UnassignedGesture()) : gestures;
+  }
+
+  private static boolean isAssignedElsewhere(
+      Gesture gesture,
+      BrailleImeAction action,
+      Map<BrailleImeAction, List<String>> customizedActionGestureMap) {
+    if (gesture instanceof UnassignedGesture) {
+      return false;
+    }
+    for (Entry<BrailleImeAction, List<String>> entry : customizedActionGestureMap.entrySet()) {
+      if (entry.getKey().getRootAction() != action.getRootAction()
+          && entry.getValue().contains(gesture.getId())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Nullable
