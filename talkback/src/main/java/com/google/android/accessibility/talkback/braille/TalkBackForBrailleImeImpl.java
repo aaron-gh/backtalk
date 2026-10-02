@@ -31,6 +31,7 @@ import com.google.android.accessibility.talkback.actor.DimScreenActor;
 import com.google.android.accessibility.talkback.compositor.GlobalVariables;
 import com.google.android.accessibility.talkback.focusmanagement.record.FocusActionInfo;
 import com.google.android.accessibility.talkback.monitor.ProximitySensorMonitor;
+import com.google.android.accessibility.talkback.pause.PauseController;
 import com.google.android.accessibility.talkback.selector.SelectorController;
 import com.google.android.accessibility.talkback.selector.SelectorController.AnnounceType;
 import com.google.android.accessibility.talkback.selector.SelectorController.Setting;
@@ -201,7 +202,10 @@ public class TalkBackForBrailleImeImpl implements TalkBackForBrailleIme {
 
   @Override
   public ServiceStatus getServiceStatus() {
-    return TalkBackService.isServiceActive() ? ServiceStatus.ON : ServiceStatus.OFF;
+    if (!TalkBackService.isServiceActive()) {
+      return ServiceStatus.OFF;
+    }
+    return PauseController.isPaused() ? ServiceStatus.SUSPEND : ServiceStatus.ON;
   }
 
   @Override

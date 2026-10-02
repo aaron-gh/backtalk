@@ -99,6 +99,7 @@ public class ContextMenuItemClickProcessor {
         || (itemId == R.id.tts_settings)
         || (itemId == R.id.enable_dimming)
         || (itemId == R.id.disable_dimming)
+        || (itemId == R.id.pause_backtalk)
         || (itemId == R.id.enable_telling_time)
         || (itemId == R.id.disable_telling_time)
         || (itemId == R.id.screen_search)
@@ -159,6 +160,10 @@ public class ContextMenuItemClickProcessor {
       pipeline.returnFeedback(eventId, Feedback.dimScreen(DIM));
     } else if (itemId == R.id.disable_dimming) {
       pipeline.returnFeedback(eventId, Feedback.dimScreen(BRIGHTEN));
+    } else if (itemId == R.id.pause_backtalk) {
+      if (service.getPauseController() != null) {
+        service.getPauseController().requestPause();
+      }
     } else if (itemId == R.id.screen_search) {
       pipeline.returnFeedback(eventId, Feedback.universalSearch(TOGGLE_SEARCH));
     } else if (itemId == R.id.voice_commands) {

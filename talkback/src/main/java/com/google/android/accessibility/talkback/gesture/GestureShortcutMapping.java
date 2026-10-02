@@ -16,6 +16,8 @@
 
 package com.google.android.accessibility.talkback.gesture;
 
+import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_2_FINGER_ROTATE_CLOCKWISE;
+import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_2_FINGER_ROTATE_COUNTERCLOCKWISE;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_2_FINGER_SINGLE_TAP_AND_HOLD;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_FAKED_SPLIT_TYPING;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_TAP_HOLD_AND_2ND_FINGER_BACKWARD_DOUBLE_TAP;
@@ -348,6 +350,17 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
         MULTI_FINGER,
         R.string.pref_shortcut_2finger_3tap_hold_key,
         R.string.pref_shortcut_2finger_3tap_hold_default),
+    // Only recognized when TalkBack detects gestures itself.
+    TWO_FINGER_ROTATE_CLOCKWISE(
+        GESTURE_2_FINGER_ROTATE_CLOCKWISE,
+        MULTI_FINGER,
+        R.string.pref_shortcut_2finger_rotate_clockwise_key,
+        R.string.pref_shortcut_2finger_rotate_clockwise_default),
+    TWO_FINGER_ROTATE_COUNTERCLOCKWISE(
+        GESTURE_2_FINGER_ROTATE_COUNTERCLOCKWISE,
+        MULTI_FINGER,
+        R.string.pref_shortcut_2finger_rotate_counterclockwise_key,
+        R.string.pref_shortcut_2finger_rotate_counterclockwise_default),
 
     // Fingerprint.
     FINGERPRINT_SWIPE_UP(
@@ -500,6 +513,7 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
     VOICE_COMMANDS(R.string.shortcut_value_voice_commands, R.string.shortcut_voice_commands),
     SCREEN_SEARCH(R.string.shortcut_value_screen_search, R.string.title_show_screen_search),
     SHOW_HIDE_SCREEN(R.string.shortcut_value_show_hide_screen, R.string.title_show_hide_screen),
+    PAUSE_BACKTALK(R.string.shortcut_value_pause_backtalk, R.string.title_pause_backtalk),
     PASS_THROUGH_NEXT_GESTURE(
         R.string.shortcut_value_pass_through_next_gesture, R.string.shortcut_pass_through_next),
     PRINT_NODE_TREE(R.string.shortcut_value_print_node_tree, R.string.shortcut_print_node_tree),
@@ -994,6 +1008,10 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
         return context.getString(action.actionNameResId);
       }
     }
+    @Nullable String navigationLabel = NavigationGestureActions.label(context, actionKeyString);
+    if (navigationLabel != null) {
+      return navigationLabel;
+    }
     return context.getString(R.string.shortcut_unassigned);
   }
 
@@ -1129,6 +1147,10 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
           context.getString(R.string.title_pref_shortcut_3finger_2tap_hold);
       case AccessibilityService.GESTURE_4_FINGER_DOUBLE_TAP_AND_HOLD ->
           context.getString(R.string.title_pref_shortcut_4finger_2tap_hold);
+      case GESTURE_2_FINGER_ROTATE_CLOCKWISE ->
+          context.getString(R.string.title_pref_shortcut_2finger_rotate_clockwise);
+      case GESTURE_2_FINGER_ROTATE_COUNTERCLOCKWISE ->
+          context.getString(R.string.title_pref_shortcut_2finger_rotate_counterclockwise);
       case GESTURE_TOUCH_EXPLORATION ->
           FeatureSupport.supportGestureMotionEvents()
               ? context.getString(R.string.gesture_name_touch_explore)

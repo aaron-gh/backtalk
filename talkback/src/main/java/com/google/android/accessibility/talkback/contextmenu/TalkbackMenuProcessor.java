@@ -71,6 +71,7 @@ public class TalkbackMenuProcessor {
   public static final int ORDER_TEXT_FORMATTING = 13;
   private static final int ORDER_LANGUAGES = 14;
   private static final int ORDER_SHOW_HIDE_SCREEN = 20;
+  private static final int ORDER_PAUSE_BACKTALK = 21;
   private static final int ORDER_SYSTEM_ACTIONS = 24;
   private static final int ORDER_TELL_TIME = 27;
 
@@ -143,6 +144,8 @@ public class TalkbackMenuProcessor {
 
     // Show/hide screen
     addDimOrBrightenScreen(menu);
+    // Pause Backtalk
+    addPauseBacktalk(menu);
     // Tell time
     addTellingTimeActionMenu(menu, prefs);
     // Language
@@ -155,6 +158,14 @@ public class TalkbackMenuProcessor {
         R.id.enable_dimming,
         prefs.getBoolean(
             service.getString(R.string.pref_show_dim_screen_confirmation_dialog), true));
+
+    setMenuItemShowsDialog(
+        menu,
+        R.id.pause_backtalk,
+        prefs.getBoolean(service.getString(R.string.pref_show_pause_confirmation_dialog), true));
+    // Pause once the menu has closed, so closing it does not move focus or speak after the pause.
+    setMenuItemDeferredType(menu, R.id.pause_backtalk, DeferredType.WINDOWS_STABLE);
+    setSkipRefocusAndWindowAnnounce(menu, R.id.pause_backtalk, true);
 
     setMenuItemShowsDialog(
         menu,
@@ -450,6 +461,19 @@ public class TalkbackMenuProcessor {
           ORDER_SHOW_HIDE_SCREEN,
           R.string.shortcut_enable_dimming);
     }
+  }
+
+  private void addPauseBacktalk(ContextMenu menu) {
+    menu.removeItem(R.id.pause_backtalk);
+
+    if (!showMenuItem(
+        R.string.pref_show_context_menu_pause_backtalk_setting_key,
+        R.bool.pref_show_context_menu_pause_backtalk_default)) {
+      return;
+    }
+
+    menu.add(
+        /* groupId= */ 0, R.id.pause_backtalk, ORDER_PAUSE_BACKTALK, R.string.title_pause_backtalk);
   }
 
   private void addTellingTimeActionMenu(ContextMenu menu, SharedPreferences prefs) {

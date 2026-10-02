@@ -180,6 +180,14 @@
             android:summary="@string/summary_show_hide_screen"/>
         <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
             android:layout="@layout/listitem_2texts"
+            android:defaultValue="@bool/pref_show_context_menu_pause_backtalk_default"
+            android:key="@string/pref_show_context_menu_pause_backtalk_setting_key"
+            android:order="20"
+            android:title="@string/title_pause_backtalk"
+            app:singleLineTitle="false"
+            android:summary="@string/summary_pause_backtalk"/>
+        <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
+            android:layout="@layout/listitem_2texts"
             android:defaultValue="@bool/pref_show_context_menu_voice_commands_default"
             android:key="@string/pref_show_context_menu_voice_commands_setting_key"
             android:order="21"

@@ -19,6 +19,7 @@ Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), t
 *   **Faster swiping in lists.** To find the next item in a list, TalkBack built the reading order of the whole screen three times: once to check whether you were at the end of the list, once to find the item, and once to check whether the item needed scrolling into view. Backtalk now builds it once and reuses it.
 *   **Faster swiping on screens that do not change.** TalkBack asked the app for every item on the screen on each swipe, and waited for each answer. Backtalk now keeps the reading order between swipes, and builds it again only when the screen changes or Backtalk scrolls or clicks. In a test on a Realme phone, 3 of 4 swipes reused the order, and the longest pause during swiping went from about 450 ms to about 150 ms.
 *   **Swiping away from long paragraphs.** Some speech engines only stop between the blocks they synthesize, and treat a whole item as one block. When you swiped away from a long paragraph on a web page, the next item could wait up to 850 ms for the engine to stop. Backtalk now sends text longer than 150 characters as pieces of about a sentence, queued one after another, so the engine stops at once. In Chrome on a Samsung phone with the Gryphon engine, web swipes went from as much as 900 ms to at most about 110 ms. The paragraph still counts as one item for continuous reading and for word positions.
+*   **Faster screen changes.** After a window changes, TalkBack waits for it to settle before it says the title, and counted that wait in a way that made 550 ms last about 900 ms. Backtalk counts the real time. **Reduce window announcement delay** in Advanced settings turns animations off, so screens change at once and the wait is 200 ms, but TalkBack had switched that part off, so the setting did nothing. Backtalk turns animations back on when it is turned off. The setting is on by default.
 
 ### Screen and brightness
 
@@ -39,12 +40,19 @@ Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), t
     *   Triple-tap with 3 fingers: copy the last spoken phrase.
     *   Triple-tap and hold with 3 fingers: paste.
     *   Selection mode has no gesture.
+*   **Navigation gestures.** You can assign a gesture to move to the next or previous character, word, line, paragraph, heading, link, control, landmark, button, checkbox, radio button, edit field, combo box, focusable item, graphic, list, list item, table, visited link, unvisited link, or heading of a given level. The reading control does not change. Find these actions under **Navigate by text**, **Navigate by element**, and **Navigate by heading level** when you choose an action for a gesture. Headings, links, and controls work in apps and on web pages. The other elements work only on web pages, and elsewhere Backtalk says so.
 *   **Status gesture.** Triple-tap with 2 fingers to hear what the status bar shows: the time, battery, Wi-Fi, and mobile signal, and the ringer, Do Not Disturb, and airplane mode when they are not in their usual state. To hear the Wi-Fi network name, allow location access when Backtalk asks the first time. To choose what it says and in what order, go to **Status readout** in Backtalk settings. Each item has **Move up** and **Move down** actions. This action is also in the gesture list as **Speak status**. To read from the current item, use **Read from next item** in the Backtalk menu.
+*   **Rotor.** Turn 2 fingers on the screen like a dial to choose a reading control. Turn clockwise for the next one and counterclockwise for the previous one. Each step of about a twelfth of a turn moves one reading control, so you can keep turning to move further. Then swipe up or down to change it. You can assign other actions to **Rotate clockwise with 2 fingers** and **Rotate counterclockwise with 2 fingers** in gesture settings. This needs Android 13 or later.
+*   **Gestures handled by Backtalk.** Backtalk now recognizes gestures itself by default, instead of leaving this to Android. This is what makes the rotor possible. To let Android recognize gestures again, go to **Developer settings** in Backtalk settings and turn off **Handle gestures in Backtalk**, then turn Backtalk off and on again. The rotor does not work then.
 
 ### Backtalk menu
 
 *   **Shorter menu by default.** These items are off by default: Actions, Screen search, Add or edit labels, Describe text formatting, Copy last spoken phrase, Spoken language, Voice commands, Keyboard shortcuts, and Braille display settings. Actions stay available with the actions reading control. Text-to-speech stays on, so that you can get to speech settings if your speech engine crashes. To turn them back on, go to **Customize menus** in Backtalk settings.
 *   **Circle menu.** The Backtalk menu can show as a circle in the middle of the screen, like in TalkBack 8.1 and earlier. Each item is a slice of the screen around the middle. Slide to an item, and lift to select it. Lift in the middle of the circle to close the menu. Items that open more items show them in a new circle. To turn it on, go to **Customize menus** in Backtalk settings and turn on **Circle menu**.
+
+### Pause
+
+*   **Pause Backtalk.** Pausing turns off Backtalk's speech, sounds, vibration and gestures, and explore by touch, so the phone works as if no screen reader is on. Backtalk stays on, so it resumes at once. This was in TalkBack 8.1 and earlier as suspend. To pause, choose **Pause Backtalk** in the Backtalk menu, assign the **Pause Backtalk** action to a gesture, or assign the **Pause or resume Backtalk** keyboard shortcut. The first time, Backtalk asks to confirm and says how to resume. To resume, tap the **Backtalk is paused** notification, press volume down 3 times quickly, or press the keyboard shortcut again. By default, Backtalk also resumes when the lock screen shows. To change this, go to **Advanced settings > Resume Backtalk** in Backtalk settings and choose **When the screen turns on** or **Only from the notification or a shortcut**. Volume keys still change the volume while Backtalk is paused. If Backtalk restarts while paused, it starts unpaused.
 
 ### Speech
 
@@ -117,6 +125,19 @@ Google's source release does not include the Gemini settings, so **Describe imag
 Git ignores `local.properties`, so your key is not committed. The key is built into the APK, so do not share an APK that contains your key.
 
 Images and screenshots that you describe are sent to Google. On the free tier, Google can use this data to improve its products.
+
+### On-device AI
+
+If you do not want to use an API key, or you have hit the free tier limit, Backtalk can describe images and screens with a Gemma 4 model that runs on your phone. Nothing is sent to Google or anyone else when you use it.
+
+1.  Open Backtalk settings, then **Automatic descriptions**, then **On-device AI**.
+2.  Choose a model. **Gemma 4 E2B** is the one to start with: 2.6 GB, and it needs a phone with about 6 GB of memory. **Gemma 4 E4B** is 3.7 GB, gives better answers, and needs about 8 GB. The list also has other small vision models from the [LiteRT community](https://huggingface.co/litert-community), from 0.4 GB up, so that you can try them. Those are marked experimental: they are community conversions that the Backtalk developers have not tried, and some may not work or may follow the screen description format badly. The list only shows models that your phone has enough memory for, plus any you already have. If your phone does not have enough memory for Gemma 4 E2B, Backtalk picks the largest model that fits.
+3.  Choose **Download model**. It downloads once from [Hugging Face](https://huggingface.co/litert-community) and carries on where it stopped if the connection drops. A notification shows the progress. Backtalk checks the file against a known SHA-256 hash and deletes it if it does not match. Or choose **Use a model file from storage** to use a `.litertlm` file that you downloaded yourself, such as `gemma-4-E2B-it.litertlm` from `litert-community/gemma-4-E2B-it-litert-lm`. Backtalk works out which model it is.
+4.  Turn on **Use on-device AI**.
+
+You still need to turn on Gemini support in the Gemini settings, which switches on Describe image and Describe screen. After that, they use the model on your phone. Turn **Use on-device AI** off to go back to the Gemini API.
+
+Answers take several seconds and use battery, more than the cloud on a mid-range phone. The model loads on the first request and unloads after two idle minutes to free memory. If answers fail or the phone slows down, try the other model, or turn **Use the GPU** on or off. On-device AI needs a 64-bit ARM phone and adds about 22 MB to the app.
 
 ## Install
 

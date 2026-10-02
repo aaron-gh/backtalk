@@ -76,6 +76,7 @@ class DirectTouchController(
   private var screenInteractive = true
   private var displayOn = true
   private var active = false
+  private var paused = false
 
   // The system holds preference listeners weakly, so this must stay a field.
   private val prefsListener =
@@ -141,6 +142,19 @@ class DirectTouchController(
     evaluate()
   }
 
+  /**
+   * Stops sending the region while Backtalk is paused, when explore by touch is off and the region
+   * does nothing. On resume, sends it again for the current screen.
+   */
+  fun setPaused(paused: Boolean) {
+    this.paused = paused
+    handler.removeCallbacks(reevaluate)
+    handler.removeCallbacks(recheck)
+    if (!paused) {
+      evaluate()
+    }
+  }
+
   fun shutdown() {
     prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
     handler.removeCallbacks(reevaluate)
@@ -163,7 +177,7 @@ class DirectTouchController(
 
   private fun evaluate() {
     handler.removeCallbacks(reevaluate)
-    if (!FeatureSupport.supportPassthrough()) {
+    if (paused || !FeatureSupport.supportPassthrough()) {
       return
     }
     val windows = service.windows.orEmpty()

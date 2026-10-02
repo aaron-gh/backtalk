@@ -324,6 +324,11 @@ public enum TalkBackPhysicalKeyboardShortcut {
       /* KEYBOARD_SHORTCUT_HIDE_OR_SHOW_SCREEN */ 77,
       R.string.keycombo_shortcut_global_hide_or_show_screen,
       R.string.keycombo_menu_global_hide_or_show_screen),
+  // Backtalk: an ordinal well past Google's, which only analytics and performance logs use.
+  PAUSE_OR_RESUME_BACKTALK(
+      /* KEYBOARD_SHORTCUT_PAUSE_OR_RESUME_BACKTALK */ 1001,
+      R.string.keycombo_shortcut_global_pause_backtalk,
+      R.string.keycombo_menu_global_pause_backtalk),
   NAVIGATE_NEXT_ROW(
       /* KeyboardShortcut.KEYBOARD_SHORTCUT_NAVIGATE_TO_NEXT_ROW */ 78,
       R.string.keycombo_shortcut_navigate_next_row,

@@ -39,12 +39,16 @@ import static com.google.android.accessibility.utils.Performance.EVENT_ID_UNTRAC
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.Toast;
 import androidx.annotation.StringRes;
+import com.google.android.accessibility.talkback.actor.gemini.local.OnDeviceAiSettings;
+import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.talkback.Feedback;
 import com.google.android.accessibility.talkback.Feedback.GeminiRequest;
 import com.google.android.accessibility.talkback.Feedback.ScreenOverviewResult;
@@ -248,7 +252,7 @@ public class GeminiActor {
         new ProgressTonePlayer(
             new DefaultProgressToneProvider(),
             this::playTone,
-            KEEP_WAITING_TIME_MS,
+            this::keepWaitingTimeMs,
             this::onTimeout);
     this.aiCoreEndpoint = aiCoreEndpoint;
     this.aiCoreEndpoint.setAiFeatureDownloadCallback(aiFeatureDownloadCallback);
@@ -553,6 +557,13 @@ public class GeminiActor {
   }
 
   public void displayScreenOverviewResultDialog(ScreenOverviewResult result) {
+    Log.i(
+        TAG,
+        String.format(
+            "Screen overview result %s, overviewEnabled=%b, imageQna=%b",
+            result.response().getClass().getSimpleName(),
+            GeminiConfiguration.screenOverviewEnabled(context),
+            isSupportImageQna(result.requestId())));
     if (GeminiConfiguration.screenOverviewEnabled(context)) {
       if (isSupportImageQna(result.requestId())) {
         mainHandler.post(
@@ -770,6 +781,7 @@ public class GeminiActor {
 
   private void handleScreenOverviewResponse(
       int requestId, FinishReason finishReason, OverviewResponse response) {
+    Log.i(TAG, "Screen overview response: " + finishReason);
     switch (finishReason) {
       case STOP -> {
         analytics.onGeminiEvent(
@@ -907,6 +919,14 @@ public class GeminiActor {
   private void responseScreenOverviewResult(int requestId, OverviewResponse response) {
     pipeline.returnFeedback(
         EVENT_ID_UNTRACKED, Feedback.responseScreenOverviewResult(requestId, response));
+  }
+
+  /** The cloud gives up after a fixed time. A model on the phone is slower, so the user sets it. */
+  private long keepWaitingTimeMs() {
+    SharedPreferences prefs = SharedPreferencesUtils.getSharedPreferences(context);
+    return OnDeviceAiSettings.INSTANCE.isOnDevice(prefs)
+        ? SECONDS.toMillis(OnDeviceAiSettings.INSTANCE.timeoutSeconds(prefs))
+        : KEEP_WAITING_TIME_MS;
   }
 
   private void onTimeout() {

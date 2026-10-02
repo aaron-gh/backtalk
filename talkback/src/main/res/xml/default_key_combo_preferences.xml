@@ -116,6 +116,9 @@
         <com.google.android.accessibility.talkback.preference.base.KeyboardShortcutDialogPreference
             android:key="@string/keycombo_shortcut_global_hide_or_show_screen"
             android:title="@string/keycombo_menu_global_hide_or_show_screen"/>
+        <com.google.android.accessibility.talkback.preference.base.KeyboardShortcutDialogPreference
+            android:key="@string/keycombo_shortcut_global_pause_backtalk"
+            android:title="@string/keycombo_menu_global_pause_backtalk"/>
     </PreferenceCategory>
     <PreferenceCategory
         android:key="@string/pref_other_actions_category_key"
