@@ -1639,7 +1639,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     helper.checkUpdate();
     Updater.startAutomaticChecks(this);
     // Turns Backtalk under its old app ID off, before this one says it is on.
-    AppIdHandOver.onServiceConnected(this);
+    AppIdHandOver.onServiceConnected(this, this::refreshGestureDetection);
 
     compositor.handleEvent(Compositor.EVENT_SPOKEN_FEEDBACK_ON, talkbackOnEventId);
 
@@ -3906,6 +3906,17 @@ public class TalkBackService extends AccessibilityServiceCompat
       displayIdToTouchInteractionMonitors.put(display.getDisplayId(), touchInteractionMonitor);
       userInterface.registerListener(touchInteractionMonitor);
       LogUtils.i(TAG, "Enabling service gesture detection on display %d", display.getDisplayId());
+    }
+  }
+
+  /**
+   * Sets up gesture detection again, after Android set up touch handling again and dropped it, as
+   * when another accessibility service is turned off.
+   */
+  private void refreshGestureDetection() {
+    if (isServiceActive() && shouldUseTalkbackGestureDetection()) {
+      unregisterGestureDetection();
+      registerGestureDetection();
     }
   }
 

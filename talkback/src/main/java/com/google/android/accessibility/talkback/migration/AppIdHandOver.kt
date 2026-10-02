@@ -23,7 +23,10 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.database.ContentObserver
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import com.google.android.accessibility.talkback.R
 import com.google.android.accessibility.talkback.utils.NotificationUtils
@@ -43,6 +46,12 @@ object AppIdHandOver {
   private const val KEY_UNINSTALL_OFFERED = "uninstall_offered"
   private const val BRAILLE_IME_CLASS = "com.google.android.accessibility.brailleime.BrailleIme"
 
+  /** How long after the old service leaves the enabled services to set up gestures again. */
+  private const val REREGISTER_DELAY_MS = 500L
+
+  /** How long to wait for the old service to leave the enabled services. */
+  private const val WATCH_TIMEOUT_MS = 30_000L
+
   // Secure settings that name accessibility services as shortcut targets. Some of them are only on
   // newer Android versions, and missing ones are skipped.
   private val SHORTCUT_TARGET_SETTINGS =
@@ -53,20 +62,24 @@ object AppIdHandOver {
       "accessibility_gesture_targets",
     )
 
-  /** Call when the screen reader service connects. */
+  /**
+   * Call when the screen reader service connects. When the old service has left the enabled
+   * services, [onOldServiceGone] runs on the main thread: Android sets up touch handling again after
+   * that change, which drops this service's own gesture detection, so it must be set up again.
+   */
   @JvmStatic
-  fun onServiceConnected(context: Context) {
+  fun onServiceConnected(context: Context, onOldServiceGone: Runnable) {
     if (context.packageName == AppIdMove.OLD_PACKAGE) {
       return
     }
     try {
-      handOver(context)
+      handOver(context, onOldServiceGone)
     } catch (e: RuntimeException) {
       LogUtils.e(TAG, "Cannot take over from the old app: %s", e)
     }
   }
 
-  private fun handOver(context: Context) {
+  private fun handOver(context: Context, onOldServiceGone: Runnable) {
     if (!SettingsImporter.isOldAppInstalled(context)) {
       return
     }
@@ -79,6 +92,7 @@ object AppIdHandOver {
 
     val enabled = Settings.Secure.getString(resolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
     if (ComponentLists.contains(enabled, oldService)) {
+      watchForServiceGone(context, oldService, onOldServiceGone)
       if (canWrite) {
         ComponentLists.remove(enabled, oldService)?.let {
           putSecure(context, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, it)
@@ -102,6 +116,37 @@ object AppIdHandOver {
     }
 
     offerUninstall(context)
+  }
+
+  /** Runs [onGone] shortly after [service] leaves the enabled accessibility services. */
+  private fun watchForServiceGone(context: Context, service: String, onGone: Runnable) {
+    val resolver = context.contentResolver
+    val handler = Handler(Looper.getMainLooper())
+    val observer =
+      object : ContentObserver(handler) {
+        var watching = true
+
+        override fun onChange(selfChange: Boolean) {
+          val enabled =
+            Settings.Secure.getString(resolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
+          if (watching && !ComponentLists.contains(enabled, service)) {
+            stop()
+            LogUtils.i(TAG, "The old app is off, setting up gestures again")
+            handler.postDelayed(onGone, REREGISTER_DELAY_MS)
+          }
+        }
+
+        fun stop() {
+          watching = false
+          resolver.unregisterContentObserver(this)
+        }
+      }
+    resolver.registerContentObserver(
+      Settings.Secure.getUriFor(Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES),
+      false,
+      observer,
+    )
+    handler.postDelayed({ if (observer.watching) observer.stop() }, WATCH_TIMEOUT_MS)
   }
 
   private fun swap(context: Context, key: String, oldComponent: String, newComponent: String) {
