@@ -53,7 +53,7 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
   private final SharedPreferences prefs;
   private final String model;
   private final String url;
-  private final String urlWithApiKey;
+  private final String builtInApiKey;
   private final GeminiRestRequestPerformer requestPerformer;
   private final String safetyThresholdHarassment;
   private final String safetyThresholdHateSpeech;
@@ -62,16 +62,16 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
   private final String prefixPrompt;
   private final ScreenOverviewRequester screenOverviewRequester;
 
+  /**
+   * @param builtInApiKey the key built into the app, used only while the user has not entered one
+   *     in settings
+   */
   public GeminiRestEndpoint(
-      Context context, String apiKey, GeminiRestRequestPerformer requestPerformer) {
+      Context context, String builtInApiKey, GeminiRestRequestPerformer requestPerformer) {
     this.context = context;
     model = GeminiConfiguration.getGeminiModel(context);
     url = GEMINI_URL + model + GEMINI_URL_NO_PARAM;
-    if (!TextUtils.isEmpty(apiKey)) {
-      urlWithApiKey = GEMINI_URL + model + GEMINI_URL_PARAM + apiKey;
-    } else {
-      urlWithApiKey = "";
-    }
+    this.builtInApiKey = builtInApiKey;
     this.requestPerformer = requestPerformer;
     safetyThresholdHarassment = GeminiConfiguration.getSafetyThresholdHarassment(context);
     safetyThresholdHateSpeech = GeminiConfiguration.getSafetyThresholdHateSpeech(context);
@@ -92,6 +92,7 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
                   : PromptStyle.ON_DEVICE;
             },
             (postData, callback) -> {
+              String urlWithApiKey = urlWithApiKey();
               requestPerformer.performRequest(
                   TextUtils.isEmpty(urlWithApiKey) ? url : urlWithApiKey, postData, callback);
               return kotlin.Unit.INSTANCE;
@@ -99,8 +100,17 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
     prefs = SharedPreferencesUtils.getSharedPreferences(context);
   }
 
+  /**
+   * Returns the request URL with the API key, or an empty string when there is no key. The key is
+   * read each time, so that a key entered in settings works at once.
+   */
+  private String urlWithApiKey() {
+    String apiKey = GeminiApiKey.effectiveKey(prefs, builtInApiKey);
+    return TextUtils.isEmpty(apiKey) ? "" : GEMINI_URL + model + GEMINI_URL_PARAM + apiKey;
+  }
+
   private boolean isSupported() {
-    return !TextUtils.isEmpty(urlWithApiKey) || requestPerformer.isKeylessInitialized();
+    return !TextUtils.isEmpty(urlWithApiKey()) || requestPerformer.isKeylessInitialized();
   }
 
   @Override
@@ -160,6 +170,7 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
       JSONObject postData =
           DataFieldUtils.createPostDataJson(prefixPrompt + text, encodedImage, safetySettings);
 
+      String urlWithApiKey = urlWithApiKey();
       String urlTarget = TextUtils.isEmpty(urlWithApiKey) ? url : urlWithApiKey;
       requestPerformer.performRequest(
           urlTarget,
