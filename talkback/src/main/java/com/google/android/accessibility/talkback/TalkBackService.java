@@ -270,6 +270,7 @@ import com.google.android.accessibility.utils.monitor.SpeechStateMonitor;
 import com.google.android.accessibility.utils.monitor.TouchMonitor;
 import com.google.android.accessibility.utils.output.ActorStateProvider;
 import com.google.android.accessibility.utils.output.EditTextActionHistory;
+import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.accessibility.utils.output.FeedbackController;
 import com.google.android.accessibility.utils.output.FeedbackProcessingUtils;
 import com.google.android.accessibility.utils.output.ScrollActionRecord;
@@ -815,47 +816,30 @@ public class TalkBackService extends AccessibilityServiceCompat
    * @return TTS volume in [0.0f, 1.0f].
    */
   private float calculateFinalAnnouncementVolume() {
-    if (!FeatureSupport.hasAccessibilityAudioStream(this)) {
-      return 1.0f;
+    float speechVolume = userSpeechVolume();
+    if (!FeatureSupport.hasAccessibilityAudioStream(this)
+        || !FailoverTextToSpeech.shouldUseAccessibilityStream(this)) {
+      // Speech already uses the media volume.
+      return speechVolume;
     }
-    AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+    return FinalAnnouncementVolume.calculate(
+        (AudioManager) getSystemService(Context.AUDIO_SERVICE),
+        speechVolume,
+        (volumeMonitor == null) ? -1 : volumeMonitor.getCachedAccessibilityStreamVolume(),
+        (volumeMonitor == null) ? -1 : volumeMonitor.getCachedAccessibilityMaxVolume());
+  }
 
-    int musicStreamVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-    int musicStreamMaxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-    int accessibilityStreamVolume =
-        (volumeMonitor == null) ? -1 : volumeMonitor.getCachedAccessibilityStreamVolume();
-    int accessibilityStreamMaxVolume =
-        (volumeMonitor == null) ? -1 : volumeMonitor.getCachedAccessibilityMaxVolume();
-    if (musicStreamVolume <= 0
-        || musicStreamMaxVolume <= 0
-        || accessibilityStreamVolume < 0
-        || accessibilityStreamMaxVolume <= 0) {
-      // Do not adjust volume if music stream is muted, or when any volume is invalid.
-      return 1.0f;
-    }
-    if (accessibilityStreamVolume == 0) {
-      return 0.0f;
-    }
-
-    // Depending on devices/API level, a stream might have 7 steps or 15 steps adjustment.
-    // We need to normalize the values to eliminate this difference.
-    float musicVolumeFraction = (float) musicStreamVolume / musicStreamMaxVolume;
-    float accessibilityVolumeFraction =
-        (float) accessibilityStreamVolume / accessibilityStreamMaxVolume;
-    if (musicVolumeFraction <= accessibilityVolumeFraction) {
-      // Do not adjust volume when a11y stream volume is louder than music stream volume.
-      return 1.0f;
-    }
-
-    // AudioManager measures the volume in dB scale, while TTS measures it in linear scale. We need
-    // to apply exponential operation to map dB/logarithmic-scaled diff value into linear-scaled
-    // multiplier value.
-    // The dB scaling could be different based on devices/OEMs/streams, which is not under our
-    // control.
-    // What we can do is to try our best to adjust the volume and avoid sudden volume increase.
-    // TODO: The parameters in Math.pow() are results from experiments. Feel free to change
-    // them.
-    return (float) Math.pow(10.0f, (accessibilityVolumeFraction - musicVolumeFraction) / 0.4f);
+  /** The user's speech volume, from 0 to 1. */
+  private float userSpeechVolume() {
+    int speechVolume =
+        Math.max(
+            SharedPreferencesUtils.getIntFromStringPref(
+                prefs,
+                getResources(),
+                R.string.pref_speech_volume_key,
+                R.string.pref_speech_volume_default),
+            getResources().getInteger(R.integer.pref_speech_volume_min));
+    return speechVolume / 100.0f;
   }
 
   @Override
@@ -3193,12 +3177,7 @@ public class TalkBackService extends AccessibilityServiceCompat
         getBooleanPref(R.string.pref_use_audio_focus_key, R.bool.pref_use_audio_focus_default);
     pipeline.setUseAudioFocus(useAudioFocus);
 
-    int speechVolume =
-        Math.max(
-            SharedPreferencesUtils.getIntFromStringPref(
-                prefs, res, R.string.pref_speech_volume_key, R.string.pref_speech_volume_default),
-            res.getInteger(R.integer.pref_speech_volume_min));
-    pipeline.setSpeechVolume(speechVolume / 100.0f);
+    pipeline.setSpeechVolume(userSpeechVolume());
 
     // Reload feedback preferences.
     int adjustment =
