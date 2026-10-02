@@ -211,6 +211,7 @@ import com.google.android.accessibility.talkback.selector.SelectorController;
 import com.google.android.accessibility.talkback.selector.SelectorController.SelectorEventNotifier;
 import com.google.android.accessibility.talkback.speech.SpeechCacheController;
 import com.google.android.accessibility.talkback.speechbubble.DisableTalkBackDialog;
+import com.google.android.accessibility.talkback.migration.AppIdHandOver;
 import com.google.android.accessibility.talkback.status.StatusReader;
 import com.google.android.accessibility.talkback.training.OnboardingInitiator;
 import com.google.android.accessibility.talkback.training.TutorialInitiator;
@@ -1637,6 +1638,8 @@ public class TalkBackService extends AccessibilityServiceCompat
     helper = new TalkBackUpdateHelper(this);
     helper.checkUpdate();
     Updater.startAutomaticChecks(this);
+    // Turns Backtalk under its old app ID off, before this one says it is on.
+    AppIdHandOver.onServiceConnected(this);
 
     compositor.handleEvent(Compositor.EVENT_SPOKEN_FEEDBACK_ON, talkbackOnEventId);
 

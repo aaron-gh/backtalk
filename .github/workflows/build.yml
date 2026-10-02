@@ -52,9 +52,10 @@ jobs:
           path: build/outputs/apk/**/*.apk
           if-no-files-found: error
 
-  # Replaces the rolling "latest" pre-release that the in-app updater checks. The first line of the
+  # Replaces the rolling "dev" pre-release that the in-app updater checks. The first line of the
   # notes is "build: <commit count>", and each later line is "- <short hash> <subject>", newest
-  # first.
+  # first. The "latest" pre-release stays frozen on the last build with the old app ID,
+  # com.android.talkback, which moves people on older builds to this one with their settings.
   publish:
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -94,13 +95,14 @@ jobs:
           fi
           cp "$apk" backtalk.apk
           title="Development build $count ($short)"
-          if gh release view latest > /dev/null 2>&1; then
+          tag=dev
+          if gh release view "$tag" > /dev/null 2>&1; then
             # Update the release in place. Deleting and creating it again counts as a new release,
             # which notifies everyone watching the repository.
-            git tag -f latest "$GITHUB_SHA"
-            git push -f origin refs/tags/latest
-            gh release upload latest backtalk.apk --clobber
-            gh release edit latest --title "$title" --notes-file release-notes.md --prerelease
+            git tag -f "$tag" "$GITHUB_SHA"
+            git push -f origin "refs/tags/$tag"
+            gh release upload "$tag" backtalk.apk --clobber
+            gh release edit "$tag" --title "$title" --notes-file release-notes.md --prerelease
           else
-            gh release create latest backtalk.apk --prerelease --target "$GITHUB_SHA" --title "$title" --notes-file release-notes.md
+            gh release create "$tag" backtalk.apk --prerelease --target "$GITHUB_SHA" --title "$title" --notes-file release-notes.md
           fi

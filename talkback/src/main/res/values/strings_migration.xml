@@ -12,4 +12,8 @@
     <string name="update_move_turn_on">Turn on the new Backtalk, then the old one turns itself off.</string>
     <!-- Shown when the downloaded update is not a Backtalk build that can be installed. [CHAR LIMIT=NONE] -->
     <string name="update_wrong_package">The download is not a Backtalk update, so it was not installed</string>
+    <!-- Title of the notification that the new Backtalk shows once it took over from the old one. [CHAR LIMIT=NONE] -->
+    <string name="migration_moved_title">Backtalk moved to a new app</string>
+    <!-- Text of the notification that offers to uninstall the old Backtalk. [CHAR LIMIT=NONE] -->
+    <string name="migration_moved_text">Tap to remove the old one.</string>
 </resources>

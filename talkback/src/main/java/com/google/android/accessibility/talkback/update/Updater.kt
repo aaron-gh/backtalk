@@ -62,8 +62,8 @@ import java.util.concurrent.TimeUnit
 object Updater {
   private const val TAG = "Updater"
   private const val NOTIFICATION_ID = 0x0BAC7A1C
-  private const val PREF_LAST_CHECK_TIME = "update_last_check_time"
-  private const val PREF_LAST_NOTIFIED_BUILD = "update_last_notified_build"
+  internal const val PREF_LAST_CHECK_TIME = "update_last_check_time"
+  internal const val PREF_LAST_NOTIFIED_BUILD = "update_last_notified_build"
   private const val APK_FILE_NAME = "backtalk.apk"
   private val CHECK_INTERVAL_MS = TimeUnit.DAYS.toMillis(1)
   private val POLL_INTERVAL_MS = TimeUnit.HOURS.toMillis(3)

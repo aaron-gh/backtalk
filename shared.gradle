@@ -4,7 +4,7 @@
 apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 
 ext {
-    talkbackApplicationId = "com.android.talkback"
+    talkbackApplicationId = "fyi.quin.backtalk"
 }
 
 android {

@@ -62,7 +62,7 @@ Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), t
 
 ### Calls
 
-*   **Speaker when away from your ear.** Like VoiceOver on iPhone, Backtalk can move a call to the speaker when you take the phone away from your ear, and back to the earpiece when you hold it up again. A call that starts with the phone away from your ear goes straight to the speaker. Backtalk leaves Bluetooth and wired headsets alone, and if you turn the speaker on or off in the Phone app, your choice stays until you move the phone again. Android only lets apps such as smartwatch companions change where call audio goes, so you grant the permission yourself, once, with adb or [Shizuku](https://shizuku.rikka.app): `adb shell appops set com.android.talkback MANAGE_ONGOING_CALLS allow`. Then turn on **Speaker when away from your ear** in **Advanced settings**. Until the permission is granted, the setting is unavailable and shows the command. This needs Android 12 or later.
+*   **Speaker when away from your ear.** Like VoiceOver on iPhone, Backtalk can move a call to the speaker when you take the phone away from your ear, and back to the earpiece when you hold it up again. A call that starts with the phone away from your ear goes straight to the speaker. Backtalk leaves Bluetooth and wired headsets alone, and if you turn the speaker on or off in the Phone app, your choice stays until you move the phone again. Android only lets apps such as smartwatch companions change where call audio goes, so you grant the permission yourself, once, with adb or [Shizuku](https://shizuku.rikka.app): `adb shell appops set fyi.quin.backtalk MANAGE_ONGOING_CALLS allow`. Then turn on **Speaker when away from your ear** in **Advanced settings**. Until the permission is granted, the setting is unavailable and shows the command. This needs Android 12 or later.
 
 ### Sound and vibration
 
@@ -154,11 +154,23 @@ Install the APK on your device with adb.
 
 On Windows, `.\deploy.ps1` builds the APK and installs it with adb. This script needs PowerShell 7. To install the last build without building again, use `-SkipBuild`.
 
-Backtalk installs as `com.android.talkback`, so it does not replace Google's TalkBack. The two apps have separate settings.
+Backtalk installs as `fyi.quin.backtalk`, so it does not replace Google's TalkBack. The two apps have separate settings. Because its app ID is its own, Backtalk also installs on GrapheneOS and other ROMs that ship the AOSP TalkBack as a system app named `com.android.talkback`.
+
+### Moving from the old app ID
+
+Earlier builds of Backtalk installed as `com.android.talkback`. To move to the new app ID:
+
+1.  Update as usual. The update installs the new Backtalk next to the old one, and the accessibility settings open.
+2.  Turn on the new Backtalk when asked. Your settings and custom labels come along.
+3.  The old Backtalk turns itself off, and a notification asks to remove it. Tap it to uninstall the old app.
+
+On-device AI models are not carried over, so download them again in the new app. If you used the braille keyboard or an accessibility shortcut, turn them on again for the new Backtalk.
+
+To make the switch fully automatic, grant the new app permission to change secure settings before you turn it on: `adb shell pm grant fyi.quin.backtalk android.permission.WRITE_SECURE_SETTINGS`. Then the new Backtalk turns the old one off, and moves the accessibility shortcut and the braille keyboard over, by itself.
 
 ## Updates
 
-Each change to Backtalk is built on GitHub as a development build, on the [latest release](https://github.com/trypsynth/backtalk/releases/tag/latest) page. Backtalk checks for a new build when it starts and about once a day. When there is one, it shows a notification with the list of changes. Tap the notification to download and install the new build. The first time, Android asks you to allow Backtalk to install apps.
+Each change to Backtalk is built on GitHub as a development build, on the [dev release](https://github.com/trypsynth/backtalk/releases/tag/dev) page. The [latest release](https://github.com/trypsynth/backtalk/releases/tag/latest) holds the last build with the old app ID, which moves old installs to the new one. Backtalk checks for a new build when it starts and about once a day. When there is one, it shows a notification with the list of changes. Tap the notification to download and install the new build. The first time, Android asks you to allow Backtalk to install apps.
 
 To check now, go to **Check for updates** in Backtalk settings. To stop the daily checks, turn off **Automatically check for updates**.
 

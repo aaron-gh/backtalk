@@ -71,6 +71,39 @@ class MigrationFilesTest {
   }
 
   @Test
+  fun defaultPreferencesTakeTheNewAppId() {
+    assertEquals(
+      "fyi.quin.backtalk_preferences.xml",
+      MigrationFiles.importedPrefsName(
+        "com.android.talkback_preferences.xml",
+        "com.android.talkback",
+        "fyi.quin.backtalk",
+      ),
+    )
+  }
+
+  @Test
+  fun otherPreferenceFilesKeepTheirNames() {
+    assertEquals(
+      "braille_keyboard.xml",
+      MigrationFiles.importedPrefsName("braille_keyboard.xml", "old", "new"),
+    )
+  }
+
+  @Test
+  fun moveStateIsNotImported() {
+    assertNull(MigrationFiles.importedPrefsName("app_id_move.xml", "old", "new"))
+  }
+
+  @Test
+  fun updaterStateIsSkippedButTheAppVersionIsKept() {
+    assertTrue("update_last_check_time" in MigrationFiles.SKIPPED_PREF_KEYS)
+    assertTrue("update_last_notified_build" in MigrationFiles.SKIPPED_PREF_KEYS)
+    // Keeping it makes the new app treat the settings as an update, not as a first start.
+    assertFalse("app_version" in MigrationFiles.SKIPPED_PREF_KEYS)
+  }
+
+  @Test
   fun safeNames() {
     assertTrue(MigrationFiles.isSafeName("a.xml"))
     assertFalse(MigrationFiles.isSafeName(""))

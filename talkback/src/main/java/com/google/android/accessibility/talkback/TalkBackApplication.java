@@ -17,6 +17,7 @@
 package com.google.android.accessibility.talkback;
 
 import android.app.Application;
+import com.google.android.accessibility.talkback.migration.SettingsImporter;
 import com.google.android.accessibility.talkback.training.PageConfigMapperImpl;
 import com.google.android.accessibility.talkback.training.TalkBackDisabledWarmingDialogImpl;
 import com.google.android.accessibility.talkback.training.TrainingConfigMapperImpl;
@@ -32,6 +33,9 @@ public class TalkBackApplication extends Application {
   @Override
   public void onCreate() {
     super.onCreate();
+
+    // Before anything loads the preferences, so settings from the old app ID are not overwritten.
+    SettingsImporter.importIfNeeded(this);
 
     FormFactorUtils.initialize(this);
     PackageNameProvider.initialize(this);

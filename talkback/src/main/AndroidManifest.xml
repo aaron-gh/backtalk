@@ -90,6 +90,15 @@
         android:protectionLevel="signature" />
     <uses-permission android:name="fyi.quin.backtalk.permission.MIGRATE" />
 
+    <!-- Granted by the user with adb, to move the accessibility shortcut and the braille keyboard
+         from the old app ID and turn the old screen reader off. -->
+    <uses-permission
+        android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- Used to offer to uninstall Backtalk under its old app ID. -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+
     <application
         android:supportsRtl="true">
 

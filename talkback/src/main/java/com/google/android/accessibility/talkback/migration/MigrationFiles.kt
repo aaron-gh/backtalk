@@ -16,6 +16,8 @@
 
 package com.google.android.accessibility.talkback.migration
 
+import com.google.android.accessibility.talkback.update.Updater
+
 /**
  * Which files carry the settings between the old and the new app ID.
  *
@@ -69,4 +71,28 @@ object MigrationFiles {
 
   /** Joins a directory and file name into an exported path. */
   fun path(directory: String, name: String): String = "$directory/$name"
+
+  /** The preference file, without ".xml", that records how far the move has got in this app. */
+  const val STATE_PREFS = "app_id_move"
+
+  /**
+   * Keys of the default preferences that are not carried over: the updater's own state. The app
+   * version is carried over, so the new app treats the old settings as an update of Backtalk, and
+   * not as a first start.
+   */
+  val SKIPPED_PREF_KEYS = setOf(Updater.PREF_LAST_CHECK_TIME, Updater.PREF_LAST_NOTIFIED_BUILD)
+
+  /** The name of the default preference file of the app with the given app ID. */
+  fun defaultPrefsName(packageName: String): String = "${packageName}_preferences$PREFS_SUFFIX"
+
+  /**
+   * Returns the name that an exported preference file of [oldPackage] takes in [newPackage], or
+   * null if it is not carried over. The default preference file is named after the app ID.
+   */
+  fun importedPrefsName(name: String, oldPackage: String, newPackage: String): String? =
+    when (name) {
+      "$STATE_PREFS$PREFS_SUFFIX" -> null
+      defaultPrefsName(oldPackage) -> defaultPrefsName(newPackage)
+      else -> name
+    }
 }
