@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">બ્રેઇલ કીબોર્ડ કેલિબ્રેટ થયું</string>
   <string name="individual_vibration_focus">આઇટમ પર ફોકસ</string>
   <string name="individual_vibration_focus_actionable">ક્રિયા કરી શકાય તેવી આઇટમ પર ફોકસ</string>
-  <string name="individual_vibration_selected">પસંદગી</string>
   <string name="individual_vibration_clicked">ક્લિક</string>
   <string name="individual_vibration_long_clicked">લાંબો સમય દબાવવું</string>
   <string name="individual_vibration_window_state">વિન્ડો બદલાઈ</string>

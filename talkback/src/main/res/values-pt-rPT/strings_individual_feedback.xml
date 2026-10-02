@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Teclado braille calibrado</string>
   <string name="individual_vibration_focus">Foco num item</string>
   <string name="individual_vibration_focus_actionable">Foco num item acionável</string>
-  <string name="individual_vibration_selected">Seleção</string>
   <string name="individual_vibration_clicked">Clique</string>
   <string name="individual_vibration_long_clicked">Toque prolongado</string>
   <string name="individual_vibration_window_state">Mudança de janela</string>

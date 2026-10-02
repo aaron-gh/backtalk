@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Брайль баскычтобу ыңгайлаштырылды</string>
   <string name="individual_vibration_focus">Элементке фокус</string>
   <string name="individual_vibration_focus_actionable">Аракет жасала турган элементке фокус</string>
-  <string name="individual_vibration_selected">Тандоо</string>
   <string name="individual_vibration_clicked">Чыкылдатуу</string>
   <string name="individual_vibration_long_clicked">Узак басуу</string>
   <string name="individual_vibration_window_state">Терезе алмашуусу</string>

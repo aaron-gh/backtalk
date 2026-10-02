@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Klawiatura brajlowska skalibrowana</string>
   <string name="individual_vibration_focus">Zaznaczenie elementu</string>
   <string name="individual_vibration_focus_actionable">Zaznaczenie elementu z działaniem</string>
-  <string name="individual_vibration_selected">Wybór</string>
   <string name="individual_vibration_clicked">Kliknięcie</string>
   <string name="individual_vibration_long_clicked">Przytrzymanie</string>
   <string name="individual_vibration_window_state">Zmiana okna</string>

@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Keyboard braille dikalibrasi</string>
   <string name="individual_vibration_focus">Fokus pada item</string>
   <string name="individual_vibration_focus_actionable">Fokus pada item yang dapat ditindaklanjuti</string>
-  <string name="individual_vibration_selected">Pilihan</string>
   <string name="individual_vibration_clicked">Klik</string>
   <string name="individual_vibration_long_clicked">Tekan lama</string>
   <string name="individual_vibration_window_state">Perubahan jendela</string>

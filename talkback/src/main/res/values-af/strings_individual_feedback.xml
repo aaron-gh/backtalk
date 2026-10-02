@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Braillesleutelbord gekalibreer</string>
   <string name="individual_vibration_focus">Fokus op \'n item</string>
   <string name="individual_vibration_focus_actionable">Fokus op \'n aktiveerbare item</string>
-  <string name="individual_vibration_selected">Keuse</string>
   <string name="individual_vibration_clicked">Klik</string>
   <string name="individual_vibration_long_clicked">Lang druk</string>
   <string name="individual_vibration_window_state">Vensterverandering</string>

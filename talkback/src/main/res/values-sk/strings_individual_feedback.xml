@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Braillova klávesnica je kalibrovaná</string>
   <string name="individual_vibration_focus">Zameranie položky</string>
   <string name="individual_vibration_focus_actionable">Zameranie aktivovateľnej položky</string>
-  <string name="individual_vibration_selected">Výber</string>
   <string name="individual_vibration_clicked">Kliknutie</string>
   <string name="individual_vibration_long_clicked">Dlhé stlačenie</string>
   <string name="individual_vibration_window_state">Zmena okna</string>

@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">מקלדת ברייל כוילה</string>
   <string name="individual_vibration_focus">מיקוד בפריט</string>
   <string name="individual_vibration_focus_actionable">מיקוד בפריט שאפשר להפעיל</string>
-  <string name="individual_vibration_selected">בחירה</string>
   <string name="individual_vibration_clicked">לחיצה</string>
   <string name="individual_vibration_long_clicked">לחיצה ארוכה</string>
   <string name="individual_vibration_window_state">החלפת חלון</string>

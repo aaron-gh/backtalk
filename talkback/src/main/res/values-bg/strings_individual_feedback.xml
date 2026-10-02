@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Брайловата клавиатура е калибрирана</string>
   <string name="individual_vibration_focus">Фокус върху елемент</string>
   <string name="individual_vibration_focus_actionable">Фокус върху елемент, който може да се активира</string>
-  <string name="individual_vibration_selected">Избиране</string>
   <string name="individual_vibration_clicked">Кликване</string>
   <string name="individual_vibration_long_clicked">Продължително натискане</string>
   <string name="individual_vibration_window_state">Смяна на прозореца</string>
