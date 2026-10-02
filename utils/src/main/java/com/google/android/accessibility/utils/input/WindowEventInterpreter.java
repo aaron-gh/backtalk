@@ -32,6 +32,7 @@ import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.Looper;
 import android.os.Message;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.SparseArray;
 import android.view.Display;
@@ -111,6 +112,9 @@ public class WindowEventInterpreter implements WindowsDelegate, DisplayStateChan
   // transitional split-screen announcement on android-Q + pixel-2.
   // TODO: Add minimum-delay-time only for split-screen on older android.
   private static final int DELAY_INCREMENT_MS = 10;
+
+  /** When the current delayed interpretation started waiting. */
+  private long delayStartUptimeMs;
 
   @RequiresApi(api = VERSION_CODES.P)
   private static final int WINDOWS_CHANGE_TYPES_USED =
@@ -701,12 +705,36 @@ public class WindowEventInterpreter implements WindowsDelegate, DisplayStateChan
         : NONE_APPLICATION_WINDOW_DELAY_MS;
   }
 
+  /**
+   * Set from the "Reduce window announcement delay" setting, which also turns animations off on
+   * Android 13 and later. Android 12 and earlier have no way for a service to turn animations off,
+   * so the setting shortens the wait itself there.
+   */
+  private static volatile boolean reduceWindowDelay;
+
+  /** The window-transition delay last chosen, for focus code that has no context to choose it. */
+  private static volatile long windowChangeDelayMs = WINDOW_CHANGE_DELAY_MS;
+
+  public static void setReduceWindowDelay(boolean reduce) {
+    reduceWindowDelay = reduce;
+  }
+
+  /**
+   * Returns how long after a window change starts that the windows are assumed to be stable, so
+   * that initial focus waits no longer than the window announcement does.
+   */
+  public static long getWindowChangeDelayMs() {
+    return windowChangeDelayMs;
+  }
+
   /** Returns the current window-transition delay in milliseconds. */
   private long getWindowTransitionDelayMs() {
     // Windows appear at once when animations are off, however they were turned off.
-    return SettingsUtils.isAnimationDisabled(service)
-        ? WINDOW_CHANGE_DELAY_NO_ANIMATION_MS
-        : WINDOW_CHANGE_DELAY_MS;
+    windowChangeDelayMs =
+        (reduceWindowDelay || SettingsUtils.isAnimationDisabled(service))
+            ? WINDOW_CHANGE_DELAY_NO_ANIMATION_MS
+            : WINDOW_CHANGE_DELAY_MS;
+    return windowChangeDelayMs;
   }
 
   /** Step 4: Delay event interpretation. */
@@ -808,7 +836,14 @@ public class WindowEventInterpreter implements WindowsDelegate, DisplayStateChan
 
   private void delayInterpret(EventInterpretation interpretation, @Nullable EventId eventId) {
     long delay = DELAY_INCREMENT_MS;
-    interpretation.incrementTotalDelayMs(delay);
+    // Count the time that has really passed by the next check. Each check fetches the window list
+    // first, so adding only the increment made a 550 ms wait last about 900 ms.
+    long now = SystemClock.uptimeMillis();
+    if (interpretation.getTotalDelayMs() == 0) {
+      delayStartUptimeMs = now;
+    }
+    interpretation.incrementTotalDelayMs(
+        Math.max(delay, now + delay - delayStartUptimeMs - interpretation.getTotalDelayMs()));
 
     windowEventDelayer.sendMessageDelayed(
         windowEventDelayer.obtainMessage(

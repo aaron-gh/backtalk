@@ -20,7 +20,6 @@ import static android.view.accessibility.AccessibilityNodeInfo.FOCUS_ACCESSIBILI
 import static com.google.android.accessibility.talkback.Feedback.Focus.Action.INITIAL_FOCUS_FIRST_CONTENT;
 import static com.google.android.accessibility.talkback.Feedback.Focus.Action.INITIAL_FOCUS_FOLLOW_INPUT;
 import static com.google.android.accessibility.talkback.Feedback.Focus.Action.INITIAL_FOCUS_RESTORE;
-import static com.google.android.accessibility.utils.input.WindowEventInterpreter.WINDOW_CHANGE_DELAY_MS;
 
 import android.accessibilityservice.AccessibilityService;
 import android.os.SystemClock;
@@ -47,6 +46,7 @@ import com.google.android.accessibility.utils.FormFactorUtils;
 import com.google.android.accessibility.utils.Performance.EventId;
 import com.google.android.accessibility.utils.WebInterfaceUtils;
 import com.google.android.accessibility.utils.input.CursorGranularity;
+import com.google.android.accessibility.utils.input.WindowEventInterpreter;
 import com.google.android.accessibility.utils.traversal.OrderedTraversalStrategy;
 import com.google.android.accessibility.utils.traversal.TraversalStrategy;
 import com.google.android.accessibility.utils.traversal.TraversalStrategyUtils;
@@ -224,7 +224,7 @@ public class FocusManagerInternal {
     ScreenState state = screenState.getStableScreenState();
     long windowEventInterpreterDelayTimeMs =
         SystemClock.uptimeMillis() - state.getScreenTransitionStartTime();
-    if (windowEventInterpreterDelayTimeMs <= WINDOW_CHANGE_DELAY_MS) {
+    if (windowEventInterpreterDelayTimeMs <= WindowEventInterpreter.getWindowChangeDelayMs()) {
       LogUtils.d(TAG, String.format("%s: Return, the initial focus is not stable yet.", subTag));
       return false;
     }
