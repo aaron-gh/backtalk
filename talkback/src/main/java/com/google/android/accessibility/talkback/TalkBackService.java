@@ -3198,6 +3198,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     feedbackController.setMutedAuditory(mutedSounds);
     feedbackController.setSpatialMode(ControlSoundsSettings.spatialMode(prefs));
     globalVariables.setControlSounds(
+        auditoryEnabled && ControlSoundsSettings.isOn(prefs),
         ControlSoundsSettings.playingSounds(prefs, auditoryEnabled, mutedSounds),
         ControlSoundsSettings.speakRoles(prefs));
     feedbackController.setMutedHaptic(

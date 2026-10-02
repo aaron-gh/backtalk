@@ -267,7 +267,7 @@ public class FeedbackController {
   /**
    * Plays a sound as if it came from a place on the screen, in 3D or panned between the speakers
    * according to {@link #setSpatialMode}. In 3D mode the sound is played in 3D on the phone's
-   * speaker too. Only mono, 16 bit, 44.1 kHz WAV sounds can play in 3D.
+   * speaker too.
    *
    * @param x The place from the left edge of the screen, from 0 to 1, or negative for no place.
    * @param y The place from the top edge of the screen, from 0 to 1, or negative for no place.

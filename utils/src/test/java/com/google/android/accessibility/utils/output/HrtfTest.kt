@@ -109,10 +109,28 @@ class HrtfTest {
   }
 
   @Test
-  fun refusesOtherWavFormats() {
-    assertNull(SpatialSoundPlayer.decodeWav(wav(channels = 2, rate = 44100, 0, 0)))
-    assertNull(SpatialSoundPlayer.decodeWav(wav(channels = 1, rate = 48000, 0)))
+  fun mixesStereoWavDownToMono() {
+    val samples = SpatialSoundPlayer.decodeWav(wav(channels = 2, rate = 44100, 16384, 0, -32768, 0))
+    assertArrayEquals(floatArrayOf(0.25f, -0.5f), samples, 0f)
+  }
+
+  @Test
+  fun resamplesWavTo44100() {
+    val samples = SpatialSoundPlayer.decodeWav(wav(channels = 1, rate = 22050, 0, 16384))!!
+    assertEquals(4, samples.size)
+    assertArrayEquals(floatArrayOf(0f, 0.25f, 0.5f, 0.5f), samples, 1e-6f)
+  }
+
+  @Test
+  fun leavesOtherFormatsToTheDecoders() {
     assertNull(SpatialSoundPlayer.decodeWav("OggS".toByteArray()))
+  }
+
+  @Test
+  fun resamplingKeepsTheLength() {
+    assertEquals(44100, SpatialSoundPlayer.resample(FloatArray(48000), 48000, 44100).size)
+    val same = FloatArray(10)
+    assertTrue(SpatialSoundPlayer.resample(same, 44100, 44100) === same)
   }
 
   @Test
