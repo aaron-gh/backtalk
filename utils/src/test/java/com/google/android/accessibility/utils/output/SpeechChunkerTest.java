@@ -31,24 +31,51 @@ public class SpeechChunkerTest {
 
   @Test
   public void shortTextIsOnePiece() {
-    String text = "x".repeat(SpeechChunker.MAX_CHUNK);
+    String text = "x".repeat(2 * SpeechChunker.MIN_CHUNK - 1);
     assertEquals(Collections.singletonList(0), SpeechChunker.chunkStarts(text, Locale.US));
   }
 
   @Test
-  public void splitsAtSentences() {
-    String text = SENTENCE.repeat(4);
-    List<Integer> starts = SpeechChunker.chunkStarts(text, Locale.US);
-    // Two sentences fit in a piece.
-    assertEquals(Arrays.asList(0, 2 * SENTENCE.length()), starts);
+  public void shortClausesStayWhole() {
+    String text = "Wi-Fi, On, Connected to Home network, Button";
+    assertEquals(Collections.singletonList(0), SpeechChunker.chunkStarts(text, Locale.US));
   }
 
   @Test
-  public void splitsLongSentenceAfterComma() {
-    String text = "word ".repeat(20) + "then a pause, " + "word ".repeat(20);
+  public void splitsAtEverySentence() {
+    String first = "The first sentence is long enough. ";
+    String second = "The second sentence is long enough. ";
+    String third = "The third sentence is long enough.";
+    List<Integer> starts = SpeechChunker.chunkStarts(first + second + third, Locale.US);
+    assertEquals(
+        Arrays.asList(0, first.length(), first.length() + second.length()), starts);
+  }
+
+  @Test
+  public void splitsAfterClausePunctuation() {
+    List<Integer> starts = SpeechChunker.chunkStarts(SENTENCE, Locale.US);
+    // "Same price," is too short a piece, so the first cut is after "current silicon,".
+    assertEquals(Arrays.asList(0, "Same price, current silicon,".length()), starts);
+  }
+
+  @Test
+  public void doesNotSplitNumbers() {
+    String text = "The population grew from 1,000,000 to 2,500,000 over the following decade.";
+    assertEquals(Collections.singletonList(0), SpeechChunker.chunkStarts(text, Locale.US));
+  }
+
+  @Test
+  public void shortSentenceJoinsNextPiece() {
+    String text = "Dr. William Moon invented an embossed alphabet in 1845.";
+    assertEquals(Collections.singletonList(0), SpeechChunker.chunkStarts(text, Locale.US));
+  }
+
+  @Test
+  public void splitsLongClauseAtSpace() {
+    String text = "word ".repeat(40);
     List<Integer> starts = SpeechChunker.chunkStarts(text, Locale.US);
     assertEquals(2, starts.size());
-    assertEquals(", ", text.substring(starts.get(1) - 1, starts.get(1) + 1));
+    assertEquals(' ', text.charAt(starts.get(1) - 1));
   }
 
   @Test
