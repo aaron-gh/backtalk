@@ -59,6 +59,10 @@ Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), t
 *   **Speak notifications setting.** To stop Backtalk from reading new notifications when they arrive, go to **Verbosity** in Backtalk settings and turn off **Speak notifications**. Incoming calls are still read, and you can still read notifications in the notification shade.
 *   **No "collapsed" on notifications.** Backtalk does not say "collapsed" for each notification on the lock screen and in the notification shade. It still says "expanded" when you open one, and it still says "collapsed" in other apps.
 
+### Calls
+
+*   **Speaker when away from your ear.** Like VoiceOver on iPhone, Backtalk can move a call to the speaker when you take the phone away from your ear, and back to the earpiece when you hold it up again. A call that starts with the phone away from your ear goes straight to the speaker. Backtalk leaves Bluetooth and wired headsets alone, and if you turn the speaker on or off in the Phone app, your choice stays until you move the phone again. Android only lets apps such as smartwatch companions change where call audio goes, so you grant the permission yourself, once, with adb or [Shizuku](https://shizuku.rikka.app): `adb shell appops set com.android.talkback MANAGE_ONGOING_CALLS allow`. Then turn on **Speaker when away from your ear** in **Advanced settings**. Until the permission is granted, the setting is unavailable and shows the command. This needs Android 12 or later.
+
 ### Direct touch
 
 Audio games need raw touch, but Explore by Touch captures taps and swipes before the game sees them. With direct touch, Backtalk passes your touches straight to the games you choose, and you do not have to suspend Backtalk.

@@ -25,6 +25,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import androidx.annotation.VisibleForTesting;
@@ -37,6 +38,7 @@ import com.google.android.accessibility.talkback.TalkBackService;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.talkback.monitor.RingerModeAndScreenMonitor;
 import com.google.android.accessibility.talkback.preference.base.PreferenceActionHelper.WebPage;
+import com.google.android.accessibility.talkback.speakerphone.SpeakerphoneSettings;
 import com.google.android.accessibility.talkback.utils.DateTimeUtils;
 import com.google.android.accessibility.talkback.utils.TalkbackFeatureSupport;
 import com.google.android.accessibility.utils.FormFactorUtils;
@@ -73,6 +75,31 @@ public class AdvancedSettingFragment extends TalkbackBaseFragment {
     super.onResume();
     updateTouchExplorationState();
     updateTimeFeedbackFormatPreference();
+    updateSpeakerphonePreference();
+  }
+
+  /**
+   * The speakerphone setting needs a permission that the user grants with adb, and Android only has
+   * it from Android 12. Until it is granted, the setting is off and says how to grant it.
+   */
+  private void updateSpeakerphonePreference() {
+    Preference pref = findPreferenceByResId(R.string.pref_speakerphone_away_from_ear_key);
+    if (pref == null) {
+      return;
+    }
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+      PreferenceSettingsUtils.hidePreference(
+          context, getPreferenceScreen(), R.string.pref_speakerphone_away_from_ear_key);
+      return;
+    }
+    boolean granted = SpeakerphoneSettings.INSTANCE.canControlCalls(context);
+    pref.setEnabled(granted);
+    pref.setSummary(
+        granted
+            ? getString(R.string.summary_pref_speakerphone_away_from_ear)
+            : getString(
+                R.string.summary_pref_speakerphone_needs_permission,
+                SpeakerphoneSettings.INSTANCE.grantCommand(context)));
   }
 
   private void updateTimeFeedbackFormatPreference() {
