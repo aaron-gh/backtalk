@@ -76,8 +76,7 @@ public class OrientationMonitor {
           new OrientationEventListener(context.getApplicationContext()) {
             @Override
             public void onOrientationChanged(int degree) {
-              degree = Utils.isDeviceDefaultPortrait(context) ? degree : degree - 90;
-              Orientation newOrientation = convertToOrientation(degree);
+              Orientation newOrientation = toOrientation(context, degree);
               if (newOrientation != singleton.currentOrientation) {
                 singleton.currentOrientation = newOrientation;
                 if (singleton.orientationMonitorCallback != null) {
@@ -85,22 +84,24 @@ public class OrientationMonitor {
                 }
               }
             }
-
-            private Orientation convertToOrientation(int degree) {
-              for (Orientation orientation : Orientation.values()) {
-                if (orientation != Orientation.UNKNOWN
-                    && Math.abs(degree - orientation.getDegree()) <= 45) {
-                  return orientation;
-                }
-              }
-              // Special case for portrait when the degrees is close to 360.
-              if (Math.abs(degree - 360) <= 45) {
-                return Orientation.PORTRAIT;
-              }
-              return Orientation.UNKNOWN;
-            }
           };
     }
+  }
+
+  /** Converts a reading from {@link OrientationEventListener} to the nearest orientation. */
+  static Orientation toOrientation(Context context, int degree) {
+    degree = Utils.isDeviceDefaultPortrait(context) ? degree : degree - 90;
+    for (Orientation orientation : Orientation.values()) {
+      if (orientation != Orientation.UNKNOWN
+          && Math.abs(degree - orientation.getDegree()) <= 45) {
+        return orientation;
+      }
+    }
+    // Special case for portrait when the degrees is close to 360.
+    if (Math.abs(degree - 360) <= 45) {
+      return Orientation.PORTRAIT;
+    }
+    return Orientation.UNKNOWN;
   }
 
   public void enable() {

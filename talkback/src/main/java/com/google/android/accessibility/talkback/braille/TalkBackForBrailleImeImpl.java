@@ -229,6 +229,12 @@ public class TalkBackForBrailleImeImpl implements TalkBackForBrailleIme {
   }
 
   @Override
+  public boolean isUsageHintEnabled() {
+    return SharedPreferencesUtils.getBooleanPref(
+        prefs, service.getResources(), R.string.pref_a11y_hints_key, R.bool.pref_a11y_hints_default);
+  }
+
+  @Override
   public boolean isVibrationFeedbackEnabled() {
     return FeatureSupport.isVibratorSupported(service)
         && SharedPreferencesUtils.getBooleanPref(

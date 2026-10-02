@@ -333,6 +333,31 @@ public class BrailleUserPreferences {
         TouchDots.AUTO_DETECT);
   }
 
+  /**
+   * Reads the orientation lock for a screen size and mode, or -1 when it is unlocked. The braille
+   * keyboard decides what the value means. There is a lock for each screen size, so a foldable can
+   * be locked one way folded and another way unfolded, and for tabletop and screen-away modes.
+   */
+  public static int readOrientationLock(Context context, boolean tablet, boolean tabletop) {
+    return getSharedPreferences(context, BRAILLE_SHARED_PREFS_FILENAME)
+        .getInt(orientationLockKey(context, tablet, tabletop), -1);
+  }
+
+  /** Writes the orientation lock for a screen size and mode, or -1 to unlock it. */
+  public static void writeOrientationLock(
+      Context context, boolean tablet, boolean tabletop, int value) {
+    getSharedPreferences(context, BRAILLE_SHARED_PREFS_FILENAME)
+        .edit()
+        .putInt(orientationLockKey(context, tablet, tabletop), value)
+        .apply();
+  }
+
+  private static String orientationLockKey(Context context, boolean tablet, boolean tabletop) {
+    return context.getString(R.string.pref_brailleime_orientation_lock)
+        + (tablet ? "_tablet" : "_phone")
+        + (tabletop ? "_tabletop" : "_screen_away");
+  }
+
   /** Writes layout mode. */
   public static void writeLayoutMode(Context context, TouchDots touchDotsMode) {
     getSharedPreferences(context, BRAILLE_SHARED_PREFS_FILENAME)

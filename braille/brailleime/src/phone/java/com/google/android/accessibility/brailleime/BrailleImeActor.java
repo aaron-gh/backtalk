@@ -72,6 +72,9 @@ public class BrailleImeActor {
 
     void performEditorAction();
 
+    /** Keeps the dots facing the way they are now, or lets them follow the device again. */
+    void toggleOrientationLock();
+
     boolean isConnectionValid();
 
     ImeConnection getImeConnection();
@@ -143,6 +146,7 @@ public class BrailleImeActor {
       case HIDE_KEYBOARD -> performTextAction(imeConnection, callback::hideBrailleKeyboard);
       case SWITCH_KEYBOARD -> performTextAction(imeConnection, callback::switchToNextInputMethod);
       case HELP_AND_OTHER_ACTIONS -> performTextAction(imeConnection, callback::showContextMenu);
+      case TOGGLE_ORIENTATION_LOCK -> callback.toggleOrientationLock();
       case NEXT_GRANULARITY ->
           performTextAction(imeConnection, ScreenReaderAction.NEXT_READING_CONTROL);
       case PREVIOUS_GRANULARITY ->
