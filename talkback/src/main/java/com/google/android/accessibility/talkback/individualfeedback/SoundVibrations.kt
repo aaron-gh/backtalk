@@ -24,6 +24,21 @@ import android.content.Context
  * vibration_backtalk.xml.
  */
 object SoundVibrations {
+  /**
+   * Sounds that play without a vibration. The loading tone repeats every few seconds while waiting,
+   * and the braille sounds leave vibration to the braille keyboard, which has its own setting.
+   */
+  val WITHOUT_VIBRATION: Set<String> =
+    setOf(
+      "loading",
+      "display_connected",
+      "display_disconnected",
+      "double_beep",
+      "turn_on",
+      "turn_off",
+      "calibration_done",
+    )
+
   /** Vibration pattern resource names, by sound resource names. */
   val PATTERNS: Map<String, String> =
     mapOf(
@@ -43,15 +58,8 @@ object SoundVibrations {
       "hyperlink" to "hyperlink_pattern",
       "formatting" to "formatting_pattern",
       "volume_beep" to "volume_pattern",
-      "loading" to "loading_pattern",
       "browse_mode_on_v4_2" to "browse_mode_on_pattern",
       "browse_mode_off_v4_2" to "browse_mode_off_pattern",
-      "display_connected" to "braille_display_connected_pattern",
-      "display_disconnected" to "braille_display_disconnected_pattern",
-      "double_beep" to "braille_command_failed_pattern",
-      "turn_on" to "braille_auto_scroll_on_pattern",
-      "turn_off" to "braille_auto_scroll_off_pattern",
-      "calibration_done" to "braille_calibrated_pattern",
     ) + (1..8).associate { "radial_menu_$it" to "radial_menu_${it}_pattern" }
 
   /**

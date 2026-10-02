@@ -29,9 +29,17 @@ class SoundVibrationsTest {
   private val vibrationNames = IndividualFeedbackSettings.VIBRATIONS.flatMap { it.resourceNames }
 
   @Test
-  fun everySoundHasAVibration() {
+  fun everySoundHasAVibrationUnlessItShouldNot() {
     val sounds = IndividualFeedbackSettings.SOUNDS.flatMap { it.resourceNames }.toSet()
-    assertEquals(sounds, SoundVibrations.PATTERNS.keys)
+    assertEquals(sounds, SoundVibrations.PATTERNS.keys + SoundVibrations.WITHOUT_VIBRATION)
+    assertTrue(SoundVibrations.PATTERNS.keys.none { it in SoundVibrations.WITHOUT_VIBRATION })
+  }
+
+  @Test
+  fun repeatingProgressTonesAndBrailleSoundsDoNotVibrate() {
+    for (sound in listOf("loading", "display_connected", "double_beep", "calibration_done")) {
+      assertTrue(sound, sound !in SoundVibrations.PATTERNS)
+    }
   }
 
   @Test

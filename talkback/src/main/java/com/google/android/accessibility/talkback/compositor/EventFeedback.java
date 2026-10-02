@@ -66,6 +66,12 @@ public abstract class EventFeedback {
 
   public abstract double earconVolume();
 
+  /**
+   * Whether the earcon plays the vibration that goes with its sound. Progress tones do not, since
+   * they repeat while something loads.
+   */
+  public abstract boolean earconVibrates();
+
   public abstract boolean inlineFormatting();
 
   /**
@@ -140,6 +146,7 @@ public abstract class EventFeedback {
         StringBuilderUtils.optionalInt("earcon", earcon(), -1),
         StringBuilderUtils.optionalDouble("earconRate", earconRate(), 1.0d),
         StringBuilderUtils.optionalDouble("earconVolume", earconVolume(), 1.0d),
+        StringBuilderUtils.optionalTag("earconWithoutVibration", !earconVibrates()),
         StringBuilderUtils.optionalTag("inlineFormatting", inlineFormatting()));
   }
 
@@ -164,6 +171,7 @@ public abstract class EventFeedback {
         .setEarcon(-1)
         .setEarconRate(1.0d)
         .setEarconVolume(1.0d)
+        .setEarconVibrates(true)
         .setInlineFormatting(false);
   }
 
@@ -208,6 +216,8 @@ public abstract class EventFeedback {
     public abstract Builder setEarconRate(double value);
 
     public abstract Builder setEarconVolume(double value);
+
+    public abstract Builder setEarconVibrates(boolean value);
 
     public abstract Builder setInlineFormatting(boolean value);
 

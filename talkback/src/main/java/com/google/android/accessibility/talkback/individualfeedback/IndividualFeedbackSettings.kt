@@ -92,7 +92,6 @@ object IndividualFeedbackSettings {
       FeedbackItem("hyperlink_pattern", R.string.individual_sound_hyperlink),
       FeedbackItem("formatting_pattern", R.string.individual_sound_formatting),
       FeedbackItem("volume_pattern", R.string.individual_sound_volume_beep),
-      FeedbackItem("loading_pattern", R.string.individual_sound_loading),
       FeedbackItem("browse_mode_on_pattern", R.string.individual_sound_browse_mode_on),
       FeedbackItem("browse_mode_off_pattern", R.string.individual_sound_browse_mode_off),
       FeedbackItem(
@@ -100,20 +99,29 @@ object IndividualFeedbackSettings {
         R.string.individual_sound_radial_menu,
         (1..8).map { "radial_menu_${it}_pattern" },
       ),
-      FeedbackItem(
-        "braille_display_connected_pattern",
-        R.string.individual_sound_display_connected,
-      ),
-      FeedbackItem(
-        "braille_display_disconnected_pattern",
-        R.string.individual_sound_display_disconnected,
-      ),
-      FeedbackItem("braille_command_failed_pattern", R.string.individual_sound_double_beep),
-      FeedbackItem("braille_auto_scroll_on_pattern", R.string.individual_sound_turn_on),
-      FeedbackItem("braille_auto_scroll_off_pattern", R.string.individual_sound_turn_off),
-      FeedbackItem("braille_calibrated_pattern", R.string.individual_sound_calibration_done),
       FeedbackItem("notification_pattern", R.string.individual_vibration_notification),
     )
+
+  /**
+   * The Selection vibration switch from before every sound had its own vibration. Selection now
+   * plays the vibration of its sound, the actionable focus vibration.
+   */
+  private const val OLD_SELECTION_VIBRATION = "view_focused_or_selected_pattern"
+  private const val SELECTION_VIBRATION = "view_actionable_pattern"
+
+  /**
+   * Carries over switches that no longer exist, once: if Selection was turned off, the vibration
+   * selection now plays is turned off instead.
+   */
+  fun migrate(prefs: SharedPreferences) {
+    val muted = stringSet(prefs, PREF_MUTED_VIBRATIONS)
+    if (OLD_SELECTION_VIBRATION in muted) {
+      prefs
+        .edit()
+        .putStringSet(PREF_MUTED_VIBRATIONS, muted - OLD_SELECTION_VIBRATION + SELECTION_VIBRATION)
+        .apply()
+    }
+  }
 
   fun isSoundOn(prefs: SharedPreferences, item: FeedbackItem): Boolean =
     item.key !in stringSet(prefs, PREF_MUTED_SOUNDS)
