@@ -3199,12 +3199,19 @@ public class TalkBackService extends AccessibilityServiceCompat
     Set<String> mutedSounds = IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs);
     feedbackController.setMutedAuditory(mutedSounds);
     feedbackController.setSpatialMode(ControlSoundsSettings.spatialMode(prefs));
+    Set<String> mutedVibrations =
+        IndividualFeedbackSettings.INSTANCE.mutedVibrationResources(prefs);
+    feedbackController.setMutedHaptic(mutedVibrations);
+    // A control's sound is asked for if it can be heard or felt, so with sound feedback off its
+    // vibration still tells what kind of control it is.
+    Set<Integer> controlFeedback =
+        new HashSet<>(ControlSoundsSettings.playingSounds(prefs, auditoryEnabled, mutedSounds));
+    controlFeedback.addAll(
+        ControlSoundsSettings.vibratingSounds(prefs, hapticEnabled, mutedVibrations));
     globalVariables.setControlSounds(
         auditoryEnabled && ControlSoundsSettings.isOn(prefs),
-        ControlSoundsSettings.playingSounds(prefs, auditoryEnabled, mutedSounds),
+        controlFeedback,
         ControlSoundsSettings.speakRoles(prefs));
-    feedbackController.setMutedHaptic(
-        IndividualFeedbackSettings.INSTANCE.mutedVibrationResources(prefs));
 
     // Update preference: time feedback format.
     String timeFeedbackFormat =

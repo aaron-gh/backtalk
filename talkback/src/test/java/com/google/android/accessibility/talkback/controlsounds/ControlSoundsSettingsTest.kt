@@ -19,6 +19,7 @@ package com.google.android.accessibility.talkback.controlsounds
 import com.google.android.accessibility.talkback.R
 import com.google.android.accessibility.talkback.directtouch.FakeSharedPreferences
 import com.google.android.accessibility.talkback.individualfeedback.IndividualFeedbackSettings
+import com.google.android.accessibility.talkback.individualfeedback.SoundVibrations
 import com.google.android.accessibility.utils.output.FeedbackController
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -58,6 +59,39 @@ class ControlSoundsSettingsTest {
     val playing = ControlSoundsSettings.playingSounds(prefs, true, setOf("control_button"))
     assertFalse(R.raw.control_button in playing)
     assertTrue(R.raw.control_checkbox in playing)
+  }
+
+  @Test
+  fun controlsVibrateWithSoundFeedbackOff() {
+    turnOn()
+    assertTrue(ControlSoundsSettings.playingSounds(prefs, false, emptySet()).isEmpty())
+    assertEquals(
+      ControlSounds.SOUNDS.values.toSet(),
+      ControlSoundsSettings.vibratingSounds(prefs, true, emptySet()),
+    )
+  }
+
+  @Test
+  fun noControlVibratesWhenOffOrWithVibrationOff() {
+    assertTrue(ControlSoundsSettings.vibratingSounds(prefs, true, emptySet()).isEmpty())
+    turnOn()
+    assertTrue(ControlSoundsSettings.vibratingSounds(prefs, false, emptySet()).isEmpty())
+  }
+
+  @Test
+  fun aVibrationTurnedOffOnItsOwnDoesNotPlay() {
+    turnOn()
+    val vibrating =
+      ControlSoundsSettings.vibratingSounds(prefs, true, setOf("control_button_pattern"))
+    assertFalse(R.raw.control_button in vibrating)
+    assertTrue(R.raw.control_checkbox in vibrating)
+  }
+
+  @Test
+  fun everyControlHasItsOwnVibrationExceptLinks() {
+    val patterns = ControlSounds.SOUNDS.keys.map { SoundVibrations.PATTERNS.getValue(it) }
+    assertEquals(patterns.size, patterns.toSet().size)
+    assertEquals("hyperlink_pattern", SoundVibrations.PATTERNS["control_link"])
   }
 
   @Test
