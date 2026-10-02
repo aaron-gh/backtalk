@@ -87,6 +87,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -899,7 +900,7 @@ public class FailoverTextToSpeech {
   private int speakWithCacheOrTts(
       String utteranceId, CharSequence text, int queueMode, Locale locale, Bundle bundle) {
     if (speechCacheManager == null) {
-      return tts.speak(text, queueMode, bundle, utteranceId);
+      return speakInChunks(text, queueMode, bundle, utteranceId, locale);
     }
 
     if (speechCacheManager.isSpeaking()) {
@@ -922,7 +923,7 @@ public class FailoverTextToSpeech {
           return TextToSpeech.SUCCESS;
         }
         LogUtils.d(TAG, "tts.speak, utteranceId =" + utteranceId);
-        return tts.speak(text, queueMode, bundle, utteranceId);
+        return speakInChunks(text, queueMode, bundle, utteranceId, locale);
       }
     } else {
       if (speechCacheManager.speakWithSpeechCachePlayer(
@@ -931,8 +932,76 @@ public class FailoverTextToSpeech {
         return TextToSpeech.SUCCESS;
       }
       LogUtils.d(TAG, "tts.speak, utteranceId =" + utteranceId);
+      return speakInChunks(text, queueMode, bundle, utteranceId, locale);
+    }
+  }
+
+  /** Marks the utterance ID of one piece of a split utterance. */
+  private static final String CHUNK_ID_SEPARATOR = "#chunk";
+
+  /** One queued piece of a split utterance, by its own utterance ID. */
+  private record SpeechChunk(String utteranceId, int offset, boolean first, boolean last) {}
+
+  private final Map<String, SpeechChunk> speechChunks = new ConcurrentHashMap<>();
+
+  /**
+   * Speaks long text as pieces of about a sentence, so a later utterance can interrupt it quickly.
+   * See {@link SpeechChunker}. The pieces report progress as the one original utterance: see
+   * {@link #toOriginal}.
+   */
+  private int speakInChunks(
+      CharSequence text, int queueMode, Bundle bundle, String utteranceId, Locale locale) {
+    List<Integer> starts =
+        utteranceId == null
+            ? Collections.singletonList(0)
+            : SpeechChunker.chunkStarts(text, locale == null ? Locale.getDefault() : locale);
+    if (starts.size() <= 1) {
       return tts.speak(text, queueMode, bundle, utteranceId);
     }
+    for (int i = 0; i < starts.size(); i++) {
+      int start = starts.get(i);
+      boolean last = i == starts.size() - 1;
+      int end = last ? text.length() : starts.get(i + 1);
+      String chunkId = utteranceId + CHUNK_ID_SEPARATOR + i;
+      speechChunks.put(chunkId, new SpeechChunk(utteranceId, start, i == 0, last));
+      int result =
+          tts.speak(text.subSequence(start, end), i == 0 ? queueMode : QUEUE_ADD, bundle, chunkId);
+      if (result != TextToSpeech.SUCCESS) {
+        speechChunks.remove(chunkId);
+        if (i == 0) {
+          return result;
+        }
+        // Finish the utterance with the pieces that were queued.
+        String previousId = utteranceId + CHUNK_ID_SEPARATOR + (i - 1);
+        SpeechChunk previous = speechChunks.get(previousId);
+        if (previous != null) {
+          speechChunks.put(
+              previousId, new SpeechChunk(utteranceId, previous.offset(), previous.first(), true));
+        }
+        break;
+      }
+    }
+    LogUtils.d(TAG, "speakInChunks: %s in %d pieces", utteranceId, starts.size());
+    return TextToSpeech.SUCCESS;
+  }
+
+  /**
+   * Returns the piece for a split utterance's progress callback, or {@code null} if {@code
+   * utteranceId} is not a piece. A piece of an utterance that already ended, by a stop or an error
+   * on another piece, returns a piece with a {@code null} utterance ID, and its callback is dropped.
+   */
+  private @Nullable SpeechChunk toOriginal(@Nullable String utteranceId) {
+    if (utteranceId == null || !utteranceId.contains(CHUNK_ID_SEPARATOR)) {
+      return null;
+    }
+    SpeechChunk chunk = speechChunks.get(utteranceId);
+    return chunk != null ? chunk : new SpeechChunk(null, 0, false, false);
+  }
+
+  /** Forgets every piece of {@code utteranceId}, once it has ended. */
+  private void forgetChunks(String utteranceId) {
+    String prefix = utteranceId + CHUNK_ID_SEPARATOR;
+    speechChunks.keySet().removeIf(id -> id.startsWith(prefix));
   }
 
   private void notifyInterruptedForSuspendQueue() {
@@ -1636,6 +1705,13 @@ public class FailoverTextToSpeech {
       if (utteranceId.startsWith(CACHE_UTTERANCE_ID_PREFIX)) {
         return;
       }
+      SpeechChunk chunk = toOriginal(utteranceId);
+      if (chunk != null) {
+        if (chunk.utteranceId() == null || !chunk.first()) {
+          return;
+        }
+        utteranceId = chunk.utteranceId();
+      }
       Performance.getInstance().onFeedbackReady(utteranceId);
       if (shouldHandleTtsCallbackInHandlerThread) {
         mHandler.onUtteranceStarted(utteranceId);
@@ -1646,6 +1722,13 @@ public class FailoverTextToSpeech {
 
     @Override
     public void onAudioAvailable(String utteranceId, byte[] audio) {
+      SpeechChunk chunk = toOriginal(utteranceId);
+      if (chunk != null) {
+        if (chunk.utteranceId() == null) {
+          return;
+        }
+        utteranceId = chunk.utteranceId();
+      }
       // onAudioAvailable() is usually called many times per utterance,
       // once for each audio chunk.
       updatePerformanceMetrics(utteranceId, /* localCache= */ false);
@@ -1659,6 +1742,15 @@ public class FailoverTextToSpeech {
 
     @Override
     public void onRangeStart(String utteranceId, int start, int end, int frame) {
+      SpeechChunk chunk = toOriginal(utteranceId);
+      if (chunk != null) {
+        if (chunk.utteranceId() == null) {
+          return;
+        }
+        utteranceId = chunk.utteranceId();
+        start += chunk.offset();
+        end += chunk.offset();
+      }
       Performance.getInstance().onFeedbackRangeStarted(utteranceId);
       if (shouldHandleTtsCallbackInHandlerThread) {
         mHandler.onUtteranceRangeStarted(utteranceId, start, end);
@@ -1669,6 +1761,14 @@ public class FailoverTextToSpeech {
 
     @Override
     public void onStop(String utteranceId, boolean interrupted) {
+      SpeechChunk chunk = toOriginal(utteranceId);
+      if (chunk != null) {
+        if (chunk.utteranceId() == null) {
+          return;
+        }
+        utteranceId = chunk.utteranceId();
+        forgetChunks(utteranceId);
+      }
       if (speechCacheManager != null && speechCacheManager.handleOnStop(utteranceId, interrupted)) {
         return;
       }
@@ -1677,6 +1777,14 @@ public class FailoverTextToSpeech {
 
     @Override
     public void onError(String utteranceId) {
+      SpeechChunk chunk = toOriginal(utteranceId);
+      if (chunk != null) {
+        if (chunk.utteranceId() == null) {
+          return;
+        }
+        utteranceId = chunk.utteranceId();
+        forgetChunks(utteranceId);
+      }
       if (speechCacheManager != null && speechCacheManager.handleOnError(utteranceId)) {
         return;
       }
@@ -1685,6 +1793,15 @@ public class FailoverTextToSpeech {
 
     @Override
     public void onDone(String utteranceId) {
+      SpeechChunk chunk = toOriginal(utteranceId);
+      if (chunk != null) {
+        speechChunks.remove(utteranceId);
+        if (chunk.utteranceId() == null || !chunk.last()) {
+          return;
+        }
+        utteranceId = chunk.utteranceId();
+        forgetChunks(utteranceId);
+      }
       if (speechCacheManager != null && speechCacheManager.handleOnDone(utteranceId)) {
         return;
       }

@@ -37,6 +37,8 @@ import static com.google.android.accessibility.talkback.PrimesController.TimerAc
 import static com.google.android.accessibility.talkback.PrimesController.TimerAction.TOUCH_EXPLORE_DELAY_TYPING_200;
 import static com.google.android.accessibility.talkback.PrimesController.TimerAction.TOUCH_EXPLORE_DELAY_TYPING_250;
 import static com.google.android.accessibility.utils.gestures.GestureAnalyticsEvent.EVENT_TAP_TO_TOUCH_EXPLORE;
+import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_2_FINGER_ROTATE_CLOCKWISE;
+import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_2_FINGER_ROTATE_COUNTERCLOCKWISE;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_FAKED_SPLIT_TYPING;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_FAKED_SPLIT_TYPING_AND_HOLD;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_TAP_UP_TOUCH_EXPLORE;
@@ -67,6 +69,7 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import com.google.android.accessibility.talkback.PrimesController.TimerAction;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForTapAndTouchExploration;
+import com.google.android.accessibility.talkback.gesture.TwoFingerRotationTracker;
 import com.google.android.accessibility.utils.AccessibilityNodeInfoUtils;
 import com.google.android.accessibility.utils.AccessibilityServiceCompatUtils;
 import com.google.android.accessibility.utils.AccessibilityWindowInfoUtils;
@@ -155,6 +158,8 @@ public class TouchInteractionMonitor
   // gesture's events cancel the gesture matchers, so a new first finger down in the same
   // interaction must clear them again.
   private boolean clearGestureDetectorOnNextDown = false;
+  // Recognizes two fingers turning around each other. A recognized rotation owns the whole touch.
+  private final TwoFingerRotationTracker rotationTracker;
   // Whether double tap and double tap and hold will be dispatched to the service or handled in
   // the framework.
   private boolean serviceHandlesDoubleTap = false;
@@ -354,6 +359,8 @@ public class TouchInteractionMonitor
     int passthroughSlopMultiplier =
         context.getResources().getInteger(R.integer.config_passthrough_slop_multiplier);
     passthroughTotalSlop = passthroughSlopMultiplier * touchSlop;
+    rotationTracker =
+        new TwoFingerRotationTracker(passthroughTotalSlop, touchSlop, this::onRotationStep);
     sharedPreferences = prefs;
     typingFocusTimeout = FeatureFlagReader.typingFocusTimeout(service);
     touchFocusTimeout = FeatureFlagReader.touchFocusTimeout(service);
@@ -483,6 +490,9 @@ public class TouchInteractionMonitor
       return;
     }
     receivedPointerTracker.onMotionEvent(event);
+    if (handleRotation(event)) {
+      return;
+    }
     if (shouldPerformGestureDetection()) {
       if (waitFirstMotionEvent && event.getActionMasked() == ACTION_POINTER_DOWN) {
         // The split-typing gesture expect no action-down when re-entering the touch exploration
@@ -552,6 +562,11 @@ public class TouchInteractionMonitor
                   return;
                 }
               }
+            }
+            if (rotationTracker.isPossibleRotation()) {
+              // The fingers are turning around each other. Wait until it is clear whether this is
+              // a rotation before scrolling or passing the touch to the app.
+              return;
             }
             if (isDraggingGesture(event)) {
               computeDraggingPointerIdIfNeeded(event);
@@ -663,6 +678,7 @@ public class TouchInteractionMonitor
   private void clear() {
     gestureStarted = false;
     clearGestureDetectorOnNextDown = false;
+    rotationTracker.clear();
     stateChangeRequested = false;
     gestureDetector.clear();
     receivedPointerTracker.clear();
@@ -1003,6 +1019,58 @@ public class TouchInteractionMonitor
         });
     clear();
     clearGestureDetectorOnNextDown = true;
+  }
+
+  /**
+   * Passes the event to the two-finger rotation tracker. Returns true if the event belongs to a
+   * rotation, so nothing else may handle it.
+   */
+  private boolean handleRotation(MotionEvent event) {
+    boolean wasRotating = rotationTracker.isRotating();
+    if (!wasRotating
+        && (state != STATE_TOUCH_INTERACTING
+            || gestureStarted
+            || !gestureDetector.isMultiFingerGesturesEnabled())) {
+      if (BuildConfig.DEBUG && event.getActionMasked() == ACTION_POINTER_DOWN) {
+        Log.d(
+            DEBUG_GESTURE_TAG,
+            "Rotation not possible: state="
+                + TouchInteractionController.stateToString(state)
+                + " gestureStarted="
+                + gestureStarted);
+      }
+      rotationTracker.clear();
+      return false;
+    }
+    if (!rotationTracker.onMotionEvent(event)) {
+      return false;
+    }
+    if (!wasRotating) {
+      // The rotation starts. No other gesture, touch exploration or passthrough for this touch.
+      if (BuildConfig.DEBUG) {
+        Log.d(DEBUG_GESTURE_TAG, "Two-finger rotation started");
+      }
+      keepMonitorTouchExplore = false;
+      requestTouchExplorationDelayed.cancel();
+      gestureDetector.clear();
+      // The matchers miss the rest of this touch, so a new touch in this interaction starts them
+      // over.
+      clearGestureDetectorOnNextDown = true;
+      service.onGestureDetectionStarted();
+    }
+    return true;
+  }
+
+  private void onRotationStep(boolean clockwise) {
+    int gestureId =
+        clockwise ? GESTURE_2_FINGER_ROTATE_CLOCKWISE : GESTURE_2_FINGER_ROTATE_COUNTERCLOCKWISE;
+    if (BuildConfig.DEBUG) {
+      Log.d(
+          DEBUG_GESTURE_TAG,
+          "Gesture " + AccessibilityServiceCompatUtils.gestureIdToString(gestureId));
+    }
+    dispatchGestureToMainThread(
+        new AccessibilityGestureEvent(gestureId, displayId, new ArrayList<MotionEvent>()));
   }
 
   /** Dispatch a gesture event to the main thread of the service, but do not clear state. */

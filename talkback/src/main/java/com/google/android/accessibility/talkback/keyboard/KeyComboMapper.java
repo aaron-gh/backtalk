@@ -626,6 +626,13 @@ public class KeyComboMapper {
           result =
               pipeline.returnFeedback(
                   eventId, Feedback.part().setSpeech(Feedback.Speech.create(COPY_LAST)));
+      case PAUSE_OR_RESUME_BACKTALK -> {
+        // While paused, the pause controller sees the shortcut first and resumes.
+        TalkBackService service = TalkBackService.getInstance();
+        if (service != null && service.getPauseController() != null) {
+          service.getPauseController().toggle();
+        }
+      }
       case HIDE_OR_SHOW_SCREEN -> {
         if (actorState.getDimScreen().isDimmingEnabled()) {
           result = pipeline.returnFeedback(eventId, Feedback.dimScreen(BRIGHTEN));

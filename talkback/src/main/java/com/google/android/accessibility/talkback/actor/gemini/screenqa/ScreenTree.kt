@@ -34,8 +34,20 @@ class ScreenTree private constructor(private val nodes: List<AccessibilityNodeIn
   val description: String by lazy {
     nodes
       .withIndex()
-      .mapNotNull { (id, node) -> describe(id, node) }
-      .joinToString(separator = "\n")
+      .mapNotNull { (id, node) -> describe(id, node, compact = false) }
+      .joinToString(separator = NEWLINE)
+  }
+
+  /**
+   * A shorter list for a model on the phone, where every token costs time: only nodes that have a
+   * label, no screen coordinates, shorter labels, and a cap on the number of lines.
+   */
+  val compactDescription: String by lazy {
+    nodes
+      .withIndex()
+      .mapNotNull { (id, node) -> describe(id, node, compact = true) }
+      .take(COMPACT_MAX_LINES)
+      .joinToString(separator = NEWLINE)
   }
 
   // Node numbers are unique across the whole tree, so the window ID is not needed to find a node.
@@ -44,33 +56,56 @@ class ScreenTree private constructor(private val nodes: List<AccessibilityNodeIn
 
   override fun serialize(): ByteString = ByteString.copyFromUtf8(description)
 
-  private fun describe(id: Int, node: AccessibilityNodeInfoCompat): String? {
-    val label = (node.contentDescription ?: node.text)?.toString()?.trim()?.take(MAX_LABEL_LENGTH)
-    val traits =
-      listOfNotNull(
-        "clickable".takeIf { node.isClickable },
-        "editable".takeIf { node.isEditable },
-        "checked".takeIf { node.isCheckable && node.isChecked },
-        "not checked".takeIf { node.isCheckable && !node.isChecked },
-        "scrollable".takeIf { node.isScrollable },
-        "heading".takeIf { node.isHeading },
-      )
-    if (label.isNullOrEmpty() && traits.isEmpty()) {
-      return null
-    }
+  private fun describe(id: Int, node: AccessibilityNodeInfoCompat, compact: Boolean): String? {
     val bounds = Rect().also { node.getBoundsInScreen(it) }
-    val className = node.className?.toString()?.substringAfterLast('.') ?: "View"
-    return buildString {
-      append("$id: $className")
-      if (!label.isNullOrEmpty()) append(" \"$label\"")
-      if (traits.isNotEmpty()) append(" (${traits.joinToString()})")
-      append(" [${bounds.left},${bounds.top},${bounds.right},${bounds.bottom}]")
-    }
+    return formatLine(
+      id = id,
+      className = node.className?.toString()?.substringAfterLast('.') ?: "View",
+      rawLabel = (node.contentDescription ?: node.text)?.toString(),
+      traits =
+        listOfNotNull(
+          "clickable".takeIf { node.isClickable },
+          "editable".takeIf { node.isEditable },
+          "checked".takeIf { node.isCheckable && node.isChecked },
+          "not checked".takeIf { node.isCheckable && !node.isChecked },
+          "scrollable".takeIf { node.isScrollable },
+          "heading".takeIf { node.isHeading },
+        ),
+      bounds = listOf(bounds.left, bounds.top, bounds.right, bounds.bottom),
+      compact = compact,
+    )
   }
 
   companion object {
     private const val MAX_NODES = 400
     private const val MAX_LABEL_LENGTH = 120
+    private const val NEWLINE = "\n"
+    private const val COMPACT_MAX_LINES = 120
+    private const val COMPACT_MAX_LABEL_LENGTH = 60
+
+    /** Formats one node as a line of the prompt, or null when the node adds nothing. */
+    @JvmStatic
+    internal fun formatLine(
+      id: Int,
+      className: String,
+      rawLabel: String?,
+      traits: List<String>,
+      bounds: List<Int>,
+      compact: Boolean,
+    ): String? {
+      val maxLabel = if (compact) COMPACT_MAX_LABEL_LENGTH else MAX_LABEL_LENGTH
+      val label = rawLabel?.trim()?.take(maxLabel)
+      val usefulTraits = if (compact) traits.filter { it != "scrollable" } else traits
+      if (label.isNullOrEmpty() && (compact || usefulTraits.isEmpty())) {
+        return null
+      }
+      return buildString {
+        append("$id: $className")
+        if (!label.isNullOrEmpty()) append(" \"$label\"")
+        if (usefulTraits.isNotEmpty()) append(" (${usefulTraits.joinToString()})")
+        if (!compact) append(" [${bounds.joinToString(",")}]")
+      }
+    }
 
     /** Collects the visible nodes of the window that holds [node], in breadth-first order. */
     @JvmStatic

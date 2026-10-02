@@ -238,13 +238,12 @@ public class DeveloperPrefFragment extends TalkbackBaseFragment {
       if (FeatureSupport.supportGestureDetection()) {
         serviceGestureDetectionPref.setOnPreferenceChangeListener(
             (preference, newValue) -> {
-              if (Boolean.TRUE.equals(newValue)) {
-                Toast.makeText(
-                        getContext(),
-                        R.string.toast_pref_talkback_gesture_detection,
-                        Toast.LENGTH_LONG)
-                    .show();
-              }
+              // Turning it on or off only takes effect when Backtalk restarts.
+              Toast.makeText(
+                      getContext(),
+                      R.string.toast_pref_talkback_gesture_detection,
+                      Toast.LENGTH_LONG)
+                  .show();
               return true;
             });
       } else {

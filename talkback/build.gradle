@@ -15,6 +15,7 @@ dependencies {
     // TODO: Define different dependencies for different product flavors
     wearImplementation project(':materialpreferencecompose')
     wearImplementation project(':materialtheme')
+    implementation libs.litertlm
     testImplementation libs.junit
     testImplementation libs.json
 }

@@ -43,6 +43,14 @@
         android:key="@string/pref_time_feedback_format_key"
         android:summary="%s"
         android:title="@string/pref_time_feedback_format_title"/>
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
+        android:defaultValue="@string/pref_resume_backtalk_default"
+        android:dialogTitle="@string/title_pref_resume_backtalk"
+        android:entries="@array/pref_resume_backtalk_entries"
+        android:entryValues="@array/pref_resume_backtalk_values"
+        android:key="@string/pref_resume_backtalk_key"
+        android:summary="%s"
+        android:title="@string/title_pref_resume_backtalk"/>
     <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
         android:defaultValue="@bool/pref_reduce_window_delay_default"
         android:key="@string/pref_reduce_window_delay_key"

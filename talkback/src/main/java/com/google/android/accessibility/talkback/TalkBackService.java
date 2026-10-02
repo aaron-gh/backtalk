@@ -132,7 +132,7 @@ import com.google.android.accessibility.talkback.actor.gemini.GeminiActor;
 import com.google.android.accessibility.talkback.actor.gemini.GeminiConfiguration;
 import com.google.android.accessibility.talkback.actor.gemini.GeminiFunctionUtils;
 import com.google.android.accessibility.talkback.actor.gemini.GeminiRestEndpoint;
-import com.google.android.accessibility.talkback.actor.gemini.GeminiRestRequestPerformer;
+import com.google.android.accessibility.talkback.actor.gemini.LocalGemmaRequestPerformer;
 import com.google.android.accessibility.talkback.actor.search.UniversalSearchActor;
 import com.google.android.accessibility.talkback.actor.search.UniversalSearchManager;
 import com.google.android.accessibility.talkback.actor.voicecommands.VoiceCommandActor;
@@ -173,6 +173,7 @@ import com.google.android.accessibility.talkback.gesture.GestureShortcutMapping;
 import com.google.android.accessibility.talkback.imagecaption.ImageCaptionStorage;
 import com.google.android.accessibility.talkback.imagecaption.ImageCaptionUtils.CaptionType;
 import com.google.android.accessibility.talkback.imagecaption.ImageContents;
+import com.google.android.accessibility.talkback.individualfeedback.IndividualFeedbackSettings;
 import com.google.android.accessibility.talkback.interpreters.AccessibilityEventIdleInterpreter;
 import com.google.android.accessibility.talkback.interpreters.AccessibilityFocusInterpreter;
 import com.google.android.accessibility.talkback.interpreters.AutoScrollInterpreter;
@@ -204,6 +205,7 @@ import com.google.android.accessibility.talkback.monitor.KeyboardLockMonitor;
 import com.google.android.accessibility.talkback.monitor.ProximitySensorMonitor;
 import com.google.android.accessibility.talkback.monitor.RingerModeAndScreenMonitor;
 import com.google.android.accessibility.talkback.monitor.VolumeMonitor;
+import com.google.android.accessibility.talkback.pause.PauseController;
 import com.google.android.accessibility.talkback.preference.PreferencesActivityUtils;
 import com.google.android.accessibility.talkback.selector.SelectorController;
 import com.google.android.accessibility.talkback.selector.SelectorController.SelectorEventNotifier;
@@ -726,6 +728,7 @@ public class TalkBackService extends AccessibilityServiceCompat
   private ScrollPositionInterpreter scrollPositionInterpreter;
   private ScreenStateMonitor screenStateMonitor;
   private DirectTouchController directTouchController;
+  private PauseController pauseController;
   private InputMethodMonitor inputMethodMonitor;
   private DisplayMonitor displayMonitor;
   private ProcessorEventQueue processorEventQueue;
@@ -910,6 +913,10 @@ public class TalkBackService extends AccessibilityServiceCompat
       bootReceiver = null;
     }
 
+    if (pauseController != null) {
+      pauseController.shutdown();
+    }
+
     if (directTouchController != null) {
       directTouchController.shutdown();
       directTouchController = null;
@@ -993,6 +1000,13 @@ public class TalkBackService extends AccessibilityServiceCompat
     }
   }
 
+  /** Says why the model on the phone could not answer, such as low memory. */
+  private void speakOnDeviceAiProblem(String text) {
+    if (pipeline != null) {
+      pipeline.getFeedbackReturner().returnFeedback(EVENT_ID_UNTRACKED, Feedback.speech(text));
+    }
+  }
+
   private void updateSpeechOverlayOnConfigChange(Configuration newConfig) {
     if (lastConfiguration == null
         || didScreenPropertiesChange(lastConfiguration, newConfig)
@@ -1022,6 +1036,12 @@ public class TalkBackService extends AccessibilityServiceCompat
 
   @Override
   public void onAccessibilityEvent(AccessibilityEvent event) {
+    // Paused Backtalk drops events, except the end of a touch that started before the pause, so
+    // that nothing still thinks a finger is down after resuming. Its feedback is dropped too.
+    if (PauseController.isPaused()
+        && event.getEventType() != AccessibilityEvent.TYPE_TOUCH_INTERACTION_END) {
+      return;
+    }
     Performance perf = Performance.getInstance();
     EventId eventId = perf.onEventReceived(event);
     int eventType = event.getEventType();
@@ -1136,6 +1156,14 @@ public class TalkBackService extends AccessibilityServiceCompat
 
   /** Handles a key event and returns whether it should be considered consumed. */
   protected boolean onKeyEventInternal(KeyEvent keyEvent) {
+    if (pauseController != null) {
+      // While paused, keys pass to apps except the ones that resume Backtalk.
+      Boolean handled = pauseController.onKeyEvent(keyEvent);
+      if (handled != null) {
+        return handled;
+      }
+    }
+
     if (brailleDisplay.onKeyEvent(keyEvent)) {
       return true;
     }
@@ -1308,7 +1336,7 @@ public class TalkBackService extends AccessibilityServiceCompat
   }
 
   private boolean handleOnGestureById(int displayId, int gestureId) {
-    if (!isServiceActive()) {
+    if (!isServiceActive() || PauseController.isPaused()) {
       return false;
     }
     Performance perf = Performance.getInstance();
@@ -1367,6 +1395,11 @@ public class TalkBackService extends AccessibilityServiceCompat
 
   public KeyComboManager getKeyComboManager() {
     return keyComboManager;
+  }
+
+  /** Returns the controller that pauses and resumes Backtalk, or null before initialization. */
+  public @Nullable PauseController getPauseController() {
+    return pauseController;
   }
 
   /** Returns the actor state. */
@@ -1723,7 +1756,7 @@ public class TalkBackService extends AccessibilityServiceCompat
         new FingerprintGestureCallback() {
           @Override
           public void onGestureDetected(int gesture) {
-            if (isServiceActive() && gestureController != null) {
+            if (isServiceActive() && !PauseController.isPaused() && gestureController != null) {
               Performance perf = Performance.getInstance();
               EventId eventId = perf.onFingerprintGestureEventReceived(gesture);
 
@@ -1970,7 +2003,9 @@ public class TalkBackService extends AccessibilityServiceCompat
             GeminiConfiguration.useAratea(this)
                 ? new ArateaEndpoint(this, getApplication())
                 : new GeminiRestEndpoint(
-                    this, BuildConfig.GEMINI_API_KEY, new GeminiRestRequestPerformer(this)),
+                    this,
+                    BuildConfig.GEMINI_API_KEY,
+                    new LocalGemmaRequestPerformer(this, this::speakOnDeviceAiProblem)),
             new AiCoreEndpoint(this));
 
     KeyboardActor keyboardActor = new KeyboardActor(this);
@@ -2203,6 +2238,27 @@ public class TalkBackService extends AccessibilityServiceCompat
             speechController,
             screenStateMonitor.state,
             processorPhoneticLetters);
+
+    pauseController =
+        new PauseController(
+            this,
+            pipeline.getFeedbackReturner(),
+            keyComboManager,
+            new PauseController.Host() {
+              @Override
+              public void stopForPause() {
+                if (menuManager != null) {
+                  menuManager.dismissAll();
+                }
+                interruptFullScreenReadActor();
+                clearQueues();
+              }
+
+              @Override
+              public void onPausedChanged(boolean paused) {
+                onPauseChanged(paused);
+              }
+            });
 
     audioPlaybackMonitor = new AudioPlaybackMonitor(this);
 
@@ -2949,6 +3005,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     if (windowEventInterpreter != null) {
       enableAnimation(!reduceDelayPref);
     }
+    WindowEventInterpreter.setReduceWindowDelay(reduceDelayPref);
 
     // If performance statistics changing enabled setting... clear collected stats.
     boolean performanceEnabled =
@@ -3002,14 +3059,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     globalVariables.setInterpretAsEntryKey(
         accessibilityFocusInterpreter.getTypingMethod() == FORCE_LIFT_TO_TYPE_ON_IME);
 
-    if (supportsTouchScreen && !isBrailleKeyboardActivated()) {
-      // Touch exploration *must* be enabled on TVs for TalkBack to function.
-      final boolean touchExploration =
-          (FormFactorUtils.isAndroidTv()
-              || getBooleanPref(
-                  R.string.pref_explore_by_touch_key, R.bool.pref_explore_by_touch_default));
-      requestTouchExploration(touchExploration);
-    }
+    applyTouchExplorationPreference();
 
     if (FeatureSupport.isMultiFingerGestureSupported()) {
       requestServiceFlag(
@@ -3160,6 +3210,10 @@ public class TalkBackService extends AccessibilityServiceCompat
     boolean auditoryEnabled =
         getBooleanPref(R.string.pref_soundback_key, R.bool.pref_soundback_default);
     feedbackController.setAuditoryEnabled(auditoryEnabled);
+    feedbackController.setMutedAuditory(
+        IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs));
+    feedbackController.setMutedHaptic(
+        IndividualFeedbackSettings.INSTANCE.mutedVibrationResources(prefs));
 
     // Update preference: time feedback format.
     String timeFeedbackFormat =
@@ -3384,9 +3438,48 @@ public class TalkBackService extends AccessibilityServiceCompat
    *     no change to touch exploration state occurred.
    */
   private @Nullable Boolean requestTouchExploration(boolean requestedState) {
+    if (requestedState && PauseController.isPaused()) {
+      // Touch works as if no screen reader is on until Backtalk resumes.
+      requestedState = false;
+    }
     requestServiceFlag(
         AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE, requestedState);
     return isTouchExplorationEnabled();
+  }
+
+  /** Turns explore by touch on or off as the preference says. */
+  private void applyTouchExplorationPreference() {
+    if (supportsTouchScreen && !isBrailleKeyboardActivated()) {
+      // Touch exploration *must* be enabled on TVs for TalkBack to function.
+      final boolean touchExploration =
+          (FormFactorUtils.isAndroidTv()
+              || getBooleanPref(
+                  R.string.pref_explore_by_touch_key, R.bool.pref_explore_by_touch_default));
+      requestTouchExploration(touchExploration);
+    }
+  }
+
+  /** Turns off, or back on, what pausing Backtalk turns off besides events and feedback. */
+  private void onPauseChanged(boolean paused) {
+    if (paused) {
+      if (supportsTouchScreen) {
+        requestTouchExploration(false);
+      }
+    } else {
+      applyTouchExplorationPreference();
+    }
+    if (directTouchController != null) {
+      directTouchController.setPaused(paused);
+    }
+    BrailleImeForTalkBack brailleIme = getBrailleImeForTalkBack();
+    if (brailleIme != null) {
+      // The braille keyboard closes while paused, as it did while TalkBack was suspended.
+      if (paused) {
+        brailleIme.onTalkBackSuspended();
+      } else {
+        brailleIme.onTalkBackResumed();
+      }
+    }
   }
 
   /**

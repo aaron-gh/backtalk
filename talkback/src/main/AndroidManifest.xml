@@ -57,6 +57,7 @@
 
     <!-- Required for calling Service.startForeground after API 28. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <!-- Required for Primes. -->
     <uses-permission android:name="android.permission.GET_PACKAGE_SIZE" />
@@ -80,6 +81,23 @@
 
     <application
         android:supportsRtl="true">
+
+        <!-- Keeps the on-device model download running and shows its progress. -->
+        <service
+            android:name="com.google.android.accessibility.talkback.actor.gemini.local.ModelDownloadService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- Runs the on-device model in its own process, so running out of memory stops the
+             model and not the screen reader. -->
+        <service
+            android:name="com.google.android.accessibility.talkback.actor.gemini.local.LocalModelService"
+            android:exported="false"
+            android:process=":ondeviceai" />
+
+        <!-- The on-device model can run on the GPU when these are present. -->
+        <uses-native-library android:name="libvndksupport.so" android:required="false" />
+        <uses-native-library android:name="libOpenCL.so" android:required="false" />
 
         <!-- Allows local profiling on release builds -->
         <profileable android:shell="true" />

@@ -320,6 +320,9 @@ public class AccessibilityServiceCompatUtils {
           "GESTURE_TAP_HOLD_AND_2ND_FINGER_FORWARD_DOUBLE_TAP";
       case GestureManifold.GESTURE_TAP_HOLD_AND_2ND_FINGER_BACKWARD_DOUBLE_TAP ->
           "GESTURE_TAP_HOLD_AND_2ND_FINGER_BACKWARD_DOUBLE_TAP";
+      case GestureManifold.GESTURE_2_FINGER_ROTATE_CLOCKWISE -> "GESTURE_2_FINGER_ROTATE_CLOCKWISE";
+      case GestureManifold.GESTURE_2_FINGER_ROTATE_COUNTERCLOCKWISE ->
+          "GESTURE_2_FINGER_ROTATE_COUNTERCLOCKWISE";
       default -> "(unhandled " + gestureId + ")";
     };
   }

@@ -18,6 +18,11 @@
       android:key="@string/pref_talkback_gesture_detection_key"
       android:title="@string/title_pref_talkback_gesture_detection"/>
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+      android:defaultValue="false"
+      android:key="@string/pref_on_device_ai_ignore_memory_limits_key"
+      android:title="@string/title_pref_on_device_ai_ignore_memory_limits"
+      android:summary="@string/summary_pref_on_device_ai_ignore_memory_limits"/>
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
       android:defaultValue="@bool/pref_multiple_gesture_set_default"
       android:key="@string/pref_multiple_gesture_set_key"
       android:title="@string/title_pref_multiple_gesture_set"/>
