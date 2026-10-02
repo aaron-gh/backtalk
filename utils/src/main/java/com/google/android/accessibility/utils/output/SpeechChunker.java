@@ -43,16 +43,17 @@ public final class SpeechChunker {
   private SpeechChunker() {}
 
   /**
-   * Returns the start offset of each piece of {@code text}, beginning with 0. Pieces end at
-   * sentence boundaries and after a comma, semicolon or colon followed by a space, unless that
-   * leaves a piece shorter than {@link #MIN_CHUNK}. A piece still longer than {@link #MAX_CHUNK} is
-   * cut at a space, and only cuts a word when there is none.
+   * Returns the start offset of each piece of {@code text}, beginning with 0. Text up to {@link
+   * #MAX_CHUNK} long is one piece, so that ordinary item descriptions are not split into separate
+   * requests. Longer text is cut at sentence boundaries and after a comma, semicolon or colon
+   * followed by a space, unless that leaves a piece shorter than {@link #MIN_CHUNK}. A piece still
+   * longer than {@link #MAX_CHUNK} is cut at a space, and only cuts a word when there is none.
    */
   public static List<Integer> chunkStarts(CharSequence text, Locale locale) {
     List<Integer> starts = new ArrayList<>();
     starts.add(0);
     int length = text.length();
-    if (length < 2 * MIN_CHUNK) {
+    if (length <= MAX_CHUNK) {
       return starts;
     }
     String string = text.toString();
@@ -81,11 +82,12 @@ public final class SpeechChunker {
 
   /**
    * Adds the starts of the pieces after {@code start}, up to {@code end}, cutting any longer than
-   * {@link #MAX_CHUNK}. Returns {@code end}.
+   * {@link #MAX_CHUNK}. The last piece is kept at least {@link #MIN_CHUNK} long. Returns {@code
+   * end}.
    */
   private static int addPieces(String text, List<Integer> starts, int start, int end) {
     while (end - start > MAX_CHUNK) {
-      start = softBreak(text, start, start + MAX_CHUNK);
+      start = softBreak(text, start, Math.min(start + MAX_CHUNK, end - MIN_CHUNK));
       starts.add(start);
     }
     starts.add(end);
