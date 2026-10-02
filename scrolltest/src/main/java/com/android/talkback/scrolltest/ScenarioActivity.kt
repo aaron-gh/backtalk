@@ -26,7 +26,12 @@ import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
@@ -89,11 +94,17 @@ class ScenarioActivity : ComponentActivity() {
 
   @androidx.compose.runtime.Composable
   private fun composeLines() {
-    Column(Modifier.verticalScroll(rememberScrollState())) {
+    // Keeps the lines clear of the system bars, which an app targeting Android 15 draws behind.
+    Column(
+      Modifier.fillMaxSize()
+        .windowInsetsPadding(WindowInsets.safeDrawing)
+        .verticalScroll(rememberScrollState())
+    ) {
       for (i in 1..60) {
         BasicText(
           "Item $i",
-          Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+          // Full width, like the lines on the other screens, so touching anywhere on a line finds it.
+          Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
           style = TextStyle(fontSize = 20.sp),
         )
       }
