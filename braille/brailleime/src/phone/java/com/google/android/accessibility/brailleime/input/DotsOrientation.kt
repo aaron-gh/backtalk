@@ -1,0 +1,226 @@
+/*
+ * Copyright 2026 Backtalk contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package com.google.android.accessibility.brailleime.input
+
+import android.view.Surface
+import com.google.android.accessibility.brailleime.OrientationMonitor.Orientation
+
+/** Where the charging port is, from where the user is. */
+enum class PortPosition {
+  LEFT,
+  RIGHT,
+  /** Toward the user, with the device lying flat. */
+  NEAR,
+  /** Away from the user, with the device lying flat. */
+  FAR,
+  /** Pointing down, with a tablet held up. */
+  DOWN,
+  /** Pointing up, with a tablet held up. */
+  UP,
+}
+
+/**
+ * Decides which way the braille dots face, apart from the views and sensors so it can be tested.
+ * Rotations are [Surface] rotations, from 0 to 3 quarter turns.
+ *
+ * A phone only turns the dots by half turns, as its charging port can only be on the user's left
+ * or right. A tablet turns them by quarter turns, as if auto-rotate had turned the screen to face
+ * the user.
+ *
+ * Gravity cannot tell whether a device held up faces the user or faces away. Laid flat after being
+ * held up, a phone takes it that it was held screen away, as when moving from screen-away typing to
+ * the table. A tablet takes it that it was held facing the user, as auto-rotate does.
+ */
+object DotsOrientation {
+  /** The orientation lock when unlocked. */
+  const val UNLOCKED = -1
+
+  /** A phone's orientation lock with the charging port on the user's left. */
+  const val LOCKED_PORT_ON_LEFT = 0
+
+  /** A phone's orientation lock with the charging port on the user's right. */
+  const val LOCKED_PORT_ON_RIGHT = 1
+
+  /**
+   * The screen rotation auto-rotate gives for a reading from
+   * [android.view.OrientationEventListener], which is how far the device is turned clockwise from
+   * its natural orientation. The screen turns the other way to stay upright.
+   */
+  @JvmStatic
+  fun rotationForDegrees(degrees: Int): Int = (4 - Math.round(degrees / 90f) % 4) % 4
+
+  /**
+   * How many quarter turns clockwise the dots are drawn from the screen as displayed, so they face
+   * the user as if the screen were at [wantedRotation].
+   */
+  @JvmStatic
+  fun quarterTurns(wantedRotation: Int, displayedRotation: Int): Int =
+    Math.floorMod(wantedRotation - displayedRotation, 4)
+
+  /**
+   * The rotation that faces the user after the device turns this many quarter turns clockwise, seen
+   * from above, while lying flat. The screen turns the other way to keep facing the user.
+   */
+  @JvmStatic
+  fun turnRotation(rotation: Int, quarters: Int): Int = Math.floorMod(rotation - quarters, 4)
+
+  /** Whether a phone turned this many quarter turns lying flat has its port on the other side. */
+  @JvmStatic fun swapsSides(quarters: Int): Boolean = Math.floorMod(quarters, 4) == 2
+
+  /**
+   * Maps the layout of the dots onto a screen of this size, turned this many quarter turns
+   * clockwise, as the nine values of an [android.graphics.Matrix]. A sideways layout has the
+   * screen's width and height swapped.
+   */
+  @JvmStatic
+  fun layoutToScreen(quarterTurns: Int, width: Float, height: Float): FloatArray =
+    when (Math.floorMod(quarterTurns, 4)) {
+      1 -> floatArrayOf(0f, -1f, width, 1f, 0f, 0f, 0f, 0f, 1f)
+      2 -> floatArrayOf(-1f, 0f, width, 0f, -1f, height, 0f, 0f, 1f)
+      3 -> floatArrayOf(0f, 1f, 0f, -1f, 0f, height, 0f, 0f, 1f)
+      else -> floatArrayOf(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f)
+    }
+
+  /**
+   * Which side a phone's layout expects the charging port on in screen-away mode. In portrait, as
+   * with auto-rotate off, it expects the port on the right. In landscape, the screen has turned with
+   * the phone. Dots calibrated holding the phone the other way round swap it.
+   */
+  @JvmStatic
+  fun screenAwayLayoutExpectsPortOnRight(
+    portrait: Boolean,
+    rotation: Int,
+    dotsMirrored: Boolean,
+  ): Boolean = (portrait || rotation == Surface.ROTATION_270) != dotsMirrored
+
+  /**
+   * Which side a phone's layout expects the charging port on in tabletop mode. In portrait, as with
+   * auto-rotate off, it expects the port on the left.
+   */
+  @JvmStatic
+  fun tabletopLayoutExpectsPortOnRight(
+    portrait: Boolean,
+    rotation: Int,
+    dotsMirrored: Boolean,
+  ): Boolean = (!portrait && rotation == Surface.ROTATION_90) != dotsMirrored
+
+  /**
+   * Which side the charging port is on when a phone is held like this in screen-away mode, or null
+   * when it is not held in landscape.
+   */
+  @JvmStatic
+  fun heldPortOnRight(held: Orientation): Boolean? =
+    when (held) {
+      Orientation.LANDSCAPE -> true
+      Orientation.REVERSE_LANDSCAPE -> false
+      else -> null
+    }
+
+  /**
+   * Decides which side a phone's charging port is on when it is laid flat. A phone lying flat gives
+   * no sign of which way round it is, but tipping it flat keeps the port on the same side of the
+   * user. So the side is the one the user last typed with in screen-away mode, or else the one the
+   * phone was last held up with in landscape. Otherwise, as when it was last held in portrait, the
+   * screen rotation gives it, as it always has.
+   */
+  @JvmStatic
+  fun decideTabletopPortOnRight(
+    typedScreenAwayPortOnRight: Boolean?,
+    lastHeld: Orientation,
+    portrait: Boolean,
+    rotation: Int,
+  ): Boolean =
+    typedScreenAwayPortOnRight
+      ?: heldPortOnRight(lastHeld)
+      ?: (!portrait && rotation == Surface.ROTATION_270)
+
+  /**
+   * Whether to decide the tabletop side again, which is only when something new shows it: typing
+   * in screen-away mode, or holding the device up, since it was last decided. So a device that
+   * tilts for a moment while being turned on the table keeps its side.
+   */
+  @JvmStatic
+  fun shouldDecideTabletopAgain(
+    decidedAtMs: Long,
+    typedInScreenAway: Boolean,
+    lastHeldSeenMs: Long,
+  ): Boolean = decidedAtMs < 0 || typedInScreenAway || lastHeldSeenMs > decidedAtMs
+
+  /**
+   * Where the charging port is on a tablet facing the user at this rotation, for one whose port is
+   * at the bottom of the screen in its natural orientation. Lying flat, that edge is toward the
+   * user. Held up in screen-away mode, the user sees the back, so left and right swap.
+   */
+  @JvmStatic
+  fun tabletPortPosition(rotation: Int, tabletop: Boolean): PortPosition =
+    when (Math.floorMod(rotation, 4)) {
+      Surface.ROTATION_90 -> if (tabletop) PortPosition.RIGHT else PortPosition.LEFT
+      Surface.ROTATION_180 -> if (tabletop) PortPosition.FAR else PortPosition.UP
+      Surface.ROTATION_270 -> if (tabletop) PortPosition.LEFT else PortPosition.RIGHT
+      else -> if (tabletop) PortPosition.NEAR else PortPosition.DOWN
+    }
+
+  /**
+   * Where the charging port is, from behind the screen, when the device is held like this in
+   * screen-away mode, or null when that cannot be said. A phone is only held in landscape, while a
+   * tablet can be held any way round. Only call it for a tablet whose port is at the bottom of the
+   * screen in its natural orientation.
+   */
+  @JvmStatic
+  fun heldPortPosition(held: Orientation, phone: Boolean): PortPosition? =
+    when (held) {
+      Orientation.LANDSCAPE -> PortPosition.RIGHT
+      Orientation.REVERSE_LANDSCAPE -> PortPosition.LEFT
+      Orientation.PORTRAIT -> if (phone) null else PortPosition.DOWN
+      Orientation.REVERSE_PORTRAIT -> if (phone) null else PortPosition.UP
+      else -> null
+    }
+
+  /**
+   * Whether a phone's dot 1 is on the side where the default layout puts dot 4, as after a
+   * calibration made holding the phone the other way round. The calibrated dots are saved, so the
+   * layout then expects the charging port on the other side. The default sides come from
+   * [BrailleInputPlanePhone.sortDotCentersFirstTime].
+   */
+  @JvmStatic
+  fun dotsMirrored(
+    portrait: Boolean,
+    tabletop: Boolean,
+    dot1X: Float,
+    dot1Y: Float,
+    dot4X: Float,
+    dot4Y: Float,
+  ): Boolean =
+    if (portrait) {
+      if (tabletop) dot1Y < dot4Y else dot1Y > dot4Y
+    } else {
+      if (tabletop) dot1X > dot4X else dot1X < dot4X
+    }
+
+  /** A phone's orientation lock for the charging port on this side. */
+  @JvmStatic
+  fun phoneLock(portOnRight: Boolean): Int =
+    if (portOnRight) LOCKED_PORT_ON_RIGHT else LOCKED_PORT_ON_LEFT
+
+  /** The side of the charging port in a phone's orientation lock. */
+  @JvmStatic fun phoneLockPortOnRight(lock: Int): Boolean = lock == LOCKED_PORT_ON_RIGHT
+
+  /** Where the charging port is on a phone, which is only ever on the user's left or right. */
+  @JvmStatic
+  fun phonePortPosition(portOnRight: Boolean): PortPosition =
+    if (portOnRight) PortPosition.RIGHT else PortPosition.LEFT
+}

@@ -48,6 +48,7 @@ import static com.google.android.accessibility.braille.common.BrailleImeAction.S
 import static com.google.android.accessibility.braille.common.BrailleImeAction.SELECT_PREVIOUS_WORD;
 import static com.google.android.accessibility.braille.common.BrailleImeAction.SUBMIT_TEXT;
 import static com.google.android.accessibility.braille.common.BrailleImeAction.SWITCH_KEYBOARD;
+import static com.google.android.accessibility.braille.common.BrailleImeAction.TOGGLE_ORIENTATION_LOCK;
 
 import android.content.Context;
 import androidx.annotation.Nullable;
@@ -169,6 +170,10 @@ public final class BrailleImeGestureAction {
               END_OF_PAGE,
               new DotHoldSwipe(
                   new Swipe(Direction.DOWN, /* touchCount= */ 1), new BrailleCharacter(4, 5)))
+          .put(
+              TOGGLE_ORIENTATION_LOCK,
+              new DotHoldSwipe(
+                  new Swipe(Direction.UP, /* touchCount= */ 1), new BrailleCharacter(4, 5, 6)))
           .buildOrThrow();
 
   private static final ImmutableMap<BrailleImeAction, ImmutableList<Gesture>>

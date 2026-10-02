@@ -16,6 +16,8 @@
   <string name="pref_brailleime_reverse_dots_mode" translatable="false">pref_brailleime_reverse_dots_mode</string>
   <string name="pref_brailleime_flip_dots_vertically" translatable="false">pref_brailleime_flip_dots_vertically</string>
   <string name="pref_brailleime_layout_mode" translatable="false">pref_brailleime_layout_mode</string>
+  <!-- Prefix of the keys for the orientation locks, one for each screen size and mode. -->
+  <string name="pref_brailleime_orientation_lock" translatable="false">pref_brailleime_orientation_lock</string>
   <!-- Auto launch tutorial when opens Braille keyboard. -->
   <string name="pref_brailleime_auto_launch_tutorial" translatable="false">pref_brailleime_auto_launch_tutorial</string>
   <!-- How many times the keyboard has been exited (used by escape reminder). -->

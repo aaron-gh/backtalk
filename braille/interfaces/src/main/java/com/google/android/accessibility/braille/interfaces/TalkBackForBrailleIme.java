@@ -87,6 +87,9 @@ public interface TalkBackForBrailleIme {
   /** Checks vibration feedback is enabled. */
   boolean isVibrationFeedbackEnabled();
 
+  /** Checks whether usage hints, which explain how to do things, are spoken. */
+  boolean isUsageHintEnabled();
+
   /** Checks should braille keyboard announce character when on-screen mode. */
   boolean shouldAnnounceCharacterForOnScreenKeyboard();
 

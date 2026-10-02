@@ -32,6 +32,7 @@ import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.graphics.Insets;
 import androidx.core.view.OnApplyWindowInsetsListener;
 import androidx.core.view.ViewCompat;
@@ -48,6 +49,7 @@ import com.google.android.accessibility.brailleime.Utils;
 import com.google.android.accessibility.brailleime.dialog.ViewAttachedDialog;
 import com.google.android.accessibility.brailleime.input.BrailleDisplayImeStripView;
 import com.google.android.accessibility.brailleime.input.BrailleInputView;
+import com.google.android.accessibility.brailleime.input.PortPosition;
 import com.google.android.accessibility.brailleime.tutorial.TutorialView;
 import com.google.android.accessibility.brailleime.tutorial.TutorialView.TutorialCallback;
 import com.google.android.accessibility.brailleime.tutorial.TutorialView.TutorialState.State;
@@ -309,6 +311,40 @@ public abstract class KeyboardView {
     } else if (customGestureView != null) {
       customGestureView.setTableTopMode(enabled);
     }
+  }
+
+  /**
+   * The device was turned by this many quarter turns clockwise while lying flat. Returns where the
+   * charging port is now in tabletop mode, or null if that is not known.
+   */
+  @Nullable
+  public PortPosition turnTabletop(int quarters) {
+    return brailleInputView == null ? null : brailleInputView.turnTabletop(quarters);
+  }
+
+  /**
+   * Locks the dots facing the way they are now in the current mode, or unlocks them. Returns
+   * whether they are now locked.
+   */
+  public boolean toggleOrientationLock() {
+    return brailleInputView != null && brailleInputView.toggleOrientationLock();
+  }
+
+  /** Whether the dots are locked facing one way in the current mode. */
+  public boolean isOrientationLocked() {
+    return brailleInputView != null && brailleInputView.isOrientationLocked();
+  }
+
+  /** Where the charging port is locked in the current mode, or null if not locked or not known. */
+  @Nullable
+  public PortPosition getLockedPortPosition() {
+    return brailleInputView == null ? null : brailleInputView.getLockedPortPosition();
+  }
+
+  /** Where the charging port is in tabletop mode, or null if that is not known. */
+  @Nullable
+  public PortPosition getTabletopPortPosition() {
+    return brailleInputView == null ? null : brailleInputView.getTabletopPortPosition();
   }
 
   /** Gets braille input view's dot count. */
