@@ -1388,50 +1388,50 @@
         <item>20</item><!-- delayMs -->
     </integer-array>
 
-    <!-- List item: two soft pats. -->
+    <!-- List item: two medium clicks, slower than a button's. -->
     <integer-array name="control_list_item_pattern">
         <item>0</item>
-        <item>12</item>
-        <item>30</item>
-        <item>12</item>
+        <item>15</item>
+        <item>50</item>
+        <item>15</item>
         <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
-        <item>8</item>
-        <item>130</item>
-        <item>30</item>
+        <item>12</item>
+        <item>200</item>
+        <item>50</item>
         <item>0</item>
-        <item>8</item>
-        <item>130</item>
+        <item>12</item>
+        <item>200</item>
         <item>-9999</item><!-- SENTINEL SEPARATOR -->
-        <item>7</item><!-- TICK -->
-        <item>130</item><!-- scale -->
+        <item>1</item><!-- CLICK -->
+        <item>170</item><!-- scale -->
         <item>0</item><!-- delayMs -->
-        <item>7</item><!-- TICK -->
-        <item>130</item><!-- scale -->
-        <item>30</item><!-- delayMs -->
+        <item>1</item><!-- CLICK -->
+        <item>170</item><!-- scale -->
+        <item>50</item><!-- delayMs -->
     </integer-array>
 
-    <!-- Tree item: a soft pat, then a rise, like a branch. -->
+    <!-- Tree item: a medium click, then a rise, like a branch. -->
     <integer-array name="control_tree_item_pattern">
         <item>0</item>
-        <item>12</item>
-        <item>30</item>
+        <item>15</item>
+        <item>40</item>
         <item>30</item>
         <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
-        <item>8</item>
-        <item>130</item>
-        <item>30</item>
+        <item>12</item>
+        <item>200</item>
+        <item>40</item>
         <item>0</item>
         <item>10</item>
-        <item>100</item>
+        <item>130</item>
         <item>10</item>
-        <item>170</item>
+        <item>220</item>
         <item>-9999</item><!-- SENTINEL SEPARATOR -->
-        <item>7</item><!-- TICK -->
-        <item>130</item><!-- scale -->
+        <item>1</item><!-- CLICK -->
+        <item>170</item><!-- scale -->
         <item>0</item><!-- delayMs -->
         <item>4</item><!-- QUICK_RISE -->
-        <item>150</item><!-- scale -->
-        <item>30</item><!-- delayMs -->
+        <item>200</item><!-- scale -->
+        <item>40</item><!-- delayMs -->
     </integer-array>
 
 </resources>
