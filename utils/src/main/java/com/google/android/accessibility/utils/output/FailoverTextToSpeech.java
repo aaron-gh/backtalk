@@ -1707,7 +1707,18 @@ public class FailoverTextToSpeech {
       }
       SpeechChunk chunk = toOriginal(utteranceId);
       if (chunk != null) {
-        if (chunk.utteranceId() == null || !chunk.first()) {
+        if (chunk.utteranceId() == null) {
+          return;
+        }
+        if (!chunk.first()) {
+          // A later piece starting to play is progress through the utterance. Report it as a
+          // range, so pausing resumes from this piece with engines that report no word ranges.
+          if (shouldHandleTtsCallbackInHandlerThread) {
+            mHandler.onUtteranceRangeStarted(chunk.utteranceId(), chunk.offset(), chunk.offset());
+          } else {
+            FailoverTextToSpeech.this.handleUtteranceRangeStarted(
+                chunk.utteranceId(), chunk.offset(), chunk.offset());
+          }
           return;
         }
         utteranceId = chunk.utteranceId();
