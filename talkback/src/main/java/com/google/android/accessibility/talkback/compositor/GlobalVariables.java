@@ -38,6 +38,7 @@ import com.google.android.accessibility.talkback.compositor.parsetree.ParseTree.
 import com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DescriptionOrder;
 import com.google.android.accessibility.talkback.compositor.rule.InputTextFeedbackRules;
 import com.google.android.accessibility.talkback.compositor.rule.MagnificationStateChangedFeedbackRule;
+import com.google.android.accessibility.talkback.controlsounds.ControlSounds;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.talkback.keyboard.KeyComboManager;
 import com.google.android.accessibility.talkback.keyboard.KeyComboModel;
@@ -55,9 +56,11 @@ import com.google.android.accessibility.utils.monitor.CollectionState;
 import com.google.android.accessibility.utils.monitor.InputModeTracker;
 import com.google.android.apps.common.proguard.UsedByReflection;
 import com.google.common.base.Ascii;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Tracks the current global state for the parse tree. */
@@ -173,6 +176,12 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
   // Verbosity settings
   private boolean speakRoles = true;
   private boolean speakCollectionInfo = true;
+
+  // Control sounds: the sounds that play for focused controls, empty while they are off.
+  private Set<Integer> controlSounds = Collections.emptySet();
+  private boolean speakControlSoundRoles = false;
+  // The control sound playing for the focus being described, or 0.
+  private int roleSoundOfFocus = 0;
   @DescriptionOrder private int descriptionOrder = DESC_ORDER_ROLE_NAME_STATE_POSITION;
   private boolean speakElementIds = false;
   private boolean countRepeatedSymbols = false;
@@ -526,6 +535,37 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
 
   public void setSpeakRoles(boolean value) {
     speakRoles = value;
+  }
+
+  /**
+   * Sets the control sounds that play, and whether the kind of control is still spoken when its
+   * sound plays.
+   */
+  public void setControlSounds(Set<Integer> sounds, boolean speakRoles) {
+    controlSounds = sounds;
+    speakControlSoundRoles = speakRoles;
+  }
+
+  /** Returns the control sound to play for focusing {@code node}, or 0 if none plays. */
+  public int getControlSoundForFocus(AccessibilityNodeInfoCompat node) {
+    if (controlSounds.isEmpty()) {
+      return 0;
+    }
+    int sound = ControlSounds.soundForFocus(node);
+    return controlSounds.contains(sound) ? sound : 0;
+  }
+
+  /**
+   * Sets the control sound playing for the focus whose speech is being composed, or 0 after it.
+   * Controls of that kind do not have their kind spoken, unless the user asked for it.
+   */
+  public void setRoleSoundOfFocus(int sound) {
+    roleSoundOfFocus = speakControlSoundRoles ? 0 : sound;
+  }
+
+  /** Returns whether the sound playing for the focus already tells what kind of control it is. */
+  public boolean isRoleSaidBySound(AccessibilityNodeInfoCompat node) {
+    return roleSoundOfFocus != 0 && ControlSounds.soundForRole(node) == roleSoundOfFocus;
   }
 
   /** Returns if TalkBack speaks system window titles. */

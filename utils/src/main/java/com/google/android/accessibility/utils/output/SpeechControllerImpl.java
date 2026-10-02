@@ -2096,10 +2096,13 @@ public class SpeechControllerImpl implements SpeechController {
     final Bundle nonSpeechParams = fragment.getNonSpeechParams();
     final float earconRate = nonSpeechParams.getFloat(Utterance.KEY_METADATA_EARCON_RATE, 1.0f);
     final float earconVolume = nonSpeechParams.getFloat(Utterance.KEY_METADATA_EARCON_VOLUME, 1.0f);
+    final float earconX = nonSpeechParams.getFloat(Utterance.KEY_METADATA_EARCON_X, -1.0f);
+    final float earconY = nonSpeechParams.getFloat(Utterance.KEY_METADATA_EARCON_Y, -1.0f);
 
     if (feedbackController != null) {
       for (int keyResId : fragment.getEarcons()) {
-        feedbackController.playAuditory(keyResId, earconRate, earconVolume, eventId);
+        feedbackController.playAuditory(
+            keyResId, earconRate, earconVolume, earconX, earconY, eventId);
       }
     }
   }

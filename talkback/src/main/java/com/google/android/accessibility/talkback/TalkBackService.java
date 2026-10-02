@@ -150,6 +150,7 @@ import com.google.android.accessibility.talkback.compositor.GlobalVariables;
 import com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DescriptionOrder;
 import com.google.android.accessibility.talkback.contextmenu.ListMenuManager;
 import com.google.android.accessibility.talkback.controller.TelevisionNavigationController;
+import com.google.android.accessibility.talkback.controlsounds.ControlSoundsSettings;
 import com.google.android.accessibility.talkback.directtouch.DirectTouchController;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor.TalkBackListener;
@@ -3193,8 +3194,12 @@ public class TalkBackService extends AccessibilityServiceCompat
     boolean auditoryEnabled =
         getBooleanPref(R.string.pref_soundback_key, R.bool.pref_soundback_default);
     feedbackController.setAuditoryEnabled(auditoryEnabled);
-    feedbackController.setMutedAuditory(
-        IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs));
+    Set<String> mutedSounds = IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs);
+    feedbackController.setMutedAuditory(mutedSounds);
+    feedbackController.setSpatialMode(ControlSoundsSettings.spatialMode(prefs));
+    globalVariables.setControlSounds(
+        ControlSoundsSettings.playingSounds(prefs, auditoryEnabled, mutedSounds),
+        ControlSoundsSettings.speakRoles(prefs));
     feedbackController.setMutedHaptic(
         IndividualFeedbackSettings.INSTANCE.mutedVibrationResources(prefs));
 

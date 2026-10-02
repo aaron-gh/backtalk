@@ -44,6 +44,7 @@ import com.google.android.accessibility.talkback.compositor.EventFeedback;
 import com.google.android.accessibility.talkback.compositor.EventInterpretation;
 import com.google.android.accessibility.talkback.compositor.GlobalVariables;
 import com.google.android.accessibility.talkback.compositor.roledescription.TreeNodesDescription;
+import com.google.android.accessibility.talkback.controlsounds.ControlSounds;
 import com.google.android.accessibility.talkback.eventprocessor.ProcessorPhoneticLetters;
 import com.google.android.accessibility.talkback.imagecaption.ImageContents;
 import com.google.android.accessibility.utils.AccessibilityNodeInfoUtils;
@@ -121,20 +122,39 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
         accessibilityFocusEventInterpretation.getIsInitialFocusAfterScreenStateChange();
     boolean isEventNavigateByUser = accessibilityFocusEventInterpretation.getIsNavigateByUser();
     boolean isDeviceScreenNoTouch = globalVariables.isDeviceScreenNoTouch();
+
+    // A control sound takes the place of the focus sound, but not of the sounds for moving in and
+    // out of lists. Only while it plays is the kind of control left out of the speech.
+    int earcon = earcon(srcNode, globalVariables);
+    float[] earconPosition = null;
+    if (earcon == R.raw.focus || earcon == R.raw.focus_actionable) {
+      int controlSound = globalVariables.getControlSoundForFocus(srcNode);
+      if (controlSound != 0) {
+        earcon = controlSound;
+        earconPosition = ControlSounds.screenPosition(srcNode, context);
+        globalVariables.setRoleSoundOfFocus(controlSound);
+      }
+    }
+
     // TYPE_VIEW_HOVER_ENTER handled the feedback in this case.
-    CharSequence ttsOutput =
-        shouldEarlyAnnounceForLiftToType(context)
-                && isEqualsToLastHoverEnterKeyboardEventNode(eventOptions.eventInterpretation)
-            ? ""
-            : viewAccessibilityFocusedDescription(
-                eventOptions.eventObject,
-                srcNode,
-                isEventNavigateByUser,
-                context,
-                imageContents,
-                globalVariables,
-                processorPhoneticLetters,
-                treeNodesDescription);
+    CharSequence ttsOutput;
+    try {
+      ttsOutput =
+          shouldEarlyAnnounceForLiftToType(context)
+                  && isEqualsToLastHoverEnterKeyboardEventNode(eventOptions.eventInterpretation)
+              ? ""
+              : viewAccessibilityFocusedDescription(
+                  eventOptions.eventObject,
+                  srcNode,
+                  isEventNavigateByUser,
+                  context,
+                  imageContents,
+                  globalVariables,
+                  processorPhoneticLetters,
+                  treeNodesDescription);
+    } finally {
+      globalVariables.setRoleSoundOfFocus(0);
+    }
 
     LogUtils.v(
         TAG,
@@ -160,7 +180,9 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
         .setForceFeedbackEvenIfSsbActive(
             forceFeedbackEvenIfSsbActive(accessibilityFocusEventInterpretation, isInitialFocus))
         .setPreventDeviceSleep(true)
-        .setEarcon(earcon(srcNode, globalVariables))
+        .setEarcon(earcon)
+        .setEarconX(earconPosition == null ? -1 : earconPosition[0])
+        .setEarconY(earconPosition == null ? -1 : earconPosition[1])
         .setHaptic(haptic(srcNode))
         .setInlineFormatting(
             supportInlineFormatting(srcNode, accessibilityFocusEventInterpretation))
