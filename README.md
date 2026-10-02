@@ -2,6 +2,12 @@
 
 Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), the screen reader for blind and visually-impaired users of Android. It adds fixes and features on top of Google's source releases. It is not affiliated with Google.
 
+## This fork
+
+This is Aaron's fork of [Backtalk](https://github.com/trypsynth/backtalk). It has Backtalk's changes, plus Aaron's that are not merged into Backtalk yet. Each of those is also a pull request to Backtalk.
+
+The fork installs as **Backtalk Aaron**, with the app ID `io.github.aaron_gh.backtalk`, so it installs next to Backtalk instead of replacing it. The two apps have separate settings. Its development builds are on the fork's [dev release](https://github.com/aaron-gh/backtalk/releases/tag/dev) page, and its updater checks there. The rest of this readme describes Backtalk.
+
 ## Goals
 
 *   Make Backtalk faster and more responsive for people who use their phone quickly.
@@ -66,7 +72,7 @@ Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), t
 
 ### Calls
 
-*   **Speaker when away from your ear.** Like VoiceOver on iPhone, Backtalk can move a call to the speaker when you take the phone away from your ear, and back to the earpiece when you hold it up again. A call that starts with the phone away from your ear goes straight to the speaker. Backtalk leaves Bluetooth and wired headsets alone, and if you turn the speaker on or off in the Phone app, your choice stays until you move the phone again. Android only lets apps such as smartwatch companions change where call audio goes, so you grant the permission yourself, once, with adb or [Shizuku](https://shizuku.rikka.app): `adb shell appops set fyi.quin.backtalk MANAGE_ONGOING_CALLS allow`. Then turn on **Speaker when away from your ear** in **Advanced settings**. Until the permission is granted, the setting is unavailable and shows the command. This needs Android 12 or later.
+*   **Speaker when away from your ear.** Like VoiceOver on iPhone, Backtalk can move a call to the speaker when you take the phone away from your ear, and back to the earpiece when you hold it up again. A call that starts with the phone away from your ear goes straight to the speaker. Backtalk leaves Bluetooth and wired headsets alone, and if you turn the speaker on or off in the Phone app, your choice stays until you move the phone again. Android only lets apps such as smartwatch companions change where call audio goes, so you grant the permission yourself, once, with adb or [Shizuku](https://shizuku.rikka.app): `adb shell appops set io.github.aaron_gh.backtalk MANAGE_ONGOING_CALLS allow`. Then turn on **Speaker when away from your ear** in **Advanced settings**. Until the permission is granted, the setting is unavailable and shows the command. This needs Android 12 or later.
 
 ### Sound and vibration
 
