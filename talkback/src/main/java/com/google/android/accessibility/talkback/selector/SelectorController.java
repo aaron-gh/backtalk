@@ -91,6 +91,7 @@ import com.google.android.accessibility.talkback.contextmenu.ContextMenuItem.Con
 import com.google.android.accessibility.talkback.eventprocessor.ProcessorAccessibilityHints;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.talkback.focusmanagement.AccessibilityFocusMonitor;
+import com.google.android.accessibility.talkback.focusmanagement.LiftToActivateMode;
 import com.google.android.accessibility.talkback.focusmanagement.action.NavigationAction;
 import com.google.android.accessibility.talkback.focusmanagement.record.FocusActionInfo;
 import com.google.android.accessibility.talkback.gesture.GestureShortcutMapping;
@@ -202,6 +203,10 @@ public class SelectorController implements UserInputEventListener {
         R.string.pref_selector_change_typing_focus_latency_key,
         R.string.selector_typing_focus_latency_change,
         R.bool.pref_selector_typing_focus_latency_default),
+    CHANGE_LIFT_TO_ACTIVATE(
+        R.string.pref_selector_change_lift_to_activate_key,
+        R.string.selector_lift_to_activate_change,
+        R.bool.pref_selector_lift_to_activate_default),
     ACTIONS(
         R.string.pref_selector_actions_key,
         R.string.selector_actions,
@@ -617,6 +622,7 @@ public class SelectorController implements UserInputEventListener {
           Setting.CHANGE_BRIGHTNESS,
           Setting.CHANGE_TOUCH_FOCUS_LATENCY,
           Setting.CHANGE_TYPING_FOCUS_LATENCY,
+          Setting.CHANGE_LIFT_TO_ACTIVATE,
           Setting.ADJUSTABLE_WIDGET,
           Setting.CONTROL_TELLING_TIME,
           Setting.SWITCH_TTS_ENGINE);
@@ -925,6 +931,10 @@ public class SelectorController implements UserInputEventListener {
       }
       case CHANGE_TYPING_FOCUS_LATENCY -> {
         actionDescription = context.getString(R.string.title_pref_touch_explore_latency);
+        hint = getAdjustSelectedSettingGestures();
+      }
+      case CHANGE_LIFT_TO_ACTIVATE -> {
+        actionDescription = context.getString(R.string.title_pref_lift_to_activate);
         hint = getAdjustSelectedSettingGestures();
       }
       case CONTROL_TELLING_TIME -> {
@@ -1373,6 +1383,9 @@ public class SelectorController implements UserInputEventListener {
       case CHANGE_TYPING_FOCUS_LATENCY -> {
         return true;
       }
+      case CHANGE_LIFT_TO_ACTIVATE -> {
+        return true;
+      }
       case ACTIONS -> {
         Optional<ContextualSetting> actions = findContextualSetting(ACTIONS);
         if (actions.isEmpty()) {
@@ -1693,6 +1706,10 @@ public class SelectorController implements UserInputEventListener {
       }
       case CHANGE_TYPING_FOCUS_LATENCY -> {
         changeTypingFocusLatency(eventId, isNext);
+        return;
+      }
+      case CHANGE_LIFT_TO_ACTIVATE -> {
+        changeLiftToActivate(eventId, isNext);
         return;
       }
       case CONTROL_TELLING_TIME -> {
@@ -2231,6 +2248,24 @@ public class SelectorController implements UserInputEventListener {
       announceSetting(eventId, displayText, getSelectSettingGestures());
       showQuickMenuActionOverlay(eventId, displayText);
     }
+  }
+
+  private void changeLiftToActivate(EventId eventId, boolean isNext) {
+    LiftToActivateMode current =
+        LiftToActivateMode.fromPrefValue(
+            prefs.getString(context.getString(R.string.pref_lift_to_activate_key), null));
+    LiftToActivateMode updated = isNext ? current.next() : current.previous();
+    prefs
+        .edit()
+        .putString(context.getString(R.string.pref_lift_to_activate_key), updated.getPrefValue())
+        .apply();
+
+    String modeName =
+        context.getResources().getStringArray(R.array.pref_lift_to_activate_entries)[
+            updated.ordinal()];
+    String displayText = context.getString(R.string.template_lift_to_activate_changed, modeName);
+    announceSetting(eventId, displayText, getSelectSettingGestures());
+    showQuickMenuActionOverlay(eventId, displayText);
   }
 
   private void updateFocusDelayPreference(EventId eventId) {

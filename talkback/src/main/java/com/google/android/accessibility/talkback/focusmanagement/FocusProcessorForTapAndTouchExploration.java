@@ -40,6 +40,7 @@ import androidx.core.view.accessibility.AccessibilityWindowInfoCompat;
 import com.google.android.accessibility.talkback.ActorState;
 import com.google.android.accessibility.talkback.Interpretation;
 import com.google.android.accessibility.talkback.Pipeline;
+import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.analytics.TalkBackAnalytics;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.talkback.focusmanagement.action.TouchExplorationAction;
@@ -48,6 +49,7 @@ import com.google.android.accessibility.utils.AccessibilityWindowInfoUtils;
 import com.google.android.accessibility.utils.FeatureSupport;
 import com.google.android.accessibility.utils.Performance.EventId;
 import com.google.android.accessibility.utils.Role;
+import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.WeakReferenceHandler;
 
 /** Event interpreter to handle accessibility focus during touch interaction. */
@@ -135,6 +137,7 @@ public class FocusProcessorForTapAndTouchExploration {
   private boolean isSplitTap = false;
 
   private long touchInteractionStartTime;
+  private final Context context;
   private final TalkBackAnalytics analytics;
   private final boolean splitTapEverywhere;
 
@@ -142,6 +145,7 @@ public class FocusProcessorForTapAndTouchExploration {
   // Contstructor methods
 
   public FocusProcessorForTapAndTouchExploration(Context context, TalkBackAnalytics analytics) {
+    this.context = context;
     this.analytics = analytics;
     this.splitTapEverywhere =
         FeatureSupport.supportSplitTapEverywhere() && FeatureFlagReader.splitTapEverywhere(context);
@@ -298,6 +302,25 @@ public class FocusProcessorForTapAndTouchExploration {
     return false;
   }
 
+  /**
+   * @return {@code true} if the user's lift-to-activate setting says that lifting the finger on
+   *     {@code node} should activate it.
+   */
+  private boolean shouldLiftToActivate(@Nullable AccessibilityNodeInfoCompat node) {
+    if (node == null) {
+      return false;
+    }
+    LiftToActivateMode mode =
+        LiftToActivateMode.fromPrefValue(
+            SharedPreferencesUtils.getSharedPreferences(context)
+                .getString(context.getString(R.string.pref_lift_to_activate_key), null));
+    return LiftToActivate.shouldActivate(
+        mode,
+        mode == LiftToActivateMode.NAVIGATION_BAR
+            && LiftToActivate.isNavigationBarButton(
+                node.getPackageName(), node.getViewIdResourceName()));
+  }
+
   /** @return {@code true} if the role of node support lift-to-type functionality. */
   private boolean supportsLiftToType(AccessibilityNodeInfoCompat accessibilityNodeInfoCompat) {
     if (Role.getRole(accessibilityNodeInfoCompat) == Role.ROLE_TEXT_ENTRY_KEY) {
@@ -341,10 +364,10 @@ public class FocusProcessorForTapAndTouchExploration {
     long currentTime = SystemClock.uptimeMillis();
 
     boolean result = false;
-    if (isEnableLiftToType()
-        && supportsLiftToType(lastFocusableNodeBeingTouched)
-        && mayBeLiftToType
-        && !isSplitTap) {
+    if (mayBeLiftToType
+        && !isSplitTap
+        && ((isEnableLiftToType() && supportsLiftToType(lastFocusableNodeBeingTouched))
+            || shouldLiftToActivate(lastFocusableNodeBeingTouched))) {
       // Perform click action for lift-to-type mode.
       analytics.onGesture(GESTURE_LIFT_TO_TYPE);
       result =
