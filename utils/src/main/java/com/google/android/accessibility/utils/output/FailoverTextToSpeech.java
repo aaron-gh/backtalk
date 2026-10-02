@@ -945,9 +945,9 @@ public class FailoverTextToSpeech {
   private final Map<String, SpeechChunk> speechChunks = new ConcurrentHashMap<>();
 
   /**
-   * Speaks long text as pieces of about a sentence, so a later utterance can interrupt it quickly.
-   * See {@link SpeechChunker}. The pieces report progress as the one original utterance: see
-   * {@link #toOriginal}.
+   * Speaks long text as pieces of a sentence or phrase, so a later utterance can interrupt it
+   * quickly. See {@link SpeechChunker}. The pieces report progress as the one original utterance:
+   * see {@link #toOriginal}.
    */
   private int speakInChunks(
       CharSequence text, int queueMode, Bundle bundle, String utteranceId, Locale locale) {
