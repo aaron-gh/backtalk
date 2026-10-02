@@ -126,15 +126,15 @@ public class EventFilter {
         return;
       }
     } else if (eventType == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
-      if (globalVariables.isDndEnabled()) {
-        LogUtils.d(TAG, "Do not announce notification: DND is enabled");
-        return;
-      }
-
       // Event notification
       // REFERTO. If the user is touching on screen, skip event.
       // For toast events, the notification parcel is null. (Use event text instead.)
       Notification notification = AccessibilityEventUtils.extractNotification(event);
+      // Do not disturb silences notifications, but toasts still answer what the user just did.
+      if ((notification != null) && globalVariables.isDndEnabled()) {
+        LogUtils.d(TAG, "Do not announce notification: DND is enabled");
+        return;
+      }
       // Incoming calls are still announced, so that the user hears who is calling.
       if ((notification != null)
           && !globalVariables.getSpeakNotifications()
