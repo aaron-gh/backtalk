@@ -79,6 +79,9 @@
         android:name="android.hardware.sensor.accelerometer"
         android:required="false" />
 
+    <!-- Granted by the user with adb, for the speakerphone setting. -->
+    <uses-permission android:name="android.permission.MANAGE_ONGOING_CALLS" />
+
     <application
         android:supportsRtl="true">
 
@@ -94,6 +97,18 @@
             android:name="com.google.android.accessibility.talkback.actor.gemini.local.LocalModelService"
             android:exported="false"
             android:process=":ondeviceai" />
+
+        <!-- Moves calls to the speaker when the phone is away from the ear. Android binds it
+             during calls only while the user has granted MANAGE_ONGOING_CALLS with adb. -->
+        <service
+            android:name="com.google.android.accessibility.talkback.speakerphone.SpeakerphoneInCallService"
+            android:permission="android.permission.BIND_INCALL_SERVICE"
+            android:exported="true">
+            <meta-data android:name="android.telecom.IN_CALL_SERVICE_UI" android:value="false" />
+            <intent-filter>
+                <action android:name="android.telecom.InCallService" />
+            </intent-filter>
+        </service>
 
         <!-- The on-device model can run on the GPU when these are present. -->
         <uses-native-library android:name="libvndksupport.so" android:required="false" />
