@@ -142,8 +142,17 @@ class ScenarioActivity : ComponentActivity() {
 
   private inner class LineAdapter(private val label: String, private val count: Int) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-      object : RecyclerView.ViewHolder(line("")) {}
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+      // Full width, as a list's rows are otherwise only as wide as their text, so touching anywhere
+      // on a row finds it.
+      val row = line("")
+      row.layoutParams =
+        RecyclerView.LayoutParams(
+          ViewGroup.LayoutParams.MATCH_PARENT,
+          ViewGroup.LayoutParams.WRAP_CONTENT,
+        )
+      return object : RecyclerView.ViewHolder(row) {}
+    }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
       (holder.itemView as TextView).text = "$label ${position + 1}"
