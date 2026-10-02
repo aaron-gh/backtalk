@@ -372,6 +372,29 @@
         <item>0</item><!-- delayMs -->
     </integer-array>
 
+    <!-- Loading, repeated every 3 seconds while waiting: a faint, short heartbeat, gentle enough
+         to fade into the background while still showing that the work goes on. -->
+    <integer-array name="loading_pattern">
+        <item>0</item>
+        <item>8</item>
+        <item>60</item>
+        <item>8</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>6</item>
+        <item>80</item>
+        <item>60</item>
+        <item>0</item>
+        <item>6</item>
+        <item>50</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>7</item><!-- TICK -->
+        <item>80</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+        <item>7</item><!-- TICK -->
+        <item>50</item><!-- scale -->
+        <item>60</item><!-- delayMs -->
+    </integer-array>
+
     <!-- Browse mode on: three taps that get stronger. -->
     <integer-array name="browse_mode_on_pattern">
         <item>0</item>

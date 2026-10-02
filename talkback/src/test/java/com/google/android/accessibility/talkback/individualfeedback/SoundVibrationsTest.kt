@@ -36,10 +36,21 @@ class SoundVibrationsTest {
   }
 
   @Test
-  fun repeatingProgressTonesAndBrailleSoundsDoNotVibrate() {
-    for (sound in listOf("loading", "display_connected", "double_beep", "calibration_done")) {
+  fun brailleSoundsDoNotVibrate() {
+    for (sound in listOf("display_connected", "double_beep", "calibration_done")) {
       assertTrue(sound, sound !in SoundVibrations.PATTERNS)
     }
+  }
+
+  @Test
+  fun theRepeatingLoadingVibrationIsFaintAndShort() {
+    val loading = patterns.getValue(SoundVibrations.PATTERNS.getValue("loading"))
+    val onTimes = loading.onOff.filterIndexed { i, _ -> i % 2 == 1 }
+    assertTrue("too long", onTimes.sum() <= 20)
+    val amplitudes = loading.amplitudes.filterIndexed { i, _ -> i % 2 == 1 }
+    assertTrue("too strong", amplitudes.all { it <= 100 })
+    val scales = loading.premium.filterIndexed { i, _ -> i % 3 == 1 }
+    assertTrue("too strong", scales.all { it <= 100 })
   }
 
   @Test

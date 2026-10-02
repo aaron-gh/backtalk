@@ -25,12 +25,11 @@ import android.content.Context
  */
 object SoundVibrations {
   /**
-   * Sounds that play without a vibration. The loading tone repeats every few seconds while waiting,
-   * and the braille sounds leave vibration to the braille keyboard, which has its own setting.
+   * Sounds that play without a vibration. The braille sounds leave vibration to the braille
+   * keyboard, which has its own setting.
    */
   val WITHOUT_VIBRATION: Set<String> =
     setOf(
-      "loading",
       "display_connected",
       "display_disconnected",
       "double_beep",
@@ -58,6 +57,9 @@ object SoundVibrations {
       "hyperlink" to "hyperlink_pattern",
       "formatting" to "formatting_pattern",
       "volume_beep" to "volume_pattern",
+      // The loading tone repeats while waiting, such as for an image description, so its
+      // vibration is a faint heartbeat that shows the work goes on even with sounds off.
+      "loading" to "loading_pattern",
       "browse_mode_on_v4_2" to "browse_mode_on_pattern",
       "browse_mode_off_v4_2" to "browse_mode_off_pattern",
     ) + (1..8).associate { "radial_menu_$it" to "radial_menu_${it}_pattern" }

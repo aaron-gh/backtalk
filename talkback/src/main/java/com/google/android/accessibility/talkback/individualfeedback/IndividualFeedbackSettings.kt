@@ -92,6 +92,7 @@ object IndividualFeedbackSettings {
       FeedbackItem("hyperlink_pattern", R.string.individual_sound_hyperlink),
       FeedbackItem("formatting_pattern", R.string.individual_sound_formatting),
       FeedbackItem("volume_pattern", R.string.individual_sound_volume_beep),
+      FeedbackItem("loading_pattern", R.string.individual_sound_loading),
       FeedbackItem("browse_mode_on_pattern", R.string.individual_sound_browse_mode_on),
       FeedbackItem("browse_mode_off_pattern", R.string.individual_sound_browse_mode_off),
       FeedbackItem(
