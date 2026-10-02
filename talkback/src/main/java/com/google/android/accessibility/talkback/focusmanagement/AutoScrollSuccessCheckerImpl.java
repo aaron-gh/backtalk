@@ -22,6 +22,8 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import androidx.annotation.RequiresApi;
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.CollectionInfoCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.CollectionItemInfoCompat;
 import com.google.android.accessibility.utils.AccessibilityEventUtils;
 import com.google.android.accessibility.utils.TreeDebug;
 import com.google.android.accessibility.utils.output.ScrollActionRecord.AutoScrollSuccessChecker;
@@ -44,16 +46,54 @@ public class AutoScrollSuccessCheckerImpl implements AutoScrollSuccessChecker {
   private final int scrollAction;
   private final Point threshold;
 
+  /**
+   * Whether the list's item indexes run backward in the scroll direction, as in a chat list laid
+   * out in reverse, where scrolling forward heads toward the first item.
+   */
+  private final boolean reverseOrder;
+
   private long totalScrollDeltaX = 0;
   private long totalScrollDeltaY = 0;
 
   public AutoScrollSuccessCheckerImpl(
-      int scrollAction, Rect scrollableNodeBounds, float autoScrollSuccessThreshold) {
+      int scrollAction,
+      Rect scrollableNodeBounds,
+      float autoScrollSuccessThreshold,
+      boolean reverseOrder) {
     this.scrollAction = scrollAction;
+    this.reverseOrder = reverseOrder;
     threshold =
         new Point(
             (int) (scrollableNodeBounds.width() * autoScrollSuccessThreshold),
             (int) (scrollableNodeBounds.height() * autoScrollSuccessThreshold));
+  }
+
+  /**
+   * Whether the item indexes of a vertical list run up the screen, as in a chat list laid out in
+   * reverse, with the first item at the bottom. Compares two of the items on screen.
+   */
+  public static boolean indexesRunUpward(AccessibilityNodeInfoCompat scrollable) {
+    CollectionInfoCompat collection = scrollable.getCollectionInfo();
+    if (collection == null || collection.getRowCount() <= 1) {
+      return false;
+    }
+    int lastIndex = -1;
+    int lastTop = 0;
+    Rect bounds = new Rect();
+    for (int i = 0; i < scrollable.getChildCount(); i++) {
+      AccessibilityNodeInfoCompat child = scrollable.getChild(i);
+      CollectionItemInfoCompat item = child == null ? null : child.getCollectionItemInfo();
+      if (item == null) {
+        continue;
+      }
+      child.getBoundsInScreen(bounds);
+      if (lastIndex >= 0 && item.getRowIndex() != lastIndex && bounds.top != lastTop) {
+        return (item.getRowIndex() > lastIndex) != (bounds.top > lastTop);
+      }
+      lastIndex = item.getRowIndex();
+      lastTop = bounds.top;
+    }
+    return false;
   }
 
   /**
@@ -171,13 +211,13 @@ public class AutoScrollSuccessCheckerImpl implements AutoScrollSuccessChecker {
     if (itemCount <= 0 || fromIndex < 0 || toIndex < 0) {
       return false;
     }
-    if (scrollAction == AccessibilityNodeInfo.ACTION_SCROLL_FORWARD) {
-      return toIndex >= itemCount - 1;
+    boolean towardLastItem =
+        (scrollAction == AccessibilityNodeInfo.ACTION_SCROLL_FORWARD) != reverseOrder;
+    if (scrollAction != AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+        && scrollAction != AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD) {
+      return false;
     }
-    if (scrollAction == AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD) {
-      return fromIndex == 0;
-    }
-    return false;
+    return towardLastItem ? toIndex >= itemCount - 1 : fromIndex == 0;
   }
 
   @Override
@@ -190,6 +230,7 @@ public class AutoScrollSuccessCheckerImpl implements AutoScrollSuccessChecker {
     }
     AutoScrollSuccessCheckerImpl that = (AutoScrollSuccessCheckerImpl) o;
     return scrollAction == that.scrollAction
+        && reverseOrder == that.reverseOrder
         && Objects.equals(threshold, that.threshold)
         && totalScrollDeltaX == that.totalScrollDeltaX
         && totalScrollDeltaY == that.totalScrollDeltaY;
@@ -197,6 +238,7 @@ public class AutoScrollSuccessCheckerImpl implements AutoScrollSuccessChecker {
 
   @Override
   public int hashCode() {
-    return Objects.hash(scrollAction, threshold, totalScrollDeltaX, totalScrollDeltaY);
+    return Objects.hash(
+        scrollAction, reverseOrder, threshold, totalScrollDeltaX, totalScrollDeltaY);
   }
 }

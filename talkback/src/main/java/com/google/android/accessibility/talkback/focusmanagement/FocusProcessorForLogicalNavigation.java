@@ -2698,7 +2698,10 @@ public class FocusProcessorForLogicalNavigation {
     final Rect nodeBounds = new Rect();
     scrollableNode.getBoundsInScreen(nodeBounds);
     return new AutoScrollSuccessCheckerImpl(
-        scrollAction, nodeBounds, getSuccessAutoScrollPercentageThreshold(service));
+        scrollAction,
+        nodeBounds,
+        getSuccessAutoScrollPercentageThreshold(service),
+        AutoScrollSuccessCheckerImpl.indexesRunUpward(scrollableNode));
   }
 
   private boolean performScrollActionInternal(
