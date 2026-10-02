@@ -27,6 +27,7 @@ import com.google.android.accessibility.talkback.Feedback;
 import com.google.android.accessibility.talkback.Pipeline;
 import com.google.android.accessibility.talkback.Pipeline.FeedbackReturner;
 import com.google.android.accessibility.talkback.Pipeline.SyntheticEvent;
+import com.google.android.accessibility.talkback.focusmanagement.EnsureOnScreenSuccessChecker;
 import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForLogicalNavigation;
 import com.google.android.accessibility.talkback.interpreters.AutoScrollInterpreter;
 import com.google.android.accessibility.utils.AccessibilityNode;
@@ -205,7 +206,7 @@ public class AutoScrollActor {
           currentTime,
           scrollTimeout,
           /* autoScrollAttempt= */ 0,
-          /* autoScrollSuccessChecker= */ null);
+          new EnsureOnScreenSuccessChecker(actionNodeCompat));
     }
     LogUtils.d(
         TAG,
