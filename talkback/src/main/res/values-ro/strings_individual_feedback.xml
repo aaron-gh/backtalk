@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Tastatura braille a fost calibrată</string>
   <string name="individual_vibration_focus">Focalizare pe un element</string>
   <string name="individual_vibration_focus_actionable">Focalizare pe un element acționabil</string>
-  <string name="individual_vibration_selected">Selecție</string>
   <string name="individual_vibration_clicked">Clic</string>
   <string name="individual_vibration_long_clicked">Apăsare lungă</string>
   <string name="individual_vibration_window_state">Schimbare de fereastră</string>

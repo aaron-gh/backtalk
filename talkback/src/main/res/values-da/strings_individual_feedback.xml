@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Punkttastatur kalibreret</string>
   <string name="individual_vibration_focus">Fokus på et element</string>
   <string name="individual_vibration_focus_actionable">Fokus på et element, der kan aktiveres</string>
-  <string name="individual_vibration_selected">Markering</string>
   <string name="individual_vibration_clicked">Klik</string>
   <string name="individual_vibration_long_clicked">Langt tryk</string>
   <string name="individual_vibration_window_state">Vinduesskift</string>

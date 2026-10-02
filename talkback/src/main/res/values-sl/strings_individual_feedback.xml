@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Brajlova tipkovnica umerjena</string>
   <string name="individual_vibration_focus">Fokus na elementu</string>
   <string name="individual_vibration_focus_actionable">Fokus na elementu, ki ga je mogoče aktivirati</string>
-  <string name="individual_vibration_selected">Izbira</string>
   <string name="individual_vibration_clicked">Klik</string>
   <string name="individual_vibration_long_clicked">Dolg pritisk</string>
   <string name="individual_vibration_window_state">Sprememba okna</string>

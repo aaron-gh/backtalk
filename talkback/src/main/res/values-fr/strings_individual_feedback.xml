@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Clavier braille calibré</string>
   <string name="individual_vibration_focus">Sélection d\'un élément</string>
   <string name="individual_vibration_focus_actionable">Sélection d\'un élément activable</string>
-  <string name="individual_vibration_selected">Sélection</string>
   <string name="individual_vibration_clicked">Clic</string>
   <string name="individual_vibration_long_clicked">Appui prolongé</string>
   <string name="individual_vibration_window_state">Changement de fenêtre</string>
