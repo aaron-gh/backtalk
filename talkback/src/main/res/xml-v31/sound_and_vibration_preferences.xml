@@ -23,6 +23,11 @@
       android:defaultValue="@bool/pref_vibration_default"
       android:key="@string/pref_vibration_key"
       android:title="@string/title_pref_vibration" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
+      android:fragment="com.google.android.accessibility.talkback.individualfeedback.IndividualFeedbackFragment"
+      android:key="pref_individual_feedback"
+      android:title="@string/title_pref_individual_feedback"
+      android:summary="@string/summary_pref_individual_feedback" />
   <com.google.android.accessibility.talkback.preference.base.AccessibilityFooterPreference
       android:key="@string/pref_speech_footer_key"
       android:title="@string/title_pref_speech_footer"
