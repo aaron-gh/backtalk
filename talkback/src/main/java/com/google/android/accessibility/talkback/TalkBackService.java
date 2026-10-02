@@ -297,6 +297,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -2282,6 +2283,11 @@ public class TalkBackService extends AccessibilityServiceCompat
     final TextEventHistory textEventHistory = new TextEventHistory();
     final TextEventFilter textEventFilter =
         new TextEventFilter(this, textCursorTracker, textEventHistory);
+    textEventFilter.setBrailleKeyboardEchoReader(
+        () -> {
+          BrailleImeForTalkBack brailleIme = getBrailleImeForTalkBack();
+          return brailleIme == null ? OptionalInt.empty() : brailleIme.getOnScreenKeyboardEcho();
+        });
     textEventInterpreter =
         new TextEventInterpreter(
             this,

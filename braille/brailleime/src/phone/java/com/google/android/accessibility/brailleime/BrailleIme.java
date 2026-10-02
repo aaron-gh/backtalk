@@ -124,6 +124,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -273,6 +274,9 @@ public class BrailleIme extends InputMethodService {
     if (talkBackForBrailleIme != null) {
       talkBackForBrailleIme.setBrailleImeForTalkBack(
           instance == null ? null : instance.brailleImeForTalkBack);
+      // Start the braille keyboard's echo from what the user chose for the on-screen keyboard.
+      BrailleUserPreferences.writeKeyboardEchoIfUnset(
+          context, talkBackForBrailleIme.getOnScreenKeyboardEcho());
     }
     if (instance != null && talkBackForBrailleCommon != null) {
       instance.feedbackManager =
@@ -1094,6 +1098,13 @@ public class BrailleIme extends InputMethodService {
         public boolean isBrailleKeyboardActivated() {
           return isInputViewShown();
         }
+
+        @Override
+        public OptionalInt getOnScreenKeyboardEcho() {
+          return isInputViewShown() && !brailleDisplayConnectedAndNotSuspended
+              ? OptionalInt.of(BrailleUserPreferences.readKeyboardEcho(BrailleIme.this))
+              : OptionalInt.empty();
+        }
       };
 
   // We need this because in some situations BrailleImeForTalkBack is set to null. There is no
@@ -1661,7 +1672,7 @@ public class BrailleIme extends InputMethodService {
     boolean shouldAnnounceCharacter =
         brailleDisplayForBrailleIme.isBrailleDisplayConnectedAndNotSuspended()
             ? talkBackForBrailleIme.shouldAnnounceCharacterForPhysicalKeyboard()
-            : talkBackForBrailleIme.shouldAnnounceCharacterForOnScreenKeyboard();
+            : BrailleUserPreferences.readKeyboardEchoCharacters(this);
     if (talkBackForBrailleIme != null && shouldAnnounceCharacter) {
       announceType = NORMAL;
     }
