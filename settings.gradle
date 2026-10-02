@@ -19,6 +19,8 @@ rootProject.name = 'backtalk'
 include ':talkback'
 include ':utils'
 include ':proguard'
+// A small app with scrolling screens for testing Backtalk by hand. Not part of Backtalk itself.
+include ':scrolltest'
 
 // Those subroots which are not direct sub-folders root need to be specially declared.
 include ':braillecommon'

@@ -1,0 +1,34 @@
+// A small app with scrolling screens for testing Backtalk by hand. Not part of Backtalk itself.
+
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.plugin.compose'
+}
+
+android {
+    namespace = "com.android.talkback.scrolltest"
+    compileSdk = 37
+    defaultConfig {
+        applicationId = "com.android.talkback.scrolltest"
+        minSdk = 26
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+    implementation libs.androidx.core
+    implementation libs.androidx.recyclerview
+    implementation libs.androidx.viewpager2
+    implementation libs.androidx.activity.compose
+    implementation libs.compose.ui
+    implementation libs.compose.foundation
+}
