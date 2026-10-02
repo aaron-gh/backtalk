@@ -82,6 +82,14 @@
     <!-- Granted by the user with adb, for the speakerphone setting. -->
     <uses-permission android:name="android.permission.MANAGE_ONGOING_CALLS" />
 
+    <!-- Guards the settings that Backtalk shares when it moves from the app ID
+         com.android.talkback to fyi.quin.backtalk. Both apps declare and hold it, and are signed
+         with the same key. -->
+    <permission
+        android:name="fyi.quin.backtalk.permission.MIGRATE"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="fyi.quin.backtalk.permission.MIGRATE" />
+
     <application
         android:supportsRtl="true">
 
@@ -319,6 +327,24 @@
         <receiver
             android:name="com.google.android.accessibility.talkback.update.UpdateReceiver"
             android:exported="false" />
+
+        <!-- Shares settings and custom labels, read-only, with Backtalk under its new app ID. -->
+        <provider
+            android:name="com.google.android.accessibility.talkback.migration.SettingsExportProvider"
+            android:authorities="${applicationId}.migration"
+            android:exported="true"
+            android:permission="fyi.quin.backtalk.permission.MIGRATE"
+            android:directBootAware="true" />
+
+        <!-- Turns this screen reader off when Backtalk under its new app ID is on. -->
+        <receiver
+            android:name="com.google.android.accessibility.talkback.migration.HandOverReceiver"
+            android:exported="true"
+            android:permission="fyi.quin.backtalk.permission.MIGRATE">
+            <intent-filter>
+                <action android:name="fyi.quin.backtalk.action.HAND_OVER" />
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name="com.google.android.libraries.appdoctor.AppDoctorReceiver"

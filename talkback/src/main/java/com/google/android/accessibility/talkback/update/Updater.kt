@@ -20,9 +20,12 @@ import android.app.Activity
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.content.pm.PackageInstaller
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -36,7 +39,9 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.google.android.accessibility.talkback.BuildConfig
 import com.google.android.accessibility.talkback.R
+import com.google.android.accessibility.talkback.migration.AppIdMove
 import com.google.android.accessibility.talkback.utils.NotificationUtils
+import com.google.android.accessibility.utils.PreferenceSettingsUtils
 import com.google.android.accessibility.utils.SharedPreferencesUtils
 import com.google.android.accessibility.utils.material.A11yAlertDialogWrapper
 import com.google.android.libraries.accessibility.utils.log.LogUtils
@@ -50,6 +55,9 @@ import java.util.concurrent.TimeUnit
  * Checks for new development builds, shows a notification when one is available, and installs it.
  *
  * Automatic checks run when the service starts, and then about once a day while it runs.
+ *
+ * While this app has the old app ID, a build under the app ID fyi.quin.backtalk installs next to
+ * it. The accessibility settings for the new app then open, so the user can turn it on.
  */
 object Updater {
   private const val TAG = "Updater"
@@ -63,6 +71,11 @@ object Updater {
   private val STARTUP_DELAY_MS = TimeUnit.SECONDS.toMillis(30)
   // Lets the screen that opens be announced before the toast.
   private const val TOAST_AFTER_SCREEN_DELAY_MS = 1500L
+  // Settings.ACTION_ACCESSIBILITY_DETAILS_SETTINGS and its permission, which the SDK hides.
+  private const val ACTION_ACCESSIBILITY_DETAILS_SETTINGS =
+    "android.settings.ACCESSIBILITY_DETAILS_SETTINGS"
+  private const val PERMISSION_OPEN_DETAILS =
+    "android.permission.OPEN_ACCESSIBILITY_DETAILS_SETTINGS"
 
   private val mainHandler = Handler(Looper.getMainLooper())
   private val executor = Executors.newSingleThreadExecutor()
@@ -174,18 +187,31 @@ object Updater {
     }
   }
 
-  private fun describe(context: Context, update: UpdateInfo): String {
-    val summary = context.getString(R.string.update_notification_text, update.build)
-    return (listOf(summary) + update.changes).joinToString("\n")
-  }
+  private fun notificationText(context: Context, update: UpdateInfo): String =
+    if (update.move) {
+      context.getString(R.string.update_move_notification_text)
+    } else {
+      context.getString(R.string.update_notification_text, update.build)
+    }
+
+  private fun describe(context: Context, update: UpdateInfo): String =
+    (listOf(notificationText(context, update)) + update.changes).joinToString("\n")
 
   private fun showUpdateDialog(activity: Activity, update: UpdateInfo) {
-    val message =
-      update.changes
-        .joinToString("\n")
-        .ifEmpty { activity.getString(R.string.update_notification_text, update.build) }
+    val title: String
+    val message: String
+    if (update.move) {
+      title = activity.getString(R.string.update_move_title)
+      message = activity.getString(R.string.update_move_dialog_message)
+    } else {
+      title = activity.getString(R.string.update_dialog_title, update.build)
+      message =
+        update.changes
+          .joinToString("\n")
+          .ifEmpty { activity.getString(R.string.update_notification_text, update.build) }
+    }
     A11yAlertDialogWrapper.materialDialogBuilder(activity)
-      .setTitle(activity.getString(R.string.update_dialog_title, update.build))
+      .setTitle(title)
       .setMessage(message)
       .setPositiveButton(R.string.update_dialog_install) { _, _ ->
         install(activity, update.downloadUrl)
@@ -208,8 +234,11 @@ object Updater {
         intent,
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
       )
-    val title = context.getString(R.string.update_notification_title)
-    val text = context.getString(R.string.update_notification_text, update.build)
+    val title =
+      context.getString(
+        if (update.move) R.string.update_move_title else R.string.update_notification_title
+      )
+    val text = notificationText(context, update)
     val notification =
       NotificationUtils.createDefaultNotificationBuilder(context)
         .setTicker(title)
@@ -222,7 +251,10 @@ object Updater {
     context.getSystemService(NotificationManager::class.java)?.notify(NOTIFICATION_ID, notification)
   }
 
-  /** Downloads the APK and opens the system install prompt. */
+  /**
+   * Downloads the APK and opens the system install prompt. A build of this app updates it, and
+   * Backtalk under its new app ID installs as a new app. Anything else is refused.
+   */
   @JvmStatic
   fun install(context: Context, downloadUrl: String) {
     val appContext = context.applicationContext
@@ -253,6 +285,9 @@ object Updater {
         } finally {
           apk.delete()
         }
+      } catch (e: WrongPackageException) {
+        LogUtils.e(TAG, "Refused the update: %s", e.message)
+        mainHandler.post { toast(appContext, R.string.update_wrong_package, Toast.LENGTH_LONG) }
       } catch (e: Exception) {
         LogUtils.e(TAG, "Cannot install the update: %s", e)
         mainHandler.post { toast(appContext, R.string.update_install_failed) }
@@ -277,11 +312,27 @@ object Updater {
     return file
   }
 
+  private class WrongPackageException(message: String) : Exception(message)
+
   private fun installApk(context: Context, apk: File) {
+    val info = readArchive(context, apk)
+    val apkPackage = info?.packageName
+    val kind = AppIdMove.installKind(apkPackage, context.packageName, isSameSigner(context, info))
+    when (kind) {
+      AppIdMove.InstallKind.REFUSE ->
+        throw WrongPackageException("The APK is $apkPackage, and this app is ${context.packageName}")
+      AppIdMove.InstallKind.MOVE -> {
+        LogUtils.i(TAG, "Installing Backtalk under its new app ID %s", apkPackage)
+        mainHandler.post { toast(context, R.string.update_move_installing, Toast.LENGTH_LONG) }
+      }
+      AppIdMove.InstallKind.UPDATE -> {}
+    }
     val installer = context.packageManager.packageInstaller
+    // The session names the APK's app ID: this app's for an update, and the new one for a move,
+    // which installs as a new app next to this one.
     val params =
       PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
-        setAppPackageName(context.packageName)
+        setAppPackageName(apkPackage)
       }
     val sessionId = installer.createSession(params)
     try {
@@ -293,6 +344,7 @@ object Updater {
         val intent =
           Intent(context, UpdateReceiver::class.java)
             .setAction(UpdateReceiver.ACTION_INSTALL_STATUS)
+            .putExtra(UpdateReceiver.EXTRA_INSTALLED_PACKAGE, apkPackage)
         // The installer fills in the status, so the intent must be mutable.
         val flags =
           PendingIntent.FLAG_UPDATE_CURRENT or
@@ -303,6 +355,39 @@ object Updater {
     } catch (e: Exception) {
       installer.abandonSession(sessionId)
       throw e
+    }
+  }
+
+  /** Reads the app ID and, where Android can, the signing certificates of a downloaded APK. */
+  private fun readArchive(context: Context, apk: File): PackageInfo? {
+    val flags =
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        PackageManager.GET_SIGNING_CERTIFICATES
+      } else {
+        0
+      }
+    return context.packageManager.getPackageArchiveInfo(apk.path, flags)
+  }
+
+  /**
+   * Returns false only if the APK is known to be signed with a different key than this app. When
+   * Android cannot read the APK's certificates, the system still checks the key of an update, and
+   * the new app checks the old one's key before it takes any settings.
+   */
+  private fun isSameSigner(context: Context, info: PackageInfo?): Boolean {
+    if (info == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+      return true
+    }
+    val signers = info.signingInfo?.apkContentsSigners
+    if (signers.isNullOrEmpty()) {
+      return true
+    }
+    return signers.all {
+      context.packageManager.hasSigningCertificate(
+        context.packageName,
+        it.toByteArray(),
+        PackageManager.CERT_INPUT_RAW_X509,
+      )
     }
   }
 
@@ -325,8 +410,14 @@ object Updater {
           toast(appContext, R.string.update_install_failed)
         }
       }
-      // The system stops Backtalk to replace it, and restarts the service if it was on.
-      PackageInstaller.STATUS_SUCCESS -> {}
+      // For an update, the system stops Backtalk to replace it, and restarts the service if it
+      // was on. A move installs a new app, and this one keeps running until that one is on.
+      PackageInstaller.STATUS_SUCCESS -> {
+        val installed = intent.getStringExtra(UpdateReceiver.EXTRA_INSTALLED_PACKAGE)
+        if (installed != null && installed != appContext.packageName) {
+          onMoved(appContext, installed)
+        }
+      }
       PackageInstaller.STATUS_FAILURE_ABORTED -> toast(appContext, R.string.update_install_canceled)
       else -> {
         LogUtils.e(
@@ -338,6 +429,45 @@ object Updater {
         toast(appContext, R.string.update_install_failed)
       }
     }
+  }
+
+  /** Opens the accessibility settings for the newly installed Backtalk, so the user turns it on. */
+  private fun onMoved(context: Context, packageName: String) {
+    LogUtils.i(TAG, "Installed Backtalk under its new app ID %s", packageName)
+    val component = ComponentName(packageName, AppIdMove.SERVICE_CLASS)
+    val intents = buildList {
+      // The screen for a single service is on Android 12 and later, but Android lets only the
+      // system installer open it. Some phones may grant it, so try it when it is granted.
+      if (
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+          context.checkSelfPermission(PERMISSION_OPEN_DETAILS) == PackageManager.PERMISSION_GRANTED
+      ) {
+        add(
+          Intent(ACTION_ACCESSIBILITY_DETAILS_SETTINGS)
+            .putExtra(Intent.EXTRA_COMPONENT_NAME, component.flattenToString())
+        )
+      }
+      // Otherwise the accessibility settings open, and Pixel phones highlight the new app.
+      add(
+        Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).also {
+          PreferenceSettingsUtils.attachSettingsHighlightBundle(it, component)
+        }
+      )
+    }
+    for (intent in intents) {
+      try {
+        context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        break
+      } catch (e: ActivityNotFoundException) {
+        LogUtils.w(TAG, "Cannot open %s: %s", intent.action, e)
+      } catch (e: SecurityException) {
+        LogUtils.w(TAG, "Cannot open %s: %s", intent.action, e)
+      }
+    }
+    mainHandler.postDelayed(
+      { toast(context, R.string.update_move_turn_on, Toast.LENGTH_LONG) },
+      TOAST_AFTER_SCREEN_DELAY_MS,
+    )
   }
 
   private fun toast(context: Context, @StringRes message: Int, duration: Int = Toast.LENGTH_SHORT) {

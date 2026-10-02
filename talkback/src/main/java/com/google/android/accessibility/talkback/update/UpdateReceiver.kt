@@ -35,5 +35,7 @@ class UpdateReceiver : BroadcastReceiver() {
     const val ACTION_INSTALL_STATUS =
       "com.google.android.accessibility.talkback.update.INSTALL_STATUS"
     const val EXTRA_DOWNLOAD_URL = "download_url"
+    /** The app ID of the APK that the install session installs. */
+    const val EXTRA_INSTALLED_PACKAGE = "installed_package"
   }
 }
