@@ -1276,7 +1276,7 @@
     <integer name="pref_speech_rate_default_int">100</integer>
     <string name="pref_speech_pitch_default">1.0</string>
     <bool name="pref_use_accessibility_stream_default">true</bool>
-    <bool name="pref_speak_in_phrases_default">true</bool>
+    <bool name="pref_speak_in_phrases_default">false</bool>
     <string name="pref_speech_volume_default">100</string>
     <integer name="pref_speech_volume_min">25</integer>
     <bool name="pref_screenoff_default">false</bool>

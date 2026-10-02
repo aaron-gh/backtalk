@@ -58,10 +58,9 @@ public class SpeechChunkerTest {
   }
 
   @Test
-  public void splitsAfterClausePunctuation() {
+  public void splitsOnlyAtSentencesNotClauses() {
     List<Integer> starts = SpeechChunker.chunkStarts(SENTENCE.repeat(3), Locale.US);
-    // "Same price," is too short a piece, so the first cut is after "current silicon,".
-    assertEquals("Same price, current silicon,".length(), (int) starts.get(1));
+    assertEquals(Arrays.asList(0, SENTENCE.length(), 2 * SENTENCE.length()), starts);
   }
 
   @Test

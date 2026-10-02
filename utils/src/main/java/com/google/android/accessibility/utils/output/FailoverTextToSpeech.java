@@ -234,7 +234,7 @@ public class FailoverTextToSpeech {
   public static final String PREF_USE_ACCESSIBILITY_STREAM_KEY = "pref_use_accessibility_stream";
   private static final boolean USE_ACCESSIBILITY_STREAM_DEFAULT = true;
   public static final String PREF_SPEAK_IN_PHRASES_KEY = "pref_speak_in_phrases";
-  private static final boolean SPEAK_IN_PHRASES_DEFAULT = true;
+  private static final boolean SPEAK_IN_PHRASES_DEFAULT = false;
   private volatile boolean speakInPhrases = SPEAK_IN_PHRASES_DEFAULT;
   private @Nullable String preferredTtsEngine;
 
@@ -720,6 +720,7 @@ public class FailoverTextToSpeech {
       effectiveRate = rate * defaultRate;
     }
 
+    requestRate = effectiveRate;
     synchronized (ttsLock) {
       String utteranceId = params.get(Engine.KEY_PARAM_UTTERANCE_ID);
       boolean isLocaleAttached = locale != null;
@@ -950,6 +951,26 @@ public class FailoverTextToSpeech {
 
   private final Map<String, SpeechChunk> speechChunks = new ConcurrentHashMap<>();
 
+  /** Estimates progress through speech from engines that report no word positions. */
+  private final SpeechProgressEstimator progressEstimator = new SpeechProgressEstimator();
+
+  /** The rate of the speech being sent, for {@link #progressEstimator}. */
+  private volatile float requestRate = 1f;
+
+  /**
+   * Reports an estimate of how far the speaking utterance has got, as a word range, so that paused
+   * speech resumes near where it stopped. Does nothing when the engine reports word positions
+   * itself, or the speech was sent in pieces, which report their own progress. Call this on the
+   * thread that handles utterance callbacks, just before saving the speech to resume.
+   */
+  public void reportEstimatedProgress() {
+    String utteranceId = progressEstimator.currentUtteranceId();
+    int offset = progressEstimator.estimateResumeOffset(SystemClock.uptimeMillis());
+    if (utteranceId != null && offset > 0) {
+      handleUtteranceRangeStarted(utteranceId, offset, offset);
+    }
+  }
+
   /**
    * Speaks long text as pieces of a sentence or phrase, so a later utterance can interrupt it
    * quickly. See {@link SpeechChunker}. The pieces report progress as the one original utterance:
@@ -962,6 +983,9 @@ public class FailoverTextToSpeech {
             ? Collections.singletonList(0)
             : SpeechChunker.chunkStarts(text, locale == null ? Locale.getDefault() : locale);
     if (starts.size() <= 1) {
+      if (utteranceId != null) {
+        progressEstimator.onQueued(utteranceId, text, requestRate, ttsEngine);
+      }
       return tts.speak(text, queueMode, bundle, utteranceId);
     }
     for (int i = 0; i < starts.size(); i++) {
@@ -1708,6 +1732,7 @@ public class FailoverTextToSpeech {
 
     @Override
     public void onStart(String utteranceId) {
+      progressEstimator.onStarted(utteranceId, SystemClock.uptimeMillis());
       if (utteranceId.startsWith(CACHE_UTTERANCE_ID_PREFIX)) {
         return;
       }
@@ -1759,6 +1784,7 @@ public class FailoverTextToSpeech {
 
     @Override
     public void onRangeStart(String utteranceId, int start, int end, int frame) {
+      progressEstimator.onRange(utteranceId);
       SpeechChunk chunk = toOriginal(utteranceId);
       if (chunk != null) {
         if (chunk.utteranceId() == null) {
@@ -1778,6 +1804,7 @@ public class FailoverTextToSpeech {
 
     @Override
     public void onStop(String utteranceId, boolean interrupted) {
+      progressEstimator.onFinished(utteranceId, SystemClock.uptimeMillis(), /* completed= */ false);
       SpeechChunk chunk = toOriginal(utteranceId);
       if (chunk != null) {
         if (chunk.utteranceId() == null) {
@@ -1794,6 +1821,7 @@ public class FailoverTextToSpeech {
 
     @Override
     public void onError(String utteranceId) {
+      progressEstimator.onFinished(utteranceId, SystemClock.uptimeMillis(), /* completed= */ false);
       SpeechChunk chunk = toOriginal(utteranceId);
       if (chunk != null) {
         if (chunk.utteranceId() == null) {
@@ -1810,6 +1838,7 @@ public class FailoverTextToSpeech {
 
     @Override
     public void onDone(String utteranceId) {
+      progressEstimator.onFinished(utteranceId, SystemClock.uptimeMillis(), /* completed= */ true);
       SpeechChunk chunk = toOriginal(utteranceId);
       if (chunk != null) {
         speechChunks.remove(utteranceId);
