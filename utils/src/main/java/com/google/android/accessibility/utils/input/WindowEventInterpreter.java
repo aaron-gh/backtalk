@@ -706,7 +706,7 @@ public class WindowEventInterpreter implements WindowsDelegate, DisplayStateChan
   }
 
   /**
-   * Set from the "Reduce window announcement delay" setting, which also turns animations off on
+   * Set from the "Turn off animations" setting, which also turns animations off on
    * Android 13 and later. Android 12 and earlier have no way for a service to turn animations off,
    * so the setting shortens the wait itself there.
    */
