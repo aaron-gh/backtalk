@@ -1716,6 +1716,8 @@
     <string name="pref_window_animation_scale_default">1.0</string>
 
     <string name="pref_talkback_gesture_detection_key" translatable="false">pref_talkback_gesture_detection_key</string>
+    <!-- Must match OnDeviceAiSettings.PREF_IGNORE_MEMORY_LIMITS. -->
+    <string name="pref_on_device_ai_ignore_memory_limits_key" translatable="false">pref_on_device_ai_ignore_memory_limits</string>
 
     <string name="pref_icon_detection_download_dialog_shown_times">pref_icon_detection_download_dialog_shown_times</string>
     <string name="pref_icon_detection_download_dialog_do_no_show">pref_icon_detection_download_dialog_do_no_show</string>

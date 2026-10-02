@@ -141,7 +141,7 @@ class OnDeviceAiFragment : TalkbackBaseFragment() {
     val state = manager.state
     val busy = state is State.Downloading || state == State.Importing
 
-    val support = manager.support(model)
+    val support = support(model)
     enablePref.isChecked = OnDeviceAiSettings.isOnDevice(prefs) && manager.isReady()
     // Without a model there is nothing to turn on, so the summary says to get one first.
     enablePref.isEnabled = support == Support.OK && !busy && manager.isReady()
@@ -271,7 +271,7 @@ class OnDeviceAiFragment : TalkbackBaseFragment() {
       .setTitle(R.string.on_device_ai_choose_model)
       .setSingleChoiceItems(labels, current) { dialog, which ->
         val chosen = models[which]
-        if (manager.support(chosen) == Support.NOT_ENOUGH_RAM) {
+        if (support(chosen) == Support.NOT_ENOUGH_RAM) {
           toast(R.string.on_device_ai_model_too_big)
         } else {
           OnDeviceAiSettings.setPreferredModel(prefs, chosen)
@@ -318,7 +318,7 @@ class OnDeviceAiFragment : TalkbackBaseFragment() {
       )
     val tagText = if (tags.isEmpty()) "" else " (${tags.joinToString(", ")})"
     val memory =
-      if (manager.support(model) == Support.NOT_ENOUGH_RAM) {
+      if (support(model) == Support.NOT_ENOUGH_RAM) {
         getString(R.string.on_device_ai_tag_not_enough_memory)
       } else {
         getString(R.string.on_device_ai_tag_needs_memory, model.minTotalRamGib)
@@ -367,6 +367,19 @@ class OnDeviceAiFragment : TalkbackBaseFragment() {
       setOnPreferenceClickListener {
         onClick()
         true
+      }
+    }
+
+  /**
+   * Whether this phone can run [model]. The developer setting to ignore memory limits lets any
+   * model be chosen, to test what happens when Android stops it.
+   */
+  private fun support(model: LocalModel): Support =
+    manager.support(model).let {
+      if (it == Support.NOT_ENOUGH_RAM && OnDeviceAiSettings.ignoreMemoryLimits(prefs)) {
+        Support.OK
+      } else {
+        it
       }
     }
 

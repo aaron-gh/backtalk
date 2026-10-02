@@ -25,6 +25,7 @@ import com.google.android.accessibility.talkback.actor.gemini.local.OnDeviceAiSe
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import org.json.JSONObject;
 
 /**
@@ -37,7 +38,10 @@ public class LocalGemmaRequestPerformer extends GeminiRestRequestPerformer {
   private final SharedPreferences prefs;
   private final LocalGemmaRunner runner;
 
-  public LocalGemmaRequestPerformer(Context context) {
+  /**
+   * @param announce speaks why the model on the phone could not answer, such as low memory
+   */
+  public LocalGemmaRequestPerformer(Context context, Consumer<String> announce) {
     super(context);
     this.context = context.getApplicationContext();
     this.prefs = SharedPreferencesUtils.getSharedPreferences(context);
@@ -62,7 +66,8 @@ public class LocalGemmaRequestPerformer extends GeminiRestRequestPerformer {
             () -> LocalModelManager.Companion.get(this.context).currentLlm(),
             worker,
             canceller,
-            mainHandler::post);
+            mainHandler::post,
+            announce);
   }
 
   private boolean useOnDevice() {

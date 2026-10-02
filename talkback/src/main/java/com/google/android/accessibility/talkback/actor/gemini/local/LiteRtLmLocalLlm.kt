@@ -42,6 +42,8 @@ class LiteRtLmLocalLlm(
   /** The most tokens for a prompt plus its answer, or null to use what the model file says. */
   private val maxTokens: Int? = null,
   private val idleUnloadMs: Long = DEFAULT_IDLE_UNLOAD_MS,
+  /** Runs before each load, and throws [LocalLlmMemoryException] to stop it. */
+  private val beforeLoad: () -> Unit = {},
 ) : LocalLlm {
   private val cacheDir = context.cacheDir.path
   private val generateLock = Any()
@@ -74,6 +76,8 @@ class LiteRtLmLocalLlm(
         Log.i(TAG, "Answered in ${SystemClock.elapsedRealtime() - started} ms (load $loadMs ms)")
         answer
       } catch (e: LocalLlmCancelledException) {
+        throw e
+      } catch (e: LocalLlmMemoryException) {
         throw e
       } catch (e: Throwable) {
         if (cancelRequested) throw LocalLlmCancelledException()
@@ -108,6 +112,7 @@ class LiteRtLmLocalLlm(
     engine?.let {
       return it
     }
+    beforeLoad()
     val backend = if (useGpu) Backend.GPU() else Backend.CPU()
     val config =
       EngineConfig(

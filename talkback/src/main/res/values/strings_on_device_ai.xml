@@ -139,4 +139,12 @@
     <string name="on_device_ai_metered_download">Download</string>
     <!-- Button to cancel. [CHAR LIMIT=20] -->
     <string name="on_device_ai_cancel">Cancel</string>
+    <!-- Developer setting that lifts the memory limits of on-device AI. [CHAR LIMIT=60] -->
+    <string name="title_pref_on_device_ai_ignore_memory_limits">Ignore on-device AI memory limits</string>
+    <!-- Summary of that setting. [CHAR LIMIT=NONE] -->
+    <string name="summary_pref_on_device_ai_ignore_memory_limits">Lets you choose a model that needs more memory than this phone has, and loads it without checking for free memory, to test what happens when Android stops it.</string>
+    <!-- Spoken when there is not enough free memory to load the model. %1$s is the model name. [CHAR LIMIT=NONE] -->
+    <string name="on_device_ai_not_enough_memory">Not enough free memory for %1$s. Close some apps, or choose a smaller model in On-device AI settings.</string>
+    <!-- Spoken when Android stopped the model while it was working, most likely for lack of memory. %1$s is the model name. [CHAR LIMIT=NONE] -->
+    <string name="on_device_ai_stopped">%1$s stopped, probably because the phone ran out of memory. Choose a smaller model in On-device AI settings.</string>
 </resources>

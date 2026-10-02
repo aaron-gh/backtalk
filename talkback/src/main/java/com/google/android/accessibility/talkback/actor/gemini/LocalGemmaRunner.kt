@@ -19,11 +19,13 @@ package com.google.android.accessibility.talkback.actor.gemini
 import com.google.android.accessibility.talkback.actor.gemini.GeminiRestRequestPerformer.GeminiRestResponseCallback
 import com.google.android.accessibility.talkback.actor.gemini.local.LocalLlm
 import com.google.android.accessibility.talkback.actor.gemini.local.LocalLlmCancelledException
+import com.google.android.accessibility.talkback.actor.gemini.local.LocalLlmMemoryException
 import java.util.Base64
 import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.Consumer
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -39,6 +41,8 @@ import org.json.JSONObject
  * @param canceller runs the cancelling, because stopping a model can block and cancel is called on
  *   the main thread
  * @param callbackExecutor runs the callbacks, which expect the main thread
+ * @param announce speaks why the model could not answer, on the callback executor. The request
+ *   then ends as cancelled, which is silent, so the user does not also hear a generic error.
  */
 internal class LocalGemmaRunner(
   private val llm: () -> LocalLlm?,
@@ -46,6 +50,7 @@ internal class LocalGemmaRunner(
   private val worker: ExecutorService,
   private val canceller: Executor,
   private val callbackExecutor: Executor,
+  private val announce: Consumer<String>,
 ) {
   private class Job(val prompt: String, val jpeg: ByteArray?, val json: Boolean) {
     val cancelled = AtomicBoolean(false)
@@ -103,6 +108,11 @@ internal class LocalGemmaRunner(
       }
     } catch (_: LocalLlmCancelledException) {
       callbackExecutor.execute { callback.onCancelled() }
+    } catch (e: LocalLlmMemoryException) {
+      callbackExecutor.execute {
+        announce.accept(e.spokenMessage)
+        callback.onCancelled()
+      }
     } catch (e: Exception) {
       callbackExecutor.execute { callback.onFailure(e.toString()) }
     } finally {
