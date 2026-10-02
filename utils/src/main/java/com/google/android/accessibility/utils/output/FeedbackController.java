@@ -22,6 +22,8 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.Resources.NotFoundException;
 import android.media.AudioAttributes;
+import android.media.AudioDeviceCallback;
+import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.SystemClock;
@@ -66,6 +68,20 @@ public class FeedbackController {
    * an event that asks for a sound and a vibration vibrates once.
    */
   private static final long SOUND_HAPTIC_COVER_MILLIS = 50;
+  /** Positioned sounds are panned between the left and right speakers. */
+  public static final int SPATIAL_STEREO = 0;
+
+  /** Positioned sounds are played in 3D, for headphones. */
+  public static final int SPATIAL_3D = 1;
+
+  /** Positioned sounds are played in 3D when headphones are connected, and panned otherwise. */
+  public static final int SPATIAL_3D_WITH_HEADPHONES = 2;
+
+  private static final AudioAttributes FEEDBACK_ATTRIBUTES =
+      new AudioAttributes.Builder()
+          .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
+          .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+          .build();
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Member data
@@ -114,6 +130,17 @@ public class FeedbackController {
   private final Set<HapticFeedbackListener> mHapticFeedbackListeners = new HashSet<>();
 
   private final @NonNull HashMap<Integer, Long> resIdToLastPlayUptimeMillisec = new HashMap<>();
+
+  /** How sounds with a position on the screen are played, one of the {@code SPATIAL_} values. */
+  private int mSpatialMode = SPATIAL_3D_WITH_HEADPHONES;
+
+  /** Created the first time a sound is played in 3D. */
+  private @Nullable SpatialSoundPlayer mSpatialSoundPlayer;
+
+  /** Follows headphones connecting, from the first time it matters. */
+  private @Nullable AudioDeviceCallback mAudioDeviceCallback;
+
+  private volatile boolean mHeadphonesConnected;
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Construction
@@ -282,20 +309,129 @@ public class FeedbackController {
     LogUtils.v(TAG, "playAuditory() resId=%d eventId=%s", resId, eventId);
 
     final float adjustedVolume = ignoreVolumeAdjustment ? volume : volume * mVolumeAdjustment;
+    playFromPool(resId, rate, adjustedVolume, adjustedVolume);
+  }
+
+  /**
+   * Plays a sound as if it came from a place on the screen, in 3D or panned between the speakers
+   * according to {@link #setSpatialMode}. In 3D mode the sound is played in 3D on the phone's
+   * speaker too.
+   *
+   * @param x The place from the left edge of the screen, from 0 to 1, or negative for no place.
+   * @param y The place from the top edge of the screen, from 0 to 1, or negative for no place.
+   */
+  public void playAuditory(
+      int resId, float rate, float volume, float x, float y, @Nullable EventId eventId) {
+    if (x < 0 || y < 0) {
+      playAuditory(resId, rate, volume, eventId);
+      return;
+    }
+    if (resId != 0) {
+      playSoundHaptic(resId, eventId);
+    }
+    if (!mAuditoryEnabled || resId == 0 || isMuted(mMutedAuditoryNames, resId)) {
+      return;
+    }
+    LogUtils.v(TAG, "playAuditory() resId=%d x=%.2f y=%.2f eventId=%s", resId, x, y, eventId);
+
+    float adjustedVolume = volume * mVolumeAdjustment;
+    if (shouldPlayIn3d()) {
+      if (mSpatialSoundPlayer == null) {
+        mSpatialSoundPlayer = new SpatialSoundPlayer(mContext);
+      }
+      mSpatialSoundPlayer.play(resId, x, y, adjustedVolume);
+    } else {
+      // Full volume in the middle, fading out of the far speaker towards either edge.
+      float pan = Math.max(-1f, Math.min(1f, (x - 0.5f) * 2));
+      playFromPool(
+          resId,
+          rate,
+          adjustedVolume * Math.min(1f, 1 - pan),
+          adjustedVolume * Math.min(1f, 1 + pan));
+    }
+  }
+
+  private void playFromPool(int resId, float rate, float leftVolume, float rightVolume) {
     int soundId = mSoundIds.get(resId);
 
     if (soundId != 0) {
-      new EarconsPlayTask(mSoundPool, soundId, adjustedVolume, rate).execute();
+      new EarconsPlayTask(mSoundPool, soundId, leftVolume, rightVolume, rate).execute();
     } else {
       // The sound could not be played from the cache. Start loading the sound into the
       // SoundPool for future use, and use a listener to play the sound ASAP.
       mSoundPool.setOnLoadCompleteListener(
           (soundPool, sampleId, status) -> {
             if (mAuditoryEnabled && sampleId != 0) {
-              new EarconsPlayTask(mSoundPool, sampleId, adjustedVolume, rate).execute();
+              new EarconsPlayTask(mSoundPool, sampleId, leftVolume, rightVolume, rate).execute();
             }
           });
       mSoundIds.put(resId, mSoundPool.load(mContext, resId, 1));
+    }
+  }
+
+  private boolean shouldPlayIn3d() {
+    switch (mSpatialMode) {
+      case SPATIAL_3D:
+        return true;
+      case SPATIAL_3D_WITH_HEADPHONES:
+        return isHeadphoneOutput();
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Returns whether headphones are connected: any Bluetooth audio device, wired or USB headphones,
+   * or hearing aids. The answer is kept up to date by a callback from the first time it is asked.
+   */
+  private boolean isHeadphoneOutput() {
+    if (mAudioDeviceCallback == null) {
+      AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+      if (audioManager == null) {
+        return false;
+      }
+      mAudioDeviceCallback =
+          new AudioDeviceCallback() {
+            @Override
+            public void onAudioDevicesAdded(AudioDeviceInfo[] addedDevices) {
+              mHeadphonesConnected = hasHeadphones(audioManager);
+            }
+
+            @Override
+            public void onAudioDevicesRemoved(AudioDeviceInfo[] removedDevices) {
+              mHeadphonesConnected = hasHeadphones(audioManager);
+            }
+          };
+      // Registering reports the devices already connected, but only later on the main thread.
+      mHeadphonesConnected = hasHeadphones(audioManager);
+      audioManager.registerAudioDeviceCallback(mAudioDeviceCallback, null);
+    }
+    return mHeadphonesConnected;
+  }
+
+  private static boolean hasHeadphones(AudioManager audioManager) {
+    for (AudioDeviceInfo device : audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
+      if (isHeadphone(device)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean isHeadphone(AudioDeviceInfo device) {
+    switch (device.getType()) {
+      case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
+      case AudioDeviceInfo.TYPE_WIRED_HEADSET:
+      case AudioDeviceInfo.TYPE_USB_HEADSET:
+      case AudioDeviceInfo.TYPE_HEARING_AID:
+      case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
+      case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
+      case AudioDeviceInfo.TYPE_BLE_HEADSET:
+      case AudioDeviceInfo.TYPE_BLE_SPEAKER:
+      case AudioDeviceInfo.TYPE_BLE_BROADCAST:
+        return true;
+      default:
+        return false;
     }
   }
 
@@ -312,6 +448,17 @@ public class FeedbackController {
   public void shutdown() {
     mHapticFeedbackListeners.clear();
     mSoundPool.release();
+    if (mSpatialSoundPlayer != null) {
+      mSpatialSoundPlayer.shutdown();
+      mSpatialSoundPlayer = null;
+    }
+    if (mAudioDeviceCallback != null) {
+      AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+      if (audioManager != null) {
+        audioManager.unregisterAudioDeviceCallback(mAudioDeviceCallback);
+      }
+      mAudioDeviceCallback = null;
+    }
     mVibrator.cancel();
     mAuditoryEnabled = false;
     mHapticEnabled = false;
@@ -396,6 +543,16 @@ public class FeedbackController {
   }
 
   /**
+   * Sets how sounds with a place on the screen are played.
+   *
+   * @param mode {@link #SPATIAL_STEREO}, {@link #SPATIAL_3D} or {@link
+   *     #SPATIAL_3D_WITH_HEADPHONES}.
+   */
+  public void setSpatialMode(int mode) {
+    mSpatialMode = mode;
+  }
+
+  /**
    * Provides vibration and sound feedback to acknowledge the completion of an action (e.g. item
    * selection in Switch Access, gesture completion in TalkBack, etc.).
    */
@@ -406,12 +563,10 @@ public class FeedbackController {
   }
 
   private static SoundPool createSoundPool() {
-    AudioAttributes aa =
-        new AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
-            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-            .build();
-    return new SoundPool.Builder().setMaxStreams(MAX_STREAMS).setAudioAttributes(aa).build();
+    return new SoundPool.Builder()
+        .setMaxStreams(MAX_STREAMS)
+        .setAudioAttributes(FEEDBACK_ATTRIBUTES)
+        .build();
   }
 
   /**

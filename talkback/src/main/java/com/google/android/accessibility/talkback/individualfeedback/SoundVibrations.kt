@@ -52,7 +52,25 @@ object SoundVibrations {
       "turn_on" to "braille_auto_scroll_on_pattern",
       "turn_off" to "braille_auto_scroll_off_pattern",
       "calibration_done" to "braille_calibrated_pattern",
-    ) + (1..8).associate { "radial_menu_$it" to "radial_menu_${it}_pattern" }
+    ) +
+      (1..8).associate { "radial_menu_$it" to "radial_menu_${it}_pattern" } +
+      // Control sounds stand in for the focus sounds, so they keep the focus vibrations: things
+      // that can be activated feel actionable, and images and clocks feel like any other item.
+      listOf(
+          "control_button",
+          "control_checkbox",
+          "control_radio_button",
+          "control_edit_text",
+          "control_combo_box",
+          "control_slider",
+          "control_link",
+          "control_tab",
+          "control_menu_item",
+          "control_list_item",
+          "control_tree_item",
+        )
+        .associateWith { "view_actionable_pattern" } +
+      listOf("control_image", "control_clock").associateWith { "view_hovered_pattern" }
 
   /**
    * Vibration pattern resource IDs, by sound resource names, for the feedback controller. By name,
