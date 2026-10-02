@@ -2037,8 +2037,9 @@ public class SpeechControllerImpl implements SpeechController {
             pitch = min(pitch * CAPITAL_LETTER_PITCH_RATE, CAPITAL_LETTER_PITCH_RATE_UPPER_BOUND);
         case CAPITAL_LETTERS_TYPE_SOUND_FEEDBACK -> {
           // TODO: The raw resource of sound feedback is required for capital letter.
+          // The window change sound stands in here, so its vibration would feel like a new window.
           if (feedbackController != null) {
-            feedbackController.playAuditory(R.raw.window_state, eventId);
+            feedbackController.playAuditoryWithoutHaptic(R.raw.window_state, eventId);
           }
         }
         default -> {}
@@ -2098,11 +2099,17 @@ public class SpeechControllerImpl implements SpeechController {
     final float earconVolume = nonSpeechParams.getFloat(Utterance.KEY_METADATA_EARCON_VOLUME, 1.0f);
     final float earconX = nonSpeechParams.getFloat(Utterance.KEY_METADATA_EARCON_X, -1.0f);
     final float earconY = nonSpeechParams.getFloat(Utterance.KEY_METADATA_EARCON_Y, -1.0f);
+    final boolean earconVibrates =
+        nonSpeechParams.getBoolean(Utterance.KEY_METADATA_EARCON_VIBRATES, true);
 
     if (feedbackController != null) {
       for (int keyResId : fragment.getEarcons()) {
-        feedbackController.playAuditory(
-            keyResId, earconRate, earconVolume, earconX, earconY, eventId);
+        if (earconVibrates) {
+          feedbackController.playAuditory(
+              keyResId, earconRate, earconVolume, earconX, earconY, eventId);
+        } else {
+          feedbackController.playAuditoryWithoutHaptic(keyResId, earconRate, earconVolume, eventId);
+        }
       }
     }
   }

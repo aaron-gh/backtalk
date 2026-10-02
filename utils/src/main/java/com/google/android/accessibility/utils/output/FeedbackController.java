@@ -39,7 +39,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -63,11 +62,6 @@ public class FeedbackController {
 
   public static final long NO_SEPARATION = 0;
 
-  /**
-   * How long after a sound's vibration a separate vibration for the same event is skipped, so that
-   * an event that asks for a sound and a vibration vibrates once.
-   */
-  private static final long SOUND_HAPTIC_COVER_MILLIS = 50;
   /** Positioned sounds are panned between the left and right speakers. */
   public static final int SPATIAL_STEREO = 0;
 
@@ -121,11 +115,8 @@ public class FeedbackController {
   /** The vibration pattern that plays with each sound, by the sound's resource entry name. */
   private Map<String, Integer> mSoundHaptics = Collections.emptyMap();
 
-  /** When the last sound with a vibration played, or -1 if none has. */
-  private long mLastSoundHapticUptimeMillis = -1;
-
-  /** The event of the last sound with a vibration. */
-  private @Nullable EventId mLastSoundHapticEventId;
+  /** Skips an event's own vibration right after its sound vibrated. */
+  private final SoundHapticCover mSoundHapticCover = new SoundHapticCover();
 
   private final Set<HapticFeedbackListener> mHapticFeedbackListeners = new HashSet<>();
 
@@ -168,9 +159,7 @@ public class FeedbackController {
    * @return {@code true} if successful.
    */
   public boolean playHaptic(int resId, @Nullable EventId eventId) {
-    if (mLastSoundHapticUptimeMillis >= 0
-        && SystemClock.uptimeMillis() - mLastSoundHapticUptimeMillis < SOUND_HAPTIC_COVER_MILLIS
-        && Objects.equals(eventId, mLastSoundHapticEventId)) {
+    if (mSoundHapticCover.covers(eventId, SystemClock.uptimeMillis())) {
       LogUtils.v(TAG, "playHaptic() resId=%d skipped, the sound vibrated", resId);
       return false;
     }
@@ -190,8 +179,7 @@ public class FeedbackController {
     if (patternResId != null) {
       // Even if the user turned this vibration off, the event's own vibration stays quiet.
       vibrate(patternResId, eventId);
-      mLastSoundHapticUptimeMillis = SystemClock.uptimeMillis();
-      mLastSoundHapticEventId = eventId;
+      mSoundHapticCover.soundVibrated(eventId, SystemClock.uptimeMillis());
     }
   }
 
@@ -303,6 +291,29 @@ public class FeedbackController {
     if (resId != 0) {
       playSoundHaptic(resId, eventId);
     }
+    playSound(resId, rate, volume, ignoreVolumeAdjustment, eventId);
+  }
+
+  /**
+   * Plays a sound without the vibration that goes with it, for sounds that should not be felt,
+   * such as repeating progress tones, or whose vibration is someone else's, such as braille.
+   */
+  public void playAuditoryWithoutHaptic(int resId, @Nullable EventId eventId) {
+    playAuditoryWithoutHaptic(resId, 1.0f /* rate */, 1.0f /* volume */, eventId);
+  }
+
+  /** Plays a sound with the given rate and volume, without its vibration. */
+  public void playAuditoryWithoutHaptic(
+      int resId, float rate, float volume, @Nullable EventId eventId) {
+    playSound(resId, rate, volume, /* ignoreVolumeAdjustment= */ false, eventId);
+  }
+
+  private void playSound(
+      int resId,
+      final float rate,
+      float volume,
+      boolean ignoreVolumeAdjustment,
+      @Nullable EventId eventId) {
     if (!mAuditoryEnabled || resId == 0 || isMuted(mMutedAuditoryNames, resId)) {
       return;
     }

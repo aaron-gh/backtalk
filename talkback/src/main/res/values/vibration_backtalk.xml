@@ -372,26 +372,27 @@
         <item>0</item><!-- delayMs -->
     </integer-array>
 
-    <!-- Loading: a slow heartbeat. -->
+    <!-- Loading, repeated every 3 seconds while waiting: a faint, short heartbeat, gentle enough
+         to fade into the background while still showing that the work goes on. -->
     <integer-array name="loading_pattern">
         <item>0</item>
-        <item>12</item>
-        <item>150</item>
-        <item>20</item>
+        <item>8</item>
+        <item>60</item>
+        <item>8</item>
         <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
-        <item>10</item>
-        <item>110</item>
-        <item>120</item>
+        <item>6</item>
+        <item>80</item>
+        <item>60</item>
         <item>0</item>
-        <item>15</item>
-        <item>170</item>
+        <item>6</item>
+        <item>50</item>
         <item>-9999</item><!-- SENTINEL SEPARATOR -->
         <item>7</item><!-- TICK -->
-        <item>120</item><!-- scale -->
+        <item>80</item><!-- scale -->
         <item>0</item><!-- delayMs -->
         <item>7</item><!-- TICK -->
-        <item>180</item><!-- scale -->
-        <item>120</item><!-- delayMs -->
+        <item>50</item><!-- scale -->
+        <item>60</item><!-- delayMs -->
     </integer-array>
 
     <!-- Browse mode on: three taps that get stronger. -->
@@ -898,190 +899,6 @@
         <item>7</item><!-- TICK -->
         <item>220</item><!-- scale -->
         <item>40</item><!-- delayMs -->
-    </integer-array>
-
-    <!-- Braille display connected: a long swell that ends in a click. -->
-    <integer-array name="braille_display_connected_pattern">
-        <item>0</item>
-        <item>60</item>
-        <item>40</item>
-        <item>60</item>
-        <item>40</item>
-        <item>15</item>
-        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
-        <item>25</item>
-        <item>50</item>
-        <item>25</item>
-        <item>100</item>
-        <item>25</item>
-        <item>160</item>
-        <item>25</item>
-        <item>220</item>
-        <item>30</item>
-        <item>0</item>
-        <item>15</item>
-        <item>255</item>
-        <item>-9999</item><!-- SENTINEL SEPARATOR -->
-        <item>5</item><!-- SLOW_RISE -->
-        <item>200</item><!-- scale -->
-        <item>0</item><!-- delayMs -->
-        <item>1</item><!-- CLICK -->
-        <item>255</item><!-- scale -->
-        <item>0</item><!-- delayMs -->
-    </integer-array>
-
-    <!-- Braille display disconnected: a click that fades away. -->
-    <integer-array name="braille_display_disconnected_pattern">
-        <item>0</item>
-        <item>15</item>
-        <item>40</item>
-        <item>60</item>
-        <item>40</item>
-        <item>60</item>
-        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
-        <item>15</item>
-        <item>255</item>
-        <item>30</item>
-        <item>0</item>
-        <item>25</item>
-        <item>200</item>
-        <item>25</item>
-        <item>130</item>
-        <item>25</item>
-        <item>60</item>
-        <item>-9999</item><!-- SENTINEL SEPARATOR -->
-        <item>1</item><!-- CLICK -->
-        <item>255</item><!-- scale -->
-        <item>0</item><!-- delayMs -->
-        <item>6</item><!-- QUICK_FALL -->
-        <item>220</item><!-- scale -->
-        <item>30</item><!-- delayMs -->
-    </integer-array>
-
-    <!-- Braille command failed: three hard, fast clicks. -->
-    <integer-array name="braille_command_failed_pattern">
-        <item>0</item>
-        <item>25</item>
-        <item>40</item>
-        <item>25</item>
-        <item>40</item>
-        <item>25</item>
-        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
-        <item>15</item>
-        <item>255</item>
-        <item>40</item>
-        <item>0</item>
-        <item>15</item>
-        <item>255</item>
-        <item>40</item>
-        <item>0</item>
-        <item>15</item>
-        <item>255</item>
-        <item>-9999</item><!-- SENTINEL SEPARATOR -->
-        <item>1</item><!-- CLICK -->
-        <item>255</item><!-- scale -->
-        <item>0</item><!-- delayMs -->
-        <item>1</item><!-- CLICK -->
-        <item>255</item><!-- scale -->
-        <item>40</item><!-- delayMs -->
-        <item>1</item><!-- CLICK -->
-        <item>255</item><!-- scale -->
-        <item>40</item><!-- delayMs -->
-    </integer-array>
-
-    <!-- Braille auto scroll on: two rising swells. -->
-    <integer-array name="braille_auto_scroll_on_pattern">
-        <item>0</item>
-        <item>10</item>
-        <item>30</item>
-        <item>10</item>
-        <item>30</item>
-        <item>60</item>
-        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
-        <item>10</item>
-        <item>80</item>
-        <item>10</item>
-        <item>160</item>
-        <item>10</item>
-        <item>240</item>
-        <item>20</item>
-        <item>0</item>
-        <item>10</item>
-        <item>80</item>
-        <item>10</item>
-        <item>160</item>
-        <item>10</item>
-        <item>240</item>
-        <item>-9999</item><!-- SENTINEL SEPARATOR -->
-        <item>4</item><!-- QUICK_RISE -->
-        <item>200</item><!-- scale -->
-        <item>0</item><!-- delayMs -->
-        <item>4</item><!-- QUICK_RISE -->
-        <item>255</item><!-- scale -->
-        <item>20</item><!-- delayMs -->
-    </integer-array>
-
-    <!-- Braille auto scroll off: two falling swells. -->
-    <integer-array name="braille_auto_scroll_off_pattern">
-        <item>0</item>
-        <item>60</item>
-        <item>30</item>
-        <item>10</item>
-        <item>30</item>
-        <item>10</item>
-        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
-        <item>10</item>
-        <item>240</item>
-        <item>10</item>
-        <item>160</item>
-        <item>10</item>
-        <item>80</item>
-        <item>20</item>
-        <item>0</item>
-        <item>10</item>
-        <item>240</item>
-        <item>10</item>
-        <item>160</item>
-        <item>10</item>
-        <item>80</item>
-        <item>-9999</item><!-- SENTINEL SEPARATOR -->
-        <item>6</item><!-- QUICK_FALL -->
-        <item>255</item><!-- scale -->
-        <item>0</item><!-- delayMs -->
-        <item>6</item><!-- QUICK_FALL -->
-        <item>200</item><!-- scale -->
-        <item>20</item><!-- delayMs -->
-    </integer-array>
-
-    <!-- Braille keyboard calibrated: three clicks that get stronger, slowly. -->
-    <integer-array name="braille_calibrated_pattern">
-        <item>0</item>
-        <item>20</item>
-        <item>80</item>
-        <item>20</item>
-        <item>80</item>
-        <item>60</item>
-        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
-        <item>12</item>
-        <item>170</item>
-        <item>80</item>
-        <item>0</item>
-        <item>12</item>
-        <item>210</item>
-        <item>80</item>
-        <item>0</item>
-        <item>15</item>
-        <item>255</item>
-        <item>-9999</item><!-- SENTINEL SEPARATOR -->
-        <item>1</item><!-- CLICK -->
-        <item>200</item><!-- scale -->
-        <item>0</item><!-- delayMs -->
-        <item>1</item><!-- CLICK -->
-        <item>230</item><!-- scale -->
-        <item>80</item><!-- delayMs -->
-        <item>1</item><!-- CLICK -->
-        <item>255</item><!-- scale -->
-        <item>80</item><!-- delayMs -->
     </integer-array>
 
     <!-- Announcement: a tap, a click, then a swell. -->
