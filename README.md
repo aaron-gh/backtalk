@@ -6,7 +6,7 @@ Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), t
 
 This is Aaron's fork of [Backtalk](https://github.com/trypsynth/backtalk). It has Backtalk's changes, plus Aaron's that are not merged into Backtalk yet. Each of those is also a pull request to Backtalk.
 
-The fork installs as **Backtalk Aaron**, with the app ID `io.github.aaron_gh.backtalk`, so it installs next to Backtalk instead of replacing it. The two apps have separate settings. Its development builds are on the fork's [dev release](https://github.com/aaron-gh/backtalk/releases/tag/dev) page, and its updater checks there. The rest of this readme describes Backtalk.
+The fork installs as **Backtalk Aaron**, with the app ID `io.github.aaron_gh.backtalk`, so it installs next to Backtalk instead of replacing it. The two apps have separate settings. Its development builds are on the fork's [dev release](https://github.com/aaron-gh/backtalk/releases/tag/dev) page. Its updater checks there about once an hour instead of once a day, so that each push reaches the phone soon. The rest of this readme describes Backtalk.
 
 ## Goals
 
