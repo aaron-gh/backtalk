@@ -48,6 +48,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
@@ -219,6 +220,15 @@ public class BrailleIme extends InputMethodService {
 
   private boolean screenAwayAnnouncementPending;
 
+  /**
+   * Whether the pending screen-away announcement is the first since the keyboard opened, so it
+   * must still follow TalkBack saying the previous keyboard is hidden.
+   */
+  private boolean screenAwayAnnouncementFirst;
+
+  /** When the pending screen-away announcement was held back, in uptime milliseconds. */
+  private long screenAwayAnnouncementHeldAtMs;
+
   /** Notices the device being turned while it lies flat in tabletop mode. */
   private FlatTurnDetector flatTurnDetector;
 
@@ -226,8 +236,7 @@ public class BrailleIme extends InputMethodService {
   private final Runnable screenAwayAnnouncementTimeout =
       () -> {
         screenAwayAnnouncementPending = false;
-        BrailleCommonTalkBackSpeaker.getInstance()
-            .speak(getString(R.string.screen_away), TalkBackSpeaker.AnnounceType.INTERRUPT);
+        speakScreenAwayAnnouncement(getString(R.string.screen_away));
       };
   private ViewAttachedDialog talkbackOffDialog;
   private ViewAttachedDialog contextMenuDialog;
@@ -273,6 +282,11 @@ public class BrailleIme extends InputMethodService {
     BrailleImePreferencesActivity.initialize(talkBackForBrailleIme);
     BrailleImeGestureCommandActivity.initialize(talkBackForBrailleIme);
     Utils.setComponentEnabled(context, Constants.BRAILLE_KEYBOARD, true);
+  }
+
+  /** Releases what {@link #initialize} started, when TalkBack shuts down. */
+  public static void shutdown() {
+    HeldOrientationTracker.stop();
   }
 
   @Override
@@ -454,6 +468,13 @@ public class BrailleIme extends InputMethodService {
     createEditBuffer();
     OrientationMonitor.getInstance().enable();
     OrientationMonitor.getInstance().registerCallback(orientationMonitorCallback);
+    // A tablet says where the charging port is once how it is held settles, as its dots turn then.
+    HeldOrientationTracker.setLastHeldListener(
+        () -> {
+          if (!BrailleUtils.isPhoneSizedDevice(getResources())) {
+            announcePortSideIfTurned(HeldOrientationTracker.getLastHeld());
+          }
+        });
     // Watches the whole time, so that a turn on the table that tilts the device for a moment counts.
     flatTurnDetector.start(/* quarterTurns= */ !BrailleUtils.isPhoneSizedDevice(getResources()));
     layoutOrientator.startIfNeeded();
@@ -682,6 +703,7 @@ public class BrailleIme extends InputMethodService {
     calibrationAnnouncementHandler.removeCallbacksAndMessages(null);
     OrientationMonitor.getInstance().unregisterCallback();
     OrientationMonitor.getInstance().disable();
+    HeldOrientationTracker.setLastHeldListener(null);
     knownPortSide = OrientationMonitor.Orientation.UNKNOWN;
     cancelScreenAwayAnnouncement();
     flatTurnDetector.stop();
@@ -934,10 +956,12 @@ public class BrailleIme extends InputMethodService {
           if (!isTabletop
               && !keyboardView.inTwoStepCalibration()
               && !isOrientationLocked()
-              && !isPortSide(OrientationMonitor.getInstance().getCurrentOrientation())) {
+              && !isPortSide(getHeldOrientation())) {
             // The device is still being lifted, so wait for it to settle before saying where the
             // charging port is.
             screenAwayAnnouncementPending = true;
+            screenAwayAnnouncementFirst = isFirstChangedEvent;
+            screenAwayAnnouncementHeldAtMs = SystemClock.uptimeMillis();
             screenAwayAnnouncementHandler.postDelayed(
                 screenAwayAnnouncementTimeout, SCREEN_AWAY_SETTLE_MS);
             return;
@@ -1156,8 +1180,7 @@ public class BrailleIme extends InputMethodService {
     if (isOrientationLocked()) {
       position = keyboardView.getLockedPortPosition();
     } else {
-      OrientationMonitor.Orientation orientation =
-          OrientationMonitor.getInstance().getCurrentOrientation();
+      OrientationMonitor.Orientation orientation = getHeldOrientation();
       position = heldPortPosition(orientation);
       if (position != null) {
         knownPortSide = orientation;
@@ -1250,7 +1273,7 @@ public class BrailleIme extends InputMethodService {
                   R.string.orientation_locked_port_announcement, getPortAnnouncement(position));
     } else {
       // Following the device again, so the next turn in screen-away mode is said.
-      knownPortSide = OrientationMonitor.getInstance().getCurrentOrientation();
+      knownPortSide = getHeldOrientation();
       announcement = getString(R.string.orientation_unlocked_announcement);
     }
     BrailleCommonTalkBackSpeaker.getInstance()
@@ -1262,9 +1285,37 @@ public class BrailleIme extends InputMethodService {
     return keyboardView != null && keyboardView.isOrientationLocked();
   }
 
+  /**
+   * Says the held-back screen-away announcement. The first since the keyboard opened is queued
+   * after the same delay as before, so it still follows TalkBack saying the previous keyboard is
+   * hidden. Later ones interrupt, as they answer the user moving the device.
+   */
+  private void speakScreenAwayAnnouncement(String announcement) {
+    if (screenAwayAnnouncementFirst) {
+      long waited = SystemClock.uptimeMillis() - screenAwayAnnouncementHeldAtMs;
+      BrailleCommonTalkBackSpeaker.getInstance()
+          .speak(announcement, (int) Math.max(0, ANNOUNCE_DELAY_MS - waited));
+    } else {
+      BrailleCommonTalkBackSpeaker.getInstance()
+          .speak(announcement, TalkBackSpeaker.AnnounceType.INTERRUPT);
+    }
+    screenAwayAnnouncementFirst = false;
+  }
+
   private void cancelScreenAwayAnnouncement() {
     screenAwayAnnouncementPending = false;
     screenAwayAnnouncementHandler.removeCallbacks(screenAwayAnnouncementTimeout);
+  }
+
+  /**
+   * How the device is held, as its dots follow it: a phone's dots turn by the reading at the start
+   * of each gesture, while a tablet's turn by the settled orientation, which does not flicker near
+   * 45 degrees.
+   */
+  private OrientationMonitor.Orientation getHeldOrientation() {
+    return BrailleUtils.isPhoneSizedDevice(getResources())
+        ? OrientationMonitor.getInstance().getCurrentOrientation()
+        : HeldOrientationTracker.getLastHeld();
   }
 
   /** Whether holding the device like this in screen-away mode shows where the charging port is. */
@@ -1280,8 +1331,7 @@ public class BrailleIme extends InputMethodService {
   private void announcePortSideIfTurned(OrientationMonitor.Orientation orientation) {
     if (screenAwayAnnouncementPending && isPortSide(orientation)) {
       cancelScreenAwayAnnouncement();
-      BrailleCommonTalkBackSpeaker.getInstance()
-          .speak(getScreenAwayAnnouncement(), TalkBackSpeaker.AnnounceType.INTERRUPT);
+      speakScreenAwayAnnouncement(getScreenAwayAnnouncement());
       return;
     }
     if (!isPortSide(orientation)
@@ -1309,7 +1359,9 @@ public class BrailleIme extends InputMethodService {
           if (orientationCallbackDelegate != null) {
             orientationCallbackDelegate.onOrientationChanged(orientation);
           }
-          announcePortSideIfTurned(orientation);
+          if (BrailleUtils.isPhoneSizedDevice(getResources())) {
+            announcePortSideIfTurned(orientation);
+          }
         }
       };
 

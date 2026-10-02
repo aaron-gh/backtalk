@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Teclat braille calibrat</string>
   <string name="individual_vibration_focus">Focus en un element</string>
   <string name="individual_vibration_focus_actionable">Focus en un element activable</string>
+  <string name="individual_vibration_selected">Selecció</string>
   <string name="individual_vibration_clicked">Clic</string>
   <string name="individual_vibration_long_clicked">Mantenir premut</string>
   <string name="individual_vibration_window_state">Canvi de finestra</string>

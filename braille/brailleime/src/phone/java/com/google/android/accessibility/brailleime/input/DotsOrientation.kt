@@ -98,25 +98,21 @@ object DotsOrientation {
   /**
    * Which side a phone's layout expects the charging port on in screen-away mode. In portrait, as
    * with auto-rotate off, it expects the port on the right. In landscape, the screen has turned with
-   * the phone. Dots calibrated holding the phone the other way round swap it.
+   * the phone. It depends only on how the screen is turned, never on how the dots are numbered: the
+   * user's settings to swap the dots apply on top of any turn, as [DotNumberOrder] numbers the dots
+   * by where they are.
    */
   @JvmStatic
-  fun screenAwayLayoutExpectsPortOnRight(
-    portrait: Boolean,
-    rotation: Int,
-    dotsMirrored: Boolean,
-  ): Boolean = (portrait || rotation == Surface.ROTATION_270) != dotsMirrored
+  fun screenAwayLayoutExpectsPortOnRight(portrait: Boolean, rotation: Int): Boolean =
+    portrait || rotation == Surface.ROTATION_270
 
   /**
    * Which side a phone's layout expects the charging port on in tabletop mode. In portrait, as with
    * auto-rotate off, it expects the port on the left.
    */
   @JvmStatic
-  fun tabletopLayoutExpectsPortOnRight(
-    portrait: Boolean,
-    rotation: Int,
-    dotsMirrored: Boolean,
-  ): Boolean = (!portrait && rotation == Surface.ROTATION_90) != dotsMirrored
+  fun tabletopLayoutExpectsPortOnRight(portrait: Boolean, rotation: Int): Boolean =
+    !portrait && rotation == Surface.ROTATION_90
 
   /**
    * Which side the charging port is on when a phone is held like this in screen-away mode, or null
@@ -188,27 +184,6 @@ object DotsOrientation {
       Orientation.PORTRAIT -> if (phone) null else PortPosition.DOWN
       Orientation.REVERSE_PORTRAIT -> if (phone) null else PortPosition.UP
       else -> null
-    }
-
-  /**
-   * Whether a phone's dot 1 is on the side where the default layout puts dot 4, as after a
-   * calibration made holding the phone the other way round. The calibrated dots are saved, so the
-   * layout then expects the charging port on the other side. The default sides come from
-   * [BrailleInputPlanePhone.sortDotCentersFirstTime].
-   */
-  @JvmStatic
-  fun dotsMirrored(
-    portrait: Boolean,
-    tabletop: Boolean,
-    dot1X: Float,
-    dot1Y: Float,
-    dot4X: Float,
-    dot4Y: Float,
-  ): Boolean =
-    if (portrait) {
-      if (tabletop) dot1Y < dot4Y else dot1Y > dot4Y
-    } else {
-      if (tabletop) dot1X > dot4X else dot1X < dot4X
     }
 
   /** A phone's orientation lock for the charging port on this side. */

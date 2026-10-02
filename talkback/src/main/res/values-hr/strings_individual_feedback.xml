@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Brajična tipkovnica kalibrirana</string>
   <string name="individual_vibration_focus">Fokus na stavci</string>
   <string name="individual_vibration_focus_actionable">Fokus na stavci koja se može aktivirati</string>
+  <string name="individual_vibration_selected">Odabir</string>
   <string name="individual_vibration_clicked">Klik</string>
   <string name="individual_vibration_long_clicked">Dugi pritisak</string>
   <string name="individual_vibration_window_state">Promjena prozora</string>

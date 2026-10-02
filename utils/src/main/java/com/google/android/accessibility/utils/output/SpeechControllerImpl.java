@@ -2308,6 +2308,11 @@ public class SpeechControllerImpl implements SpeechController {
 
   /** Save the current feedback and the contents of the feedback queue. */
   private void saveCurrentFeedbackInfo() {
+    // Engines that report no word positions get an estimate, so the saved speech resumes near where
+    // it stopped.
+    if (failoverTts != null) {
+      failoverTts.reportEstimatedProgress();
+    }
     feedbackSavedTime = SystemClock.uptimeMillis();
     cachedFeedbackQueue = new ArrayList<>(feedbackQueue);
     cachedFeedbackItem = currentFeedbackItem;

@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">ဘရေးလ် ကီးဘုတ် ချိန်ညှိပြီး</string>
   <string name="individual_vibration_focus">အကြောင်းအရာကို ချိန်ထားခြင်း</string>
   <string name="individual_vibration_focus_actionable">လုပ်ဆောင်နိုင်သော အကြောင်းအရာကို ချိန်ထားခြင်း</string>
+  <string name="individual_vibration_selected">ရွေးချယ်မှု</string>
   <string name="individual_vibration_clicked">နှိပ်ခြင်း</string>
   <string name="individual_vibration_long_clicked">ကြာကြာနှိပ်ခြင်း</string>
   <string name="individual_vibration_window_state">ဝင်းဒိုး ပြောင်းခြင်း</string>

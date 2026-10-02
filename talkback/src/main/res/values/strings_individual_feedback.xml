@@ -68,6 +68,8 @@
     <string name="individual_vibration_focus">Focus on an item</string>
     <!-- Vibration when focus moves to an item that can be activated. [CHAR LIMIT=60] -->
     <string name="individual_vibration_focus_actionable">Focus on an actionable item</string>
+    <!-- Vibration when an item is selected or takes input focus. [CHAR LIMIT=60] -->
+    <string name="individual_vibration_selected">Selection</string>
     <!-- Vibration when an item is activated. [CHAR LIMIT=60] -->
     <string name="individual_vibration_clicked">Click</string>
     <!-- Vibration when an item is long pressed. [CHAR LIMIT=60] -->

@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">బ్రెయిలీ కీబోర్డ్ కాలిబ్రేట్ చేయబడింది</string>
   <string name="individual_vibration_focus">ఐటెమ్‌పై ఫోకస్</string>
   <string name="individual_vibration_focus_actionable">చర్య తీసుకోగల ఐటెమ్‌పై ఫోకస్</string>
+  <string name="individual_vibration_selected">ఎంపిక</string>
   <string name="individual_vibration_clicked">క్లిక్</string>
   <string name="individual_vibration_long_clicked">ఎక్కువసేపు నొక్కడం</string>
   <string name="individual_vibration_window_state">విండో మార్పు</string>

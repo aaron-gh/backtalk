@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">점자 키보드 보정 완료</string>
   <string name="individual_vibration_focus">항목에 포커스</string>
   <string name="individual_vibration_focus_actionable">실행 가능한 항목에 포커스</string>
+  <string name="individual_vibration_selected">선택</string>
   <string name="individual_vibration_clicked">클릭</string>
   <string name="individual_vibration_long_clicked">길게 누르기</string>
   <string name="individual_vibration_window_state">창 변경</string>

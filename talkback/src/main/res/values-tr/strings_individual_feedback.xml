@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Braille klavye kalibre edildi</string>
   <string name="individual_vibration_focus">Bir öğeye odaklanma</string>
   <string name="individual_vibration_focus_actionable">İşlem yapılabilir bir öğeye odaklanma</string>
+  <string name="individual_vibration_selected">Seçim</string>
   <string name="individual_vibration_clicked">Tıklama</string>
   <string name="individual_vibration_long_clicked">Uzun basma</string>
   <string name="individual_vibration_window_state">Pencere değişikliği</string>

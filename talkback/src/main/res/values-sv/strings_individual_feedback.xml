@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Punktskriftstangentbordet är kalibrerat</string>
   <string name="individual_vibration_focus">Fokus på ett objekt</string>
   <string name="individual_vibration_focus_actionable">Fokus på ett aktiverbart objekt</string>
+  <string name="individual_vibration_selected">Markering</string>
   <string name="individual_vibration_clicked">Klick</string>
   <string name="individual_vibration_long_clicked">Långt tryck</string>
   <string name="individual_vibration_window_state">Fönsterbyte</string>

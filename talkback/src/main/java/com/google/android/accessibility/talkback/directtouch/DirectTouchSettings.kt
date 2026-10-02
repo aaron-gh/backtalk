@@ -33,6 +33,7 @@ object DirectTouchSettings {
   const val PREF_MASTER = "pref_direct_touch_master"
   const val PREF_SPEECH = "pref_direct_touch_speech"
   const val PREF_HAPTICS = "pref_direct_touch_haptics"
+  const val PREF_NAV_BAR = "pref_direct_touch_nav_bar"
   private const val PREF_APPS = "pref_direct_touch_apps"
   private const val PREF_SEEN = "pref_direct_touch_seen"
   private const val PREF_TYPING_PREFIX = "pref_direct_touch_typing_"
@@ -47,6 +48,9 @@ object DirectTouchSettings {
   fun isSpeechEnabled(prefs: SharedPreferences): Boolean = prefs.getBoolean(PREF_SPEECH, true)
 
   fun isHapticsEnabled(prefs: SharedPreferences): Boolean = prefs.getBoolean(PREF_HAPTICS, false)
+
+  /** Whether the navigation bar takes touches directly, in every app, even when direct touch is off. */
+  fun isNavBarDirect(prefs: SharedPreferences): Boolean = prefs.getBoolean(PREF_NAV_BAR, false)
 
   fun isAppEnabled(prefs: SharedPreferences, pkg: String): Boolean = pkg in stringSet(prefs, PREF_APPS)
 
@@ -84,6 +88,7 @@ object DirectTouchSettings {
       .put("master", isMasterEnabled(prefs))
       .put("speech", isSpeechEnabled(prefs))
       .put("haptics", isHapticsEnabled(prefs))
+      .put("navBar", isNavBarDirect(prefs))
       .put("apps", JSONArray(stringSet(prefs, PREF_APPS).sorted()))
       .put("seen", JSONArray(stringSet(prefs, PREF_SEEN).sorted()))
       .put("typing", JSONArray(typingPackages(prefs).sorted()))
@@ -116,6 +121,8 @@ object DirectTouchSettings {
       .putBoolean(PREF_MASTER, backup.getBoolean("master"))
       .putBoolean(PREF_SPEECH, backup.getBoolean("speech"))
       .putBoolean(PREF_HAPTICS, backup.getBoolean("haptics"))
+      // Backups from before this setting existed have no navBar entry.
+      .putBoolean(PREF_NAV_BAR, backup.optBoolean("navBar", false))
       .putStringSet(PREF_APPS, apps)
       .putStringSet(PREF_SEEN, seen)
       .apply()

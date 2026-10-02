@@ -46,7 +46,6 @@ import com.google.android.accessibility.brailleime.Utils;
 import com.google.android.accessibility.brailleime.input.MultitouchHandler.HoldRecognizer;
 import com.google.android.accessibility.brailleime.input.MultitouchHandler.MultitouchResultListener;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -76,21 +75,6 @@ public abstract class BrailleInputPlane {
   private static final int ANIMATION_DURATION_MS = 100;
   private static final int GROUP_COUNT = 2;
   private static final int CALIBRATION_MAXIMUM_FAIL_COUNT = 3;
-
-  private static final ImmutableMap<InputDotType, int[]> dotNumberOrderMap =
-      ImmutableMap.<InputDotType, int[]>builder()
-          .put(InputDotType.SCREEN_AWAY, new int[] {1, 2, 3, 4, 5, 6})
-          .put(InputDotType.SCREEN_AWAY_EIGHT_DOT, new int[] {1, 2, 3, 7, 4, 5, 6, 8})
-          .put(InputDotType.TABLE_TOP, new int[] {3, 2, 1, 4, 5, 6})
-          .put(InputDotType.TABLE_TOP_EIGHT_DOT, new int[] {7, 3, 2, 1, 4, 5, 6, 8})
-          .buildOrThrow();
-
-  private enum InputDotType {
-    SCREEN_AWAY,
-    SCREEN_AWAY_EIGHT_DOT,
-    TABLE_TOP,
-    TABLE_TOP_EIGHT_DOT,
-  }
 
   protected final Context context;
   protected boolean isTableTopMode;
@@ -337,53 +321,11 @@ public abstract class BrailleInputPlane {
   }
 
   private int[] getDotNumberOrder() {
-    int[] dotNumberOrder = dotNumberOrderMap.get(getInputDotType(isTableTopMode));
-    if (options.reverseDots()) {
-      dotNumberOrder = reverseDotNumberOrder(dotNumberOrder);
-    }
-    if (options.flipDotsVertically()) {
-      dotNumberOrder = flipDotNumberOrderVertically(dotNumberOrder);
-    }
-    return dotNumberOrder;
-  }
-
-  /**
-   * Reverses the order within each hand, so that the top and bottom dots of each column trade
-   * places. For example, dot 1 trades places with dot 3.
-   */
-  private static int[] flipDotNumberOrderVertically(int[] dotNumberOrder) {
-    int[] result = new int[dotNumberOrder.length];
-    int half = dotNumberOrder.length / 2;
-    for (int i = 0; i < half; i++) {
-      result[i] = dotNumberOrder[half - 1 - i];
-      result[half + i] = dotNumberOrder[dotNumberOrder.length - 1 - i];
-    }
-    return result;
-  }
-
-  private InputDotType getInputDotType(boolean tableTopMode) {
-    if (options.brailleType() == BrailleType.EIGHT_DOT) {
-      return tableTopMode ? InputDotType.TABLE_TOP_EIGHT_DOT : InputDotType.SCREEN_AWAY_EIGHT_DOT;
-    } else if (options.brailleType() == BrailleType.SIX_DOT) {
-      return tableTopMode ? InputDotType.TABLE_TOP : InputDotType.SCREEN_AWAY;
-    }
-    throw new IllegalArgumentException("dotCount should be either 6 or 8.");
-  }
-
-  private int[] reverseDotNumberOrder(int[] dotNumberOrder) {
-    int[] result = new int[dotNumberOrder.length];
-    if (isTableTopMode) {
-      for (int i = 0; i < dotNumberOrder.length / 2; i++) {
-        result[i] = dotNumberOrder[dotNumberOrder.length - 1 - i];
-        result[dotNumberOrder.length - 1 - i] = dotNumberOrder[i];
-      }
-    } else {
-      for (int i = 0; i < dotNumberOrder.length / 2; i++) {
-        result[i] = dotNumberOrder[i + dotNumberOrder.length / 2];
-        result[i + dotNumberOrder.length / 2] = dotNumberOrder[i];
-      }
-    }
-    return result;
+    return DotNumberOrder.order(
+        options.brailleType().getDotCount(),
+        isTableTopMode,
+        options.reverseDots(),
+        options.flipDotsVertically());
   }
 
   @VisibleForTesting

@@ -82,6 +82,23 @@
     <!-- Granted by the user with adb, for the speakerphone setting. -->
     <uses-permission android:name="android.permission.MANAGE_ONGOING_CALLS" />
 
+    <!-- Guards the settings that Backtalk shares when it moves from the app ID
+         com.android.talkback to fyi.quin.backtalk. Both apps declare and hold it, and are signed
+         with the same key. -->
+    <permission
+        android:name="fyi.quin.backtalk.permission.MIGRATE"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="fyi.quin.backtalk.permission.MIGRATE" />
+
+    <!-- Granted by the user with adb, to move the accessibility shortcut and the braille keyboard
+         from the old app ID and turn the old screen reader off. -->
+    <uses-permission
+        android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- Used to offer to uninstall Backtalk under its old app ID. -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+
     <application
         android:supportsRtl="true">
 
@@ -91,24 +108,24 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
-        <!-- Runs the on-device model in its own process, so running out of memory stops the
-             model and not the screen reader. -->
-        <service
-            android:name="com.google.android.accessibility.talkback.actor.gemini.local.LocalModelService"
-            android:exported="false"
-            android:process=":ondeviceai" />
-
         <!-- Moves calls to the speaker when the phone is away from the ear. Android binds it
              during calls only while the user has granted MANAGE_ONGOING_CALLS with adb. -->
         <service
             android:name="com.google.android.accessibility.talkback.speakerphone.SpeakerphoneInCallService"
             android:permission="android.permission.BIND_INCALL_SERVICE"
+            android:directBootAware="true"
             android:exported="true">
             <meta-data android:name="android.telecom.IN_CALL_SERVICE_UI" android:value="false" />
             <intent-filter>
                 <action android:name="android.telecom.InCallService" />
             </intent-filter>
         </service>
+        <!-- Runs the on-device model in its own process, so running out of memory stops the
+             model and not the screen reader. -->
+        <service
+            android:name="com.google.android.accessibility.talkback.actor.gemini.local.LocalModelService"
+            android:exported="false"
+            android:process=":ondeviceai" />
 
         <!-- The on-device model can run on the GPU when these are present. -->
         <uses-native-library android:name="libvndksupport.so" android:required="false" />
@@ -319,6 +336,24 @@
         <receiver
             android:name="com.google.android.accessibility.talkback.update.UpdateReceiver"
             android:exported="false" />
+
+        <!-- Shares settings and custom labels, read-only, with Backtalk under its new app ID. -->
+        <provider
+            android:name="com.google.android.accessibility.talkback.migration.SettingsExportProvider"
+            android:authorities="${applicationId}.migration"
+            android:exported="true"
+            android:permission="fyi.quin.backtalk.permission.MIGRATE"
+            android:directBootAware="true" />
+
+        <!-- Turns this screen reader off when Backtalk under its new app ID is on. -->
+        <receiver
+            android:name="com.google.android.accessibility.talkback.migration.HandOverReceiver"
+            android:exported="true"
+            android:permission="fyi.quin.backtalk.permission.MIGRATE">
+            <intent-filter>
+                <action android:name="fyi.quin.backtalk.action.HAND_OVER" />
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name="com.google.android.libraries.appdoctor.AppDoctorReceiver"

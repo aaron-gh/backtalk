@@ -20,6 +20,8 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.google.android.accessibility.talkback.BuildConfig
+import com.google.android.accessibility.talkback.migration.AppIdMove
+import com.google.android.libraries.accessibility.utils.log.LogUtils
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -34,18 +36,32 @@ data class UpdateInfo(
   val downloadUrl: String,
   /** The subjects of the commits that are newer than the running build, newest first. */
   val changes: List<String>,
+  /** True if the build is Backtalk under its new app ID, which installs as a new app. */
+  val move: Boolean = false,
 )
 
 /**
- * Checks the rolling "latest" pre-release on GitHub for a newer development build.
+ * Checks a rolling pre-release on GitHub for a newer development build.
+ *
+ * Builds with the app ID fyi.quin.backtalk are on the "dev" pre-release. The "latest" pre-release
+ * holds builds with the old app ID com.android.talkback, and stays on the build that moves to the
+ * new app ID, so old builds always pass through it. That build offers the move whenever "dev"
+ * exists.
  *
  * CI writes the release notes as a line "build: <commit count>", then one line per commit as "-
  * <7-character hash> <subject>", newest first. A release is newer only when its commit count is
  * higher, so a local build of a newer commit is never offered an older build.
  */
 object UpdateChecker {
-  private const val RELEASE_URL =
-    "https://api.github.com/repos/trypsynth/backtalk/releases/tags/latest"
+  private const val TAG = "UpdateChecker"
+  private const val RELEASES_URL = "https://api.github.com/repos/trypsynth/backtalk/releases/tags/"
+
+  /** The pre-release for the old app ID com.android.talkback. */
+  const val OLD_CHANNEL = "latest"
+
+  /** The pre-release for the app ID fyi.quin.backtalk. */
+  const val NEW_CHANNEL = "dev"
+
   private const val APK_NAME = "backtalk.apk"
   private const val SHORT_HASH_LENGTH = 7
   private const val MAX_CHANGES = 50
@@ -61,19 +77,56 @@ object UpdateChecker {
    */
   @WorkerThread
   fun check(context: Context): UpdateInfo? {
-    val connection = openConnection(context, RELEASE_URL)
+    val channel =
+      if (context.packageName == AppIdMove.OLD_PACKAGE) {
+        checkMove(context)?.let {
+          return it
+        }
+        OLD_CHANNEL
+      } else {
+        NEW_CHANNEL
+      }
+    val json = fetchRelease(context, channel) ?: throw IOException("GitHub has no $channel release")
+    return parseRelease(json, BuildConfig.COMMIT_COUNT, BuildConfig.COMMIT_HASH)
+  }
+
+  /**
+   * Returns the newest build under the new app ID, whatever its build number, since the new app
+   * is always the way forward. Returns null if there is none yet or it cannot be read, so the old
+   * app still gets updates of its own.
+   */
+  @WorkerThread
+  private fun checkMove(context: Context): UpdateInfo? =
+    try {
+      fetchRelease(context, NEW_CHANNEL)?.let { parseMove(it, BuildConfig.COMMIT_HASH) }
+    } catch (e: Exception) {
+      LogUtils.w(TAG, "Cannot check for the new app: %s", e)
+      null
+    }
+
+  /** Returns the release with the [tag] as JSON, or null if GitHub has no such release. */
+  @WorkerThread
+  private fun fetchRelease(context: Context, tag: String): String? {
+    val connection = openConnection(context, RELEASES_URL + tag)
     try {
       connection.setRequestProperty("Accept", "application/vnd.github+json")
       val code = connection.responseCode
+      if (code == HttpURLConnection.HTTP_NOT_FOUND) {
+        return null
+      }
       if (code != HttpURLConnection.HTTP_OK) {
         throw IOException("GitHub returned HTTP $code")
       }
-      val json = connection.inputStream.bufferedReader().use { it.readText() }
-      return parseRelease(json, BuildConfig.COMMIT_COUNT, BuildConfig.COMMIT_HASH)
+      return connection.inputStream.bufferedReader().use { it.readText() }
     } finally {
       connection.disconnect()
     }
   }
+
+  /** Parses a release under the new app ID as a move, which is offered whatever its build. */
+  @VisibleForTesting
+  fun parseMove(json: String, currentHash: String): UpdateInfo? =
+    parseRelease(json, currentBuild = 0, currentHash)?.copy(move = true)
 
   /** Opens a connection with the timeouts and user agent that GitHub requests should use. */
   fun openConnection(context: Context, url: String): HttpURLConnection {

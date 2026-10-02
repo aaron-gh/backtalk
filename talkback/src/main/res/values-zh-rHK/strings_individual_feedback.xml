@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">點字鍵盤已校正</string>
   <string name="individual_vibration_focus">聚焦項目</string>
   <string name="individual_vibration_focus_actionable">聚焦可操作的項目</string>
+  <string name="individual_vibration_selected">選取</string>
   <string name="individual_vibration_clicked">點擊</string>
   <string name="individual_vibration_long_clicked">長按</string>
   <string name="individual_vibration_window_state">視窗變更</string>

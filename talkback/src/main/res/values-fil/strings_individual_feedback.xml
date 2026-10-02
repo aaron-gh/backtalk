@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Na-calibrate ang braille keyboard</string>
   <string name="individual_vibration_focus">Naka-focus sa isang item</string>
   <string name="individual_vibration_focus_actionable">Naka-focus sa isang item na may aksyon</string>
+  <string name="individual_vibration_selected">Pagpili</string>
   <string name="individual_vibration_clicked">Pag-click</string>
   <string name="individual_vibration_long_clicked">Pag-long press</string>
   <string name="individual_vibration_window_state">Pagbabago ng window</string>

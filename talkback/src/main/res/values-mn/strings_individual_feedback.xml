@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Брайль гар тохируулагдсан</string>
   <string name="individual_vibration_focus">Зүйл дээр фокуслах</string>
   <string name="individual_vibration_focus_actionable">Үйлдэл хийх боломжтой зүйл дээр фокуслах</string>
+  <string name="individual_vibration_selected">Сонголт</string>
   <string name="individual_vibration_clicked">Товших</string>
   <string name="individual_vibration_long_clicked">Удаан дарах</string>
   <string name="individual_vibration_window_state">Цонх солигдох</string>

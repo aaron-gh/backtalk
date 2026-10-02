@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Braille-toetsenbord gekalibreerd</string>
   <string name="individual_vibration_focus">Focus op een item</string>
   <string name="individual_vibration_focus_actionable">Focus op een activeerbaar item</string>
+  <string name="individual_vibration_selected">Selectie</string>
   <string name="individual_vibration_clicked">Klik</string>
   <string name="individual_vibration_long_clicked">Lang indrukken</string>
   <string name="individual_vibration_window_state">Vensterwijziging</string>

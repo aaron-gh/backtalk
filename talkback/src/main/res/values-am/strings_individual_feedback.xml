@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">የብሬይል ቁልፍ ሰሌዳ ተስተካክሏል</string>
   <string name="individual_vibration_focus">በንጥል ላይ ትኩረት</string>
   <string name="individual_vibration_focus_actionable">እርምጃ ሊወሰድበት በሚችል ንጥል ላይ ትኩረት</string>
+  <string name="individual_vibration_selected">ምርጫ</string>
   <string name="individual_vibration_clicked">ጠቅ ማድረግ</string>
   <string name="individual_vibration_long_clicked">በረጅሙ መጫን</string>
   <string name="individual_vibration_window_state">የመስኮት ለውጥ</string>

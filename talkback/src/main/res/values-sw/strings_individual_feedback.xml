@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Kibodi ya nukta nundu imesawazishwa</string>
   <string name="individual_vibration_focus">Kuangazia kipengee</string>
   <string name="individual_vibration_focus_actionable">Kuangazia kipengee kinachoweza kutekelezwa</string>
+  <string name="individual_vibration_selected">Uteuzi</string>
   <string name="individual_vibration_clicked">Kubofya</string>
   <string name="individual_vibration_long_clicked">Kubonyeza kwa muda mrefu</string>
   <string name="individual_vibration_window_state">Mabadiliko ya dirisha</string>

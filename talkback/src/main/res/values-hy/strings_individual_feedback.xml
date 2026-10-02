@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Բրայլի ստեղնաշարը չափաբերվեց</string>
   <string name="individual_vibration_focus">Ֆոկուս տարրի վրա</string>
   <string name="individual_vibration_focus_actionable">Ֆոկուս ակտիվացվող տարրի վրա</string>
+  <string name="individual_vibration_selected">Ընտրություն</string>
   <string name="individual_vibration_clicked">Սեղմում</string>
   <string name="individual_vibration_long_clicked">Երկար սեղմում</string>
   <string name="individual_vibration_window_state">Պատուհանի փոփոխություն</string>

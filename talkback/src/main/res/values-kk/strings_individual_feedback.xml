@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Брайль пернетақтасы реттелді</string>
   <string name="individual_vibration_focus">Элементке назар аудару</string>
   <string name="individual_vibration_focus_actionable">Әрекет жасалатын элементке назар аудару</string>
+  <string name="individual_vibration_selected">Таңдау</string>
   <string name="individual_vibration_clicked">Басу</string>
   <string name="individual_vibration_long_clicked">Ұзақ басу</string>
   <string name="individual_vibration_window_state">Терезе ауысуы</string>

@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Brailio klaviatūra sukalibruota</string>
   <string name="individual_vibration_focus">Fokusas elemente</string>
   <string name="individual_vibration_focus_actionable">Fokusas suaktyvinamame elemente</string>
+  <string name="individual_vibration_selected">Pasirinkimas</string>
   <string name="individual_vibration_clicked">Spustelėjimas</string>
   <string name="individual_vibration_long_clicked">Ilgas paspaudimas</string>
   <string name="individual_vibration_window_state">Lango pakeitimas</string>

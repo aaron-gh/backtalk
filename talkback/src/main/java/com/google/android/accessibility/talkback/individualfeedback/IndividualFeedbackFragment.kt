@@ -42,6 +42,8 @@ import com.google.android.accessibility.utils.output.HapticPatternParser
 class IndividualFeedbackFragment : TalkbackBaseFragment() {
   private lateinit var prefs: SharedPreferences
   private var player: MediaPlayer? = null
+  // The vibrator playing a preview, so that leaving the screen stops it like a sound preview.
+  private var previewVibrator: Vibrator? = null
 
   public override fun getTitle(): CharSequence = getText(R.string.title_pref_individual_feedback)
 
@@ -87,6 +89,8 @@ class IndividualFeedbackFragment : TalkbackBaseFragment() {
   override fun onPause() {
     super.onPause()
     stopSound()
+    previewVibrator?.cancel()
+    previewVibrator = null
   }
 
   private fun category(context: Context, title: Int) =
@@ -167,6 +171,7 @@ class IndividualFeedbackFragment : TalkbackBaseFragment() {
       return
     }
     vibrator.vibrate(HapticPatternParser(vibrator).parse(context.resources.getIntArray(resId)))
+    previewVibrator = vibrator
   }
 
   // By name, because the braille sounds are in a module whose R class talkback cannot see.

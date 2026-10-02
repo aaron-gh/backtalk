@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Tastiera e Brajës u kalibrua</string>
   <string name="individual_vibration_focus">Fokusi te një artikull</string>
   <string name="individual_vibration_focus_actionable">Fokusi te një artikull që mund të aktivizohet</string>
+  <string name="individual_vibration_selected">Zgjedhja</string>
   <string name="individual_vibration_clicked">Klikim</string>
   <string name="individual_vibration_long_clicked">Shtypje e gjatë</string>
   <string name="individual_vibration_window_state">Ndryshim i dritares</string>

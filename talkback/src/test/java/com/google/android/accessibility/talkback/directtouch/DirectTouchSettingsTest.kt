@@ -28,6 +28,7 @@ class DirectTouchSettingsTest {
     assertTrue(DirectTouchSettings.isMasterEnabled(prefs))
     assertTrue(DirectTouchSettings.isSpeechEnabled(prefs))
     assertFalse(DirectTouchSettings.isHapticsEnabled(prefs))
+    assertFalse(DirectTouchSettings.isNavBarDirect(prefs))
     assertFalse(DirectTouchSettings.isAppEnabled(prefs, "a.b"))
     assertFalse(DirectTouchSettings.isDirectTyping(prefs, "a.b"))
   }
@@ -58,6 +59,24 @@ class DirectTouchSettingsTest {
     assertTrue(DirectTouchSettings.isAppEnabled(other, "a.b"))
     assertTrue(DirectTouchSettings.isDirectTyping(other, "a.b"))
     assertFalse(DirectTouchSettings.isMasterEnabled(other))
+  }
+
+  @Test
+  fun backupRoundTripKeepsTheNavigationBarSetting() {
+    prefs.edit().putBoolean(DirectTouchSettings.PREF_NAV_BAR, true).apply()
+    val other = FakeSharedPreferences()
+    assertTrue(DirectTouchSettings.importJson(other, DirectTouchSettings.exportJson(prefs)))
+    assertTrue(DirectTouchSettings.isNavBarDirect(other))
+  }
+
+  @Test
+  fun backupFromBeforeTheNavigationBarSettingTurnsItOff() {
+    val old =
+      "{\"version\":1,\"master\":true,\"speech\":true,\"haptics\":false," +
+        "\"apps\":[],\"seen\":[],\"typing\":[]}"
+    prefs.edit().putBoolean(DirectTouchSettings.PREF_NAV_BAR, true).apply()
+    assertTrue(DirectTouchSettings.importJson(prefs, old))
+    assertFalse(DirectTouchSettings.isNavBarDirect(prefs))
   }
 
   @Test

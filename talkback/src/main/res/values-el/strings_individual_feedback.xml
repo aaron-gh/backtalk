@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Το πληκτρολόγιο Braille βαθμονομήθηκε</string>
   <string name="individual_vibration_focus">Εστίαση σε στοιχείο</string>
   <string name="individual_vibration_focus_actionable">Εστίαση σε στοιχείο με ενέργεια</string>
+  <string name="individual_vibration_selected">Επιλογή</string>
   <string name="individual_vibration_clicked">Κλικ</string>
   <string name="individual_vibration_long_clicked">Παρατεταμένο πάτημα</string>
   <string name="individual_vibration_window_state">Αλλαγή παραθύρου</string>

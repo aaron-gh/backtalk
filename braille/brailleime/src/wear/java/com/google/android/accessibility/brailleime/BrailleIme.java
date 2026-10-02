@@ -31,4 +31,8 @@ public class BrailleIme {
       BrailleDisplayForBrailleIme brailleDisplayForBrailleIme) {
     // Stub
   }
+
+  public static void shutdown() {
+    // Stub
+  }
 }

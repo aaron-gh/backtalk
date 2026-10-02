@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">ব্রেল কীবোর্ড ক্যালিব্রেট করা হয়েছে</string>
   <string name="individual_vibration_focus">কোনো আইটেমে ফোকাস</string>
   <string name="individual_vibration_focus_actionable">অ্যাকশনযোগ্য আইটেমে ফোকাস</string>
+  <string name="individual_vibration_selected">বেছে নেওয়া</string>
   <string name="individual_vibration_clicked">ক্লিক</string>
   <string name="individual_vibration_long_clicked">বেশিক্ষণ প্রেস করা</string>
   <string name="individual_vibration_window_state">উইন্ডো পরিবর্তন</string>

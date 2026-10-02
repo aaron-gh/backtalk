@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Брайлевская клавиатура откалибрована</string>
   <string name="individual_vibration_focus">Фокус на элементе</string>
   <string name="individual_vibration_focus_actionable">Фокус на активном элементе</string>
+  <string name="individual_vibration_selected">Выбор</string>
   <string name="individual_vibration_clicked">Нажатие</string>
   <string name="individual_vibration_long_clicked">Долгое нажатие</string>
   <string name="individual_vibration_window_state">Смена окна</string>

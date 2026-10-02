@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">ब्रेल किबोर्ड क्यालिब्रेट गरियो</string>
   <string name="individual_vibration_focus">वस्तुमा फोकस</string>
   <string name="individual_vibration_focus_actionable">कार्य गर्न मिल्ने वस्तुमा फोकस</string>
+  <string name="individual_vibration_selected">चयन</string>
   <string name="individual_vibration_clicked">क्लिक</string>
   <string name="individual_vibration_long_clicked">लामो समय थिच्नु</string>
   <string name="individual_vibration_window_state">विन्डो परिवर्तन</string>

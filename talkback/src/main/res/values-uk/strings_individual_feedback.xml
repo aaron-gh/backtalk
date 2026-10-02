@@ -33,6 +33,7 @@
   <string name="individual_sound_calibration_done">Брайлівську клавіатуру відкалібровано</string>
   <string name="individual_vibration_focus">Фокус на елементі</string>
   <string name="individual_vibration_focus_actionable">Фокус на активному елементі</string>
+  <string name="individual_vibration_selected">Вибір</string>
   <string name="individual_vibration_clicked">Натискання</string>
   <string name="individual_vibration_long_clicked">Довге натискання</string>
   <string name="individual_vibration_window_state">Зміна вікна</string>

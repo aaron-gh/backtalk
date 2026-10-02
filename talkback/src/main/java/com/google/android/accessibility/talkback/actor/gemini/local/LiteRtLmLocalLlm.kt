@@ -59,8 +59,20 @@ class LiteRtLmLocalLlm(
   override fun generate(prompt: String, jpeg: ByteArray?): String =
     synchronized(generateLock) {
       cancelRequested = false
+      generate(prompt, jpeg) { cancelRequested }
+    }
+
+  /**
+   * Like [generate], but stops when [isCancelled] returns true, instead of using the flag that
+   * [cancel] sets and [generate] clears. A cancel that comes before this starts, while the engine
+   * waits for an earlier answer or loads, is then not lost. [cancel] still stops an answer that has
+   * started.
+   */
+  fun generate(prompt: String, jpeg: ByteArray?, isCancelled: () -> Boolean): String =
+    synchronized(generateLock) {
       unloadTask?.cancel(false)
       try {
+        if (isCancelled()) throw LocalLlmCancelledException()
         val started = SystemClock.elapsedRealtime()
         val loaded = loadEngine()
         val loadMs = SystemClock.elapsedRealtime() - started
@@ -70,7 +82,7 @@ class LiteRtLmLocalLlm(
         val answer =
           loaded.createConversation().use { current ->
             conversation = current
-            if (cancelRequested) throw LocalLlmCancelledException()
+            if (isCancelled()) throw LocalLlmCancelledException()
             current.sendMessage(contents).toString()
           }
         Log.i(TAG, "Answered in ${SystemClock.elapsedRealtime() - started} ms (load $loadMs ms)")
@@ -80,7 +92,7 @@ class LiteRtLmLocalLlm(
       } catch (e: LocalLlmMemoryException) {
         throw e
       } catch (e: Throwable) {
-        if (cancelRequested) throw LocalLlmCancelledException()
+        if (isCancelled()) throw LocalLlmCancelledException()
         // A failed engine may be half loaded, so drop it and load afresh next time.
         unload()
         throw LocalLlmException(e.message ?: e.javaClass.simpleName, e)

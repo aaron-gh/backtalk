@@ -30,8 +30,14 @@ public class SpeechChunkerTest {
       "Same price, current silicon, current design, and full support ahead of it. ";
 
   @Test
-  public void shortTextIsOnePiece() {
-    String text = "x".repeat(2 * SpeechChunker.MIN_CHUNK - 1);
+  public void textUpToTheLimitIsOnePiece() {
+    String text = "x".repeat(SpeechChunker.MAX_CHUNK);
+    assertEquals(Collections.singletonList(0), SpeechChunker.chunkStarts(text, Locale.US));
+  }
+
+  @Test
+  public void itemDescriptionWithClausesStaysWhole() {
+    String text = "Wi-Fi, On, Connected to Home network, Button, Double-tap to toggle";
     assertEquals(Collections.singletonList(0), SpeechChunker.chunkStarts(text, Locale.US));
   }
 
@@ -43,19 +49,18 @@ public class SpeechChunkerTest {
 
   @Test
   public void splitsAtEverySentence() {
-    String first = "The first sentence is long enough. ";
-    String second = "The second sentence is long enough. ";
-    String third = "The third sentence is long enough.";
+    String first = "The first sentence is long enough to be a piece on its own. ";
+    String second = "The second sentence is long enough to be a piece on its own. ";
+    String third = "The third sentence is long enough to be a piece on its own.";
     List<Integer> starts = SpeechChunker.chunkStarts(first + second + third, Locale.US);
     assertEquals(
         Arrays.asList(0, first.length(), first.length() + second.length()), starts);
   }
 
   @Test
-  public void splitsAfterClausePunctuation() {
-    List<Integer> starts = SpeechChunker.chunkStarts(SENTENCE, Locale.US);
-    // "Same price," is too short a piece, so the first cut is after "current silicon,".
-    assertEquals(Arrays.asList(0, "Same price, current silicon,".length()), starts);
+  public void splitsOnlyAtSentencesNotClauses() {
+    List<Integer> starts = SpeechChunker.chunkStarts(SENTENCE.repeat(3), Locale.US);
+    assertEquals(Arrays.asList(0, SENTENCE.length(), 2 * SENTENCE.length()), starts);
   }
 
   @Test
@@ -81,9 +86,21 @@ public class SpeechChunkerTest {
   @Test
   public void splitsUnbrokenTextAtLimit() {
     String text = "x".repeat(SpeechChunker.MAX_CHUNK * 2 + 1);
+    // The second cut comes early, so that the last piece is not tiny.
     assertEquals(
-        Arrays.asList(0, SpeechChunker.MAX_CHUNK, 2 * SpeechChunker.MAX_CHUNK),
+        Arrays.asList(0, SpeechChunker.MAX_CHUNK, text.length() - SpeechChunker.MIN_CHUNK),
         SpeechChunker.chunkStarts(text, Locale.US));
+  }
+
+  @Test
+  public void lastPieceIsNeverTiny() {
+    for (String text :
+        Arrays.asList(
+            "word ".repeat(31) + "tail end.", "x".repeat(SpeechChunker.MAX_CHUNK + 10))) {
+      List<Integer> starts = SpeechChunker.chunkStarts(text, Locale.US);
+      int last = starts.get(starts.size() - 1);
+      assertTrue(text.length() - last >= SpeechChunker.MIN_CHUNK);
+    }
   }
 
   @Test

@@ -30,6 +30,7 @@ import android.telecom.InCallService
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.google.android.accessibility.talkback.TalkBackService
+import com.google.android.accessibility.talkback.pause.PauseController
 import com.google.android.accessibility.talkback.speakerphone.SpeakerphonePolicy.Route
 import com.google.android.accessibility.utils.SharedPreferencesUtils
 
@@ -39,7 +40,9 @@ import com.google.android.accessibility.utils.SharedPreferencesUtils
  *
  * Android binds this service during calls only when Backtalk holds MANAGE_ONGOING_CALLS, which the
  * user grants with adb or Shizuku. It has no call screen of its own. It watches the proximity
- * sensor only while a call can be heard, Backtalk is on, and the setting is on.
+ * sensor only while a call can be heard and the setting is on, and only switches the call while
+ * Backtalk is on and not paused, so that turning Backtalk off or on, or pausing it, takes effect
+ * during a call.
  */
 @RequiresApi(Build.VERSION_CODES.S)
 class SpeakerphoneInCallService : InCallService() {
@@ -79,6 +82,11 @@ class SpeakerphoneInCallService : InCallService() {
 
   private val applyReading = Runnable {
     val nearEar = pendingNearEar ?: return@Runnable
+    if (!TalkBackService.isServiceActive() || PauseController.isPaused()) {
+      // Forget the reading, so the next one switches once Backtalk is back.
+      pendingNearEar = null
+      return@Runnable
+    }
     val target = policy.onProximity(nearEar, currentRoute()) ?: return@Runnable
     Log.i(TAG, "Phone ${if (nearEar) "at" else "away from"} the ear, switching to $target")
     setAudioRoute(
@@ -118,14 +126,15 @@ class SpeakerphoneInCallService : InCallService() {
     policy.onRouteChanged(currentRoute())
   }
 
-  /** Starts or stops watching the sensor, as calls, Backtalk and the setting change. */
+  /** Starts or stops watching the sensor, as calls and the setting change. */
   private fun update() {
     val prefs = SharedPreferencesUtils.getSharedPreferences(this)
     val active =
-      calls.any { it.details.state in AUDIBLE_STATES } &&
-        SpeakerphoneSettings.isEnabled(prefs) &&
-        TalkBackService.isServiceActive()
+      calls.any { it.details.state in AUDIBLE_STATES } && SpeakerphoneSettings.isEnabled(prefs)
     if (active) startListening() else stopListening()
+    // Remember a switch to the speaker while a call is on hold or calls are swapped, so that the
+    // call still goes back to the earpiece when the phone is held up.
+    if (calls.isEmpty()) policy.reset()
   }
 
   private fun startListening() {
@@ -142,7 +151,6 @@ class SpeakerphoneInCallService : InCallService() {
     sensorManager.unregisterListener(sensorListener)
     main.removeCallbacks(applyReading)
     pendingNearEar = null
-    policy.reset()
   }
 
   private fun currentRoute(): Route =
