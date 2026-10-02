@@ -88,6 +88,13 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
+        <!-- Runs the on-device model in its own process, so running out of memory stops the
+             model and not the screen reader. -->
+        <service
+            android:name="com.google.android.accessibility.talkback.actor.gemini.local.LocalModelService"
+            android:exported="false"
+            android:process=":ondeviceai" />
+
         <!-- The on-device model can run on the GPU when these are present. -->
         <uses-native-library android:name="libvndksupport.so" android:required="false" />
         <uses-native-library android:name="libOpenCL.so" android:required="false" />
