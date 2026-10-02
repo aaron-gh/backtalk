@@ -14,4 +14,5 @@ dependencies {
     implementation project(':brailleinterfaces')
     implementation project(':brailleimeanalytics')
     implementation project(':brailletranslate')
+    testImplementation libs.junit
 }

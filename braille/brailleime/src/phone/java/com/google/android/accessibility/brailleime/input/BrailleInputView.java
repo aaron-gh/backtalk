@@ -20,23 +20,30 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.os.SystemClock;
 import android.util.Size;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnAttachStateChangeListener;
+import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
+import com.google.android.accessibility.braille.common.BrailleUserPreferences;
 import com.google.android.accessibility.braille.common.BrailleUtils;
 import com.google.android.accessibility.braille.common.Constants.BrailleType;
 import com.google.android.accessibility.braille.interfaces.BrailleCharacter;
 import com.google.android.accessibility.brailleime.BrailleIme.OrientationSensitive;
 import com.google.android.accessibility.brailleime.BrailleInputOptions;
+import com.google.android.accessibility.brailleime.HeldOrientationTracker;
+import com.google.android.accessibility.brailleime.OrientationMonitor;
 import com.google.android.accessibility.brailleime.R;
 import com.google.android.accessibility.brailleime.Utils;
 import com.google.android.accessibility.brailleime.input.BrailleInputPlane.CustomOnGestureListener;
@@ -92,6 +99,12 @@ public class BrailleInputView extends View
         boolean inTwoStepCalibration, int pointersHeldCount) {
       return false;
     }
+
+    /**
+     * Signals that the side of the charging port in tabletop mode was decided afresh, so turns of
+     * the device on the table count from here.
+     */
+    default void onTabletopPortSideDecided() {}
 
     /** Signals that hold has been produced. Returns true if the action is consumed. */
     @CanIgnoreReturnValue
@@ -149,9 +162,48 @@ public class BrailleInputView extends View
   private final InputViewCaption inputViewCaption;
   private final BrailleInputPlane inputPlane;
   private CaptionText captionText;
+
+  /** The size the dots are laid out in, which is turned from the screen's on a tablet. */
   private Size screenSizeInPixels;
+
+  /** The orientation the dots are laid out in, which is turned from the screen's on a tablet. */
   private int orientation;
+
+  /** The screen's size as displayed, before any turn. */
+  private Size screenSizeAsDisplayed;
+
+  /** The screen's orientation as displayed, before any turn. */
+  private int orientationAsDisplayed;
+
   private boolean tabletopMode;
+
+  /**
+   * On a tablet, how many quarter turns clockwise the dots are drawn from the screen as displayed,
+   * so that they face the user as if auto-rotate had turned the screen. The screen does not turn
+   * when auto-rotate is off, nor upside down when it is on.
+   */
+  private int quarterTurns;
+
+  /**
+   * On a tablet in tabletop mode, the screen rotation that faces the user, decided when the tablet
+   * was laid flat, as a {@link android.view.Surface} rotation.
+   */
+  private int tabletopRotation;
+
+  /**
+   * Whether the charging port should be on the other side from where the layout expects it. Then
+   * touches and drawing are turned 180 degrees so the dots still fit the hands.
+   */
+  private boolean turnedAround;
+
+  /** The side of the charging port the user last typed with in screen-away mode, or null. */
+  @Nullable private Boolean screenAwayPortOnRight;
+
+  /** The side of the charging port in tabletop mode, decided when the phone was laid flat. */
+  private boolean tabletopPortOnRight;
+
+  /** When the tabletop side was last decided, in uptime milliseconds, or -1 if not yet. */
+  private long tabletopSideDecidedAtMs = -1;
   private AutoPerformer autoPerformer;
   private BrailleInputOptions options;
   private boolean touchInteracting;
@@ -173,10 +225,16 @@ public class BrailleInputView extends View
     this.callback = callback;
     this.screenSizeInPixels = screenSizeInPixels;
     this.orientation = getResources().getConfiguration().orientation;
+    this.screenSizeAsDisplayed = screenSizeInPixels;
+    this.orientationAsDisplayed = orientation;
     this.options = options;
     this.inputPlane = getInputPlane(context);
     this.inputPlane.setTableTopMode(tabletopMode);
     this.tabletopMode = tabletopMode;
+    if (tabletopMode) {
+      decideTabletopPortSideIfNeeded();
+      updateTurnedAround();
+    }
     setBackgroundColor(getResources().getColor(R.color.input_plane_background));
     this.inputViewCaption = new InputViewCaption(context.getString(R.string.input_view_caption));
     addOnAttachStateChangeListener(this);
@@ -217,7 +275,14 @@ public class BrailleInputView extends View
   public void onOrientationChanged(int orientation, Size screenSize) {
     this.orientation = orientation;
     this.screenSizeInPixels = screenSize;
+    this.orientationAsDisplayed = orientation;
+    this.screenSizeAsDisplayed = screenSize;
     this.inputPlane.setOrientation(orientation, screenSizeInPixels);
+    if (!isPhone()) {
+      // The screen turned, so the dots turn by a different amount to keep facing the user.
+      quarterTurns = 0;
+      updateQuarterTurns();
+    }
     invalidate();
     requestLayout();
   }
@@ -245,6 +310,10 @@ public class BrailleInputView extends View
     if (tabletopMode != enabled) {
       inputPlane.setTableTopMode(enabled);
       tabletopMode = enabled;
+      if (enabled) {
+        decideTabletopPortSideIfNeeded();
+        updateTurnedAround();
+      }
       invalidate();
       requestLayout();
     }
@@ -303,11 +372,14 @@ public class BrailleInputView extends View
     if (DRAW_DEBUG_BACKGROUND) {
       drawDebugBackground(canvas);
     }
+    canvas.save();
+    canvas.concat(layoutToScreen());
     inputPlane.onDraw(canvas);
     if (captionText != null) {
       captionText.onDraw(canvas);
     }
     inputViewCaption.onDraw(canvas);
+    canvas.restore();
   }
 
   private final CustomOnGestureListener customOnGestureListener =
@@ -342,9 +414,269 @@ public class BrailleInputView extends View
   @SuppressWarnings("ClickableViewAccessibility")
   public boolean onTouchEvent(MotionEvent event) {
     updateTouchAction(event);
-    boolean result = inputPlane.onTouchEvent(event);
+    // Decide at the start of each gesture, so a gesture is never turned partway through.
+    if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+      updateTurnedAround();
+      if (tabletopMode) {
+        // The user is typing on the table now, so screen-away typing is no longer the last thing.
+        screenAwayPortOnRight = null;
+      }
+    }
+    boolean result;
+    Matrix layoutToScreen = layoutToScreen();
+    if (layoutToScreen.isIdentity()) {
+      result = inputPlane.onTouchEvent(event);
+    } else {
+      Matrix screenToLayout = new Matrix();
+      layoutToScreen.invert(screenToLayout);
+      MotionEvent turned = MotionEvent.obtain(event);
+      turned.transform(screenToLayout);
+      result = inputPlane.onTouchEvent(turned);
+      turned.recycle();
+    }
     invalidate();
     return result;
+  }
+
+  /**
+   * Turns the layout around when the charging port should be on the other side of the user from
+   * where the layout expects it. In screen-away mode, the side comes from the orientation lock, or
+   * from how the phone is held. In tabletop mode, it is the side decided when the phone was laid
+   * flat: see {@link DotsOrientation#decideTabletopPortOnRight}. A tablet is turned by quarter turns
+   * instead: see {@link #updateQuarterTurns}.
+   */
+  private void updateTurnedAround() {
+    if (!isPhone()) {
+      turnedAround = false;
+      updateQuarterTurns();
+      return;
+    }
+    int lock = readOrientationLock();
+    if (tabletopMode) {
+      boolean layoutExpectsPortOnRight =
+          DotsOrientation.tabletopLayoutExpectsPortOnRight(isPortrait(), displayRotation());
+      boolean portOnRight =
+          lock != DotsOrientation.UNLOCKED
+              ? DotsOrientation.phoneLockPortOnRight(lock)
+              : tabletopPortOnRight;
+      turnedAround = portOnRight != layoutExpectsPortOnRight;
+      return;
+    }
+    boolean layoutExpectsPortOnRight = layoutExpectsPortOnRight();
+    Boolean portOnRight =
+        lock != DotsOrientation.UNLOCKED
+            ? (Boolean) DotsOrientation.phoneLockPortOnRight(lock)
+            : heldPortOnRight();
+    if (portOnRight != null) {
+      turnedAround = portOnRight != layoutExpectsPortOnRight;
+    }
+    screenAwayPortOnRight = layoutExpectsPortOnRight != turnedAround;
+  }
+
+  /**
+   * Decides the tabletop side again only when something new shows it: see {@link
+   * DotsOrientation#shouldDecideTabletopAgain}.
+   */
+  private void decideTabletopPortSideIfNeeded() {
+    if (!DotsOrientation.shouldDecideTabletopAgain(
+        tabletopSideDecidedAtMs,
+        /* typedInScreenAway= */ screenAwayPortOnRight != null,
+        HeldOrientationTracker.getLastHeldSeenMs())) {
+      return;
+    }
+    if (isPhone()) {
+      tabletopPortOnRight =
+          DotsOrientation.decideTabletopPortOnRight(
+              screenAwayPortOnRight,
+              HeldOrientationTracker.getLastHeld(),
+              isPortrait(),
+              displayRotation());
+    } else {
+      // Laying a tablet flat keeps the rotation it was last held up with, as auto-rotate does.
+      int held = HeldOrientationTracker.getLastHeldRotation();
+      tabletopRotation = held >= 0 ? held : displayRotation();
+    }
+    screenAwayPortOnRight = null;
+    tabletopSideDecidedAtMs = SystemClock.uptimeMillis();
+    callback.onTabletopPortSideDecided();
+  }
+
+  /** The screen rotation, which works before the view is attached to a window. */
+  private int displayRotation() {
+    return getDisplay() != null
+        ? getDisplay().getRotation()
+        : Utils.getDisplayRotationDegrees(getContext());
+  }
+
+  private boolean isPortrait() {
+    return orientation == Configuration.ORIENTATION_PORTRAIT;
+  }
+
+  /**
+   * The device was turned while lying flat, by this many quarter turns clockwise seen from above. A
+   * phone only turns by half turns. Returns where the charging port is now in tabletop mode.
+   */
+  @Nullable
+  public PortPosition turnTabletop(int quarters) {
+    if (isPhone()) {
+      if (DotsOrientation.swapsSides(quarters)) {
+        tabletopPortOnRight = !tabletopPortOnRight;
+      }
+    } else {
+      tabletopRotation = DotsOrientation.turnRotation(tabletopRotation, quarters);
+    }
+    if (tabletopMode) {
+      updateTurnedAround();
+      invalidate();
+    }
+    return getTabletopPortPosition();
+  }
+
+  /**
+   * Where the charging port is in tabletop mode, as decided when the device was laid flat. Null on
+   * a tablet whose natural orientation is landscape, where the port could be on any edge.
+   */
+  @Nullable
+  public PortPosition getTabletopPortPosition() {
+    int lock =
+        BrailleUserPreferences.readOrientationLock(getContext(), !isPhone(), /* tabletop= */ true);
+    if (isPhone()) {
+      return DotsOrientation.phonePortPosition(
+          lock != DotsOrientation.UNLOCKED
+              ? DotsOrientation.phoneLockPortOnRight(lock)
+              : tabletopPortOnRight);
+    }
+    return tabletPortPosition(
+        lock != DotsOrientation.UNLOCKED ? lock : tabletopRotation, /* tabletop= */ true);
+  }
+
+  /**
+   * Where the charging port is on a tablet facing the user at this screen rotation, or null on a
+   * tablet whose natural orientation is landscape, where the port could be on any edge.
+   */
+  @Nullable
+  private PortPosition tabletPortPosition(int rotation, boolean tabletop) {
+    return Utils.isDeviceDefaultPortrait(getContext())
+        ? DotsOrientation.tabletPortPosition(rotation, tabletop)
+        : null;
+  }
+
+  /**
+   * Locks the dots facing the way they are now in the current mode, or unlocks them to follow how
+   * the device is held again. Each screen size has its own locks, so a foldable can be locked one
+   * way folded and another way unfolded. Returns whether it is now locked.
+   */
+  public boolean toggleOrientationLock() {
+    boolean locked = isOrientationLocked();
+    int value;
+    if (locked) {
+      value = DotsOrientation.UNLOCKED;
+    } else if (!isPhone()) {
+      value = Math.floorMod(displayRotation() + quarterTurns, 4);
+    } else if (tabletopMode) {
+      value = DotsOrientation.phoneLock(tabletopPortOnRight);
+    } else {
+      value = DotsOrientation.phoneLock(layoutExpectsPortOnRight() != turnedAround);
+    }
+    BrailleUserPreferences.writeOrientationLock(getContext(), !isPhone(), tabletopMode, value);
+    updateTurnedAround();
+    invalidate();
+    return !locked;
+  }
+
+  /** Whether the dots are locked facing one way in the current mode. */
+  public boolean isOrientationLocked() {
+    return readOrientationLock() != DotsOrientation.UNLOCKED;
+  }
+
+  /**
+   * Where the charging port is locked in the current mode, or null when it is not locked or that
+   * cannot be said.
+   */
+  @Nullable
+  public PortPosition getLockedPortPosition() {
+    int lock = readOrientationLock();
+    if (lock == DotsOrientation.UNLOCKED) {
+      return null;
+    }
+    if (isPhone()) {
+      return DotsOrientation.phonePortPosition(DotsOrientation.phoneLockPortOnRight(lock));
+    }
+    return tabletPortPosition(lock, tabletopMode);
+  }
+
+  /**
+   * The orientation lock for this screen size and the current mode, or {@link
+   * DotsOrientation#UNLOCKED}. On a phone it is the side of the charging port, and on a tablet the
+   * screen rotation that faces the user.
+   */
+  private int readOrientationLock() {
+    return BrailleUserPreferences.readOrientationLock(getContext(), !isPhone(), tabletopMode);
+  }
+
+  private boolean isPhone() {
+    return BrailleUtils.isPhoneSizedDevice(getResources());
+  }
+
+  /**
+   * On a tablet, turns the dots to face the user as if auto-rotate had turned the screen: to the
+   * orientation lock, to the rotation decided when it was laid flat in tabletop mode, or else to how
+   * it is held up.
+   */
+  private void updateQuarterTurns() {
+    int wanted;
+    int lock = readOrientationLock();
+    if (lock != DotsOrientation.UNLOCKED) {
+      wanted = lock;
+    } else if (tabletopMode) {
+      wanted = tabletopRotation;
+    } else {
+      int held = HeldOrientationTracker.getLastHeldRotation();
+      wanted = held >= 0 ? held : displayRotation();
+    }
+    int turns = DotsOrientation.quarterTurns(wanted, displayRotation());
+    if (turns == quarterTurns) {
+      return;
+    }
+    quarterTurns = turns;
+    boolean sideways = turns % 2 == 1;
+    screenSizeInPixels =
+        sideways
+            ? new Size(screenSizeAsDisplayed.getHeight(), screenSizeAsDisplayed.getWidth())
+            : screenSizeAsDisplayed;
+    orientation =
+        !sideways
+            ? orientationAsDisplayed
+            : orientationAsDisplayed == Configuration.ORIENTATION_PORTRAIT
+                ? Configuration.ORIENTATION_LANDSCAPE
+                : Configuration.ORIENTATION_PORTRAIT;
+    inputPlane.setOrientation(orientation, screenSizeInPixels);
+    invalidate();
+  }
+
+  /** Maps the layout of the dots onto the screen, turning it to face the user. */
+  private Matrix layoutToScreen() {
+    Matrix matrix = new Matrix();
+    matrix.setValues(
+        DotsOrientation.layoutToScreen(turnedAround ? 2 : quarterTurns, getWidth(), getHeight()));
+    return matrix;
+  }
+
+  /** Which side a phone's layout expects the charging port on in screen-away mode. */
+  private boolean layoutExpectsPortOnRight() {
+    return DotsOrientation.screenAwayLayoutExpectsPortOnRight(isPortrait(), displayRotation());
+  }
+
+  /**
+   * Which side the charging port is on as the phone is held, or null when it is not clearly in
+   * landscape. With the screen in landscape, it has already turned to match.
+   */
+  @Nullable
+  private Boolean heldPortOnRight() {
+    if (!isPortrait()) {
+      return layoutExpectsPortOnRight();
+    }
+    return DotsOrientation.heldPortOnRight(OrientationMonitor.getInstance().getCurrentOrientation());
   }
 
   /** Calibrates dots positions. */

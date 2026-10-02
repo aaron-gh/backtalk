@@ -46,7 +46,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
@@ -99,6 +101,8 @@ import com.google.android.accessibility.brailleime.input.BrailleInputView;
 import com.google.android.accessibility.brailleime.input.BrailleInputView.CalibrationTriggeredType;
 import com.google.android.accessibility.brailleime.input.BrailleInputView.FingersPattern;
 import com.google.android.accessibility.brailleime.input.DotHoldSwipe;
+import com.google.android.accessibility.brailleime.input.DotsOrientation;
+import com.google.android.accessibility.brailleime.input.PortPosition;
 import com.google.android.accessibility.brailleime.input.Swipe;
 import com.google.android.accessibility.brailleime.keyboardview.AccessibilityOverlayKeyboardView;
 import com.google.android.accessibility.brailleime.keyboardview.KeyboardView;
@@ -183,6 +187,11 @@ public class BrailleIme extends InputMethodService {
   private static BrailleDisplayForBrailleIme brailleDisplayForBrailleIme;
 
   private static final String BARD_PACKAGE_NAME = "gov.loc.nls.dtb";
+  /**
+   * How long to wait for the device to settle where the charging port can be said after
+   * screen-away mode is detected.
+   */
+  private static final long SCREEN_AWAY_SETTLE_MS = 1000;
   private static final int ANNOUNCE_DELAY_MS =
       800; // Delay, so that it follows previous-IME-is-hidden announcement.
   private static final int ANNOUNCE_CALIBRATION_DELAY_MS = 1500;
@@ -199,6 +208,36 @@ public class BrailleIme extends InputMethodService {
   private EditBuffer editBuffer;
   private Thread.UncaughtExceptionHandler originalDefaultUncaughtExceptionHandler;
   private OrientationMonitor.Callback orientationCallbackDelegate;
+
+  /** How the device was held when the user last heard where the charging port is. */
+  private OrientationMonitor.Orientation knownPortSide = OrientationMonitor.Orientation.UNKNOWN;
+
+  /**
+   * Holds the screen-away announcement while the device is still being lifted, until it settles
+   * where the charging port can be said.
+   */
+  private final Handler screenAwayAnnouncementHandler = new Handler(Looper.getMainLooper());
+
+  private boolean screenAwayAnnouncementPending;
+
+  /**
+   * Whether the pending screen-away announcement is the first since the keyboard opened, so it
+   * must still follow TalkBack saying the previous keyboard is hidden.
+   */
+  private boolean screenAwayAnnouncementFirst;
+
+  /** When the pending screen-away announcement was held back, in uptime milliseconds. */
+  private long screenAwayAnnouncementHeldAtMs;
+
+  /** Notices the device being turned while it lies flat in tabletop mode. */
+  private FlatTurnDetector flatTurnDetector;
+
+  /** Says plain screen-away mode when the device never settles where the port can be said. */
+  private final Runnable screenAwayAnnouncementTimeout =
+      () -> {
+        screenAwayAnnouncementPending = false;
+        speakScreenAwayAnnouncement(getString(R.string.screen_away));
+      };
   private ViewAttachedDialog talkbackOffDialog;
   private ViewAttachedDialog contextMenuDialog;
   private ViewAttachedDialog tooFewTouchPointsDialog;
@@ -230,6 +269,7 @@ public class BrailleIme extends InputMethodService {
     BrailleIme.talkBackForBrailleIme = talkBackForBrailleIme;
     BrailleIme.talkBackForBrailleCommon = talkBackForBrailleCommon;
     BrailleIme.brailleDisplayForBrailleIme = brailleDisplayForBrailleIme;
+    HeldOrientationTracker.start(context);
     if (talkBackForBrailleIme != null) {
       talkBackForBrailleIme.setBrailleImeForTalkBack(
           instance == null ? null : instance.brailleImeForTalkBack);
@@ -242,6 +282,11 @@ public class BrailleIme extends InputMethodService {
     BrailleImePreferencesActivity.initialize(talkBackForBrailleIme);
     BrailleImeGestureCommandActivity.initialize(talkBackForBrailleIme);
     Utils.setComponentEnabled(context, Constants.BRAILLE_KEYBOARD, true);
+  }
+
+  /** Releases what {@link #initialize} started, when TalkBack shuts down. */
+  public static void shutdown() {
+    HeldOrientationTracker.stop();
   }
 
   @Override
@@ -283,6 +328,7 @@ public class BrailleIme extends InputMethodService {
 
     brailleImeAnalytics = BrailleImeAnalytics.getInstance(this);
     OrientationMonitor.init(this);
+    flatTurnDetector = new FlatTurnDetector(this, this::onTurnedFlat);
     layoutOrientator = new LayoutOrientator(this, layoutOrientatorCallback);
 
     if (talkBackForBrailleIme != null) {
@@ -350,6 +396,8 @@ public class BrailleIme extends InputMethodService {
   @Override
   public void onConfigurationChanged(Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
+    // Folding or unfolding switches between the phone and tablet layouts.
+    flatTurnDetector.setQuarterTurns(!BrailleUtils.isPhoneSizedDevice(getResources()));
     if (orientation != newConfig.orientation) {
       orientation = newConfig.orientation;
       keyboardView.onOrientationChanged(newConfig.orientation);
@@ -420,6 +468,15 @@ public class BrailleIme extends InputMethodService {
     createEditBuffer();
     OrientationMonitor.getInstance().enable();
     OrientationMonitor.getInstance().registerCallback(orientationMonitorCallback);
+    // A tablet says where the charging port is once how it is held settles, as its dots turn then.
+    HeldOrientationTracker.setLastHeldListener(
+        () -> {
+          if (!BrailleUtils.isPhoneSizedDevice(getResources())) {
+            announcePortSideIfTurned(HeldOrientationTracker.getLastHeld());
+          }
+        });
+    // Watches the whole time, so that a turn on the table that tilts the device for a moment counts.
+    flatTurnDetector.start(/* quarterTurns= */ !BrailleUtils.isPhoneSizedDevice(getResources()));
     layoutOrientator.startIfNeeded();
     updateNavigationBarColor();
     brailleImeActor =
@@ -646,6 +703,10 @@ public class BrailleIme extends InputMethodService {
     calibrationAnnouncementHandler.removeCallbacksAndMessages(null);
     OrientationMonitor.getInstance().unregisterCallback();
     OrientationMonitor.getInstance().disable();
+    HeldOrientationTracker.setLastHeldListener(null);
+    knownPortSide = OrientationMonitor.Orientation.UNKNOWN;
+    cancelScreenAwayAnnouncement();
+    flatTurnDetector.stop();
     return true;
   }
 
@@ -889,15 +950,32 @@ public class BrailleIme extends InputMethodService {
 
         @Override
         public void onDetectionChanged(boolean isTabletop, boolean isFirstChangedEvent) {
+          cancelScreenAwayAnnouncement();
+          // Switch first, so that tabletop mode decides which side the charging port is on.
+          keyboardView.setTableMode(isTabletop);
+          if (!isTabletop
+              && !keyboardView.inTwoStepCalibration()
+              && !isOrientationLocked()
+              && !isPortSide(getHeldOrientation())) {
+            // The device is still being lifted, so wait for it to settle before saying where the
+            // charging port is.
+            screenAwayAnnouncementPending = true;
+            screenAwayAnnouncementFirst = isFirstChangedEvent;
+            screenAwayAnnouncementHeldAtMs = SystemClock.uptimeMillis();
+            screenAwayAnnouncementHandler.postDelayed(
+                screenAwayAnnouncementTimeout, SCREEN_AWAY_SETTLE_MS);
+            return;
+          }
           String layout =
-              getString(
-                  isTabletop ? R.string.switch_to_tabletop_announcement : R.string.screen_away);
+              isTabletop ? getTabletopAnnouncement() : getScreenAwayAnnouncement();
           String calibrationTips = "";
           if (keyboardView.inTwoStepCalibration()) {
             if (!isFirstChangedEvent) {
               calibrationTips = getTwoStepsCalibrationAnnounceString(FingersPattern.NO_FINGERS);
             }
-          } else if (isTabletop) {
+          } else if (isTabletop
+              && talkBackForBrailleIme != null
+              && talkBackForBrailleIme.isUsageHintEnabled()) {
             calibrationTips =
                 getString(
                     R.string.calibration_tip_announcement,
@@ -921,7 +999,6 @@ public class BrailleIme extends InputMethodService {
                             getRepeatedTwoStepCalibrationAnnounceString(FingersPattern.NO_FINGERS))
                         : null);
           }
-          keyboardView.setTableMode(isTabletop);
         }
       };
 
@@ -1053,6 +1130,11 @@ public class BrailleIme extends InputMethodService {
   private final BrailleImeActor.Callback brailleImeActorCallback =
       new BrailleImeActor.Callback() {
         @Override
+        public void toggleOrientationLock() {
+          BrailleIme.this.toggleOrientationLock();
+        }
+
+        @Override
         public void hideBrailleKeyboard() {
           hideSelf();
           escapeReminder.increaseExitKeyboardCounter();
@@ -1092,6 +1174,184 @@ public class BrailleIme extends InputMethodService {
         }
       };
 
+  /** Says screen-away mode, and where the charging port is when that is known. */
+  private String getScreenAwayAnnouncement() {
+    PortPosition position;
+    if (isOrientationLocked()) {
+      position = keyboardView.getLockedPortPosition();
+    } else {
+      OrientationMonitor.Orientation orientation = getHeldOrientation();
+      position = heldPortPosition(orientation);
+      if (position != null) {
+        knownPortSide = orientation;
+      }
+    }
+    return getString(
+        position == null
+            ? R.string.screen_away
+            : switch (position) {
+              case LEFT -> R.string.screen_away_port_left_announcement;
+              case RIGHT -> R.string.screen_away_port_right_announcement;
+              case DOWN -> R.string.screen_away_port_down_announcement;
+              case UP -> R.string.screen_away_port_up_announcement;
+              case NEAR, FAR -> R.string.screen_away;
+            });
+  }
+
+  /**
+   * Where the charging port is, from behind the screen, when the device is held like this in
+   * screen-away mode, or null when that cannot be said. Only a tablet whose natural orientation is
+   * portrait, with the port at the bottom, says where the port is.
+   */
+  @Nullable
+  private PortPosition heldPortPosition(OrientationMonitor.Orientation orientation) {
+    boolean phone = BrailleUtils.isPhoneSizedDevice(getResources());
+    if (!phone && !Utils.isDeviceDefaultPortrait(this)) {
+      return null;
+    }
+    return DotsOrientation.heldPortPosition(orientation, phone);
+  }
+
+  /** Says tabletop mode, and where the charging port is when that is known. */
+  private String getTabletopAnnouncement() {
+    PortPosition position = keyboardView.getTabletopPortPosition();
+    return getString(
+        position == null
+            ? R.string.switch_to_tabletop_announcement
+            : switch (position) {
+              case LEFT -> R.string.tabletop_port_left_announcement;
+              case RIGHT -> R.string.tabletop_port_right_announcement;
+              case NEAR -> R.string.tabletop_port_near_announcement;
+              case FAR -> R.string.tabletop_port_far_announcement;
+              case DOWN, UP -> R.string.switch_to_tabletop_announcement;
+            });
+  }
+
+  /** Says where the charging port is, without the mode. */
+  private String getPortAnnouncement(PortPosition position) {
+    return getString(
+        switch (position) {
+          case LEFT -> R.string.port_left_announcement;
+          case RIGHT -> R.string.port_right_announcement;
+          case NEAR -> R.string.port_near_announcement;
+          case FAR -> R.string.port_far_announcement;
+          case DOWN -> R.string.port_down_announcement;
+          case UP -> R.string.port_up_announcement;
+        });
+  }
+
+  /**
+   * The device was turned while lying flat, so the charging port is somewhere else in tabletop
+   * mode. Says where when it is lying flat and not locked. Out of tabletop mode, the side still
+   * turns, in case it is only tilted for a moment, but laying it flat after holding it up decides
+   * the side afresh. While locked, the side still turns, so unlocking finds it.
+   */
+  private void onTurnedFlat(int quarters) {
+    if (keyboardView == null || !keyboardView.isInputViewCreated()) {
+      return;
+    }
+    PortPosition position = keyboardView.turnTabletop(quarters);
+    if (position == null || !isCurrentTableTopMode() || isOrientationLocked()) {
+      return;
+    }
+    BrailleCommonTalkBackSpeaker.getInstance()
+        .speak(getPortAnnouncement(position), TalkBackSpeaker.AnnounceType.INTERRUPT);
+  }
+
+  /** Locks the dots facing the way they are now in the current mode, or unlocks them. */
+  private void toggleOrientationLock() {
+    if (keyboardView == null || !keyboardView.isInputViewCreated()) {
+      return;
+    }
+    String announcement;
+    if (keyboardView.toggleOrientationLock()) {
+      PortPosition position = keyboardView.getLockedPortPosition();
+      announcement =
+          position == null
+              ? getString(R.string.orientation_locked_announcement)
+              : getString(
+                  R.string.orientation_locked_port_announcement, getPortAnnouncement(position));
+    } else {
+      // Following the device again, so the next turn in screen-away mode is said.
+      knownPortSide = getHeldOrientation();
+      announcement = getString(R.string.orientation_unlocked_announcement);
+    }
+    BrailleCommonTalkBackSpeaker.getInstance()
+        .speak(announcement, TalkBackSpeaker.AnnounceType.INTERRUPT);
+  }
+
+  /** Whether the dots are locked facing one way in the current mode. */
+  private boolean isOrientationLocked() {
+    return keyboardView != null && keyboardView.isOrientationLocked();
+  }
+
+  /**
+   * Says the held-back screen-away announcement. The first since the keyboard opened is queued
+   * after the same delay as before, so it still follows TalkBack saying the previous keyboard is
+   * hidden. Later ones interrupt, as they answer the user moving the device.
+   */
+  private void speakScreenAwayAnnouncement(String announcement) {
+    if (screenAwayAnnouncementFirst) {
+      long waited = SystemClock.uptimeMillis() - screenAwayAnnouncementHeldAtMs;
+      BrailleCommonTalkBackSpeaker.getInstance()
+          .speak(announcement, (int) Math.max(0, ANNOUNCE_DELAY_MS - waited));
+    } else {
+      BrailleCommonTalkBackSpeaker.getInstance()
+          .speak(announcement, TalkBackSpeaker.AnnounceType.INTERRUPT);
+    }
+    screenAwayAnnouncementFirst = false;
+  }
+
+  private void cancelScreenAwayAnnouncement() {
+    screenAwayAnnouncementPending = false;
+    screenAwayAnnouncementHandler.removeCallbacks(screenAwayAnnouncementTimeout);
+  }
+
+  /**
+   * How the device is held, as its dots follow it: a phone's dots turn by the reading at the start
+   * of each gesture, while a tablet's turn by the settled orientation, which does not flicker near
+   * 45 degrees.
+   */
+  private OrientationMonitor.Orientation getHeldOrientation() {
+    return BrailleUtils.isPhoneSizedDevice(getResources())
+        ? OrientationMonitor.getInstance().getCurrentOrientation()
+        : HeldOrientationTracker.getLastHeld();
+  }
+
+  /** Whether holding the device like this in screen-away mode shows where the charging port is. */
+  private boolean isPortSide(OrientationMonitor.Orientation orientation) {
+    return heldPortPosition(orientation) != null;
+  }
+
+  /**
+   * Says where the charging port is when the user turns the device in screen-away mode. The first
+   * position after the keyboard opens is only remembered, because the screen-away announcement says
+   * it, and turning through a position that cannot be said says nothing.
+   */
+  private void announcePortSideIfTurned(OrientationMonitor.Orientation orientation) {
+    if (screenAwayAnnouncementPending && isPortSide(orientation)) {
+      cancelScreenAwayAnnouncement();
+      speakScreenAwayAnnouncement(getScreenAwayAnnouncement());
+      return;
+    }
+    if (!isPortSide(orientation)
+        || orientation == knownPortSide
+        || keyboardView == null
+        || !keyboardView.isInputViewCreated()
+        || isCurrentTableTopMode()
+        || isOrientationLocked()) {
+      return;
+    }
+    boolean turned = knownPortSide != OrientationMonitor.Orientation.UNKNOWN;
+    knownPortSide = orientation;
+    if (turned) {
+      BrailleCommonTalkBackSpeaker.getInstance()
+          .speak(
+              getPortAnnouncement(heldPortPosition(orientation)),
+              TalkBackSpeaker.AnnounceType.INTERRUPT);
+    }
+  }
+
   private final OrientationMonitor.Callback orientationMonitorCallback =
       new OrientationMonitor.Callback() {
         @Override
@@ -1099,11 +1359,19 @@ public class BrailleIme extends InputMethodService {
           if (orientationCallbackDelegate != null) {
             orientationCallbackDelegate.onOrientationChanged(orientation);
           }
+          if (BrailleUtils.isPhoneSizedDevice(getResources())) {
+            announcePortSideIfTurned(orientation);
+          }
         }
       };
 
   private final BrailleInputView.Callback inputPlaneCallback =
       new BrailleInputView.Callback() {
+        @Override
+        public void onTabletopPortSideDecided() {
+          flatTurnDetector.reset();
+        }
+
         @Override
         public boolean onSwipeProduced(Swipe swipe) {
           if (brailleImeGestureController.performSwipeAction(swipe)) {

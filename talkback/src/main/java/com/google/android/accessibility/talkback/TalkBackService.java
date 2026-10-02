@@ -2907,6 +2907,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     if (analytics != null) {
       analytics.onTalkBackServiceStopped();
     }
+    BrailleIme.shutdown();
   }
 
   /**
