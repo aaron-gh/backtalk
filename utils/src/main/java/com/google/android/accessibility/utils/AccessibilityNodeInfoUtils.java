@@ -1908,7 +1908,23 @@ public class AccessibilityNodeInfoUtils {
   private static boolean isFocusableOrClickable(AccessibilityNodeInfoCompat node) {
     return (node != null)
         && isVisible(node)
-        && (node.isScreenReaderFocusable() || isActionableForAccessibility(node));
+        && (node.isScreenReaderFocusable()
+            || isActionableForAccessibility(node)
+            || isAdjustableSlider(node));
+  }
+
+  /**
+   * Returns whether a node is a slider that can be adjusted, even though the app did not mark it
+   * focusable or clickable. Some vendor sliders (e.g. realme UI's COUISeekBar) report the class
+   * {@code android.widget.AbsSeekBar} with no text, focusable=false and clickable=false. Without
+   * this, such a slider is never accessibility focusable and cannot be adjusted.
+   */
+  private static boolean isAdjustableSlider(AccessibilityNodeInfoCompat node) {
+    if (Role.getRole(node) == Role.ROLE_SEEK_CONTROL) {
+      return true;
+    }
+    return nodeMatchesClassByType(node, android.widget.AbsSeekBar.class)
+        && supportsAction(node, android.R.id.accessibilityActionSetProgress);
   }
 
   /**
