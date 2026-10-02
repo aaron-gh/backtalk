@@ -54,7 +54,8 @@ import java.util.concurrent.TimeUnit
 /**
  * Checks for new development builds, shows a notification when one is available, and installs it.
  *
- * Automatic checks run when the service starts, and then about once a day while it runs.
+ * Automatic checks run when the service starts, and then about once an hour while it runs, since
+ * this fork's builds are tried as soon as they are pushed.
  *
  * While this app has the old app ID, a build under the app ID fyi.quin.backtalk installs next to
  * it. The accessibility settings for the new app then open, so the user can turn it on.
@@ -65,8 +66,8 @@ object Updater {
   internal const val PREF_LAST_CHECK_TIME = "update_last_check_time"
   internal const val PREF_LAST_NOTIFIED_BUILD = "update_last_notified_build"
   private const val APK_FILE_NAME = "backtalk.apk"
-  private val CHECK_INTERVAL_MS = TimeUnit.DAYS.toMillis(1)
-  private val POLL_INTERVAL_MS = TimeUnit.HOURS.toMillis(3)
+  private val CHECK_INTERVAL_MS = TimeUnit.HOURS.toMillis(1)
+  private val POLL_INTERVAL_MS = TimeUnit.MINUTES.toMillis(15)
   // Gives the network time to come up when the service starts at boot.
   private val STARTUP_DELAY_MS = TimeUnit.SECONDS.toMillis(30)
   // Lets the screen that opens be announced before the toast.
