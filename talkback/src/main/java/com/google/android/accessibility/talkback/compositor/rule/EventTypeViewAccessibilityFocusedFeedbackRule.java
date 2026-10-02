@@ -125,12 +125,11 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
 
     // With control sounds on, the focus and list sounds come from where the focus lands, and a
     // control sound takes the place of the focus sound. Only while a control sound plays is the
-    // kind of control left out of the speech. Typing on the keyboard sounds as it always did.
+    // kind of control left out of the speech.
     int earcon = earcon(srcNode, globalVariables);
     float[] earconPosition = null;
     boolean isFocusSound = earcon == R.raw.focus || earcon == R.raw.focus_actionable;
     if (globalVariables.areControlSoundsOn()
-        && AccessibilityNodeInfoUtils.getWindowType(srcNode) != TYPE_INPUT_METHOD
         && (isFocusSound || earcon == R.raw.chime_up || earcon == R.raw.chime_down)) {
       earconPosition = ControlSounds.screenPosition(srcNode, context);
     }
