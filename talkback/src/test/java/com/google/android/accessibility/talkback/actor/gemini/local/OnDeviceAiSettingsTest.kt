@@ -81,6 +81,30 @@ class OnDeviceAiSettingsTest {
   }
 
   @Test
+  fun theLargestModelNeedsASixteenGigPhone() {
+    val gemma12b = LocalModel.entries.single { it.id == "gemma4-12b" }
+    // A 12 GB phone reports about 10.9 GB, and was stopped by Android loading this model.
+    assertEquals(
+      Support.NOT_ENOUGH_RAM,
+      OnDeviceAiSettings.support(gemma12b, (10.9 * gib).toLong(), arm64),
+    )
+    assertEquals(Support.OK, OnDeviceAiSettings.support(gemma12b, (14.8 * gib).toLong(), arm64))
+  }
+
+  @Test
+  fun aModelLoadsOnlyWhenTheFreeMemoryHoldsIt() {
+    val model = 3 * gib
+    assertTrue(OnDeviceAiSettings.hasFreeMemoryFor(model, 4 * gib, lowMemory = false))
+    assertTrue(OnDeviceAiSettings.hasFreeMemoryFor(model, model, lowMemory = false))
+    assertFalse(OnDeviceAiSettings.hasFreeMemoryFor(model, 2 * gib, lowMemory = false))
+  }
+
+  @Test
+  fun aModelDoesNotLoadWhenAndroidIsLowOnMemory() {
+    assertFalse(OnDeviceAiSettings.hasFreeMemoryFor(gib, 8 * gib, lowMemory = true))
+  }
+
+  @Test
   fun a32BitPhoneIsUnsupported() {
     assertEquals(
       Support.UNSUPPORTED_CPU,

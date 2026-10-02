@@ -25,6 +25,7 @@ object OnDeviceAiSettings {
   const val PREF_GPU = "pref_on_device_ai_gpu"
   const val PREF_SHORT_PROMPTS = "pref_on_device_ai_short_prompts"
   const val PREF_TIMEOUT = "pref_on_device_ai_timeout_seconds"
+  const val PREF_IGNORE_MEMORY_LIMITS = "pref_on_device_ai_ignore_memory_limits"
 
   const val PROVIDER_CLOUD = "cloud"
   const val PROVIDER_DEVICE = "device"
@@ -51,6 +52,14 @@ object OnDeviceAiSettings {
   /** Whether a phone with [totalRamBytes] of RAM has enough memory for [model]. */
   fun fits(model: LocalModel, totalRamBytes: Long): Boolean =
     totalRamBytes >= model.minTotalRamBytes * RAM_SLACK
+
+  /**
+   * Whether a model file of [modelBytes] can load now, with [availableBytes] of memory free, as
+   * Android counts it. A model that loads into less memory than its own size pushes the phone so low
+   * that Android stops apps, and in the end the model itself.
+   */
+  fun hasFreeMemoryFor(modelBytes: Long, availableBytes: Long, lowMemory: Boolean): Boolean =
+    !lowMemory && availableBytes >= modelBytes
 
   /**
    * The models to offer on a phone with [totalRamBytes] of RAM: the ones that fit, and any that
@@ -89,6 +98,14 @@ object OnDeviceAiSettings {
   fun setShortPrompts(prefs: SharedPreferences, short: Boolean) {
     prefs.edit().putBoolean(PREF_SHORT_PROMPTS, short).apply()
   }
+
+  /**
+   * Whether to let the user choose a model that needs more memory than the phone has, and load it
+   * without checking for free memory. A developer setting, to test what happens when Android stops
+   * the model.
+   */
+  fun ignoreMemoryLimits(prefs: SharedPreferences): Boolean =
+    prefs.getBoolean(PREF_IGNORE_MEMORY_LIMITS, false)
 
   /** How long to wait for an answer, in seconds, that the user can pick from. */
   val TIMEOUT_CHOICES_SECONDS = listOf(60, 120, 180, 300, 600)
