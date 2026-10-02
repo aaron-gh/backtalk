@@ -1118,4 +1118,320 @@
         <item>255</item><!-- scale -->
         <item>50</item><!-- delayMs -->
     </integer-array>
+
+    <!-- Control sounds: each kind of control has its own vibration, so it can be told by touch
+         alone, like its sound. Controls are focused often, so each is brief. Links use the
+         hyperlink vibration. -->
+
+    <!-- Button: a quick double click. -->
+    <integer-array name="control_button_pattern">
+        <item>0</item>
+        <item>20</item>
+        <item>25</item>
+        <item>20</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>12</item>
+        <item>255</item>
+        <item>25</item>
+        <item>0</item>
+        <item>12</item>
+        <item>255</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>1</item><!-- CLICK -->
+        <item>255</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+        <item>1</item><!-- CLICK -->
+        <item>255</item><!-- scale -->
+        <item>25</item><!-- delayMs -->
+    </integer-array>
+
+    <!-- Checkbox: a click, then a swell rising. -->
+    <integer-array name="control_checkbox_pattern">
+        <item>0</item>
+        <item>20</item>
+        <item>20</item>
+        <item>40</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>12</item>
+        <item>255</item>
+        <item>20</item>
+        <item>0</item>
+        <item>10</item>
+        <item>100</item>
+        <item>10</item>
+        <item>180</item>
+        <item>10</item>
+        <item>240</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>1</item><!-- CLICK -->
+        <item>255</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+        <item>4</item><!-- QUICK_RISE -->
+        <item>200</item><!-- scale -->
+        <item>20</item><!-- delayMs -->
+    </integer-array>
+
+    <!-- Radio button: a slow swell, then a click. -->
+    <integer-array name="control_radio_button_pattern">
+        <item>0</item>
+        <item>40</item>
+        <item>20</item>
+        <item>20</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>10</item>
+        <item>100</item>
+        <item>10</item>
+        <item>180</item>
+        <item>10</item>
+        <item>240</item>
+        <item>20</item>
+        <item>0</item>
+        <item>12</item>
+        <item>255</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>5</item><!-- SLOW_RISE -->
+        <item>180</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+        <item>1</item><!-- CLICK -->
+        <item>255</item><!-- scale -->
+        <item>20</item><!-- delayMs -->
+    </integer-array>
+
+    <!-- Edit field: four quick light taps, like typing. -->
+    <integer-array name="control_edit_text_pattern">
+        <item>0</item>
+        <item>8</item>
+        <item>15</item>
+        <item>8</item>
+        <item>15</item>
+        <item>8</item>
+        <item>15</item>
+        <item>8</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>6</item>
+        <item>140</item>
+        <item>15</item>
+        <item>0</item>
+        <item>6</item>
+        <item>140</item>
+        <item>15</item>
+        <item>0</item>
+        <item>6</item>
+        <item>140</item>
+        <item>15</item>
+        <item>0</item>
+        <item>6</item>
+        <item>140</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>7</item><!-- TICK -->
+        <item>140</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+        <item>7</item><!-- TICK -->
+        <item>140</item><!-- scale -->
+        <item>15</item><!-- delayMs -->
+        <item>7</item><!-- TICK -->
+        <item>140</item><!-- scale -->
+        <item>15</item><!-- delayMs -->
+        <item>7</item><!-- TICK -->
+        <item>140</item><!-- scale -->
+        <item>15</item><!-- delayMs -->
+    </integer-array>
+
+    <!-- Drop-down list: a click, then a fall, like a list dropping open. -->
+    <integer-array name="control_combo_box_pattern">
+        <item>0</item>
+        <item>20</item>
+        <item>25</item>
+        <item>45</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>12</item>
+        <item>255</item>
+        <item>25</item>
+        <item>0</item>
+        <item>12</item>
+        <item>230</item>
+        <item>12</item>
+        <item>150</item>
+        <item>12</item>
+        <item>80</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>1</item><!-- CLICK -->
+        <item>255</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+        <item>6</item><!-- QUICK_FALL -->
+        <item>200</item><!-- scale -->
+        <item>25</item><!-- delayMs -->
+    </integer-array>
+
+    <!-- Slider: a swell up and down. -->
+    <integer-array name="control_slider_pattern">
+        <item>0</item>
+        <item>70</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>12</item>
+        <item>60</item>
+        <item>12</item>
+        <item>140</item>
+        <item>12</item>
+        <item>220</item>
+        <item>12</item>
+        <item>140</item>
+        <item>12</item>
+        <item>60</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>4</item><!-- QUICK_RISE -->
+        <item>180</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+        <item>6</item><!-- QUICK_FALL -->
+        <item>180</item><!-- scale -->
+        <item>35</item><!-- delayMs -->
+    </integer-array>
+
+    <!-- Image: a soft, fading shimmer. -->
+    <integer-array name="control_image_pattern">
+        <item>0</item>
+        <item>25</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>8</item>
+        <item>150</item>
+        <item>8</item>
+        <item>90</item>
+        <item>8</item>
+        <item>40</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>6</item><!-- QUICK_FALL -->
+        <item>140</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+    </integer-array>
+
+    <!-- Clock: a tick, then a lighter tock. -->
+    <integer-array name="control_clock_pattern">
+        <item>0</item>
+        <item>10</item>
+        <item>90</item>
+        <item>10</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>8</item>
+        <item>160</item>
+        <item>90</item>
+        <item>0</item>
+        <item>8</item>
+        <item>90</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>7</item><!-- TICK -->
+        <item>160</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+        <item>7</item><!-- TICK -->
+        <item>90</item><!-- scale -->
+        <item>90</item><!-- delayMs -->
+    </integer-array>
+
+    <!-- Tab: two taps, then a click. -->
+    <integer-array name="control_tab_pattern">
+        <item>0</item>
+        <item>10</item>
+        <item>20</item>
+        <item>10</item>
+        <item>20</item>
+        <item>25</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>8</item>
+        <item>140</item>
+        <item>20</item>
+        <item>0</item>
+        <item>8</item>
+        <item>140</item>
+        <item>20</item>
+        <item>0</item>
+        <item>14</item>
+        <item>255</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>7</item><!-- TICK -->
+        <item>140</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+        <item>7</item><!-- TICK -->
+        <item>140</item><!-- scale -->
+        <item>20</item><!-- delayMs -->
+        <item>1</item><!-- CLICK -->
+        <item>255</item><!-- scale -->
+        <item>20</item><!-- delayMs -->
+    </integer-array>
+
+    <!-- Menu item: a click, then two taps. -->
+    <integer-array name="control_menu_item_pattern">
+        <item>0</item>
+        <item>25</item>
+        <item>20</item>
+        <item>10</item>
+        <item>20</item>
+        <item>10</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>14</item>
+        <item>255</item>
+        <item>20</item>
+        <item>0</item>
+        <item>8</item>
+        <item>140</item>
+        <item>20</item>
+        <item>0</item>
+        <item>8</item>
+        <item>140</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>1</item><!-- CLICK -->
+        <item>255</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+        <item>7</item><!-- TICK -->
+        <item>140</item><!-- scale -->
+        <item>20</item><!-- delayMs -->
+        <item>7</item><!-- TICK -->
+        <item>140</item><!-- scale -->
+        <item>20</item><!-- delayMs -->
+    </integer-array>
+
+    <!-- List item: two soft pats. -->
+    <integer-array name="control_list_item_pattern">
+        <item>0</item>
+        <item>12</item>
+        <item>30</item>
+        <item>12</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>8</item>
+        <item>130</item>
+        <item>30</item>
+        <item>0</item>
+        <item>8</item>
+        <item>130</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>7</item><!-- TICK -->
+        <item>130</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+        <item>7</item><!-- TICK -->
+        <item>130</item><!-- scale -->
+        <item>30</item><!-- delayMs -->
+    </integer-array>
+
+    <!-- Tree item: a soft pat, then a rise, like a branch. -->
+    <integer-array name="control_tree_item_pattern">
+        <item>0</item>
+        <item>12</item>
+        <item>30</item>
+        <item>30</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>8</item>
+        <item>130</item>
+        <item>30</item>
+        <item>0</item>
+        <item>10</item>
+        <item>100</item>
+        <item>10</item>
+        <item>170</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>7</item><!-- TICK -->
+        <item>130</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+        <item>4</item><!-- QUICK_RISE -->
+        <item>150</item><!-- scale -->
+        <item>30</item><!-- delayMs -->
+    </integer-array>
+
 </resources>

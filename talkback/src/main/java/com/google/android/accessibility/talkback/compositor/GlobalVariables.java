@@ -539,12 +539,12 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
   }
 
   /**
-   * Sets whether control sounds are on, the ones that play, and whether the kind of control is
-   * still spoken when its sound plays.
+   * Sets whether control sounds are heard, the ones that are heard or felt as vibrations, and
+   * whether the kind of control is still spoken when its sound plays.
    */
   public void setControlSounds(boolean on, Set<Integer> sounds, boolean speakRoles) {
     controlSoundsOn = on;
-    controlSounds = on ? sounds : Collections.emptySet();
+    controlSounds = sounds;
     speakControlSoundRoles = speakRoles;
   }
 

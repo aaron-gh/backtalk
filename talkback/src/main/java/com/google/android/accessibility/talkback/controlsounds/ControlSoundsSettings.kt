@@ -17,6 +17,7 @@
 package com.google.android.accessibility.talkback.controlsounds
 
 import android.content.SharedPreferences
+import com.google.android.accessibility.talkback.individualfeedback.SoundVibrations
 import com.google.android.accessibility.utils.output.FeedbackController
 
 /** Stored settings for control sounds. They are off by default. */
@@ -57,5 +58,25 @@ object ControlSoundsSettings {
   ): Set<Int> {
     if (!soundFeedbackOn || !isOn(prefs)) return emptySet()
     return ControlSounds.SOUNDS.filterKeys { it !in mutedSounds }.values.toSet()
+  }
+
+  /**
+   * The control sounds whose vibrations play, which are none while control sounds or vibration
+   * feedback are off, and leave out the vibrations turned off in Individual sounds and vibrations.
+   * A control's vibration plays even when its sound does not, so it can tell the kind of control
+   * by touch alone.
+   */
+  @JvmStatic
+  fun vibratingSounds(
+    prefs: SharedPreferences,
+    vibrationFeedbackOn: Boolean,
+    mutedVibrations: Set<String>,
+  ): Set<Int> {
+    if (!vibrationFeedbackOn || !isOn(prefs)) return emptySet()
+    return ControlSounds.SOUNDS.filterKeys {
+        SoundVibrations.PATTERNS[it]?.let { pattern -> pattern !in mutedVibrations } == true
+      }
+      .values
+      .toSet()
   }
 }
