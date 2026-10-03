@@ -277,15 +277,6 @@ vibration when you preview it.
 *   To make a theme file from sounds on your phone, choose them in **Sounds** and use **Save as a
     theme file**. Its `theme.json` has the theme's settings.
 
-### Example: Unspoken
-
-[tools/control_sounds/make_unspoken_theme.py](tools/control_sounds/make_unspoken_theme.py) makes a
-theme of the control sounds of Unspoken for NVDA, which are under the GPL, from a checkout of
-Unspoken:
-
-    git clone https://github.com/ahicks92/Unspoken
-    python3 tools/control_sounds/make_unspoken_theme.py Unspoken Unspoken.zip
-
 ## Limitations
 
 *   Watches have no file picker, so themes can only be installed from a link there, and single
