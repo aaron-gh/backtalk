@@ -16,7 +16,6 @@
 
 package com.google.android.accessibility.talkback.actor.gemini;
 
-import static android.widget.Toast.LENGTH_SHORT;
 import static com.google.android.accessibility.talkback.PrimesController.TimerAction.GEMINI_ON_DEVICE_RESPONSE_LATENCY;
 import static com.google.android.accessibility.talkback.PrimesController.TimerAction.GEMINI_RESPONSE_LATENCY;
 import static com.google.android.accessibility.talkback.actor.gemini.GeminiActor.ErrorReason.BITMAP_COMPRESSION_FAIL;
@@ -45,7 +44,6 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
 import androidx.annotation.StringRes;
 import com.google.android.accessibility.talkback.actor.gemini.local.OnDeviceAiSettings;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
@@ -565,7 +563,10 @@ public class GeminiActor {
             GeminiConfiguration.screenOverviewEnabled(context),
             isSupportImageQna(result.requestId())));
     if (GeminiConfiguration.screenOverviewEnabled(context)) {
-      if (isSupportImageQna(result.requestId())) {
+      if (result.response() instanceof OverviewResponse.Error error) {
+        // Spoken, not a toast: Android hides toasts from an app whose notifications are off.
+        speak(getErrorMessage(context, error));
+      } else if (isSupportImageQna(result.requestId())) {
         mainHandler.post(
             () -> bottomSheetResultOverlay.showScreenOverviewResultBottomSheet(result));
       } else {
@@ -578,16 +579,10 @@ public class GeminiActor {
                           Result.create(
                               CaptionType.SCREEN_OVERVIEW, overview.getOverview().getSummary()))
                       .showDialog());
-        } else if (result.response() instanceof OverviewResponse.Error error) {
-          Toast.makeText(context, getErrorMessage(context, error), LENGTH_SHORT).show();
         }
       }
     } else {
-      Toast.makeText(
-              context,
-              context.getString(R.string.summary_pref_gemini_support_disabled),
-              LENGTH_SHORT)
-          .show();
+      speak(context.getString(R.string.summary_pref_gemini_support_disabled));
     }
   }
 
