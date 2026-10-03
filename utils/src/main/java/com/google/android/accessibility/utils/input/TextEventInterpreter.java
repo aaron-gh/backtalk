@@ -940,8 +940,12 @@ public class TextEventInterpreter {
     return eventText.get(0);
   }
 
-  /** Returns index of first whitespace or punctuation preceding fromIndex. */
-  private static int getPrecedingWhitespaceOrPunctuation(CharSequence text, int toIndex) {
+  /**
+   * Returns index of first whitespace or punctuation preceding fromIndex. An apostrophe inside a
+   * word, as in "don't", is part of the word.
+   */
+  @VisibleForTesting
+  static int getPrecedingWhitespaceOrPunctuation(CharSequence text, int toIndex) {
     if (toIndex > text.length()) {
       toIndex = text.length();
     }
@@ -949,13 +953,20 @@ public class TextEventInterpreter {
       if (isWhiteSpace(text.charAt(i))) {
         return i + 1;
       }
-      if (isPunctuation(text.charAt(i))) {
+      if (isPunctuation(text.charAt(i)) && !isApostropheInWord(text, i)) {
         // The preceding punctuation is not preserved.
         return i + 1;
       }
     }
 
     return 0;
+  }
+
+  private static boolean isApostropheInWord(CharSequence text, int index) {
+    return text.charAt(index) == '\''
+        && index + 1 < text.length()
+        && Character.isLetterOrDigit(text.charAt(index - 1))
+        && Character.isLetterOrDigit(text.charAt(index + 1));
   }
 
   // Visible for testing only.

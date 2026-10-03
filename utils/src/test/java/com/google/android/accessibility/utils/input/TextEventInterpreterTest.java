@@ -43,4 +43,21 @@ public class TextEventInterpreterTest {
   public void spaceAfterALetterIsNotTreatedAsPunctuation() {
     assertEquals(2, TextEventInterpreter.getWordEchoEnd("ab "));
   }
+
+  @Test
+  public void apostropheInsideAWordIsPartOfTheWord() {
+    assertEquals(3, TextEventInterpreter.getPrecedingWhitespaceOrPunctuation("hi don't ", 8));
+    assertEquals(0, TextEventInterpreter.getPrecedingWhitespaceOrPunctuation("don't ", 5));
+  }
+
+  @Test
+  public void apostropheAtTheEdgeOfAWordEndsTheWord() {
+    assertEquals(6, TextEventInterpreter.getPrecedingWhitespaceOrPunctuation("rock 'n ", 7));
+    assertEquals(4, TextEventInterpreter.getPrecedingWhitespaceOrPunctuation("don'", 4));
+  }
+
+  @Test
+  public void otherPunctuationInsideAWordStillEndsTheWord() {
+    assertEquals(6, TextEventInterpreter.getPrecedingWhitespaceOrPunctuation("hello,world ", 11));
+  }
 }
