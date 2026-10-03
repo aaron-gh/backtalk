@@ -156,15 +156,16 @@ public class TalkBackPreferenceFilter {
     KEYBOARD_SHORTCUTS(
         R.string.pref_category_manage_keyboard_shortcut_key, HIDDEN_ON_TV | HIDDEN_ON_WATCH),
     PLAY_PAUSE_MEDIA(R.string.keycombo_shortcut_global_play_pause_media, HIDDEN_NO_MEDIA_CONTROL),
-    TYPING_CONFIRMATION(R.string.pref_typing_confirmation_key, HIDDEN_ON_TV | HIDDEN_ON_WATCH),
-    TYPING_LONG_PRESS_DURATION(
-        R.string.pref_typing_long_press_duration_key, HIDDEN_ON_TV | HIDDEN_ON_WATCH),
+    // The delay settings work on watches as on phones, so watches show them too.
+    TYPING_CONFIRMATION(R.string.pref_typing_confirmation_key, HIDDEN_ON_TV),
+    TYPING_LONG_PRESS_DURATION(R.string.pref_typing_long_press_duration_key, HIDDEN_ON_TV),
     TYPING_LATENCY_SETTINGS(
-        R.string.pref_typing_focus_time_out_key,
-        HIDDEN_ON_TV | HIDDEN_ON_WATCH | HIDDEN_TYPING_LATENCY_SETTING),
+        R.string.pref_typing_focus_time_out_key, HIDDEN_ON_TV | HIDDEN_TYPING_LATENCY_SETTING),
     TOUCH_LATENCY_SETTINGS(
-        R.string.pref_touch_focus_time_out_key,
-        HIDDEN_ON_TV | HIDDEN_ON_WATCH | HIDDEN_TOUCH_LATENCY_SETTING),
+        R.string.pref_touch_focus_time_out_key, HIDDEN_ON_TV | HIDDEN_TOUCH_LATENCY_SETTING),
+    // Taps are timed by Backtalk's own gesture detection, so without it this does nothing.
+    MULTI_TAP_TIMEOUT(
+        R.string.pref_multi_tap_timeout_key, HIDDEN_ON_TV | SHOW_IF_SERVICE_GESTURE_DETECTION),
     PRIVACY_POLICY(R.string.pref_policy_key, HIDDEN_SETUP),
     TERMS_OF_SERVICE(R.string.pref_show_tos_key, HIDDEN_SETUP),
     // Help & Tutorial.
