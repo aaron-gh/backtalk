@@ -1881,11 +1881,21 @@ public class ImageCaptioner extends Handler
           returnFeedback(imageDescriptionResult.text());
         } else {
           // Gemini error with a fallback result.
+          @Nullable CharSequence reason =
+              Result.isEmpty(imageDescriptionResult) ? null : imageDescriptionResult.text();
           if (isNetworkError) {
             returnFeedback(
                 service.getString(
                     R.string.detailed_image_description_fallback_result_network_error,
                     fallbackResult));
+          } else if (!TextUtils.isEmpty(reason)
+              && !TextUtils.equals(reason, service.getString(R.string.gemini_error_message))) {
+            // Say why, such as a rejected key or a busy server.
+            returnFeedback(
+                service.getString(
+                    R.string.detailed_image_description_fallback_result_with_reason,
+                    fallbackResult,
+                    reason));
           } else {
             returnFeedback(
                 service.getString(
