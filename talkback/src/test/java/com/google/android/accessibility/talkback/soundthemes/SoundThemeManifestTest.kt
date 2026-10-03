@@ -17,6 +17,7 @@
 package com.google.android.accessibility.talkback.soundthemes
 
 import com.google.android.accessibility.talkback.individualfeedback.IndividualFeedbackSettings
+import com.google.android.accessibility.talkback.individualfeedback.SoundVibrations
 import org.json.JSONObject
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -26,7 +27,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SoundThemeManifestTest {
-  private val keys = IndividualFeedbackSettings.SOUNDS.map { it.key }.toSet()
+  private val keys =
+    SoundVibrations.themeNames(IndividualFeedbackSettings.SOUNDS.map { it.key })
 
   private fun parse(json: String) = SoundThemeManifest.parse(json, keys, "fallback")
 
@@ -147,6 +149,24 @@ class SoundThemeManifestTest {
       manifest.vibrationPatterns().getValue("focus"),
       again.vibrationPatterns().getValue("focus"),
     )
+  }
+
+  @Test
+  fun vibrationsWithoutASoundCanBeReplacedButNotBrailleDisplaySounds() {
+    val manifest =
+      parse(
+        """
+        {"vibrations": {"announcement": {"pattern": [0, 20]},
+                        "braille_keyboard_type": {"pattern": [0, 10]},
+                        "direct_touch_on": "none",
+                        "display_connected": {"pattern": [0, 20]}}}
+        """
+      )
+    assertEquals(
+      setOf("announcement", "braille_keyboard_type", "direct_touch_on"),
+      manifest.vibrations.keys,
+    )
+    assertEquals(1, manifest.warnings.size)
   }
 
   @Test

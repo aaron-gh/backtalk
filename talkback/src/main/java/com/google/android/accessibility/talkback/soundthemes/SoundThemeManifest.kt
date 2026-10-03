@@ -114,14 +114,14 @@ data class SoundThemeManifest(
     private const val SENTINEL_SEPARATOR = -9999
 
     /**
-     * Reads a theme.json. Vibrations for sounds not in [soundKeys], and ones that are not well
-     * formed, are left out with a warning. Throws [JSONException] if it is not a JSON object.
+     * Reads a theme.json. Vibrations not in [vibrationNames], and ones that are not well formed,
+     * are left out with a warning. Throws [JSONException] if it is not a JSON object.
      *
      * @param fallbackName the name to use if the file has none, such as the name of the ZIP file
      */
     @JvmStatic
     @Throws(JSONException::class)
-    fun parse(text: String, soundKeys: Set<String>, fallbackName: String): SoundThemeManifest {
+    fun parse(text: String, vibrationNames: Set<String>, fallbackName: String): SoundThemeManifest {
       val json = JSONObject(text)
       val warnings = ArrayList<String>()
       if (json.optInt(FORMAT, FORMAT_VERSION) > FORMAT_VERSION) {
@@ -144,8 +144,8 @@ data class SoundThemeManifest(
       json.optJSONObject(VIBRATIONS)?.let { all ->
         for (key in all.keys()) {
           val value = all.get(key)
-          if (key !in soundKeys) {
-            warnings += "vibrations.$key: there is no sound called $key"
+          if (key !in vibrationNames) {
+            warnings += "vibrations.$key: there is no vibration called $key"
             continue
           }
           try {

@@ -58,7 +58,10 @@ data class StagedTheme(
 class ThemeFeedback(
   /** Sound files by the resource names of the sounds they replace. */
   val soundPaths: Map<String, String>,
-  /** Vibration patterns by the resource names of the sounds they play with. */
+  /**
+   * Vibration patterns by the names they play under: the resource names of the sounds they play
+   * with, of the patterns they replace, and of vibrations without a sound.
+   */
   val vibrations: Map<String, IntArray>,
 ) {
   /**
@@ -66,8 +69,8 @@ class ThemeFeedback(
    * play nothing rather than the vibration they replace.
    */
   fun vibrationsPlaying(mutedVibrations: Set<String>): Map<String, IntArray> =
-    vibrations.mapValues { (sound, pattern) ->
-      if (SoundVibrations.switchOf(sound) in mutedVibrations) IntArray(0) else pattern
+    vibrations.mapValues { (name, pattern) ->
+      if (SoundVibrations.switchOfPlayed(name) in mutedVibrations) IntArray(0) else pattern
     }
 
   /** The sounds the theme gives a vibration that can be felt, by resource name. */
@@ -126,6 +129,10 @@ object SoundThemes {
 
   val SOUND_KEYS: Set<String>
     get() = IndividualFeedbackSettings.SOUNDS.map { it.key }.toSet()
+
+  /** The names of the vibrations a theme can replace. */
+  val VIBRATION_NAMES: Set<String>
+    get() = SoundVibrations.themeNames(SOUND_KEYS)
 
   // ---------------------------------------------------------------------------------------------
   // Installed themes
@@ -192,10 +199,11 @@ object SoundThemes {
     for ((key, file) in soundFiles(theme)) {
       items[key]?.resourceNames?.forEach { paths[it] = file.path }
     }
-    val vibrations = HashMap<String, IntArray>()
-    for ((key, pattern) in theme.manifest.vibrationPatterns()) {
-      items[key]?.resourceNames?.forEach { vibrations[it] = pattern }
-    }
+    val vibrations =
+      SoundVibrations.playedAs(
+        theme.manifest.vibrationPatterns(),
+        items.mapValues { it.value.resourceNames },
+      )
     return ThemeFeedback(paths, vibrations)
   }
 
@@ -340,7 +348,7 @@ object SoundThemes {
                 String(readLimited(it, MAX_DOCUMENT_BYTES), Charsets.UTF_8)
               }
             try {
-              SoundThemeManifest.parse(text, items.keys, fallbackName)
+              SoundThemeManifest.parse(text, VIBRATION_NAMES, fallbackName)
             } catch (e: JSONException) {
               throw NotAThemeException("theme.json: ${e.message}")
             }
@@ -497,7 +505,7 @@ object SoundThemes {
     return try {
       SoundTheme(
         directory.name,
-        SoundThemeManifest.parse(file.readText(), SOUND_KEYS, directory.name),
+        SoundThemeManifest.parse(file.readText(), VIBRATION_NAMES, directory.name),
         directory,
       )
     } catch (e: JSONException) {

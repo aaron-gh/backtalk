@@ -139,12 +139,10 @@ class IndividualFeedbackFragment : TalkbackBaseFragment() {
     val vibrator = context.getSystemService(Vibrator::class.java) ?: return
     // The theme in use may replace the vibration, as it can give control sounds theirs.
     val switch = item.resourceNames.first()
+    val themeVibrations = SoundThemes.feedback(context, prefs).vibrations
     val themePattern =
-      SoundThemes.feedback(context, prefs)
-        .vibrations
-        .entries
-        .firstOrNull { SoundVibrations.switchOf(it.key) == switch }
-        ?.value
+      themeVibrations[switch]
+        ?: themeVibrations.entries.firstOrNull { SoundVibrations.switchOf(it.key) == switch }?.value
     val pattern =
       themePattern
         ?: resourceId(context, switch, "array").takeIf { it != 0 }?.let {

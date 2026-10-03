@@ -173,8 +173,33 @@ Tips:
 
 ### Vibrations
 
-Each sound has a vibration, which plays with it even when sound feedback is off. A theme can give
-any sound its own vibration, by the name of the sound, as in the table above. A sound the theme gives no vibration keeps Backtalk's.
+A theme can replace every vibration Backtalk plays, and define each pattern itself. A vibration
+the theme leaves out keeps Backtalk's.
+
+Each sound has a vibration, which plays with it even when sound feedback is off. A theme gives a
+sound its own vibration by the name of the sound, as in the table above. It then replaces that
+vibration everywhere it plays: with the sound, and wherever Backtalk plays the same vibration
+without the sound, such as the click vibration of the circle menu and the focus vibration of
+selection. `radial_menu` replaces the vibrations of all eight circle menu notes. The braille display
+sounds (`display_connected`, `display_disconnected`, `double_beep`, `turn_on`, `turn_off` and
+`calibration_done`) have no vibration, so they can't have one in a theme either.
+
+These vibrations have no sound, and a theme replaces them by these names:
+
+| Name | Plays for |
+| --- | --- |
+| `announcement` | An app's announcement |
+| `braille_keyboard_type` | Typing a braille character on the braille keyboard |
+| `braille_keyboard_space` | Space, delete, moving the cursor or changing the reading unit on the braille keyboard |
+| `braille_keyboard_new_line` | A new line or deleting a word on the braille keyboard |
+| `braille_keyboard_hold` | Holding the fingers down on the braille keyboard |
+| `braille_keyboard_gesture` | Other gestures on the braille keyboard |
+| `braille_keyboard_nothing_to_delete` | Deleting with nothing left to delete on the braille keyboard |
+| `direct_touch_on` | Direct touch turning on |
+| `direct_touch_off` | Direct touch turning off |
+
+The braille keyboard vibrations play only with the braille keyboard's own vibration setting on, and
+the direct touch vibrations only with direct touch's.
 
 #### Control vibrations
 
@@ -259,5 +284,4 @@ Unspoken:
 *   Watches have no file picker, so themes can only be installed from a link there, and single
     sounds can't be chosen.
 *   The circle menu's eight notes share one theme sound.
-*   Announcements, which vibrate without a sound, keep Backtalk's vibration.
 *   Links on web pages and links in text share one vibration switch.
