@@ -1,16 +1,16 @@
 # Control sounds
 
-Backtalk has no control sounds of its own. Each kind of control plays the custom sound the user
-chooses for it, in **Sound and vibration** > **Custom sounds**, and a control without one plays the
-usual focus sound.
+Backtalk has no control sounds of its own. Each kind of control plays the sound the sound theme in
+use gives it, and a control without one plays the usual focus sound. See [themes.md](../../themes.md)
+for sound themes.
 
-`make_unspoken_pack.py` makes a sound pack of the sounds from the
+`make_unspoken_theme.py` makes a sound theme of the sounds from the
 [Unspoken](https://github.com/ahicks92/Unspoken) add-on for NVDA, by Bryan Smart and Austin Hicks,
 from a checkout of Unspoken. Their license, the GNU General Public License, version 2, goes in the
-pack with them. Backtalk only reads the files the user loads, so it ships no GPL sounds:
+theme with them. Backtalk only reads the themes the user installs, so it ships no GPL sounds:
 
     git clone https://github.com/ahicks92/Unspoken
-    python3 make_unspoken_pack.py Unspoken unspoken-sounds.zip
+    python3 make_unspoken_theme.py Unspoken Unspoken.zip
 
 `make_hrtf.py` packs the head-related transfer functions that play the sounds in 3D into
 `utils/src/main/res/raw/hrtf_kemar.bin`. Its comments say how to download the measurements.

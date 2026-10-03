@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-"""Makes a Backtalk sound pack of the control sounds from the Unspoken add-on for NVDA.
+"""Makes a Backtalk sound theme of the control sounds from the Unspoken add-on for NVDA.
 
 Backtalk has no control sounds of its own. Unspoken's sounds are under the GNU General Public
-License, version 2, so they are not part of Backtalk, but anyone can make a pack of them:
+License, version 2, so they are not part of Backtalk, but anyone can make a theme of them:
 
     git clone https://github.com/ahicks92/Unspoken
-    python3 make_unspoken_pack.py Unspoken unspoken-sounds.zip
+    python3 make_unspoken_theme.py Unspoken Unspoken.zip
 
-Then load the pack in Backtalk settings, under Sound and vibration > Custom sounds > Load a sound
-pack. The pack holds Unspoken's WAV files unchanged, renamed after the control sounds they play
-for, with Unspoken's license text and a note of where they came from.
+Then open Unspoken.zip with Backtalk, or install it in Backtalk settings, under Sound and
+vibration > Sound themes > Install a theme > From a file. The theme holds Unspoken's WAV files
+unchanged, renamed after the control sounds they play for, with Unspoken's license text and a
+note of where they came from. It turns control sounds on, in 3D with headphones. See themes.md at
+the top of the repository for the theme format.
 """
 
+import json
 import os
 import sys
 import zipfile
@@ -33,6 +36,16 @@ SOUNDS = {
     "control_tree_item": "treeviewitem.wav",
 }
 
+THEME = {
+    "format": 1,
+    "name": "Unspoken",
+    "author": "Bryan Smart and Austin Hicks",
+    "description": "The control sounds of the Unspoken add-on for NVDA, in 3D with headphones.",
+    "license": "GPL-2.0",
+    "website": "https://github.com/ahicks92/Unspoken",
+    "settings": {"control_sounds": True, "3d_audio": "headphones"},
+}
+
 NOTE = """These sounds are from the Unspoken add-on for NVDA, by Bryan Smart and Austin Hicks:
 https://github.com/ahicks92/Unspoken
 
@@ -45,7 +58,7 @@ files, unchanged, renamed after the Backtalk control sounds they play for:
 
 def main():
     if len(sys.argv) != 3:
-        sys.exit("usage: make_unspoken_pack.py UNSPOKEN_CHECKOUT OUTPUT.zip")
+        sys.exit("usage: make_unspoken_theme.py UNSPOKEN_CHECKOUT OUTPUT.zip")
     checkout, output = sys.argv[1:]
     sounds = os.path.join(checkout, "addon", "globalPlugins", "Unspoken", "sounds")
     license_text = os.path.join(checkout, "COPYING.txt")
@@ -54,11 +67,12 @@ def main():
             sys.exit(f"missing {path}; is {checkout} a checkout of Unspoken?")
 
     names = "\n".join(f"    {key}.wav  ({source})" for key, source in SOUNDS.items())
-    with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as pack:
+    with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as theme:
+        theme.writestr("theme.json", json.dumps(THEME, indent=2) + "\n")
         for key, source in SOUNDS.items():
-            pack.write(os.path.join(sounds, source), f"{key}.wav")
-        pack.write(license_text, "COPYING.txt")
-        pack.writestr("README.txt", NOTE.format(names=names))
+            theme.write(os.path.join(sounds, source), f"{key}.wav")
+        theme.write(license_text, "COPYING.txt")
+        theme.writestr("README.txt", NOTE.format(names=names))
     print(f"wrote {len(SOUNDS)} sounds to {output}")
 
 

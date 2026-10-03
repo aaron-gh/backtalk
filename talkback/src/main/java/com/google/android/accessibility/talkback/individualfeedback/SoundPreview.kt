@@ -20,10 +20,10 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.media.AudioAttributes
 import android.media.MediaPlayer
-import com.google.android.accessibility.talkback.customsounds.CustomSounds
+import com.google.android.accessibility.talkback.soundthemes.SoundThemes
 import java.io.IOException
 
-/** Plays one sound at a time on settings screens, the custom sound if the user chose one. */
+/** Plays one sound at a time on settings screens, the sound of the theme in use if it has one. */
 class SoundPreview {
   private var player: MediaPlayer? = null
 
@@ -34,7 +34,7 @@ class SoundPreview {
         .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
         .build()
-    val custom = CustomSounds.file(context, prefs, item)
+    val custom = SoundThemes.soundFile(context, prefs, item)
     player =
       if (custom != null) {
         try {

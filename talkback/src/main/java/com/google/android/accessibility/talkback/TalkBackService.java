@@ -151,7 +151,6 @@ import com.google.android.accessibility.talkback.compositor.roledescription.Role
 import com.google.android.accessibility.talkback.contextmenu.ListMenuManager;
 import com.google.android.accessibility.talkback.controller.TelevisionNavigationController;
 import com.google.android.accessibility.talkback.controlsounds.ControlSoundsSettings;
-import com.google.android.accessibility.talkback.customsounds.CustomSounds;
 import com.google.android.accessibility.talkback.directtouch.DirectTouchController;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor.TalkBackListener;
@@ -212,6 +211,8 @@ import com.google.android.accessibility.talkback.pause.PauseController;
 import com.google.android.accessibility.talkback.preference.PreferencesActivityUtils;
 import com.google.android.accessibility.talkback.selector.SelectorController;
 import com.google.android.accessibility.talkback.selector.SelectorController.SelectorEventNotifier;
+import com.google.android.accessibility.talkback.soundthemes.SoundThemes;
+import com.google.android.accessibility.talkback.soundthemes.ThemeFeedback;
 import com.google.android.accessibility.talkback.speech.SpeechCacheController;
 import com.google.android.accessibility.talkback.speechbubble.DisableTalkBackDialog;
 import com.google.android.accessibility.talkback.migration.AppIdHandOver;
@@ -3212,8 +3213,10 @@ public class TalkBackService extends AccessibilityServiceCompat
     IndividualFeedbackSettings.INSTANCE.migrate(prefs);
     Set<String> mutedSounds = IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs);
     feedbackController.setMutedAuditory(mutedSounds);
-    Map<String, String> customSounds = CustomSounds.pathsByResourceName(this, prefs);
+    ThemeFeedback soundTheme = SoundThemes.feedback(this, prefs);
+    Map<String, String> customSounds = soundTheme.getSoundPaths();
     feedbackController.setCustomSounds(customSounds);
+    feedbackController.setThemeVibrations(soundTheme.getVibrations());
     feedbackController.setSpatialMode(ControlSoundsSettings.spatialMode(prefs));
     globalVariables.setControlSounds(
         auditoryEnabled && ControlSoundsSettings.isOn(prefs),

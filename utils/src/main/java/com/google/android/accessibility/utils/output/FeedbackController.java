@@ -102,6 +102,12 @@ public class FeedbackController {
   /** Sound files the user chose to play in place of the app's own, by sound resource name. */
   private Map<String, String> mCustomSoundPaths = Collections.emptyMap();
 
+  /**
+   * Vibration patterns that play in place of the usual ones, by the resource names of the sounds
+   * they go with. An empty pattern plays no vibration.
+   */
+  private Map<String, int[]> mThemeVibrations = Collections.emptyMap();
+
   private final HapticPatternParser parser;
 
   /** The volume adjustment for sound feedback. */
@@ -178,12 +184,19 @@ public class FeedbackController {
    * sound can be felt as well as heard.
    */
   private void playSoundHaptic(int soundResId, @Nullable EventId eventId) {
-    if (!mHapticEnabled || mSoundHaptics.isEmpty()) {
+    if (!mHapticEnabled || (mSoundHaptics.isEmpty() && mThemeVibrations.isEmpty())) {
       return;
     }
     @Nullable String name = resourceName(soundResId);
     @Nullable Integer patternResId = name == null ? null : mSoundHaptics.get(name);
-    if (patternResId != null) {
+    int @Nullable [] themePattern = name == null ? null : mThemeVibrations.get(name);
+    if (themePattern != null) {
+      // The theme's vibration is turned off by the switch of the vibration it replaces.
+      if (patternResId == null || !isMuted(mMutedHapticNames, patternResId)) {
+        vibratePattern(themePattern, eventId);
+      }
+      mSoundHapticCover.soundVibrated(eventId, SystemClock.uptimeMillis());
+    } else if (patternResId != null) {
       // Even if the user turned this vibration off, the event's own vibration stays quiet.
       vibrate(patternResId, eventId);
       mSoundHapticCover.soundVibrated(eventId, SystemClock.uptimeMillis());
@@ -204,7 +217,22 @@ public class FeedbackController {
       return false;
     }
 
-    VibrationEffect effect = parser.parse(patternArray);
+    return vibratePattern(patternArray, eventId);
+  }
+
+  /** Plays a vibration pattern in the format {@link HapticPatternParser} reads. */
+  private boolean vibratePattern(int[] patternArray, @Nullable EventId eventId) {
+    if (!mHapticEnabled || patternArray.length == 0) {
+      return false;
+    }
+    final VibrationEffect effect;
+    try {
+      effect = parser.parse(patternArray);
+    } catch (RuntimeException e) {
+      // A theme's pattern that the device refuses.
+      LogUtils.e(TAG, "Cannot play vibration pattern: %s", e);
+      return false;
+    }
 
     long nanoTime = System.nanoTime();
     for (HapticFeedbackListener listener : mHapticFeedbackListeners) {
@@ -596,6 +624,14 @@ public class FeedbackController {
     if (mSpatialSoundPlayer != null) {
       mSpatialSoundPlayer.forgetSounds();
     }
+  }
+
+  /**
+   * Sets the vibrations to play with sounds in place of the usual ones, by the resource names of
+   * the sounds, in the format {@link HapticPatternParser} reads. An empty pattern plays none.
+   */
+  public void setThemeVibrations(Map<String, int[]> patternsBySoundName) {
+    mThemeVibrations = new HashMap<>(patternsBySoundName);
   }
 
   /**
