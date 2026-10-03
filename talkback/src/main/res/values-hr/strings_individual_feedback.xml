@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Pravopisna pogreška</string>
   <string name="individual_sound_hyperlink">Veza</string>
   <string name="individual_sound_formatting">Oblikovani tekst</string>
-  <string name="individual_sound_volume_beep">Promjena glasnoće</string>
+  <string name="individual_sound_screen_off">Zaslon je isključen</string>
   <string name="individual_sound_loading">Učitavanje</string>
   <string name="individual_sound_browse_mode_on">Način pregledavanja uključen</string>
   <string name="individual_sound_browse_mode_off">Način pregledavanja isključen</string>

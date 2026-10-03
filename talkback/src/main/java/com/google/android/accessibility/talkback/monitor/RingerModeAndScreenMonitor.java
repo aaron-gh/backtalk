@@ -314,7 +314,7 @@ public class RingerModeAndScreenMonitor extends SameThreadBroadcastReceiver
         }
         // Normally we'll play the volume beep on the ring stream.
         Feedback.Part.Builder feedback =
-            Feedback.part().setSound(Feedback.Sound.create(R.raw.volume_beep, 1.0f, volume));
+            Feedback.part().setSound(Feedback.Sound.create(R.raw.screen_off, 1.0f, volume));
         if (ttsText.length() > 0) {
           feedback.speech(ttsText, speakOptions);
         }

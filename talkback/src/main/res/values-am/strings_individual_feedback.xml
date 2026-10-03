@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">የፊደል ስህተት</string>
   <string name="individual_sound_hyperlink">አገናኝ</string>
   <string name="individual_sound_formatting">ቅርጸት ያለው ጽሑፍ</string>
-  <string name="individual_sound_volume_beep">የድምፅ መጠን ለውጥ</string>
+  <string name="individual_sound_screen_off">ማያ ገፅ ጠፍቷል።</string>
   <string name="individual_sound_loading">በመጫን ላይ</string>
   <string name="individual_sound_browse_mode_on">የአሰሳ ሁነታ በርቷል</string>
   <string name="individual_sound_browse_mode_off">የአሰሳ ሁነታ ጠፍቷል</string>

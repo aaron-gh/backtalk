@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Ortografia-akatsa</string>
   <string name="individual_sound_hyperlink">Esteka</string>
   <string name="individual_sound_formatting">Formatua duen testua</string>
-  <string name="individual_sound_volume_beep">Bolumen-aldaketa</string>
+  <string name="individual_sound_screen_off">Pantaila itzalita dago</string>
   <string name="individual_sound_loading">Kargatzen</string>
   <string name="individual_sound_browse_mode_on">Arakatze modua aktibatuta</string>
   <string name="individual_sound_browse_mode_off">Arakatze modua desaktibatuta</string>

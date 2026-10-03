@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">ორთოგრაფიული შეცდომა</string>
   <string name="individual_sound_hyperlink">ბმული</string>
   <string name="individual_sound_formatting">დაფორმატებული ტექსტი</string>
-  <string name="individual_sound_volume_beep">ხმის სიმაღლის ცვლილება</string>
+  <string name="individual_sound_screen_off">ეკრანის გამორთვა</string>
   <string name="individual_sound_loading">იტვირთება</string>
   <string name="individual_sound_browse_mode_on">დათვალიერების რეჟიმი ჩართულია</string>
   <string name="individual_sound_browse_mode_off">დათვალიერების რეჟიმი გამორთულია</string>

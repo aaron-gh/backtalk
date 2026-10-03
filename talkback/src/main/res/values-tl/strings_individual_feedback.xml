@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Maling spelling</string>
   <string name="individual_sound_hyperlink">Link</string>
   <string name="individual_sound_formatting">Naka-format na text</string>
-  <string name="individual_sound_volume_beep">Pagbabago ng volume</string>
+  <string name="individual_sound_screen_off">Naka-off ang screen</string>
   <string name="individual_sound_loading">Naglo-load</string>
   <string name="individual_sound_browse_mode_on">Naka-on ang browse mode</string>
   <string name="individual_sound_browse_mode_off">Naka-off ang browse mode</string>

@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">స్పెల్లింగ్ తప్పు</string>
   <string name="individual_sound_hyperlink">లింక్</string>
   <string name="individual_sound_formatting">ఫార్మాట్ చేసిన టెక్స్ట్</string>
-  <string name="individual_sound_volume_beep">వాల్యూమ్ మార్పు</string>
+  <string name="individual_sound_screen_off">స్క్రీన్ ఆఫ్‌లో ఉంది</string>
   <string name="individual_sound_loading">లోడ్ అవుతోంది</string>
   <string name="individual_sound_browse_mode_on">బ్రౌజ్ మోడ్ ఆన్</string>
   <string name="individual_sound_browse_mode_off">బ్రౌజ్ మోడ్ ఆఫ్</string>

@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Greșeală de ortografie</string>
   <string name="individual_sound_hyperlink">Link</string>
   <string name="individual_sound_formatting">Text formatat</string>
-  <string name="individual_sound_volume_beep">Schimbarea volumului</string>
+  <string name="individual_sound_screen_off">Ecran dezactivat</string>
   <string name="individual_sound_loading">Se încarcă</string>
   <string name="individual_sound_browse_mode_on">Modul de navigare activat</string>
   <string name="individual_sound_browse_mode_off">Modul de navigare dezactivat</string>

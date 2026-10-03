@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Õigekirjaviga</string>
   <string name="individual_sound_hyperlink">Link</string>
   <string name="individual_sound_formatting">Vormindatud tekst</string>
-  <string name="individual_sound_volume_beep">Helitugevuse muutmine</string>
+  <string name="individual_sound_screen_off">Ekraan on väljas</string>
   <string name="individual_sound_loading">Laadimine</string>
   <string name="individual_sound_browse_mode_on">Sirvimisrežiim sees</string>
   <string name="individual_sound_browse_mode_off">Sirvimisrežiim väljas</string>

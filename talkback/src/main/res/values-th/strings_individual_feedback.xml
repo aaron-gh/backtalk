@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">คำสะกดผิด</string>
   <string name="individual_sound_hyperlink">ลิงก์</string>
   <string name="individual_sound_formatting">ข้อความที่มีการจัดรูปแบบ</string>
-  <string name="individual_sound_volume_beep">เปลี่ยนระดับเสียง</string>
+  <string name="individual_sound_screen_off">ปิดหน้าจอ</string>
   <string name="individual_sound_loading">กำลังโหลด</string>
   <string name="individual_sound_browse_mode_on">เปิดโหมดเรียกดู</string>
   <string name="individual_sound_browse_mode_off">ปิดโหมดเรียกดู</string>

@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Error ortogràfic</string>
   <string name="individual_sound_hyperlink">Enllaç</string>
   <string name="individual_sound_formatting">Text amb format</string>
-  <string name="individual_sound_volume_beep">Canvi de volum</string>
+  <string name="individual_sound_screen_off">Pantalla desactivada</string>
   <string name="individual_sound_loading">S\'està carregant</string>
   <string name="individual_sound_browse_mode_on">Mode d\'exploració activat</string>
   <string name="individual_sound_browse_mode_off">Mode d\'exploració desactivat</string>
