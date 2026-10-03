@@ -78,7 +78,6 @@ import com.google.android.accessibility.utils.output.FeedbackItem;
 import com.google.android.accessibility.utils.output.SpeechController;
 import com.google.android.accessibility.utils.output.SpeechController.SpeakOptions;
 import com.google.android.accessibility.utils.widget.DialogUtils;
-import com.google.android.accessibility.utils.widget.NonScrollableListView;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -516,9 +515,9 @@ public class ListMenuManager implements WindowEventHandler, AccessibilityEventLi
   }
 
   private View createListView() {
-    if (FormFactorUtils.isAndroidWear()) {
-      return new NonScrollableListView(service);
-    }
+    // Watches also get a list that scrolls. A list that never scrolls relies on the dialog to
+    // scroll, but the dialog gives its custom view a fixed height, so on a Galaxy Watch only the
+    // first two of five items could be reached.
     if (FormFactorUtils.isAndroidTv()) {
       return new RecyclerView(service);
     }
