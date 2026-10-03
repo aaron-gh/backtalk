@@ -73,6 +73,7 @@ public class BrailleUserPreferences {
   private static final boolean ACCUMULATE_MODE_DEFAULT = true;
   private static final boolean REVERSE_DOTS_MODE_DEFAULT = false;
   private static final boolean FLIP_DOTS_VERTICALLY_DEFAULT = false;
+  private static final boolean TYPING_SOUNDS_DEFAULT = false;
   private static final int KEYBOARD_ECHO_DEFAULT = PREF_ECHO_CHARACTERS_AND_WORDS;
   private static final boolean LAUNCH_TUTORIAL_DEFAULT = true;
   private static final int EXIT_KEYBOARD_DEFAULT = 0;
@@ -314,6 +315,20 @@ public class BrailleUserPreferences {
         .getBoolean(
             context.getString(R.string.pref_brailleime_flip_dots_vertically),
             FLIP_DOTS_VERTICALLY_DEFAULT);
+  }
+
+  /** Reads whether the braille keyboard plays keyboard sounds as it types. */
+  public static boolean readTypingSounds(Context context) {
+    return getSharedPreferences(context, BRAILLE_SHARED_PREFS_FILENAME)
+        .getBoolean(context.getString(R.string.pref_brailleime_typing_sounds), TYPING_SOUNDS_DEFAULT);
+  }
+
+  /** Writes whether the braille keyboard plays keyboard sounds as it types. */
+  public static void writeTypingSounds(Context context, boolean typingSounds) {
+    getSharedPreferences(context, BRAILLE_SHARED_PREFS_FILENAME)
+        .edit()
+        .putBoolean(context.getString(R.string.pref_brailleime_typing_sounds), typingSounds)
+        .apply();
   }
 
   /** Writes whether the top and bottom dots trade places. */
