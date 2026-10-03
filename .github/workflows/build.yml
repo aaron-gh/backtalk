@@ -88,12 +88,16 @@ jobs:
               echo "- ${line:0:7} ${line:41}"
             done
           } > release-notes.md
-          apk=$(find apks -name backtalk-phone-debug.apk | head -n 1)
-          if [ -z "$apk" ]; then
-            echo "Phone APK not found." >&2
-            exit 1
-          fi
-          cp "$apk" backtalk.apk
+          # The phone build is backtalk.apk, which the updater on phones looks for, and the watch
+          # build is backtalk-wear.apk, which the updater on watches looks for.
+          for build in phone:backtalk.apk wear:backtalk-wear.apk; do
+            apk=$(find apks -name "backtalk-${build%%:*}-debug.apk" | head -n 1)
+            if [ -z "$apk" ]; then
+              echo "The ${build%%:*} APK was not found." >&2
+              exit 1
+            fi
+            cp "$apk" "${build#*:}"
+          done
           title="Development build $count ($short)"
           tag=dev
           if gh release view "$tag" > /dev/null 2>&1; then
@@ -101,8 +105,8 @@ jobs:
             # which notifies everyone watching the repository.
             git tag -f "$tag" "$GITHUB_SHA"
             git push -f origin "refs/tags/$tag"
-            gh release upload "$tag" backtalk.apk --clobber
+            gh release upload "$tag" backtalk.apk backtalk-wear.apk --clobber
             gh release edit "$tag" --title "$title" --notes-file release-notes.md --prerelease
           else
-            gh release create "$tag" backtalk.apk --prerelease --target "$GITHUB_SHA" --title "$title" --notes-file release-notes.md
+            gh release create "$tag" backtalk.apk backtalk-wear.apk --prerelease --target "$GITHUB_SHA" --title "$title" --notes-file release-notes.md
           fi
