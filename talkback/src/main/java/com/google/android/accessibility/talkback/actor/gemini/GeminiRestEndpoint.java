@@ -96,7 +96,8 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
               requestPerformer.performRequest(
                   TextUtils.isEmpty(urlWithApiKey) ? url : urlWithApiKey, postData, callback);
               return kotlin.Unit.INSTANCE;
-            });
+            },
+            failure -> failure.userMessage(context));
     prefs = SharedPreferencesUtils.getSharedPreferences(context);
   }
 
@@ -184,9 +185,9 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
                 LogUtils.v(TAG, "Gemini succeeds");
               } else { // Redefine the hint of these kinds when the use cases are understood.
                 geminiResponseListener.onResponse(FinishReason.ERROR_BLOCKED, /* response= */ null);
-                LogUtils.v(
+                LogUtils.e(
                     TAG,
-                    "Gemini finishes by some reason:%s",
+                    "Gemini gave no answer, finish or block reason: %s",
                     (response.blockReason() != null)
                         ? response.blockReason()
                         : response.finishReason());
@@ -194,9 +195,10 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
             }
 
             @Override
-            public void onFailure(String reason) {
-              LogUtils.w(TAG, "ErrorResponse processing Gemini request:%s", reason);
-              geminiResponseListener.onResponse(FinishReason.ERROR_RESPONSE, /* response= */ null);
+            public void onFailure(GeminiFailure failure) {
+              // The request performer has logged the failure. The listener speaks the text.
+              geminiResponseListener.onResponse(
+                  FinishReason.ERROR_RESPONSE, failure.userMessage(context));
             }
 
             @Override

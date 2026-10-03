@@ -132,7 +132,7 @@ public class BottomSheetResultOverlay {
             /* ocrTextResult= */ null,
             /* screenDescription= */ true);
       } else if (screenOverviewResult.response() instanceof OverviewResponse.Error error) {
-        Toast.makeText(context, getErrorMessage(error), LENGTH_SHORT).show();
+        Toast.makeText(context, getErrorMessage(context, error), LENGTH_SHORT).show();
       }
     }
   }
@@ -158,7 +158,7 @@ public class BottomSheetResultOverlay {
       }
       screenQAChatController.onScreenQueryAnswer(answer);
     } else if (screenOverviewResult.response() instanceof OverviewResponse.Error error) {
-      Toast.makeText(context, getErrorMessage(error), LENGTH_SHORT).show();
+      Toast.makeText(context, getErrorMessage(context, error), LENGTH_SHORT).show();
     }
   }
 }

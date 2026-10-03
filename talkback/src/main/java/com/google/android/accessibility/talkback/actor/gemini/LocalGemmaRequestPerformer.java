@@ -83,7 +83,7 @@ public class LocalGemmaRequestPerformer extends GeminiRestRequestPerformer {
   public void performRequest(
       String url, JSONObject postData, GeminiRestResponseCallback callback) {
     if (useOnDevice()) {
-      runner.run(postData, callback);
+      runner.run(postData, loggingFailures(callback));
     } else {
       super.performRequest(url, postData, callback);
     }

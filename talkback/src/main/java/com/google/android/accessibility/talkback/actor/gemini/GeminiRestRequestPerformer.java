@@ -23,11 +23,13 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.accessibility.talkback.actor.gemini.DataFieldUtils.GeminiResponse;
+import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 /** Performs Gemini REST requests. */
 public class GeminiRestRequestPerformer {
+  private static final String TAG = "GeminiRequest";
   private static final int TIMEOUT_MS = 30_000;
   // Retrying a request that timed out sends and pays for the same slow request again.
   private static final int MAX_RETRIES = 0;
@@ -35,7 +37,7 @@ public class GeminiRestRequestPerformer {
   interface GeminiRestResponseCallback {
     void onResponse(GeminiResponse response);
 
-    void onFailure(String reason);
+    void onFailure(GeminiFailure failure);
 
     void onCancelled();
   }
@@ -51,7 +53,9 @@ public class GeminiRestRequestPerformer {
   }
 
   /** Performs an HTTP POST request to the given URL with the specified message body. */
-  public void performRequest(String url, JSONObject postData, GeminiRestResponseCallback callback) {
+  public void performRequest(
+      String url, JSONObject postData, GeminiRestResponseCallback unloggedCallback) {
+    GeminiRestResponseCallback callback = loggingFailures(unloggedCallback);
     JsonObjectRequest stringRequest =
         new JsonObjectRequest(
             Request.Method.POST,
@@ -62,16 +66,38 @@ public class GeminiRestRequestPerformer {
                 GeminiResponse result = DataFieldUtils.parseGeminiResponse(response);
                 callback.onResponse(result);
               } catch (JSONException e) {
-                callback.onFailure(e.toString());
+                callback.onFailure(GeminiFailure.other("Could not read the answer: " + e));
               }
             },
-            error -> {
-              callback.onFailure(error.toString());
-            });
+            error -> callback.onFailure(GeminiFailure.fromVolleyError(error)));
 
     stringRequest.setRetryPolicy(
         new DefaultRetryPolicy(TIMEOUT_MS, MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
     requestQueue.add(stringRequest);
+  }
+
+  /**
+   * Wraps the callback so that each failure is logged at error level, which is logged at every log
+   * output level.
+   */
+  static GeminiRestResponseCallback loggingFailures(GeminiRestResponseCallback callback) {
+    return new GeminiRestResponseCallback() {
+      @Override
+      public void onResponse(GeminiResponse response) {
+        callback.onResponse(response);
+      }
+
+      @Override
+      public void onFailure(GeminiFailure failure) {
+        LogUtils.e(TAG, "Gemini request failed: %s", failure.getLogMessage());
+        callback.onFailure(failure);
+      }
+
+      @Override
+      public void onCancelled() {
+        callback.onCancelled();
+      }
+    };
   }
 
   public void cancelExistingRequestIfNeeded() {}
