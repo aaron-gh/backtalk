@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">خطأ إملائي</string>
   <string name="individual_sound_hyperlink">رابط</string>
   <string name="individual_sound_formatting">نص منسَّق</string>
-  <string name="individual_sound_volume_beep">تغيير مستوى الصوت</string>
+  <string name="individual_sound_screen_off">الشاشة متوقفة</string>
   <string name="individual_sound_loading">جارٍ التحميل</string>
   <string name="individual_sound_browse_mode_on">تم تفعيل وضع التصفح</string>
   <string name="individual_sound_browse_mode_off">تم إيقاف وضع التصفح</string>

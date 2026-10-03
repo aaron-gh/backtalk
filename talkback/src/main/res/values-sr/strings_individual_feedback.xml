@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Правописна грешка</string>
   <string name="individual_sound_hyperlink">Линк</string>
   <string name="individual_sound_formatting">Форматирани текст</string>
-  <string name="individual_sound_volume_beep">Промена јачине звука</string>
+  <string name="individual_sound_screen_off">Екран је искључен</string>
   <string name="individual_sound_loading">Учитава се</string>
   <string name="individual_sound_browse_mode_on">Режим прегледања је укључен</string>
   <string name="individual_sound_browse_mode_off">Режим прегледања је искључен</string>

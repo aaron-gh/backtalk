@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Орфографічна помилка</string>
   <string name="individual_sound_hyperlink">Посилання</string>
   <string name="individual_sound_formatting">Відформатований текст</string>
-  <string name="individual_sound_volume_beep">Зміна гучності</string>
+  <string name="individual_sound_screen_off">Екран вимкнено</string>
   <string name="individual_sound_loading">Завантаження</string>
   <string name="individual_sound_browse_mode_on">Режим перегляду ввімкнено</string>
   <string name="individual_sound_browse_mode_off">Режим перегляду вимкнено</string>

@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Lỗi chính tả</string>
   <string name="individual_sound_hyperlink">Đường liên kết</string>
   <string name="individual_sound_formatting">Văn bản được định dạng</string>
-  <string name="individual_sound_volume_beep">Thay đổi âm lượng</string>
+  <string name="individual_sound_screen_off">Màn hình tắt</string>
   <string name="individual_sound_loading">Đang tải</string>
   <string name="individual_sound_browse_mode_on">Bật chế độ duyệt</string>
   <string name="individual_sound_browse_mode_off">Tắt chế độ duyệt</string>

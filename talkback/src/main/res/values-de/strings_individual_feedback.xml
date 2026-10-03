@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Rechtschreibfehler</string>
   <string name="individual_sound_hyperlink">Link</string>
   <string name="individual_sound_formatting">Formatierter Text</string>
-  <string name="individual_sound_volume_beep">Lautstärkeänderung</string>
+  <string name="individual_sound_screen_off">Bildschirm aus</string>
   <string name="individual_sound_loading">Wird geladen</string>
   <string name="individual_sound_browse_mode_on">Suchmodus an</string>
   <string name="individual_sound_browse_mode_off">Suchmodus aus</string>

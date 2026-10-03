@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">எழுத்துப்பிழை</string>
   <string name="individual_sound_hyperlink">இணைப்பு</string>
   <string name="individual_sound_formatting">வடிவமைக்கப்பட்ட உரை</string>
-  <string name="individual_sound_volume_beep">ஒலியளவு மாற்றம்</string>
+  <string name="individual_sound_screen_off">திரை முடக்கப்பட்டுள்ளது</string>
   <string name="individual_sound_loading">ஏற்றுகிறது</string>
   <string name="individual_sound_browse_mode_on">உலாவல் பயன்முறை இயக்கத்தில்</string>
   <string name="individual_sound_browse_mode_off">உலாவல் பயன்முறை முடக்கத்தில்</string>

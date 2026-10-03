@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Kirjoitusvirhe</string>
   <string name="individual_sound_hyperlink">Linkki</string>
   <string name="individual_sound_formatting">Muotoiltu teksti</string>
-  <string name="individual_sound_volume_beep">Äänenvoimakkuuden muutos</string>
+  <string name="individual_sound_screen_off">Näyttö sammutettu</string>
   <string name="individual_sound_loading">Ladataan</string>
   <string name="individual_sound_browse_mode_on">Selaustila päällä</string>
   <string name="individual_sound_browse_mode_off">Selaustila pois</string>

@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Helyesírási hiba</string>
   <string name="individual_sound_hyperlink">Link</string>
   <string name="individual_sound_formatting">Formázott szöveg</string>
-  <string name="individual_sound_volume_beep">Hangerő módosítása</string>
+  <string name="individual_sound_screen_off">Képernyő kikapcsolva</string>
   <string name="individual_sound_loading">Betöltés</string>
   <string name="individual_sound_browse_mode_on">Böngészési mód be</string>
   <string name="individual_sound_browse_mode_off">Böngészési mód ki</string>

@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Орфографическая ошибка</string>
   <string name="individual_sound_hyperlink">Ссылка</string>
   <string name="individual_sound_formatting">Форматированный текст</string>
-  <string name="individual_sound_volume_beep">Изменение громкости</string>
+  <string name="individual_sound_screen_off">Экран выключен</string>
   <string name="individual_sound_loading">Загрузка</string>
   <string name="individual_sound_browse_mode_on">Режим просмотра включен</string>
   <string name="individual_sound_browse_mode_off">Режим просмотра выключен</string>

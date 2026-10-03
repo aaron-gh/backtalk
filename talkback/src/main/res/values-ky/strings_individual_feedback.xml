@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Орфографиялык ката</string>
   <string name="individual_sound_hyperlink">Шилтеме</string>
   <string name="individual_sound_formatting">Форматталган текст</string>
-  <string name="individual_sound_volume_beep">Үндүн катуулугун өзгөртүү</string>
+  <string name="individual_sound_screen_off">Экран өчүк</string>
   <string name="individual_sound_loading">Жүктөлүүдө</string>
   <string name="individual_sound_browse_mode_on">Карап чыгуу режими күйүк</string>
   <string name="individual_sound_browse_mode_off">Карап чыгуу режими өчүк</string>

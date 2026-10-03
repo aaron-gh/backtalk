@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Orfoqrafiya xətası</string>
   <string name="individual_sound_hyperlink">Keçid</string>
   <string name="individual_sound_formatting">Formatlanmış mətn</string>
-  <string name="individual_sound_volume_beep">Səs səviyyəsinin dəyişməsi</string>
+  <string name="individual_sound_screen_off">Ekran deaktiv</string>
   <string name="individual_sound_loading">Yüklənir</string>
   <string name="individual_sound_browse_mode_on">Baxış rejimi aktivdir</string>
   <string name="individual_sound_browse_mode_off">Baxış rejimi deaktivdir</string>
