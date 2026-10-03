@@ -352,6 +352,18 @@ public class TalkBackPreferenceFragment extends TalkbackBaseFragment {
           getPreferenceManager(),
           R.string.pref_category_manage_selector_menu_key,
           R.string.pref_category_selector_menu_summary_xr);
+    } else if (!FeatureSupport.supportGestureDetection()
+        || !SharedPreferencesUtils.getBooleanPref(
+            prefs,
+            context.getResources(),
+            R.string.pref_talkback_gesture_detection_key,
+            R.bool.pref_talkback_gesture_detection_default)) {
+      // The rotor needs Backtalk's own gesture detection.
+      PreferencesActivityUtils.setSummary(
+          context,
+          getPreferenceManager(),
+          R.string.pref_category_manage_selector_menu_key,
+          R.string.pref_category_selector_menu_summary_no_rotor);
     }
   }
 
