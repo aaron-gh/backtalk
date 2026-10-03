@@ -2195,7 +2195,12 @@ public class TalkBackService extends AccessibilityServiceCompat
 
     ringerModeAndScreenMonitor =
         new RingerModeAndScreenMonitor(
-            menuManager, pipeline.getFeedbackReturner(), callStateMonitor, displayMonitor, this);
+            menuManager,
+            pipeline.getFeedbackReturner(),
+            callStateMonitor,
+            displayMonitor,
+            statusReader,
+            this);
     if (speechCacheController != null) {
       ringerModeAndScreenMonitor.addScreenChangedListener(speechCacheController);
     }
