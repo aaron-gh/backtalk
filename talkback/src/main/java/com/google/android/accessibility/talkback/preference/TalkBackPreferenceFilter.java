@@ -245,6 +245,9 @@ public class TalkBackPreferenceFilter {
         R.string.pref_shortcut_3finger_1tap_hold_key, SHOW_IF_MULTI_FINGER_TAP_AND_HOLD),
     CUSTOMIZE_GESTURE_3FINGER_3TAP_HOLD(
         R.string.pref_shortcut_3finger_3tap_hold_key, SHOW_IF_MULTI_FINGER_TAP_AND_HOLD),
+    CUSTOMIZE_GESTURE_3FINGER_QUADRUPLE_TAP(
+        R.string.pref_shortcut_3finger_4tap_key,
+        SHOW_IF_SERVICE_GESTURE_DETECTION | HIDDEN_ON_WATCH),
     CUSTOMIZE_GESTURE_2FINGER_ROTATE_CLOCKWISE(
         R.string.pref_shortcut_2finger_rotate_clockwise_key,
         SHOW_IF_SERVICE_GESTURE_DETECTION),
