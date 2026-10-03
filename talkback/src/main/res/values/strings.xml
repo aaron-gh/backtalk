@@ -506,12 +506,10 @@
     <string name="title_pref_category_manage_gestures">Gestures</string>
     <!-- Label for the button to launch an activity for managing TalkBack's custom view labels. [CHAR LIMIT=70] -->
     <string name="title_pref_manage_labels">Custom labels</string>
-    <!-- Label for the button to launch an activity for managing custom menus. [CHAR LIMIT=70] -->
-    <string name="title_pref_manage_customize_menus">Edit menus</string>
     <!-- Label for the button to launch an activity for managing TalkBack's custom menus. [CHAR LIMIT=100] -->
-    <string name="title_pref_category_context_menu">Customize Backtalk menu</string>
+    <string name="title_pref_category_context_menu">Backtalk menu</string>
     <!-- Label for the button to launch an activity for managing TalkBack's custom menus. [CHAR LIMIT=100] -->
-    <string name="title_pref_category_selector_menu">Customize reading controls</string>
+    <string name="title_pref_category_selector_menu">Reading controls</string>
     <!-- Label for the button to launch an activity for managing TalkBack's navigation options menus. [CHAR LIMIT=100] -->
     <string name="title_pref_category_navigation_menu">Edit navigation options</string>
     <!-- Label for the button to launch an activity for managing TalkBack's keyboard shortcuts. [CHAR LIMIT=40] -->

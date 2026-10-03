@@ -30,6 +30,7 @@ import androidx.preference.Preference;
 import androidx.preference.Preference.OnPreferenceChangeListener;
 import androidx.preference.PreferenceGroup;
 import androidx.preference.TwoStatePreference;
+import com.google.android.accessibility.talkback.preference.PreferencesActivityUtils;
 import com.google.android.accessibility.talkback.preference.TalkBackPreferencesActivity.HatsRequesterViewModel;
 import com.google.android.accessibility.talkback.HatsSurveyRequester;
 import com.google.android.accessibility.talkback.HelpAndFeedbackUtils;
@@ -86,6 +87,7 @@ public class TalkBackPreferenceFragment extends TalkbackBaseFragment {
     settingsMetricStore = new SettingsMetricStore(context);
 
     fixListSummaries(getPreferenceScreen());
+    updateMenuSummaries();
 
     HatsRequesterViewModel viewModel =
         new ViewModelProvider(getActivity()).get(HatsRequesterViewModel.class);
@@ -324,6 +326,33 @@ public class TalkBackPreferenceFragment extends TalkbackBaseFragment {
       return;
     }
     preference.setChecked(prefValue);
+  }
+
+  /** Says how to open the menus with the gestures this device has. */
+  private void updateMenuSummaries() {
+    if (!FeatureSupport.isMultiFingerGestureSupported() || FormFactorUtils.isAndroidWear()) {
+      PreferencesActivityUtils.setSummary(
+          context,
+          getPreferenceManager(),
+          R.string.pref_category_manage_context_menu_key,
+          R.string.pref_category_context_menu_summary_single_finger);
+      PreferencesActivityUtils.setSummary(
+          context,
+          getPreferenceManager(),
+          R.string.pref_category_manage_selector_menu_key,
+          R.string.pref_category_selector_menu_summary_single_finger);
+    } else if (FormFactorUtils.isAndroidXr()) {
+      PreferencesActivityUtils.setSummary(
+          context,
+          getPreferenceManager(),
+          R.string.pref_category_manage_context_menu_key,
+          R.string.pref_category_context_menu_summary_xr);
+      PreferencesActivityUtils.setSummary(
+          context,
+          getPreferenceManager(),
+          R.string.pref_category_manage_selector_menu_key,
+          R.string.pref_category_selector_menu_summary_xr);
+    }
   }
 
   /**
