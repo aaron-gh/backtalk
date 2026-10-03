@@ -157,6 +157,13 @@ play is left out when the theme is installed, and Backtalk says so.
 | `control_menu_item` | Control sound: menu item |
 | `control_list_item` | Control sound: list item |
 | `control_tree_item` | Control sound: tree item on a web page |
+| `braille_keyboard_character` | Braille keyboard: typing a character |
+| `braille_keyboard_space` | Braille keyboard: space |
+| `braille_keyboard_delete` | Braille keyboard: deleting a character or a word |
+| `braille_keyboard_new_line` | Braille keyboard: new line |
+
+The braille keyboard sounds replace Android's keyboard sounds, and play only with **Typing sounds**
+on in the braille keyboard's settings.
 
 The names are also shown in Backtalk: in **Sounds**, selecting a sound shows its name after its
 title, such as "Click (tick)".
@@ -189,7 +196,7 @@ These vibrations have no sound, and a theme replaces them by these names:
 | Name | Plays for |
 | --- | --- |
 | `announcement` | An app's announcement |
-| `braille_keyboard_type` | Typing a braille character on the braille keyboard |
+| `braille_keyboard_character` | Typing a character on the braille keyboard |
 | `braille_keyboard_space` | Space, delete, moving the cursor or changing the reading unit on the braille keyboard |
 | `braille_keyboard_new_line` | A new line or deleting a word on the braille keyboard |
 | `braille_keyboard_hold` | Holding the fingers down on the braille keyboard |

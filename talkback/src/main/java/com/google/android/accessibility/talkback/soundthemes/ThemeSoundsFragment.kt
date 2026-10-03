@@ -36,7 +36,6 @@ import com.google.android.accessibility.material.preference.AccessibilitySuitePr
 import com.google.android.accessibility.talkback.R
 import com.google.android.accessibility.talkback.controlsounds.ControlSounds
 import com.google.android.accessibility.talkback.individualfeedback.FeedbackItem
-import com.google.android.accessibility.talkback.individualfeedback.IndividualFeedbackSettings
 import com.google.android.accessibility.talkback.individualfeedback.SoundPreview
 import com.google.android.accessibility.talkback.preference.base.TalkbackBaseFragment
 import com.google.android.accessibility.utils.SharedPreferencesUtils
@@ -60,7 +59,7 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
 
   private val chooseSound: ActivityResultLauncher<Array<String>> =
     registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-      val item = IndividualFeedbackSettings.SOUNDS.firstOrNull { it.key == choosingFor }
+      val item = SoundThemes.SOUNDS.firstOrNull { it.key == choosingFor }
       choosingFor = null
       if (uri != null && item != null) setSound(item, uri)
     }
@@ -98,7 +97,7 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
       }
     screen.addPreference(sounds)
     rows.clear()
-    for (item in IndividualFeedbackSettings.SOUNDS) {
+    for (item in SoundThemes.SOUNDS) {
       val row = SoundRow(context, item, preview = { soundPreview.play(context, prefs, item) })
       row.setOnPreferenceClickListener {
         showChoices(item)
@@ -135,6 +134,7 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
           when {
             row.item.key in custom -> R.string.theme_sound_summary_custom
             isControlSound(row.item) -> R.string.theme_sound_summary_none
+            isBrailleTypingSound(row.item) -> R.string.theme_sound_summary_android_keyboard
             else -> R.string.theme_sound_summary_default
           }
         )
@@ -163,7 +163,11 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
     }
     if (hasCustom) {
       val label =
-        if (isControlSound(item)) R.string.theme_sound_remove else R.string.theme_sound_use_default
+        when {
+          isControlSound(item) -> R.string.theme_sound_remove
+          isBrailleTypingSound(item) -> R.string.theme_sound_use_android_keyboard
+          else -> R.string.theme_sound_use_default
+        }
       choices +=
         label to
           {
@@ -278,5 +282,8 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
     val SOUND_TYPES = arrayOf("audio/*", "application/ogg")
 
     fun isControlSound(item: FeedbackItem): Boolean = item.key in ControlSounds.SOUNDS
+
+    fun isBrailleTypingSound(item: FeedbackItem): Boolean =
+      item.key in SoundThemes.BRAILLE_TYPING_EFFECTS
   }
 }

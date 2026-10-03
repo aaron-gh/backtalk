@@ -157,13 +157,13 @@ class SoundThemeManifestTest {
       parse(
         """
         {"vibrations": {"announcement": {"pattern": [0, 20]},
-                        "braille_keyboard_type": {"pattern": [0, 10]},
+                        "braille_keyboard_character": {"pattern": [0, 10]},
                         "direct_touch_on": "none",
                         "display_connected": {"pattern": [0, 20]}}}
         """
       )
     assertEquals(
-      setOf("announcement", "braille_keyboard_type", "direct_touch_on"),
+      setOf("announcement", "braille_keyboard_character", "direct_touch_on"),
       manifest.vibrations.keys,
     )
     assertEquals(1, manifest.warnings.size)

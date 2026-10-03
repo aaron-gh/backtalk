@@ -95,7 +95,7 @@ class SoundVibrationsTest {
           "focus_actionable" to focus,
           "radial_menu" to intArrayOf(0, 5),
           "announcement" to intArrayOf(0, 30),
-          "braille_keyboard_type" to intArrayOf(0, 10),
+          "braille_keyboard_character" to intArrayOf(0, 10),
         ),
         IndividualFeedbackSettings.SOUNDS.associate { it.key to it.resourceNames },
       )
@@ -109,7 +109,7 @@ class SoundVibrationsTest {
       assertEquals(5, played.getValue("radial_menu_${note}_pattern")[1])
     }
     assertEquals(30, played.getValue("notification_pattern")[1])
-    assertEquals(10, played.getValue("braille_keyboard_type")[1])
+    assertEquals(10, played.getValue("braille_keyboard_character")[1])
   }
 
   @Test
@@ -122,7 +122,7 @@ class SoundVibrationsTest {
     )
     assertEquals("notification_pattern", SoundVibrations.switchOfPlayed("notification_pattern"))
     // The braille keyboard and direct touch have settings of their own.
-    assertEquals(null, SoundVibrations.switchOfPlayed("braille_keyboard_type"))
+    assertEquals(null, SoundVibrations.switchOfPlayed("braille_keyboard_character"))
     assertEquals(null, SoundVibrations.switchOfPlayed("direct_touch_on"))
     SoundVibrations.PATTERNS.values.forEach {
       assertTrue("$it has no switch", SoundVibrations.switchOfPlayed(it) in vibrationNames)

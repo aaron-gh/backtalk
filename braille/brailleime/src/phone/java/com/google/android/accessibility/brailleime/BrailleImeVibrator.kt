@@ -42,7 +42,7 @@ class BrailleImeVibrator private constructor(context: Context) {
     internal val amplitude: Int,
     internal vararg val steps: Step,
   ) {
-    BRAILLE_COMMISSION("braille_keyboard_type", 25, 120, Step(PRIMITIVE_TICK)),
+    BRAILLE_COMMISSION("braille_keyboard_character", 25, 120, Step(PRIMITIVE_TICK)),
     SPACE_DELETE_OR_MOVE_CURSOR_OR_GRANULARITY(
       "braille_keyboard_space",
       70,

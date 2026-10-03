@@ -284,6 +284,7 @@ import com.google.android.accessibility.utils.output.SpeechController.UtteranceC
 import com.google.android.accessibility.utils.output.SpeechControllerImpl;
 import com.google.android.accessibility.utils.output.SpeechControllerImpl.CapitalLetterHandlingMethod;
 import com.google.android.accessibility.utils.output.TextFormattingUtils;
+import com.google.android.accessibility.utils.output.ThemeSounds;
 import com.google.android.accessibility.utils.output.ThemeVibrations;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import com.google.android.libraries.accessibility.utils.servicecompat.AccessibilityServiceCompat;
@@ -3222,8 +3223,9 @@ public class TalkBackService extends AccessibilityServiceCompat
     feedbackController.setCustomSounds(customSounds);
     Map<String, int[]> themeVibrations = soundTheme.vibrationsPlaying(mutedVibrations);
     feedbackController.setThemeVibrations(themeVibrations);
-    // For the braille keyboard and direct touch, which vibrate on their own.
+    // For the braille keyboard and direct touch, which play their own sounds and vibrations.
     ThemeVibrations.set(themeVibrations);
+    ThemeSounds.set(SoundThemes.brailleTypingSounds(customSounds));
     feedbackController.setSpatialMode(ControlSoundsSettings.spatialMode(prefs));
     // A control's sound is asked for if it can be heard or felt, so with sound feedback off its
     // vibration still tells what kind of control it is.

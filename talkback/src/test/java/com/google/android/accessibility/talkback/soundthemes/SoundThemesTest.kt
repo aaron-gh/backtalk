@@ -35,10 +35,27 @@ class SoundThemesTest {
 
   @Test
   fun everySoundCanBeNamedInATheme() {
-    for (item in IndividualFeedbackSettings.SOUNDS) {
+    for (item in SoundThemes.SOUNDS) {
       assertFalse(item.key, item.key.contains('.'))
       assertEquals(item.key to "wav", SoundThemes.parseSoundName("${item.key}.wav"))
     }
+  }
+
+  @Test
+  fun theBrailleKeyboardTypingSoundsCanBeReplaced() {
+    val typing =
+      listOf(
+        "braille_keyboard_character",
+        "braille_keyboard_space",
+        "braille_keyboard_delete",
+        "braille_keyboard_new_line",
+      )
+    assertEquals(typing, SoundThemes.BRAILLE_TYPING_EFFECTS.keys.toList())
+    assertTrue(SoundThemes.SOUND_KEYS.containsAll(typing))
+    val paths = mapOf("braille_keyboard_space" to "/a.wav", "focus" to "/b.wav")
+    assertEquals(mapOf("braille_keyboard_space" to "/a.wav"), SoundThemes.brailleTypingSounds(paths))
+    // They are not Backtalk's own sounds, so they have no switches of their own.
+    assertTrue(IndividualFeedbackSettings.SOUNDS.none { it.key in typing })
   }
 
   @Test

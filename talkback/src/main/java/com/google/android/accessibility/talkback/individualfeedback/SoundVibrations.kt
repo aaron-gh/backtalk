@@ -61,7 +61,7 @@ object SoundVibrations {
   val VIBRATION_ONLY: Map<String, String> =
     mapOf(
       "announcement" to "notification_pattern",
-      "braille_keyboard_type" to "braille_keyboard_type",
+      "braille_keyboard_character" to "braille_keyboard_character",
       "braille_keyboard_space" to "braille_keyboard_space",
       "braille_keyboard_new_line" to "braille_keyboard_new_line",
       "braille_keyboard_hold" to "braille_keyboard_hold",

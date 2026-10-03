@@ -118,6 +118,18 @@
     <string name="theme_sound_summary_custom">Theme sound</string>
     <!-- Theme sounds: summary of a control sound, which Backtalk has no sound for, that the theme has no file for. [CHAR LIMIT=NONE] -->
     <string name="theme_sound_summary_none">No sound. The focus sound plays.</string>
+    <!-- Theme sounds: summary of a braille keyboard typing sound that plays Android's keyboard sound. [CHAR LIMIT=60] -->
+    <string name="theme_sound_summary_android_keyboard">Android\'s keyboard sound</string>
+    <!-- Theme sounds: choice that goes back to Android's keyboard sound for a braille keyboard typing sound. [CHAR LIMIT=50] -->
+    <string name="theme_sound_use_android_keyboard">Use Android\'s keyboard sound</string>
+    <!-- Theme sounds: typing sound of the braille keyboard when a character is typed. [CHAR LIMIT=60] -->
+    <string name="theme_sound_braille_character">Braille keyboard: typing a character</string>
+    <!-- Theme sounds: typing sound of the braille keyboard when a space is typed. [CHAR LIMIT=60] -->
+    <string name="theme_sound_braille_space">Braille keyboard: space</string>
+    <!-- Theme sounds: typing sound of the braille keyboard when deleting. [CHAR LIMIT=60] -->
+    <string name="theme_sound_braille_delete">Braille keyboard: delete</string>
+    <!-- Theme sounds: typing sound of the braille keyboard when a new line is typed. [CHAR LIMIT=60] -->
+    <string name="theme_sound_braille_new_line">Braille keyboard: new line</string>
     <!-- Theme sounds: title of the choices for one sound, with the name its file has in a theme, such as "Click (tick)". [CHAR LIMIT=NONE] -->
     <string name="theme_sound_dialog_title"><xliff:g id="sound" example="Click">%1$s</xliff:g> (<xliff:g id="name" example="tick">%2$s</xliff:g>)</string>
     <!-- Theme sounds: choice that opens the file picker to choose a sound file. [CHAR LIMIT=50] -->

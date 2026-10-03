@@ -18,9 +18,11 @@ package com.google.android.accessibility.talkback.soundthemes
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.media.AudioManager
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import androidx.core.content.ContextCompat
+import com.google.android.accessibility.talkback.R
 import com.google.android.accessibility.talkback.controlsounds.ControlSounds
 import com.google.android.accessibility.talkback.controlsounds.ControlSoundsSettings
 import com.google.android.accessibility.talkback.individualfeedback.FeedbackItem
@@ -127,12 +129,44 @@ object SoundThemes {
   /** Thrown when a file is not a sound theme, with a message for the person installing it. */
   class NotAThemeException(message: String) : Exception(message)
 
+  /**
+   * The braille keyboard's typing sounds, which are Android's keyboard sounds unless the theme
+   * replaces them, with the Android sound effect each replaces. They play only with the braille
+   * keyboard's typing sounds setting on.
+   */
+  @JvmField
+  val BRAILLE_TYPING_EFFECTS: Map<String, Int> =
+    linkedMapOf(
+      "braille_keyboard_character" to AudioManager.FX_KEYPRESS_STANDARD,
+      "braille_keyboard_space" to AudioManager.FX_KEYPRESS_SPACEBAR,
+      "braille_keyboard_delete" to AudioManager.FX_KEYPRESS_DELETE,
+      "braille_keyboard_new_line" to AudioManager.FX_KEYPRESS_RETURN,
+    )
+
+  private val BRAILLE_TYPING_SOUNDS =
+    listOf(
+      FeedbackItem("braille_keyboard_character", R.string.theme_sound_braille_character),
+      FeedbackItem("braille_keyboard_space", R.string.theme_sound_braille_space),
+      FeedbackItem("braille_keyboard_delete", R.string.theme_sound_braille_delete),
+      FeedbackItem("braille_keyboard_new_line", R.string.theme_sound_braille_new_line),
+    )
+
+  /** The braille keyboard's typing sounds among the theme's sound files by name. */
+  @JvmStatic
+  fun brailleTypingSounds(soundPaths: Map<String, String>): Map<String, String> =
+    soundPaths.filterKeys { it in BRAILLE_TYPING_EFFECTS }
+
+  /** Every sound a theme can replace, in the order the settings show them. */
+  @JvmStatic
+  val SOUNDS: List<FeedbackItem>
+    get() = IndividualFeedbackSettings.SOUNDS + BRAILLE_TYPING_SOUNDS
+
   val SOUND_KEYS: Set<String>
-    get() = IndividualFeedbackSettings.SOUNDS.map { it.key }.toSet()
+    get() = SOUNDS.map { it.key }.toSet()
 
   /** The names of the vibrations a theme can replace. */
   val VIBRATION_NAMES: Set<String>
-    get() = SoundVibrations.themeNames(SOUND_KEYS)
+    get() = SoundVibrations.themeNames(IndividualFeedbackSettings.SOUNDS.map { it.key })
 
   // ---------------------------------------------------------------------------------------------
   // Installed themes
@@ -194,7 +228,7 @@ object SoundThemes {
   @JvmStatic
   fun feedback(context: Context, prefs: SharedPreferences): ThemeFeedback {
     val theme = active(context, prefs)
-    val items = IndividualFeedbackSettings.SOUNDS.associateBy { it.key }
+    val items = SOUNDS.associateBy { it.key }
     val paths = HashMap<String, String>()
     for ((key, file) in soundFiles(theme)) {
       items[key]?.resourceNames?.forEach { paths[it] = file.path }
@@ -202,7 +236,7 @@ object SoundThemes {
     val vibrations =
       SoundVibrations.playedAs(
         theme.manifest.vibrationPatterns(),
-        items.mapValues { it.value.resourceNames },
+        IndividualFeedbackSettings.SOUNDS.associate { it.key to it.resourceNames },
       )
     return ThemeFeedback(paths, vibrations)
   }
@@ -311,7 +345,7 @@ object SoundThemes {
       zip.write(theme.manifest.toJson().toByteArray())
       zip.closeEntry()
       val sounds = soundFiles(theme)
-      for (item in IndividualFeedbackSettings.SOUNDS) {
+      for (item in SOUNDS) {
         val file = sounds[item.key] ?: continue
         zip.putNextEntry(ZipEntry("${item.key}.${file.extension}"))
         file.inputStream().use { it.copyTo(zip) }
@@ -333,7 +367,7 @@ object SoundThemes {
    */
   @Throws(IOException::class, NotAThemeException::class)
   fun stage(context: Context, zip: File, fallbackName: String): StagedTheme {
-    val items = IndividualFeedbackSettings.SOUNDS.associateBy { it.key }
+    val items = SOUNDS.associateBy { it.key }
     val staging = File(themesDirectory(context), STAGING_PREFIX + System.currentTimeMillis())
     staging.mkdirs()
     try {
@@ -406,7 +440,7 @@ object SoundThemes {
           id = idFor(manifest.name),
           manifest = manifest,
           directory = staging,
-          sounds = IndividualFeedbackSettings.SOUNDS.filter { it.key in sounds },
+          sounds = SOUNDS.filter { it.key in sounds },
           skipped = skipped + manifest.warnings,
         )
       }
