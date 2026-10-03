@@ -3813,6 +3813,8 @@ Do not use any markdown in your response."</string>
   <string name="detailed_image_description_ocr_result">Text in image: <xliff:g id="detailed_ocr_result" example="That's a wonderful world.">%1$s</xliff:g></string>
   <!-- Detailed image description fallback result with a common error. [CHAR_LIMIT=NONE]-->
   <string name="detailed_image_description_fallback_result"><xliff:g id="fallback_result" example="Text in image: Hello world!!">%1$s</xliff:g>. Can\'t get a more detailed image description.</string>
+  <!-- The result of the detailed image description when Gemini failed, with the reason it failed. [CHAR_LIMIT=NONE]-->
+  <string name="detailed_image_description_fallback_result_with_reason"><xliff:g id="fallback_result" example="Text in image: Hello world!!">%1$s</xliff:g>. Can\'t get a more detailed image description: <xliff:g id="reason" example="Gemini is busy right now. Try again in a moment.">%2$s</xliff:g></string>
   <!-- Detailed image description fallback result with a network error. [CHAR_LIMIT=NONE]-->
   <string name="detailed_image_description_fallback_result_network_error"><xliff:g id="fallback_result_network_error" example="Text in image: Hello world!!">%1$s</xliff:g>. Connect to the internet for a more detailed image description.</string>
 
