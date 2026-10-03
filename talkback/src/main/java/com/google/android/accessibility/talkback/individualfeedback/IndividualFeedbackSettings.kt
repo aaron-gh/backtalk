@@ -53,7 +53,7 @@ object IndividualFeedbackSettings {
       FeedbackItem("typo", R.string.individual_sound_typo),
       FeedbackItem("hyperlink", R.string.individual_sound_hyperlink),
       FeedbackItem("formatting", R.string.individual_sound_formatting),
-      FeedbackItem("volume_beep", R.string.individual_sound_volume_beep),
+      FeedbackItem("screen_off", R.string.individual_sound_screen_off),
       FeedbackItem("loading", R.string.individual_sound_loading),
       FeedbackItem("browse_mode_on_v4_2", R.string.individual_sound_browse_mode_on),
       FeedbackItem("browse_mode_off_v4_2", R.string.individual_sound_browse_mode_off),
@@ -104,7 +104,7 @@ object IndividualFeedbackSettings {
       FeedbackItem("typo_pattern", R.string.individual_vibration_typo),
       FeedbackItem("hyperlink_pattern", R.string.individual_sound_hyperlink),
       FeedbackItem("formatting_pattern", R.string.individual_sound_formatting),
-      FeedbackItem("volume_pattern", R.string.individual_sound_volume_beep),
+      FeedbackItem("screen_off_pattern", R.string.individual_sound_screen_off),
       FeedbackItem("loading_pattern", R.string.individual_sound_loading),
       FeedbackItem("browse_mode_on_pattern", R.string.individual_sound_browse_mode_on),
       FeedbackItem("browse_mode_off_pattern", R.string.individual_sound_browse_mode_off),
@@ -136,8 +136,17 @@ object IndividualFeedbackSettings {
   private const val SELECTION_VIBRATION = "view_actionable_pattern"
 
   /**
+   * Screen off used to play the volume beep and its vibration, under switches named Volume change,
+   * though no volume change plays them. Set once screen off has been given those switches' state.
+   */
+  private const val OLD_VOLUME_SOUND = "volume_beep"
+  private const val OLD_VOLUME_VIBRATION = "volume_pattern"
+  private const val PREF_SCREEN_OFF_SPLIT = "pref_individual_screen_off_split"
+
+  /**
    * Carries over switches that no longer exist, once: if Selection was turned off, the vibration
-   * selection now plays is turned off instead.
+   * selection now plays is turned off instead. And if Volume change was turned off, which only
+   * silenced screen off, Screen off is turned off instead.
    */
   fun migrate(prefs: SharedPreferences) {
     val muted = stringSet(prefs, PREF_MUTED_VIBRATIONS)
@@ -145,6 +154,27 @@ object IndividualFeedbackSettings {
       prefs
         .edit()
         .putStringSet(PREF_MUTED_VIBRATIONS, muted - OLD_SELECTION_VIBRATION + SELECTION_VIBRATION)
+        .apply()
+    }
+    if (!prefs.getBoolean(PREF_SCREEN_OFF_SPLIT, false)) {
+      val mutedSounds = stringSet(prefs, PREF_MUTED_SOUNDS)
+      val mutedVibrations = stringSet(prefs, PREF_MUTED_VIBRATIONS)
+      prefs
+        .edit()
+        .putStringSet(
+          PREF_MUTED_SOUNDS,
+          if (OLD_VOLUME_SOUND in mutedSounds) mutedSounds - OLD_VOLUME_SOUND + "screen_off"
+          else mutedSounds,
+        )
+        .putStringSet(
+          PREF_MUTED_VIBRATIONS,
+          if (OLD_VOLUME_VIBRATION in mutedVibrations) {
+            mutedVibrations - OLD_VOLUME_VIBRATION + "screen_off_pattern"
+          } else {
+            mutedVibrations
+          },
+        )
+        .putBoolean(PREF_SCREEN_OFF_SPLIT, true)
         .apply()
     }
   }

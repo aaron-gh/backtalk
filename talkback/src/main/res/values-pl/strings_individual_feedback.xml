@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Błąd pisowni</string>
   <string name="individual_sound_hyperlink">Link</string>
   <string name="individual_sound_formatting">Sformatowany tekst</string>
-  <string name="individual_sound_volume_beep">Zmiana głośności</string>
+  <string name="individual_sound_screen_off">Ekran wyłączony</string>
   <string name="individual_sound_loading">Wczytywanie</string>
   <string name="individual_sound_browse_mode_on">Tryb przeglądania włączony</string>
   <string name="individual_sound_browse_mode_off">Tryb przeglądania wyłączony</string>

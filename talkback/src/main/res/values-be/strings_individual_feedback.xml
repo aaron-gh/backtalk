@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Арфаграфічная памылка</string>
   <string name="individual_sound_hyperlink">Спасылка</string>
   <string name="individual_sound_formatting">Адфарматаваны тэкст</string>
-  <string name="individual_sound_volume_beep">Змяненне гучнасці</string>
+  <string name="individual_sound_screen_off">Выключэнне экрана</string>
   <string name="individual_sound_loading">Загрузка</string>
   <string name="individual_sound_browse_mode_on">Рэжым прагляду ўключаны</string>
   <string name="individual_sound_browse_mode_off">Рэжым прагляду выключаны</string>

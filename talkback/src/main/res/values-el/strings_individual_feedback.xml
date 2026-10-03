@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Ορθογραφικό λάθος</string>
   <string name="individual_sound_hyperlink">Σύνδεσμος</string>
   <string name="individual_sound_formatting">Μορφοποιημένο κείμενο</string>
-  <string name="individual_sound_volume_beep">Αλλαγή έντασης</string>
+  <string name="individual_sound_screen_off">Οθόνη απενεργοποιημένη</string>
   <string name="individual_sound_loading">Φόρτωση</string>
   <string name="individual_sound_browse_mode_on">Λειτουργία περιήγησης ενεργή</string>
   <string name="individual_sound_browse_mode_off">Λειτουργία περιήγησης ανενεργή</string>

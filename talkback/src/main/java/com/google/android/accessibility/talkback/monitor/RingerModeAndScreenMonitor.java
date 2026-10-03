@@ -296,7 +296,7 @@ public class RingerModeAndScreenMonitor extends SameThreadBroadcastReceiver
         pipeline.returnFeedback(
             eventId,
             Feedback.part()
-                .setSound(Feedback.Sound.create(R.raw.volume_beep, 1.0f, volume))
+                .setSound(Feedback.Sound.create(R.raw.screen_off, 1.0f, volume))
                 .speech(ttsText, speakOptions));
       } else {
         pipeline.returnFeedback(eventId, Feedback.speech(ttsText, speakOptions));

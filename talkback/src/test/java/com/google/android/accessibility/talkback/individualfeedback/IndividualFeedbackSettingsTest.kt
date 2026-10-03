@@ -109,4 +109,41 @@ class IndividualFeedbackSettingsTest {
     IndividualFeedbackSettings.migrate(prefs)
     assertEquals(setOf("typo_pattern"), IndividualFeedbackSettings.mutedVibrationResources(prefs))
   }
+
+  @Test
+  fun screenOffTakesOverTheVolumeChangeSwitchesThatWereOff() {
+    // Screen off used to play the volume beep, under switches named Volume change.
+    prefs
+      .edit()
+      .putStringSet(IndividualFeedbackSettings.PREF_MUTED_SOUNDS, setOf("volume_beep", "focus"))
+      .putStringSet(IndividualFeedbackSettings.PREF_MUTED_VIBRATIONS, setOf("volume_pattern"))
+      .apply()
+    val screenOff = IndividualFeedbackSettings.SOUNDS.first { it.key == "screen_off" }
+    val screenOffVibration =
+      IndividualFeedbackSettings.VIBRATIONS.first { it.key == "screen_off_pattern" }
+
+    IndividualFeedbackSettings.migrate(prefs)
+    assertEquals(
+      setOf("screen_off", "focus"),
+      IndividualFeedbackSettings.mutedSoundResources(prefs),
+    )
+    assertEquals(
+      setOf("screen_off_pattern"),
+      IndividualFeedbackSettings.mutedVibrationResources(prefs),
+    )
+
+    // Only once, so screen off stays on after the user turns it back on.
+    IndividualFeedbackSettings.setSoundOn(prefs, screenOff, true)
+    IndividualFeedbackSettings.setVibrationOn(prefs, screenOffVibration, true)
+    IndividualFeedbackSettings.migrate(prefs)
+    assertTrue(IndividualFeedbackSettings.isSoundOn(prefs, screenOff))
+    assertTrue(IndividualFeedbackSettings.isVibrationOn(prefs, screenOffVibration))
+  }
+
+  @Test
+  fun screenOffStaysOnWhenVolumeChangeWasOn() {
+    val screenOff = IndividualFeedbackSettings.SOUNDS.first { it.key == "screen_off" }
+    IndividualFeedbackSettings.migrate(prefs)
+    assertTrue(IndividualFeedbackSettings.isSoundOn(prefs, screenOff))
+  }
 }

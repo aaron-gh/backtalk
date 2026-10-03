@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">જોડણીની ભૂલ</string>
   <string name="individual_sound_hyperlink">લિંક</string>
   <string name="individual_sound_formatting">ફોર્મેટ કરેલી ટેક્સ્ટ</string>
-  <string name="individual_sound_volume_beep">વૉલ્યૂમમાં ફેરફાર</string>
+  <string name="individual_sound_screen_off">સ્ક્રીન બંધ</string>
   <string name="individual_sound_loading">લોડ થઈ રહ્યું છે</string>
   <string name="individual_sound_browse_mode_on">બ્રાઉઝ મોડ ચાલુ</string>
   <string name="individual_sound_browse_mode_off">બ્રાઉઝ મોડ બંધ</string>

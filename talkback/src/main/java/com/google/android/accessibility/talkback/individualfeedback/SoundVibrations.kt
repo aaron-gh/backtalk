@@ -73,7 +73,7 @@ object SoundVibrations {
       "typo" to "typo_pattern",
       "hyperlink" to "hyperlink_pattern",
       "formatting" to "formatting_pattern",
-      "volume_beep" to "volume_pattern",
+      "screen_off" to "screen_off_pattern",
       // The loading tone repeats while waiting, such as for an image description, so its
       // vibration is a heartbeat that shows the work goes on even with sounds off.
       "loading" to "loading_pattern",

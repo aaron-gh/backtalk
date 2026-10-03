@@ -352,25 +352,6 @@
         <item>50</item><!-- delayMs -->
     </integer-array>
 
-    <!-- Volume change: one longer swell. -->
-    <integer-array name="volume_pattern">
-        <item>0</item>
-        <item>60</item>
-        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
-        <item>15</item>
-        <item>60</item>
-        <item>15</item>
-        <item>120</item>
-        <item>15</item>
-        <item>180</item>
-        <item>15</item>
-        <item>120</item>
-        <item>-9999</item><!-- SENTINEL SEPARATOR -->
-        <item>4</item><!-- QUICK_RISE -->
-        <item>140</item><!-- scale -->
-        <item>0</item><!-- delayMs -->
-    </integer-array>
-
     <!-- Loading, repeated every 3 seconds while waiting: a heartbeat, a firm click and a softer
          one, strong enough to feel through a case, so it shows that the work goes on. -->
     <integer-array name="loading_pattern">
@@ -1250,4 +1231,27 @@
         <item>40</item><!-- delayMs -->
     </integer-array>
 
+    <!-- Screen off: two falls, the second weaker, like powering down. -->
+    <integer-array name="screen_off_pattern">
+        <item>0</item>
+        <item>40</item>
+        <item>40</item>
+        <item>20</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>20</item>
+        <item>220</item>
+        <item>20</item>
+        <item>120</item>
+        <item>40</item>
+        <item>0</item>
+        <item>20</item>
+        <item>90</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>6</item><!-- QUICK_FALL -->
+        <item>200</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+        <item>6</item><!-- QUICK_FALL -->
+        <item>110</item><!-- scale -->
+        <item>40</item><!-- delayMs -->
+    </integer-array>
 </resources>

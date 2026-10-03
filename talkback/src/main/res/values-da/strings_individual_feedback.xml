@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">Stavefejl</string>
   <string name="individual_sound_hyperlink">Link</string>
   <string name="individual_sound_formatting">Formateret tekst</string>
-  <string name="individual_sound_volume_beep">Lydstyrkeændring</string>
+  <string name="individual_sound_screen_off">Skærmen er slået fra</string>
   <string name="individual_sound_loading">Indlæser</string>
   <string name="individual_sound_browse_mode_on">Gennemsynstilstand til</string>
   <string name="individual_sound_browse_mode_off">Gennemsynstilstand fra</string>

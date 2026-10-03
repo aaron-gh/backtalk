@@ -20,7 +20,7 @@
   <string name="individual_sound_typo">අක්ෂර වින්‍යාස දෝෂය</string>
   <string name="individual_sound_hyperlink">සබැඳිය</string>
   <string name="individual_sound_formatting">හැඩසවි ගැන්වූ පෙළ</string>
-  <string name="individual_sound_volume_beep">හඬ පරිමා වෙනස</string>
+  <string name="individual_sound_screen_off">තිරය අක්‍රියයි</string>
   <string name="individual_sound_loading">පූරණය වෙමින්</string>
   <string name="individual_sound_browse_mode_on">බ්‍රවුස් ප්‍රකාරය ක්‍රියාත්මකයි</string>
   <string name="individual_sound_browse_mode_off">බ්‍රවුස් ප්‍රකාරය ක්‍රියාවිරහිතයි</string>
