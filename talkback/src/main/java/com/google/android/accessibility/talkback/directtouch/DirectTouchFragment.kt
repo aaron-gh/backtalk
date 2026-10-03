@@ -97,15 +97,6 @@ class DirectTouchFragment : TalkbackBaseFragment() {
       )
     )
     screen.addPreference(
-      switchPreference(
-        context,
-        DirectTouchSettings.PREF_NAV_BAR,
-        R.string.pref_direct_touch_nav_bar,
-        R.string.pref_direct_touch_nav_bar_summary,
-        DirectTouchSettings.isNavBarDirect(prefs),
-      )
-    )
-    screen.addPreference(
       actionPreference(context, R.string.pref_direct_touch_backup) {
         createBackup.launch(BACKUP_FILE_NAME)
       }

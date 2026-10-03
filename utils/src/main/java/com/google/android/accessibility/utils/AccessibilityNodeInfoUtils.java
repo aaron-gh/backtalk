@@ -1225,8 +1225,7 @@ public class AccessibilityNodeInfoUtils {
     return node != null && TextUtils.equals(getChromeRole(node), CHROME_ROLE_LINK);
   }
 
-  /** Returns the role Chrome gives a web element, such as "button" or "listItem", or empty. */
-  public static CharSequence getChromeRole(@Nullable AccessibilityNodeInfoCompat node) {
+  private static CharSequence getChromeRole(@Nullable AccessibilityNodeInfoCompat node) {
     if (node == null) {
       return "";
     }

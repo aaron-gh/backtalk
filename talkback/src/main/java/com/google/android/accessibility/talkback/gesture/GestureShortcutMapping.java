@@ -18,6 +18,7 @@ package com.google.android.accessibility.talkback.gesture;
 
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_2_FINGER_ROTATE_CLOCKWISE;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_2_FINGER_ROTATE_COUNTERCLOCKWISE;
+import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_3_FINGER_QUADRUPLE_TAP;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_2_FINGER_SINGLE_TAP_AND_HOLD;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_FAKED_SPLIT_TYPING;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_TAP_HOLD_AND_2ND_FINGER_BACKWARD_DOUBLE_TAP;
@@ -245,6 +246,12 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
         MULTI_FINGER,
         R.string.pref_shortcut_3finger_3tap_key,
         R.string.pref_shortcut_3finger_3tap_default),
+    // Only recognized when Backtalk detects gestures itself.
+    THREE_FINGER_QUADRUPLE_TAP(
+        GESTURE_3_FINGER_QUADRUPLE_TAP,
+        MULTI_FINGER,
+        R.string.pref_shortcut_3finger_4tap_key,
+        R.string.pref_shortcut_3finger_4tap_default),
     THREE_FINGER_TRIPLE_TAP_AND_HOLD(
         AccessibilityService.GESTURE_3_FINGER_TRIPLE_TAP_AND_HOLD,
         MULTI_FINGER,
@@ -1127,6 +1134,8 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
           context.getString(R.string.title_pref_shortcut_3finger_2tap);
       case AccessibilityService.GESTURE_3_FINGER_TRIPLE_TAP ->
           context.getString(R.string.title_pref_shortcut_3finger_3tap);
+      case GESTURE_3_FINGER_QUADRUPLE_TAP ->
+          context.getString(R.string.title_pref_shortcut_3finger_4tap);
       case AccessibilityService.GESTURE_4_FINGER_SWIPE_UP ->
           context.getString(R.string.title_pref_shortcut_4finger_swipe_up);
       case AccessibilityService.GESTURE_4_FINGER_SWIPE_DOWN ->

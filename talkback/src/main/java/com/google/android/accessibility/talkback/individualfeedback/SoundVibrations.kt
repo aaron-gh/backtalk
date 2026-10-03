@@ -24,23 +24,6 @@ import android.content.Context
  * vibration_backtalk.xml.
  */
 object SoundVibrations {
-  /** The kinds of control with their own sound and vibration, named control_<kind>. */
-  private val CONTROL_KINDS =
-    listOf(
-      "button",
-      "checkbox",
-      "radio_button",
-      "edit_text",
-      "combo_box",
-      "slider",
-      "image",
-      "clock",
-      "tab",
-      "menu_item",
-      "list_item",
-      "tree_item",
-    )
-
   /**
    * Sounds that play without a vibration. The braille sounds leave vibration to the braille
    * keyboard, which has its own setting.
@@ -79,12 +62,7 @@ object SoundVibrations {
       "loading" to "loading_pattern",
       "browse_mode_on_v4_2" to "browse_mode_on_pattern",
       "browse_mode_off_v4_2" to "browse_mode_off_pattern",
-    ) +
-      (1..8).associate { "radial_menu_$it" to "radial_menu_${it}_pattern" } +
-      // Each kind of control feels different, so it can be told by touch alone. A link feels like
-      // any other link.
-      CONTROL_KINDS.associate { "control_$it" to "control_${it}_pattern" } +
-      mapOf("control_link" to "hyperlink_pattern")
+    ) + (1..8).associate { "radial_menu_$it" to "radial_menu_${it}_pattern" }
 
   /**
    * Vibration pattern resource IDs, by sound resource names, for the feedback controller. By name,

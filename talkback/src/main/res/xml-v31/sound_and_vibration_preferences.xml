@@ -20,25 +20,6 @@
       android:title="@string/title_pref_use_audio_focus"
       android:summary="@string/summary_audio_ducking" />
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
-      android:defaultValue="false"
-      android:key="pref_control_sounds"
-      android:title="@string/title_pref_control_sounds"
-      android:summary="@string/summary_pref_control_sounds" />
-  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
-      android:defaultValue="false"
-      android:dependency="pref_control_sounds"
-      android:key="pref_control_sounds_speak_roles"
-      android:title="@string/title_pref_control_sounds_speak_roles" />
-  <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
-      android:defaultValue="headphones"
-      android:dependency="pref_control_sounds"
-      android:dialogTitle="@string/title_pref_control_sounds_3d"
-      android:entries="@array/pref_control_sounds_3d_entries"
-      android:entryValues="@array/pref_control_sounds_3d_values"
-      android:key="pref_control_sounds_3d"
-      android:summary="%s"
-      android:title="@string/title_pref_control_sounds_3d" />
-  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
       android:defaultValue="@bool/pref_vibration_default"
       android:key="@string/pref_vibration_key"
       android:title="@string/title_pref_vibration" />

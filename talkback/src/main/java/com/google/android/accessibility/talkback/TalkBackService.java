@@ -150,7 +150,6 @@ import com.google.android.accessibility.talkback.compositor.GlobalVariables;
 import com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DescriptionOrder;
 import com.google.android.accessibility.talkback.contextmenu.ListMenuManager;
 import com.google.android.accessibility.talkback.controller.TelevisionNavigationController;
-import com.google.android.accessibility.talkback.controlsounds.ControlSoundsSettings;
 import com.google.android.accessibility.talkback.directtouch.DirectTouchController;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor.TalkBackListener;
@@ -3208,22 +3207,10 @@ public class TalkBackService extends AccessibilityServiceCompat
         getBooleanPref(R.string.pref_soundback_key, R.bool.pref_soundback_default);
     feedbackController.setAuditoryEnabled(auditoryEnabled);
     IndividualFeedbackSettings.INSTANCE.migrate(prefs);
-    Set<String> mutedSounds = IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs);
-    feedbackController.setMutedAuditory(mutedSounds);
-    feedbackController.setSpatialMode(ControlSoundsSettings.spatialMode(prefs));
-    Set<String> mutedVibrations =
-        IndividualFeedbackSettings.INSTANCE.mutedVibrationResources(prefs);
-    feedbackController.setMutedHaptic(mutedVibrations);
-    // A control's sound is asked for if it can be heard or felt, so with sound feedback off its
-    // vibration still tells what kind of control it is.
-    Set<Integer> controlFeedback =
-        new HashSet<>(ControlSoundsSettings.playingSounds(prefs, auditoryEnabled, mutedSounds));
-    controlFeedback.addAll(
-        ControlSoundsSettings.vibratingSounds(prefs, hapticEnabled, mutedVibrations));
-    globalVariables.setControlSounds(
-        auditoryEnabled && ControlSoundsSettings.isOn(prefs),
-        controlFeedback,
-        ControlSoundsSettings.speakRoles(prefs));
+    feedbackController.setMutedAuditory(
+        IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs));
+    feedbackController.setMutedHaptic(
+        IndividualFeedbackSettings.INSTANCE.mutedVibrationResources(prefs));
 
     // Update preference: time feedback format.
     String timeFeedbackFormat =
