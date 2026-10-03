@@ -64,9 +64,10 @@ internal class RadialMenuView(context: Context, private val listener: Listener) 
 
   private var items: List<Item> = emptyList()
 
-  private val innerRadius = dp(48f)
-  private val outerRadius = dp(56f)
-  private val extremeRadius = dp(160f)
+  // Sized for a phone, and scaled down to fit smaller screens such as a watch's.
+  private var innerRadius = dp(INNER_RADIUS_DP)
+  private var outerRadius = dp(OUTER_RADIUS_DP)
+  private var extremeRadius = dp(EXTREME_RADIUS_DP)
   private val spacing = dp(2f)
   private val shadowRadius = dp(4f)
   private val textSize =
@@ -85,8 +86,8 @@ internal class RadialMenuView(context: Context, private val listener: Listener) 
       }
 
   // Bounds of the circles, centered on (extremeRadius, extremeRadius).
-  private val outerBound = circleBounds(outerRadius)
-  private val extremeBound = circleBounds(extremeRadius)
+  private var outerBound = circleBounds(outerRadius)
+  private var extremeBound = circleBounds(extremeRadius)
 
   // A single slice pointing up, and the same outline in reverse for drawing text the right way up.
   private val slicePath = Path()
@@ -116,6 +117,16 @@ internal class RadialMenuView(context: Context, private val listener: Listener) 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
     center.set(w / 2f, h / 2f)
+    // On a screen smaller than the circle, such as a round watch, shrink the circle so that the
+    // item names, which run along its outer edge, stay on the screen.
+    val scale = (minOf(w, h) / 2f / dp(EXTREME_RADIUS_DP)).coerceAtMost(1f)
+    innerRadius = dp(INNER_RADIUS_DP) * scale
+    outerRadius = dp(OUTER_RADIUS_DP) * scale
+    extremeRadius = dp(EXTREME_RADIUS_DP) * scale
+    outerBound = circleBounds(outerRadius)
+    extremeBound = circleBounds(extremeRadius)
+    gradientBackground.gradientRadius = extremeRadius * 2
+    updateSliceShapes()
   }
 
   override fun onHoverEvent(event: MotionEvent): Boolean = onTouchEvent(event)
@@ -319,6 +330,10 @@ internal class RadialMenuView(context: Context, private val listener: Listener) 
 
   companion object {
     const val NO_ITEM = -1
+
+    private const val INNER_RADIUS_DP = 48f
+    private const val OUTER_RADIUS_DP = 56f
+    private const val EXTREME_RADIUS_DP = 160f
 
     private const val ELLIPSIS = "…"
 
