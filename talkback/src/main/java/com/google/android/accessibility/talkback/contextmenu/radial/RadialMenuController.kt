@@ -275,7 +275,8 @@ class RadialMenuController(
     /** Whether the user chose to show the Backtalk menu as a circle. */
     @JvmStatic
     fun isEnabled(context: Context): Boolean {
-      if (FormFactorUtils.isAndroidTv() || FormFactorUtils.isAndroidWear()) {
+      // A watch's round screen suits a circle; it is scaled to fit.
+      if (FormFactorUtils.isAndroidTv()) {
         return false
       }
       return SharedPreferencesUtils.getBooleanPref(
