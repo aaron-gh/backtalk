@@ -115,6 +115,22 @@
       android:title="@string/pref_allow_frequent_content_change_announcement_title"
       android:summary="@string/summary_pref_allow_frequent_content_change_announcement"
       app:splitSummary="true" />
+  <!-- Formatting -->
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+      android:defaultValue="@bool/pref_formatting_inline_default"
+      android:key="@string/pref_formatting_inline_key"
+      android:summary="@string/summary_text_formatting_verbosity"
+      android:title="@string/title_text_formatting_inline" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
+      android:key="@string/pref_formatting_inline_detail_key"
+      android:dependency="@string/pref_formatting_inline_key"
+      android:title="@string/title_text_formatting_verbosity_options"
+      android:fragment="com.google.android.accessibility.talkback.preference.base.TextFormattingDetailFragment" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+      android:defaultValue="@bool/pref_speak_notifications_default"
+      android:key="@string/pref_speak_notifications_key"
+      android:summary="@string/summary_pref_speak_notifications"
+      android:title="@string/title_pref_speak_notifications" />
   <!-- Speak element IDs - Non-preset detailed settings -->
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
       android:defaultValue="@bool/pref_speak_element_ids_default"
@@ -127,8 +143,21 @@
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
       android:defaultValue="@bool/pref_punctuation_default"
       android:key="@string/pref_punctuation_key"
+      android:visibility="invisible"
       android:title="@string/title_pref_punctuation"
       app:splitSummary="true" />
+  <com.google.android.accessibility.talkback.preference.base.PunctuationListPreference
+      android:defaultValue="@string/pref_punctuation_verbosity_default"
+      android:entries="@array/pref_punctuation_entries"
+      android:entryValues="@array/pref_punctuation_values"
+      android:key="@string/pref_punctuation_verbosity"
+      android:summary="%s"
+      android:title="@string/title_pref_punctuation" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+      android:defaultValue="@bool/pref_count_repeated_symbols_default"
+      android:key="@string/pref_count_repeated_symbols_key"
+      android:summary="@string/summary_pref_count_repeated_symbols"
+      android:title="@string/title_pref_count_repeated_symbols" />
 
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
       android:defaultValue="@bool/pref_tell_time_default"

@@ -6,6 +6,12 @@
         android:key="@string/pref_show_context_menu_contextual_actions_category_key"
         android:title="@string/context_menu_category_contextual_actions">
         <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
+            android:defaultValue="@bool/pref_show_context_menu_typo_suggestions_default"
+            android:key="@string/pref_show_context_menu_typo_suggestions_setting_key"
+            android:order="1"
+            android:title="@string/title_edittext_typo_suggestions"
+            android:summary="@string/summary_typo_suggestions"/>
+        <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
             android:defaultValue="@bool/pref_show_context_menu_custom_action_default"
             android:key="@string/pref_show_context_menu_custom_action_setting_key"
             android:order="2"
@@ -13,6 +19,12 @@
             app:singleLineTitle="false"
             android:summary="@string/summary_custom_action"
             app:splitSummary="true" />
+        <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
+            android:defaultValue="@bool/pref_show_context_menu_text_formatting_default"
+            android:key="@string/pref_show_context_menu_text_formatting_setting_key"
+            android:order="3"
+            android:title="@string/title_text_formatting_menu"
+            android:summary="@string/summary_text_formatting_menu"/>
         <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
             android:defaultValue="@bool/pref_show_context_menu_page_navigation_default"
             android:key="@string/pref_show_context_menu_page_navigation_setting_key"
@@ -37,6 +49,12 @@
             app:singleLineTitle="false"
             android:summary="@string/summary_image_caption"
             app:splitSummary="true" />
+        <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
+            android:defaultValue="@bool/pref_show_context_menu_summarize_view_default"
+            android:key="@string/pref_show_context_menu_summarize_view_setting_key"
+            android:order="27"
+            android:title="@string/title_summarize_view"
+            android:summary="@string/summary_screen_overview_no_actions"/>
     </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
         android:key="@string/pref_show_context_menu_navigation_category_key"
@@ -74,6 +92,12 @@
             app:singleLineTitle="false"
             android:summary="@string/summary_read_from_current"
             app:splitSummary="true" />
+        <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
+            android:defaultValue="@bool/pref_show_context_menu_copy_last_spoken_phrase_default"
+            android:key="@string/pref_show_context_menu_copy_last_spoken_phrase_setting_key"
+            android:order="10"
+            android:title="@string/title_copy_last_spoken_phrase"
+            android:summary="@string/summary_copy_last_spoken_phrase"/>
         <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
             android:defaultValue="@bool/pref_show_context_menu_spell_last_spoken_phrase_default"
             android:key="@string/pref_show_context_menu_spell_last_spoken_phrase_setting_key"
