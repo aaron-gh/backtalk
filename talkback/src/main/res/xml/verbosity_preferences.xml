@@ -113,6 +113,13 @@
             android:title="@string/title_text_formatting_verbosity_options"
             android:fragment="com.google.android.accessibility.talkback.preference.base.TextFormattingDetailFragment" />
 
+  <!-- What is said when the screen turns off or on and when the phone is unlocked -->
+  <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
+      android:key="pref_screen_announcements"
+      android:summary="@string/summary_pref_screen_announcements"
+      android:title="@string/title_pref_screen_announcements"
+      android:fragment="com.google.android.accessibility.talkback.preference.base.ScreenAnnouncementsFragment" />
+
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
       android:defaultValue="@bool/pref_speak_notifications_default"
       android:key="@string/pref_speak_notifications_key"
