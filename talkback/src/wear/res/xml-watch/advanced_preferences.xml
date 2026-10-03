@@ -46,6 +46,11 @@
   <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
       android:key="@string/pref_category_others_key"
       android:title="@string/title_pref_category_others">
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+        android:defaultValue="@bool/pref_reduce_window_delay_default"
+        android:key="@string/pref_reduce_window_delay_key"
+        android:summary="@string/pref_reduce_window_delay_summary"
+        android:title="@string/pref_reduce_window_delay_title"/>
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:fragment="com.google.android.accessibility.talkback.preference.base.DeveloperPrefFragment"
         android:key="@string/pref_category_developer_key"
