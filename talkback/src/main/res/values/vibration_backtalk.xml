@@ -142,56 +142,48 @@
         <item>20</item><!-- delayMs -->
     </integer-array>
 
-    <!-- Entering a list: a tap that rises. -->
+    <!-- Entering a list: two light taps, the second stronger. -->
     <integer-array name="list_entered_pattern">
         <item>0</item>
-        <item>15</item>
-        <item>40</item>
-        <item>50</item>
-        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
         <item>10</item>
-        <item>120</item>
-        <item>30</item>
-        <item>0</item>
-        <item>12</item>
+        <item>50</item>
+        <item>15</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>8</item>
         <item>80</item>
-        <item>12</item>
+        <item>50</item>
+        <item>0</item>
+        <item>10</item>
         <item>150</item>
-        <item>12</item>
-        <item>230</item>
         <item>-9999</item><!-- SENTINEL SEPARATOR -->
         <item>7</item><!-- TICK -->
-        <item>160</item><!-- scale -->
+        <item>80</item><!-- scale -->
         <item>0</item><!-- delayMs -->
-        <item>4</item><!-- QUICK_RISE -->
-        <item>180</item><!-- scale -->
-        <item>20</item><!-- delayMs -->
+        <item>7</item><!-- TICK -->
+        <item>150</item><!-- scale -->
+        <item>50</item><!-- delayMs -->
     </integer-array>
 
-    <!-- Leaving a list: a fall that ends in a tap. -->
+    <!-- Leaving a list: two light taps, the second weaker. -->
     <integer-array name="list_exited_pattern">
         <item>0</item>
-        <item>50</item>
-        <item>40</item>
         <item>15</item>
-        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
-        <item>12</item>
-        <item>230</item>
-        <item>12</item>
-        <item>150</item>
-        <item>12</item>
-        <item>80</item>
-        <item>30</item>
-        <item>0</item>
+        <item>50</item>
         <item>10</item>
-        <item>120</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>10</item>
+        <item>150</item>
+        <item>50</item>
+        <item>0</item>
+        <item>8</item>
+        <item>80</item>
         <item>-9999</item><!-- SENTINEL SEPARATOR -->
-        <item>6</item><!-- QUICK_FALL -->
-        <item>180</item><!-- scale -->
+        <item>7</item><!-- TICK -->
+        <item>150</item><!-- scale -->
         <item>0</item><!-- delayMs -->
         <item>7</item><!-- TICK -->
-        <item>160</item><!-- scale -->
-        <item>20</item><!-- delayMs -->
+        <item>80</item><!-- scale -->
+        <item>50</item><!-- delayMs -->
     </integer-array>
 
     <!-- Action done or end reached: two firm knocks. -->

@@ -185,7 +185,8 @@ public class TalkBackPreferenceFilter {
     BRAILLE_DISPLAY(
         R.string.pref_brailledisplay_key,
         HIDDEN_ON_TV | HIDDEN_ON_WATCH | HIDE_NO_BRAILLE_DISPLAY | HIDDEN_ON_XR),
-    CUSTOMIZE_MENU(R.string.pref_manage_customize_menus_key, HIDDEN_ON_TV),
+    CUSTOMIZE_CONTEXT_MENU(R.string.pref_category_manage_context_menu_key, HIDDEN_ON_TV),
+    CUSTOMIZE_SELECTOR_MENU(R.string.pref_category_manage_selector_menu_key, HIDDEN_ON_TV),
     // TalkBack/Reading Menu
     CUSTOMIZE_TALKBACK_MENU_VOICE_COMMAND_CONTROLS(
         R.string.pref_show_context_menu_voice_commands_setting_key, HIDDEN_ON_WATCH | HIDDEN_ON_XR),
@@ -244,6 +245,9 @@ public class TalkBackPreferenceFilter {
         R.string.pref_shortcut_3finger_1tap_hold_key, SHOW_IF_MULTI_FINGER_TAP_AND_HOLD),
     CUSTOMIZE_GESTURE_3FINGER_3TAP_HOLD(
         R.string.pref_shortcut_3finger_3tap_hold_key, SHOW_IF_MULTI_FINGER_TAP_AND_HOLD),
+    CUSTOMIZE_GESTURE_3FINGER_QUADRUPLE_TAP(
+        R.string.pref_shortcut_3finger_4tap_key,
+        SHOW_IF_SERVICE_GESTURE_DETECTION | HIDDEN_ON_WATCH),
     CUSTOMIZE_GESTURE_2FINGER_ROTATE_CLOCKWISE(
         R.string.pref_shortcut_2finger_rotate_clockwise_key,
         SHOW_IF_SERVICE_GESTURE_DETECTION),

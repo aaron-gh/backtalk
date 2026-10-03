@@ -292,9 +292,11 @@ public class RingerModeAndScreenMonitor extends SameThreadBroadcastReceiver
     // Speak "screen off".
     // REFERTO: Do not have any screen off message and any chime for Android Wear.
     if (!isWatch) {
+      // Uninterruptible, so that the lock screen or always-on display appearing right after the
+      // screen turns off does not cut the announcement off.
       SpeakOptions speakOptions =
           SpeakOptions.create()
-              .setQueueMode(SpeechController.QUEUE_MODE_INTERRUPT)
+              .setQueueMode(SpeechController.QUEUE_MODE_INTERRUPT_AND_UNINTERRUPTIBLE_BY_NEW_SPEECH)
               .setFlags(FeedbackItem.FLAG_NO_HISTORY);
       final float volume;
       if (ringerMode == AudioManager.RINGER_MODE_NORMAL) {

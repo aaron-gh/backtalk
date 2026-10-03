@@ -506,12 +506,10 @@
     <string name="title_pref_category_manage_gestures">Gestures</string>
     <!-- Label for the button to launch an activity for managing TalkBack's custom view labels. [CHAR LIMIT=70] -->
     <string name="title_pref_manage_labels">Custom labels</string>
-    <!-- Label for the button to launch an activity for managing custom menus. [CHAR LIMIT=70] -->
-    <string name="title_pref_manage_customize_menus">Edit menus</string>
     <!-- Label for the button to launch an activity for managing TalkBack's custom menus. [CHAR LIMIT=100] -->
-    <string name="title_pref_category_context_menu">Customize Backtalk menu</string>
+    <string name="title_pref_category_context_menu">Backtalk menu</string>
     <!-- Label for the button to launch an activity for managing TalkBack's custom menus. [CHAR LIMIT=100] -->
-    <string name="title_pref_category_selector_menu">Customize reading controls</string>
+    <string name="title_pref_category_selector_menu">Reading controls</string>
     <!-- Label for the button to launch an activity for managing TalkBack's navigation options menus. [CHAR LIMIT=100] -->
     <string name="title_pref_category_navigation_menu">Edit navigation options</string>
     <!-- Label for the button to launch an activity for managing TalkBack's keyboard shortcuts. [CHAR LIMIT=40] -->
@@ -519,7 +517,7 @@
       Source: Summary subtext for TalkBack context menu setting.
       Description: Explains how TalkBack context menu is opened. [CHAR LIMIT=NONE]
     -->
-    <string name="pref_category_context_menu_summary">To use the Backtalk menu, tap the screen with 3 fingers. You can also swipe up then right, or swipe down then right.</string>
+    <string name="pref_category_context_menu_summary">Tap with 3 fingers, or swipe up or down then right.</string>
     <!--
     Source: Summary subtext for TalkBack context menu setting in XR.
     Description: Explains how TalkBack context menu is opened on XR devices. [CHAR LIMIT=NONE]
@@ -529,12 +527,14 @@
     Source: Summary subtext for TalkBack context menu setting.
     Description: Explains how TalkBack context menu is opened without multifinger support. [CHAR LIMIT=NONE]
     -->
-    <string name="pref_category_context_menu_summary_single_finger">To use the Backtalk menu, swipe down then right.</string>
+    <string name="pref_category_context_menu_summary_single_finger">Swipe down then right.</string>
     <!--
     Source: Summary subtext for quick menu setting.
     Description: Explains how quick menu is opened. [CHAR LIMIT=NONE]
     -->
-    <string name="pref_category_selector_menu_summary">To use the reading controls, swipe left or right with 3 fingers. You can also swipe up or down with 3 fingers.</string>
+    <string name="pref_category_selector_menu_summary">Turn 2 fingers like a dial, or swipe left or right with 3 fingers, to choose a reading control. Then swipe up or down to change it.</string>
+    <!-- Summary of the reading controls setting when the rotor is not available. [CHAR LIMIT=NONE] -->
+    <string name="pref_category_selector_menu_summary_no_rotor">Swipe left or right with 3 fingers to choose a reading control. Then swipe up or down to change it.</string>
     <!--
     Source: Summary subtext for quick menu setting in XR.
     Description: Explains how quick menu is opened without multifinger support. [CHAR LIMIT=NONE]
@@ -544,7 +544,7 @@
     Source: Summary subtext for quick menu setting.
     Description: Explains how quick menu is opened without multifinger support. [CHAR LIMIT=NONE]
     -->
-    <string name="pref_category_selector_menu_summary_single_finger">To use the reading controls, swipe up then down.</string>
+    <string name="pref_category_selector_menu_summary_single_finger">Swipe up then down, or down then up, to choose a reading control. Then swipe up or down to change it.</string>
     <string name="title_pref_manage_keyboard_shortcuts">Keyboard shortcuts</string>
     <!-- Label for the button to export custom labels data as a file. [CHAR LIMIT=40] -->
     <string name="title_pref_export_custom_labels">Export custom labels</string>
@@ -2036,6 +2036,8 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <string name="title_pref_shortcut_3finger_2tap">Double-tap with 3 fingers</string>
     <!-- Label for the preference that assigns an action to the "three-finger triple-tap" gesture. [CHAR_LIMIT=75] -->
     <string name="title_pref_shortcut_3finger_3tap">Triple-tap with 3 fingers</string>
+    <!-- Label for the preference that assigns an action to the "three-finger quadruple-tap" gesture. [CHAR_LIMIT=75] -->
+    <string name="title_pref_shortcut_3finger_4tap">Quadruple-tap with 3 fingers</string>
     <!-- Label for the preference that assigns an action to the "four-finger tap" gesture. [CHAR_LIMIT=63] -->
     <string name="title_pref_shortcut_4finger_1tap">Tap with 4 fingers</string>
     <!-- Label for the preference that assigns an action to the "four-finger double-tap" gesture. [CHAR_LIMIT=75] -->

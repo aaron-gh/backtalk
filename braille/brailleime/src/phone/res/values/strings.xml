@@ -145,6 +145,11 @@
   <!-- Summary of the option that swaps the top and bottom dots. [CHAR_LIMIT=100]-->
   <string name="summary_pref_flip_dots_vertically">Dot 1 trades places with dot 3, and dot 4 with dot 6</string>
 
+  <!-- Title of the option that plays keyboard sounds while typing braille. [CHAR_LIMIT=60]-->
+  <string name="title_pref_typing_sounds">Typing sounds</string>
+  <!-- Summary of the option that plays keyboard sounds while typing braille. [CHAR_LIMIT=150]-->
+  <string name="summary_pref_typing_sounds">Play keyboard clicks when you type a character, a space, a new line, or delete</string>
+
   <!-- Title of the option for what is spoken as the user types on the braille keyboard. [CHAR_LIMIT=60]-->
   <string name="title_pref_braille_keyboard_echo">Keyboard echo</string>
   <!-- Keyboard echo choice: speak nothing as the user types. [CHAR_LIMIT=40]-->

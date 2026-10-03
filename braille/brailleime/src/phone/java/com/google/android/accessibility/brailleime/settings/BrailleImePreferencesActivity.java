@@ -234,6 +234,19 @@ public class BrailleImePreferencesActivity extends PreferencesActivity {
       }
 
       {
+        // Typing sounds preference.
+        SwitchPreferenceCompat typingSoundsPref =
+            findPreference(getString(R.string.pref_brailleime_typing_sounds));
+        typingSoundsPref.setChecked(BrailleUserPreferences.readTypingSounds(getContext()));
+        typingSoundsPref.setOnPreferenceClickListener(
+            preference -> {
+              BrailleUserPreferences.writeTypingSounds(
+                  getContext(), ((SwitchPreferenceCompat) preference).isChecked());
+              return true;
+            });
+      }
+
+      {
         // Swap top and bottom dots preference.
         SwitchPreferenceCompat flipDotsVerticallyPref =
             findPreference(getString(R.string.pref_brailleime_flip_dots_vertically));

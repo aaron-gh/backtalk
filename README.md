@@ -41,8 +41,10 @@ Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), t
     *   Double-tap and hold with 2 fingers: switch to the braille keyboard.
     *   Tap and hold with 3 fingers: pass through the next gesture.
     *   Triple-tap with 3 fingers: copy the last spoken phrase.
+    *   Double-tap with 3 fingers: turn speech off or on, as with VoiceOver.
     *   Triple-tap and hold with 3 fingers: paste.
-    *   Selection mode has no gesture.
+    *   Quadruple-tap with 3 fingers: hide or show the screen. This gesture is new in Backtalk, which recognizes it itself, so it needs Android 13 or later and **Handle gestures in Backtalk** on, which it is by default. It can be reassigned in gesture settings like the others.
+    *   Selection mode, copy, and the old speech gesture (triple-tap and hold with 2 fingers) have no gesture.
 *   **Navigation gestures.** You can assign a gesture to move to the next or previous character, word, line, paragraph, heading, link, control, landmark, button, checkbox, radio button, edit field, combo box, focusable item, graphic, list, list item, table, visited link, unvisited link, or heading of a given level. The reading control does not change. Find these actions under **Navigate by text**, **Navigate by element**, and **Navigate by heading level** when you choose an action for a gesture. Headings, links, and controls work in apps and on web pages. The other elements work only on web pages, and elsewhere Backtalk says so.
 *   **Status gesture.** Triple-tap with 2 fingers to hear what the status bar shows: the time, battery, Wi-Fi, and mobile signal, and the ringer, Do Not Disturb, and airplane mode when they are not in their usual state. To hear the Wi-Fi network name, allow location access when Backtalk asks the first time. To choose what it says and in what order, go to **Status readout** in Backtalk settings. Each item has **Move up** and **Move down** actions. This action is also in the gesture list as **Speak status**. To read from the current item, use **Read from next item** in the Backtalk menu.
 *   **Choose what is said when the screen turns off or on.** In **Verbosity > Screen on and off**, turn off "Screen off" or the ringer mode when the screen turns off, the time when the screen turns on, or "Device unlocked" when you unlock the phone. When the screen turns on, Backtalk can also say the battery, Wi-Fi, mobile network, ringer and Do Not Disturb, and airplane mode, each with its own switch, after the time and in the same announcement. These are separate from **Status readout**, so the status gesture can say different things.
@@ -52,8 +54,8 @@ Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), t
 
 ### Backtalk menu
 
-*   **Shorter menu by default.** These items are off by default: Actions, Screen search, Add or edit labels, Describe text formatting, Copy last spoken phrase, Spoken language, Voice commands, Keyboard shortcuts, and Braille display settings. Actions stay available with the actions reading control. Text-to-speech stays on, so that you can get to speech settings if your speech engine crashes. To turn them back on, go to **Customize menus** in Backtalk settings.
-*   **Circle menu.** The Backtalk menu can show as a circle in the middle of the screen, like in TalkBack 8.1 and earlier. Each item is a slice of the screen around the middle. Slide to an item, and lift to select it. Lift in the middle of the circle to close the menu. Items that open more items show them in a new circle. To turn it on, go to **Customize menus** in Backtalk settings and turn on **Circle menu**.
+*   **Shorter menu by default.** These items are off by default: Actions, Screen search, Add or edit labels, Describe text formatting, Copy last spoken phrase, Spoken language, Voice commands, Keyboard shortcuts, and Braille display settings. Actions stay available with the actions reading control. Text-to-speech stays on, so that you can get to speech settings if your speech engine crashes. To turn them back on, go to **Backtalk menu** in Backtalk settings.
+*   **Circle menu.** The Backtalk menu can show as a circle in the middle of the screen, like in TalkBack 8.1 and earlier. Each item is a slice of the screen around the middle. Slide to an item, and lift to select it. Lift in the middle of the circle to close the menu. Items that open more items show them in a new circle. To turn it on, go to **Backtalk menu** in Backtalk settings and turn on **Circle menu**.
 
 ### Pause
 
@@ -91,7 +93,6 @@ To use it:
 *   **Choose your games.** Go to **Direct touch** in TalkBack settings and turn on each game in the **Apps** list. Backtalk says "Direct touch on" when a game you chose comes to the front, and "Direct touch off" when it gives touch back. You can turn the speech off, and turn on a short vibration instead or as well.
 *   **Backtalk takes touch back when it is needed.** Touch returns to Backtalk when a dialog appears, another app opens on top of the game, you open the notification shade or quick settings, a text field takes focus, or the screen turns off. It goes back to the game when they are gone. The keyboard always stays with Backtalk, so you can explore it while the rest of the screen stays in direct touch.
 *   **Direct typing.** By default the keyboard area keeps working with Backtalk. For a game that draws its own keyboard, open the actions menu on the game in the list and choose **Turn on direct typing**.
-*   **Navigation bar always direct.** Turn this on in **Direct touch** settings, and a single tap on the Back, Home and Recents buttons works at once in every app, without exploring to them first, whether or not direct touch is on for the app in front. Touching the bottom of the screen while you explore can press them by accident. It is off by default.
 *   **Quick settings tile.** Add the **Direct touch** tile to pause and resume direct touch without leaving your game.
 *   **Backup and restore.** **Back up settings** saves your choices to a file, and **Restore settings** loads them on another device.
 *   **For game developers.** Add this `<meta-data>` tag inside your `<application>` or your main `<activity>`, and Backtalk turns your game on the first time it sees it. Players can still turn it off.
@@ -106,6 +107,7 @@ To use it:
 
 ### Braille keyboard
 
+*   **Typing sounds.** In braille keyboard settings, **Typing sounds** plays Android's keyboard clicks as you type: a click for each character, and the space, delete and return sounds for those actions. It is off by default, and works even when touch sounds are off in Android's settings.
 *   **Swap top and bottom dots.** In braille keyboard settings, **Swap top and bottom dots** makes dot 1 trade places with dot 3, and dot 4 with dot 6. **Reverse dots** is now called **Swap left and right dots**. You can turn on both.
 *   **Skip the tutorial.** The first page of the braille keyboard tutorial has a **Skip tutorial** button, which opens the keyboard right away.
 *   **Better haptics.** The braille keyboard uses the same crisp vibration effects as the rest of Backtalk. Submitting text feels the same as closing or switching the keyboard. Deleting in an empty field gives a soft vibration that fades out, so that you know there was nothing to delete.

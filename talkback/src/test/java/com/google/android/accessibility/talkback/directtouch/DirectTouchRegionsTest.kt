@@ -30,44 +30,6 @@ class DirectTouchRegionsTest {
   }
 
   @Test
-  fun aThinStripAlongTheBottomIsANavigationBar() {
-    assertTrue(DirectTouchRegions.isNavigationBar(0, 2300, 1080, 2400, 1080, 2400))
-  }
-
-  @Test
-  fun aNavigationBarThatIsOnlyTheButtonClusterIsStillOne() {
-    // The window Android reports on a real phone with three-button navigation.
-    assertTrue(DirectTouchRegions.isNavigationBar(165, 2245, 895, 2377, 1080, 2377))
-  }
-
-  @Test
-  fun aThinStripAlongASideInLandscapeIsANavigationBar() {
-    assertTrue(DirectTouchRegions.isNavigationBar(2250, 0, 2400, 1080, 2400, 1080))
-    assertTrue(DirectTouchRegions.isNavigationBar(0, 0, 150, 1080, 2400, 1080))
-  }
-
-  @Test
-  fun theStatusBarIsNotANavigationBar() {
-    assertFalse(DirectTouchRegions.isNavigationBar(0, 0, 1080, 100, 1080, 2400))
-  }
-
-  @Test
-  fun theNotificationShadeIsNotANavigationBar() {
-    assertFalse(DirectTouchRegions.isNavigationBar(0, 0, 1080, 2400, 1080, 2400))
-    assertFalse(DirectTouchRegions.isNavigationBar(0, 1200, 1080, 2400, 1080, 2400))
-  }
-
-  @Test
-  fun aSmallPopupAtTheBottomIsNotANavigationBar() {
-    assertFalse(DirectTouchRegions.isNavigationBar(300, 2300, 700, 2400, 1080, 2400))
-  }
-
-  @Test
-  fun anEmptyWindowIsNotANavigationBar() {
-    assertFalse(DirectTouchRegions.isNavigationBar(0, 2400, 1080, 2400, 1080, 2400))
-  }
-
-  @Test
   fun otherEventsDoNot() {
     assertFalse(DirectTouchRegions.reassertsRegion(AccessibilityEvent.TYPE_VIEW_FOCUSED))
     assertFalse(DirectTouchRegions.reassertsRegion(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED))

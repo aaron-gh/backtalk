@@ -77,8 +77,6 @@ class DirectTouchController(
   private var screenInteractive = true
   private var displayOn = true
   private var active = false
-  // Whether the passthrough region now holds just the navigation bar, while direct touch is off.
-  private var navBarRegionSent = false
   private var paused = false
 
   // The system holds preference listeners weakly, so this must stay a field.
@@ -90,6 +88,10 @@ class DirectTouchController(
     }
 
   init {
+    DirectTouchSettings.migrateNavBarSetting(
+      prefs,
+      service.getString(R.string.pref_lift_to_activate_key),
+    )
     prefs.registerOnSharedPreferenceChangeListener(prefsListener)
   }
 
@@ -162,9 +164,8 @@ class DirectTouchController(
     prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
     handler.removeCallbacks(reevaluate)
     handler.removeCallbacks(recheck)
-    if (active || navBarRegionSent) {
+    if (active) {
       active = false
-      navBarRegionSent = false
       clearRegion()
     }
   }
@@ -189,66 +190,18 @@ class DirectTouchController(
       windows.firstOrNull { it.id == mainWindowId }?.root?.packageName?.toString()
     val directTyping = mainPackage != null && DirectTouchSettings.isDirectTyping(prefs, mainPackage)
     val shouldBeActive = mainPackage != null && shouldBeActive(windows, mainPackage)
-    val navBarDirect = DirectTouchSettings.isNavBarDirect(prefs)
     if (shouldBeActive) {
-      navBarRegionSent = false
-      applyRegion(windows, directTyping, navBarDirect)
+      applyRegion(windows, directTyping)
     }
-    if (shouldBeActive != active) {
-      active = shouldBeActive
-      if (!active) {
-        clearRegion()
-        navBarRegionSent = false
-      }
-      announce(active)
+    if (shouldBeActive == active) {
+      return
     }
+    active = shouldBeActive
     if (!active) {
-      updateNavBarRegion(windows, navBarDirect)
-    }
-  }
-
-  /**
-   * While direct touch is off, keeps the navigation bar alone in the passthrough region if the user
-   * asked for that, and takes it out again once they stop asking or the bar is gone. The region is
-   * sent again on every look, because other services can clear the shared one.
-   */
-  private fun updateNavBarRegion(windows: List<AccessibilityWindowInfo>, navBarDirect: Boolean) {
-    val navBars = if (navBarDirect) navigationBarBounds(windows) else emptyList()
-    if (navBars.isNotEmpty()) {
-      val region = Region()
-      navBars.forEach { region.union(it) }
-      sendRegion(region)
-      navBarRegionSent = true
-    } else if (navBarRegionSent) {
       clearRegion()
-      navBarRegionSent = false
     }
+    announce(active)
   }
-
-  private fun navigationBarBounds(windows: List<AccessibilityWindowInfo>): List<Rect> {
-    val display = displayBounds()
-    return windows.mapNotNull { window ->
-      if (!isSystemUiWindow(window)) {
-        return@mapNotNull null
-      }
-      val bounds = Rect()
-      window.getBoundsInScreen(bounds)
-      bounds.takeIf {
-        DirectTouchRegions.isNavigationBar(
-          it.left,
-          it.top,
-          it.right,
-          it.bottom,
-          display.width(),
-          display.height(),
-        )
-      }
-    }
-  }
-
-  private fun isSystemUiWindow(window: AccessibilityWindowInfo): Boolean =
-    window.type == AccessibilityWindowInfo.TYPE_SYSTEM &&
-      window.root?.packageName?.toString() == SYSTEM_UI
 
   private fun shouldBeActive(
     windows: List<AccessibilityWindowInfo>,
@@ -281,7 +234,10 @@ class DirectTouchController(
     val displayHeight = displayBounds().height()
     val bounds = Rect()
     return windows.any { window ->
-      if (!isSystemUiWindow(window)) {
+      if (
+        window.type != AccessibilityWindowInfo.TYPE_SYSTEM ||
+          window.root?.packageName?.toString() != SYSTEM_UI
+      ) {
         return@any false
       }
       window.getBoundsInScreen(bounds)
@@ -289,33 +245,16 @@ class DirectTouchController(
     }
   }
 
-  private fun applyRegion(
-    windows: List<AccessibilityWindowInfo>,
-    directTyping: Boolean,
-    navBarDirect: Boolean,
-  ) {
-    val display = displayBounds()
+  private fun applyRegion(windows: List<AccessibilityWindowInfo>, directTyping: Boolean) {
     val excluded = mutableListOf<Rect>()
     windows.forEach { window ->
       if (DirectTouchRegions.shouldExcludeWindow(window.type, directTyping)) {
         val bounds = Rect()
         window.getBoundsInScreen(bounds)
-        val isNavBar =
-          isSystemUiWindow(window) &&
-            DirectTouchRegions.isNavigationBar(
-              bounds.left,
-              bounds.top,
-              bounds.right,
-              bounds.bottom,
-              display.width(),
-              display.height(),
-            )
-        if (!(navBarDirect && isNavBar)) {
-          excluded += bounds
-        }
+        excluded += bounds
       }
     }
-    sendRegion(DirectTouchRegions.passthroughRegion(display, excluded))
+    sendRegion(DirectTouchRegions.passthroughRegion(displayBounds(), excluded))
   }
 
   private fun clearRegion() = sendRegion(Region())
