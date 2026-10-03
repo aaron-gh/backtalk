@@ -28,6 +28,7 @@ import androidx.preference.PreferenceViewHolder
 import com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
 import com.google.android.accessibility.talkback.R
 import com.google.android.accessibility.talkback.preference.base.TalkbackBaseFragment
+import com.google.android.accessibility.talkback.soundthemes.SoundThemes
 import com.google.android.accessibility.utils.FeatureSupport
 import com.google.android.accessibility.utils.SharedPreferencesUtils
 import com.google.android.accessibility.utils.output.HapticPatternParser
@@ -135,12 +136,24 @@ class IndividualFeedbackFragment : TalkbackBaseFragment() {
   }
 
   private fun playVibration(context: Context, item: FeedbackItem) {
-    val resId = resourceId(context, item.resourceNames.first(), "array")
-    val vibrator = context.getSystemService(Vibrator::class.java)
-    if (resId == 0 || vibrator == null) {
+    val vibrator = context.getSystemService(Vibrator::class.java) ?: return
+    // The theme in use may replace the vibration, as it can give control sounds theirs.
+    val switch = item.resourceNames.first()
+    val themePattern =
+      SoundThemes.feedback(context, prefs)
+        .vibrations
+        .entries
+        .firstOrNull { SoundVibrations.switchOf(it.key) == switch }
+        ?.value
+    val pattern =
+      themePattern
+        ?: resourceId(context, switch, "array").takeIf { it != 0 }?.let {
+          context.resources.getIntArray(it)
+        }
+    if (pattern == null || pattern.isEmpty()) {
       return
     }
-    vibrator.vibrate(HapticPatternParser(vibrator).parse(context.resources.getIntArray(resId)))
+    vibrator.vibrate(HapticPatternParser(vibrator).parse(pattern))
     previewVibrator = vibrator
   }
 

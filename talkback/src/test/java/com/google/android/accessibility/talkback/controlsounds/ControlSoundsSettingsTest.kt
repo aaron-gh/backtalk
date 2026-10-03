@@ -73,6 +73,45 @@ class ControlSoundsSettingsTest {
   }
 
   @Test
+  fun onlyControlsTheThemeGivesAVibrationAreFelt() {
+    turnOn()
+    assertEquals(
+      setOf(R.id.control_button),
+      ControlSoundsSettings.vibratingSounds(prefs, true, emptySet(), setOf("control_button")),
+    )
+    assertTrue(ControlSoundsSettings.vibratingSounds(prefs, true, emptySet(), emptySet()).isEmpty())
+  }
+
+  @Test
+  fun controlVibrationsAreFeltWithSoundFeedbackOffButNotWithVibrationOff() {
+    turnOn()
+    assertTrue(ControlSoundsSettings.playingSounds(prefs, false, emptySet(), allChosen).isEmpty())
+    assertEquals(
+      ControlSounds.SOUNDS.values.toSet(),
+      ControlSoundsSettings.vibratingSounds(prefs, true, emptySet(), allChosen),
+    )
+    assertTrue(ControlSoundsSettings.vibratingSounds(prefs, false, emptySet(), allChosen).isEmpty())
+  }
+
+  @Test
+  fun aControlVibrationTurnedOffOnItsOwnIsNotFelt() {
+    turnOn()
+    val felt =
+      ControlSoundsSettings.vibratingSounds(prefs, true, setOf("control_button_pattern"), allChosen)
+    assertFalse(R.id.control_button in felt)
+    assertTrue(R.id.control_checkbox in felt)
+    // Links share the switch of the link vibration.
+    val withoutLinks =
+      ControlSoundsSettings.vibratingSounds(prefs, true, setOf("hyperlink_pattern"), allChosen)
+    assertFalse(R.id.control_link in withoutLinks)
+  }
+
+  @Test
+  fun noControlVibrationsWithControlSoundsOff() {
+    assertTrue(ControlSoundsSettings.vibratingSounds(prefs, true, emptySet(), allChosen).isEmpty())
+  }
+
+  @Test
   fun everySoundHasAnIndividualSwitch() {
     val switches = IndividualFeedbackSettings.SOUNDS.flatMap { it.resourceNames }
     assertTrue(switches.containsAll(ControlSounds.SOUNDS.keys))

@@ -25,6 +25,7 @@ import com.google.android.accessibility.talkback.controlsounds.ControlSounds
 import com.google.android.accessibility.talkback.controlsounds.ControlSoundsSettings
 import com.google.android.accessibility.talkback.individualfeedback.FeedbackItem
 import com.google.android.accessibility.talkback.individualfeedback.IndividualFeedbackSettings
+import com.google.android.accessibility.talkback.individualfeedback.SoundVibrations
 import com.google.android.libraries.accessibility.utils.log.LogUtils
 import java.io.File
 import java.io.IOException
@@ -59,7 +60,19 @@ class ThemeFeedback(
   val soundPaths: Map<String, String>,
   /** Vibration patterns by the resource names of the sounds they play with. */
   val vibrations: Map<String, IntArray>,
-)
+) {
+  /**
+   * The vibrations, with the ones whose switch is in [mutedVibrations] made empty, so that they
+   * play nothing rather than the vibration they replace.
+   */
+  fun vibrationsPlaying(mutedVibrations: Set<String>): Map<String, IntArray> =
+    vibrations.mapValues { (sound, pattern) ->
+      if (SoundVibrations.switchOf(sound) in mutedVibrations) IntArray(0) else pattern
+    }
+
+  /** The sounds the theme gives a vibration that can be felt, by resource name. */
+  fun felt(): Set<String> = vibrations.filterValues { it.isNotEmpty() }.keys
+}
 
 /**
  * Sound themes: sets of sounds, vibrations and settings that replace Backtalk's own. Backtalk's
@@ -206,7 +219,8 @@ object SoundThemes {
       .putString(PREF_ACTIVE, theme.id)
       .putBoolean(
         ControlSoundsSettings.PREF_ON,
-        manifest.controlSounds ?: soundFiles(theme).keys.any { it in ControlSounds.SOUNDS },
+        manifest.controlSounds
+          ?: (soundFiles(theme).keys + manifest.vibrations.keys).any { it in ControlSounds.SOUNDS },
       )
       .putString(
         ControlSoundsSettings.PREF_3D,

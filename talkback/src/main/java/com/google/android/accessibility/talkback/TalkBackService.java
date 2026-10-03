@@ -3213,18 +3213,28 @@ public class TalkBackService extends AccessibilityServiceCompat
     IndividualFeedbackSettings.INSTANCE.migrate(prefs);
     Set<String> mutedSounds = IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs);
     feedbackController.setMutedAuditory(mutedSounds);
+    Set<String> mutedVibrations =
+        IndividualFeedbackSettings.INSTANCE.mutedVibrationResources(prefs);
+    feedbackController.setMutedHaptic(mutedVibrations);
     ThemeFeedback soundTheme = SoundThemes.feedback(this, prefs);
     Map<String, String> customSounds = soundTheme.getSoundPaths();
     feedbackController.setCustomSounds(customSounds);
-    feedbackController.setThemeVibrations(soundTheme.getVibrations());
+    feedbackController.setThemeVibrations(soundTheme.vibrationsPlaying(mutedVibrations));
     feedbackController.setSpatialMode(ControlSoundsSettings.spatialMode(prefs));
+    // A control's sound is asked for if it can be heard or felt, so with sound feedback off its
+    // vibration still tells what kind of control it is.
+    Set<Integer> heardControls =
+        ControlSoundsSettings.playingSounds(
+            prefs, auditoryEnabled, mutedSounds, customSounds.keySet());
+    Set<Integer> controlFeedback = new HashSet<>(heardControls);
+    controlFeedback.addAll(
+        ControlSoundsSettings.vibratingSounds(
+            prefs, hapticEnabled, mutedVibrations, soundTheme.felt()));
     globalVariables.setControlSounds(
         auditoryEnabled && ControlSoundsSettings.isOn(prefs),
-        ControlSoundsSettings.playingSounds(
-            prefs, auditoryEnabled, mutedSounds, customSounds.keySet()),
+        controlFeedback,
+        heardControls,
         ControlSoundsSettings.speakRoles(prefs));
-    feedbackController.setMutedHaptic(
-        IndividualFeedbackSettings.INSTANCE.mutedVibrationResources(prefs));
 
     // Update preference: time feedback format.
     String timeFeedbackFormat =

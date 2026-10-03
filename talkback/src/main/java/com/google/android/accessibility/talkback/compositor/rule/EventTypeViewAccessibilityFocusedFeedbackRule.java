@@ -124,9 +124,13 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
     boolean isDeviceScreenNoTouch = globalVariables.isDeviceScreenNoTouch();
 
     // With control sounds on, the focus and list sounds come from where the focus lands, and a
-    // control sound takes the place of the focus sound. Only while a control sound plays is the
-    // kind of control left out of the speech.
+    // control sound takes the place of the focus sound. A control sound that the theme only gives
+    // a vibration leaves the focus sound in place, and its vibration takes the place of the focus
+    // vibration. Only while a control sound is heard or felt is the kind of control left out of
+    // the speech.
     int earcon = earcon(srcNode, globalVariables);
+    int haptic = haptic(srcNode);
+    boolean earconVibrates = true;
     float[] earconPosition = null;
     boolean isFocusSound = earcon == R.raw.focus || earcon == R.raw.focus_actionable;
     if (globalVariables.areControlSoundsOn()
@@ -136,7 +140,12 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
     if (isFocusSound) {
       int controlSound = globalVariables.getControlSoundForFocus(srcNode);
       if (controlSound != 0) {
-        earcon = controlSound;
+        if (globalVariables.isControlSoundHeard(controlSound)) {
+          earcon = controlSound;
+        } else {
+          haptic = controlSound;
+          earconVibrates = false;
+        }
         globalVariables.setRoleSoundOfFocus(controlSound);
       }
     }
@@ -188,7 +197,8 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
         .setEarcon(earcon)
         .setEarconX(earconPosition == null ? -1 : earconPosition[0])
         .setEarconY(earconPosition == null ? -1 : earconPosition[1])
-        .setHaptic(haptic(srcNode))
+        .setEarconVibrates(earconVibrates)
+        .setHaptic(haptic)
         .setInlineFormatting(
             supportInlineFormatting(srcNode, accessibilityFocusEventInterpretation))
         .build();

@@ -16,6 +16,7 @@
 
 package com.google.android.accessibility.talkback.individualfeedback
 
+import com.google.android.accessibility.talkback.controlsounds.ControlSounds
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 import org.junit.Assert.assertEquals
@@ -28,11 +29,21 @@ class SoundVibrationsTest {
   private val patterns: Map<String, Pattern> = loadPatterns()
   private val vibrationNames = IndividualFeedbackSettings.VIBRATIONS.flatMap { it.resourceNames }
 
+  // Switches of vibrations that only themes give, which Backtalk has no pattern for.
+  private val patternNames =
+    vibrationNames - (SoundVibrations.THEME_ONLY_SWITCHES.values - SoundVibrations.PATTERNS.values)
+
   @Test
   fun everySoundHasAVibrationUnlessItShouldNot() {
     val sounds = IndividualFeedbackSettings.SOUNDS.flatMap { it.resourceNames }.toSet()
-    assertEquals(sounds, SoundVibrations.PATTERNS.keys + SoundVibrations.WITHOUT_VIBRATION)
+    assertEquals(
+      sounds,
+      SoundVibrations.PATTERNS.keys +
+        SoundVibrations.WITHOUT_VIBRATION +
+        SoundVibrations.THEME_ONLY_SWITCHES.keys,
+    )
     assertTrue(SoundVibrations.PATTERNS.keys.none { it in SoundVibrations.WITHOUT_VIBRATION })
+    assertTrue(SoundVibrations.PATTERNS.keys.none { it in SoundVibrations.THEME_ONLY_SWITCHES })
   }
 
   @Test
@@ -70,14 +81,26 @@ class SoundVibrationsTest {
 
   @Test
   fun everySoundVibrationHasASwitch() {
-    SoundVibrations.PATTERNS.values.forEach {
+    (SoundVibrations.PATTERNS.values + SoundVibrations.THEME_ONLY_SWITCHES.values).forEach {
       assertTrue("$it has no switch", it in vibrationNames)
     }
   }
 
   @Test
+  fun everyControlVibrationHasItsOwnSwitchButLinks() {
+    for (control in ControlSounds.SOUNDS.keys) {
+      val switch = SoundVibrations.switchOf(control)
+      if (control == "control_link") {
+        assertEquals("hyperlink_pattern", switch)
+      } else {
+        assertEquals("${control}_pattern", switch)
+      }
+    }
+  }
+
+  @Test
   fun everySwitchHasAWellFormedPattern() {
-    vibrationNames.forEach { name ->
+    patternNames.forEach { name ->
       val pattern = patterns[name]
       assertNotNull("$name is not defined", pattern)
       pattern!!
@@ -104,7 +127,7 @@ class SoundVibrationsTest {
 
   @Test
   fun noTwoActionsFeelTheSame() {
-    val used = vibrationNames.associateWith { patterns.getValue(it) }
+    val used = patternNames.associateWith { patterns.getValue(it) }
     assertUnique("on and off times", used.mapValues { it.value.onOff })
     assertUnique("amplitudes", used.mapValues { it.value.amplitudes })
     assertUnique("primitives", used.mapValues { it.value.premium })

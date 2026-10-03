@@ -31,6 +31,7 @@ import android.os.VibrationEffect;
 import android.text.TextUtils;
 import android.os.Vibrator;
 import android.util.SparseArray;
+import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
 import com.google.android.accessibility.utils.BuildVersionUtils;
 import com.google.android.accessibility.utils.Performance.EventId;
@@ -98,6 +99,9 @@ public class FeedbackController {
 
   /** The file each sound in {@link #mSoundIds} was loaded from, if it was a custom sound. */
   private final SparseArray<String> mLoadedPaths = new SparseArray<>();
+
+  /** Whether each sound played so far has a sound resource of its own. */
+  private final SparseBooleanArray mHasOwnSound = new SparseBooleanArray();
 
   /** Sound files the user chose to play in place of the app's own, by sound resource name. */
   private Map<String, String> mCustomSoundPaths = Collections.emptyMap();
@@ -191,10 +195,8 @@ public class FeedbackController {
     @Nullable Integer patternResId = name == null ? null : mSoundHaptics.get(name);
     int @Nullable [] themePattern = name == null ? null : mThemeVibrations.get(name);
     if (themePattern != null) {
-      // The theme's vibration is turned off by the switch of the vibration it replaces.
-      if (patternResId == null || !isMuted(mMutedHapticNames, patternResId)) {
-        vibratePattern(themePattern, eventId);
-      }
+      // Even an empty pattern, of a vibration that is off, keeps the event's own vibration quiet.
+      vibratePattern(themePattern, eventId);
       mSoundHapticCover.soundVibrated(eventId, SystemClock.uptimeMillis());
     } else if (patternResId != null) {
       // Even if the user turned this vibration off, the event's own vibration stays quiet.
@@ -204,6 +206,13 @@ public class FeedbackController {
   }
 
   private boolean vibrate(int resId, @Nullable EventId eventId) {
+    // A sound's vibration from the theme, played on its own, such as for a control with a
+    // vibration and no sound in the theme.
+    @Nullable String name = mThemeVibrations.isEmpty() ? null : resourceName(resId);
+    int @Nullable [] themePattern = name == null ? null : mThemeVibrations.get(name);
+    if (themePattern != null) {
+      return vibratePattern(themePattern, eventId);
+    }
     if (!mHapticEnabled || resId == 0 || isMuted(mMutedHapticNames, resId)) {
       return false;
     }
@@ -349,7 +358,10 @@ public class FeedbackController {
       float volume,
       boolean ignoreVolumeAdjustment,
       @Nullable EventId eventId) {
-    if (!mAuditoryEnabled || resId == 0 || isMuted(mMutedAuditoryNames, resId)) {
+    if (!mAuditoryEnabled
+        || resId == 0
+        || isMuted(mMutedAuditoryNames, resId)
+        || !hasSound(resId)) {
       return;
     }
     LogUtils.v(TAG, "playAuditory() resId=%d eventId=%s", resId, eventId);
@@ -375,7 +387,25 @@ public class FeedbackController {
     if (resId != 0) {
       playSoundHaptic(resId, eventId);
     }
-    if (!mAuditoryEnabled || resId == 0 || isMuted(mMutedAuditoryNames, resId)) {
+    playPlacedSound(resId, rate, volume, x, y, eventId);
+  }
+
+  /** Plays a sound from a place on the screen, like {@link #playAuditory}, without its vibration. */
+  public void playAuditoryWithoutHaptic(
+      int resId, float rate, float volume, float x, float y, @Nullable EventId eventId) {
+    if (x < 0 || y < 0) {
+      playAuditoryWithoutHaptic(resId, rate, volume, eventId);
+      return;
+    }
+    playPlacedSound(resId, rate, volume, x, y, eventId);
+  }
+
+  private void playPlacedSound(
+      int resId, float rate, float volume, float x, float y, @Nullable EventId eventId) {
+    if (!mAuditoryEnabled
+        || resId == 0
+        || isMuted(mMutedAuditoryNames, resId)
+        || !hasSound(resId)) {
       return;
     }
     LogUtils.v(TAG, "playAuditory() resId=%d x=%.2f y=%.2f eventId=%s", resId, x, y, eventId);
@@ -418,16 +448,32 @@ public class FeedbackController {
               new EarconsPlayTask(mSoundPool, sampleId, leftVolume, rightVolume, rate).execute();
             }
           });
-      try {
-        mSoundIds.put(
-            resId, path != null ? mSoundPool.load(path, 1) : mSoundPool.load(mContext, resId, 1));
-        mLoadedPaths.put(resId, path);
-      } catch (NotFoundException e) {
-        // A sound that only plays as a custom sound, such as a control sound, has no file of its
-        // own.
-        LogUtils.w(TAG, "No sound to play for %d", resId);
-      }
+      mSoundIds.put(
+          resId, path != null ? mSoundPool.load(path, 1) : mSoundPool.load(mContext, resId, 1));
+      mLoadedPaths.put(resId, path);
     }
+  }
+
+  /**
+   * Returns whether {@code resId} has a sound to play: a sound of its own, or one the user chose. A
+   * control sound with only a vibration in the theme has neither.
+   */
+  private boolean hasSound(int resId) {
+    if (customSoundPath(resId) != null) {
+      return true;
+    }
+    int index = mHasOwnSound.indexOfKey(resId);
+    if (index >= 0) {
+      return mHasOwnSound.valueAt(index);
+    }
+    boolean hasOwn;
+    try {
+      hasOwn = "raw".equals(mResources.getResourceTypeName(resId));
+    } catch (NotFoundException e) {
+      hasOwn = false;
+    }
+    mHasOwnSound.put(resId, hasOwn);
+    return hasOwn;
   }
 
   /** Returns the file the user chose to play in place of {@code resId}, or null for its own. */
@@ -628,7 +674,8 @@ public class FeedbackController {
 
   /**
    * Sets the vibrations to play with sounds in place of the usual ones, by the resource names of
-   * the sounds, in the format {@link HapticPatternParser} reads. An empty pattern plays none.
+   * the sounds, in the format {@link HapticPatternParser} reads. An empty pattern plays none, so
+   * a vibration the user turned off is passed as an empty pattern.
    */
   public void setThemeVibrations(Map<String, int[]> patternsBySoundName) {
     mThemeVibrations = new HashMap<>(patternsBySoundName);

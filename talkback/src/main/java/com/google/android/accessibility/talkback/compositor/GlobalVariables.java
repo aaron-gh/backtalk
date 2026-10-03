@@ -177,9 +177,10 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
   private boolean speakRoles = true;
   private boolean speakCollectionInfo = true;
 
-  // Control sounds: whether they are on, and the sounds that play for focused controls.
+  // Control sounds: whether they are heard, and the ones heard or felt for focused controls.
   private boolean controlSoundsOn = false;
   private Set<Integer> controlSounds = Collections.emptySet();
+  private Set<Integer> heardControlSounds = Collections.emptySet();
   private boolean speakControlSoundRoles = false;
   // The control sound playing for the focus being described, or 0.
   private int roleSoundOfFocus = 0;
@@ -539,13 +540,24 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
   }
 
   /**
-   * Sets whether control sounds are on, the ones that play, and whether the kind of control is
-   * still spoken when its sound plays.
+   * Sets whether control sounds are heard, the ones that are heard or felt as vibrations, the ones
+   * of those that are heard, and whether the kind of control is still spoken when its sound
+   * plays.
    */
-  public void setControlSounds(boolean on, Set<Integer> sounds, boolean speakRoles) {
+  public void setControlSounds(
+      boolean on, Set<Integer> sounds, Set<Integer> heard, boolean speakRoles) {
     controlSoundsOn = on;
-    controlSounds = on ? sounds : Collections.emptySet();
+    controlSounds = sounds;
+    heardControlSounds = heard;
     speakControlSoundRoles = speakRoles;
+  }
+
+  /**
+   * Returns whether a control sound is heard. One that is only felt leaves the focus sound in
+   * place, and plays its vibration in place of the focus vibration.
+   */
+  public boolean isControlSoundHeard(int sound) {
+    return heardControlSounds.contains(sound);
   }
 
   /** Returns whether control sounds are on, so focus sounds come from where the focus is. */

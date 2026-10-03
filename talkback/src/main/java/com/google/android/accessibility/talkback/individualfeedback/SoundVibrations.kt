@@ -26,9 +26,8 @@ import com.google.android.accessibility.talkback.controlsounds.ControlSounds
  */
 object SoundVibrations {
   /**
-   * Sounds that play without a vibration of their own. The braille sounds leave vibration to the
-   * braille keyboard, which has its own setting. Control sounds take the place of the focus sound,
-   * and the focus vibration plays with them as it would with the focus sound.
+   * Sounds that play without a vibration. The braille sounds leave vibration to the braille
+   * keyboard, which has its own setting.
    */
   val WITHOUT_VIBRATION: Set<String> =
     setOf(
@@ -38,7 +37,21 @@ object SoundVibrations {
       "turn_on",
       "turn_off",
       "calibration_done",
-    ) + ControlSounds.SOUNDS.keys
+    )
+
+  /**
+   * The switches of vibrations that only sound themes give, by sound resource name: each kind of
+   * control can have its own vibration in a theme. Without one, a control plays the focus
+   * vibration. A link shares the switch of the link vibration.
+   */
+  val THEME_ONLY_SWITCHES: Map<String, String> =
+    ControlSounds.SOUNDS.keys.associateWith {
+      if (it == "control_link") "hyperlink_pattern" else "${it}_pattern"
+    }
+
+  /** The name of the switch that turns off the vibration of a sound, by its resource name. */
+  @JvmStatic
+  fun switchOf(soundName: String): String? = PATTERNS[soundName] ?: THEME_ONLY_SWITCHES[soundName]
 
   /** Vibration pattern resource names, by sound resource names. */
   val PATTERNS: Map<String, String> =

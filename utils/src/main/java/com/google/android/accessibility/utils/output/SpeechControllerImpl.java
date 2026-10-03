@@ -2108,7 +2108,8 @@ public class SpeechControllerImpl implements SpeechController {
           feedbackController.playAuditory(
               keyResId, earconRate, earconVolume, earconX, earconY, eventId);
         } else {
-          feedbackController.playAuditoryWithoutHaptic(keyResId, earconRate, earconVolume, eventId);
+          feedbackController.playAuditoryWithoutHaptic(
+              keyResId, earconRate, earconVolume, earconX, earconY, eventId);
         }
       }
     }

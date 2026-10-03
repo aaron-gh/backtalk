@@ -31,18 +31,22 @@ use it, to read about it, to save it as a theme file, or to remove it.
 
 Under **Settings of** the theme in use:
 
-*   **Control sounds** plays a sound for each kind of control, such as buttons, checkboxes and
-    edit fields, in place of the focus sound, as the [Unspoken](https://github.com/ahicks92/Unspoken)
-    add-on does for NVDA. Backtalk has no control sounds of its own, so they come from the theme.
-    A kind of control that the theme has no sound for plays the focus sound, and Backtalk says
-    what kind of control it is.
+*   **Control sounds and vibrations** gives each kind of control, such as buttons, checkboxes
+    and edit fields, its own sound and its own vibration, in place of the focus sound and
+    vibration, as the [Unspoken](https://github.com/ahicks92/Unspoken) add-on does for NVDA with
+    sounds. Backtalk has no control sounds or vibrations of its own, so they come from the theme.
+    When a control's sound or vibration plays, Backtalk leaves out saying what kind of control it
+    is. A control's vibration plays even with **Sound feedback** off, so you can learn the kinds of
+    control by touch alone. A kind of control that the theme gives a vibration but no sound plays
+    the focus sound with its own vibration. One the theme gives neither plays the focus sound and
+    vibration, and Backtalk says what kind of control it is.
 *   **3D audio** sets when control sounds play in 3D: with headphones, always, or never.
 *   **Sounds** lists every sound, where you can replace any of them with a sound file of your own,
     preview it, or go back to Backtalk's sound.
 
-Each theme remembers its own **Control sounds** and **3D audio** settings, so switching themes
-switches them too. A theme starts with the settings in its `theme.json`. **Still say the kind of control**, in
-**Sound and vibration**, is the same for every theme.
+Each theme remembers its own **Control sounds and vibrations** and **3D audio** settings, so
+switching themes switches them too. A theme starts with the settings in its `theme.json`. **Still
+say the kind of control**, in **Sound and vibration**, is the same for every theme.
 
 To replace a few sounds without installing anything, use **Sounds** with the Backtalk theme in use.
 To share your sounds, select the theme and choose **Save as a theme file**.
@@ -102,7 +106,7 @@ Every field is optional.
 | `description` | A sentence or two about it. |
 | `license` | The license of the sounds, such as `GPL-2.0` or `CC0-1.0`. Include its text in the theme too. |
 | `website` | Where to find out more, or get updates. |
-| `settings.control_sounds` | `true` or `false`: whether control sounds are on with this theme. Without it, they are on when the theme has a control sound. |
+| `settings.control_sounds` | `true` or `false`: whether control sounds and vibrations are on with this theme. Without it, they are on when the theme has a control sound or a control vibration. |
 | `settings.3d_audio` | `"headphones"`, `"always"` or `"never"`: when control sounds play in 3D. Without it, `"headphones"`. |
 | `vibrations` | The theme's own vibrations, by the name of the sound they play with. See below. |
 
@@ -170,9 +174,43 @@ Tips:
 ### Vibrations
 
 Each sound has a vibration, which plays with it even when sound feedback is off. A theme can give
-any sound its own vibration, by the name of the sound, as in the table above. A theme can also
-give control sounds vibrations, which Backtalk does not: without one, a control plays the focus
-vibration. A sound the theme gives no vibration keeps Backtalk's.
+any sound its own vibration, by the name of the sound, as in the table above. A sound the theme gives no vibration keeps Backtalk's.
+
+#### Control vibrations
+
+A theme can give each kind of control its own vibration, by the names of the control sounds, such
+as `control_button`, so that people can tell what a control is by touch alone. Backtalk has none
+of its own. A control vibration:
+
+*   plays in place of the focus vibration, with **Control sounds and vibrations** on;
+*   plays even with **Sound feedback** off;
+*   leaves the kind of control out of the speech, as a control sound does;
+*   works without a control sound: the control then plays the focus sound with its own vibration;
+*   has its own switch in **Individual sounds and vibrations**, under **Vibrations**, except for
+    links on web pages, which share the switch of the link vibration.
+
+Keep control vibrations short and easy to tell apart, because controls are focused often. Build
+them from the same taps, clicks, rises and falls, and give each kind its own rhythm, since some
+phones can only play the `pattern` form. For example:
+
+```json
+"vibrations": {
+  "control_button": {
+    "pattern": [0, 15, 40, 15],
+    "strength": [[15, 255], [40, 0], [15, 255]],
+    "effects": [["click", 255, 0], ["click", 255, 40]]
+  },
+  "control_checkbox": {
+    "pattern": [0, 15, 30, 40],
+    "strength": [[15, 255], [30, 0], [40, 160]],
+    "effects": [["click", 255, 0], ["quick_rise", 160, 30]]
+  },
+  "control_list_item": {
+    "pattern": [0, 10, 50, 10],
+    "effects": [["click", 140, 0], ["click", 140, 50]]
+  }
+}
+```
 
 A vibration is `"none"`, for no vibration, or an object with up to three forms of the same
 vibration. Phones play the best form they can.
@@ -195,7 +233,8 @@ Times can be up to 5000 ms, and each form up to 64 steps. A vibration that is no
 left out when the theme is installed, and Backtalk says why.
 
 The **Vibrations** switches in **Individual sounds and vibrations** turn off a theme's vibrations
-too: the switch of the vibration a theme's vibration replaces turns it off.
+too: the switch of the vibration a theme's vibration replaces turns it off, and plays the theme's
+vibration when you preview it.
 
 ### Sharing a theme
 
@@ -221,5 +260,4 @@ Unspoken:
     sounds can't be chosen.
 *   The circle menu's eight notes share one theme sound.
 *   Announcements, which vibrate without a sound, keep Backtalk's vibration.
-*   The vibration previews in **Individual sounds and vibrations** play Backtalk's vibrations, not
-    the theme's.
+*   Links on web pages and links in text share one vibration switch.
