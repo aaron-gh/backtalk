@@ -9,6 +9,14 @@
         android:title="@string/title_pref_latency_reduction"
         android:summary="@string/talkback_latency_reduction_summary"
         android:fragment="com.google.android.accessibility.talkback.preference.base.TalkBackLatencyReductionPreferenceFragment" />
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
+        android:defaultValue="@string/pref_lift_to_activate_default"
+        android:dialogTitle="@string/title_pref_lift_to_activate"
+        android:entries="@array/pref_lift_to_activate_entries"
+        android:entryValues="@array/pref_lift_to_activate_values"
+        android:key="@string/pref_lift_to_activate_key"
+        android:summary="%s"
+        android:title="@string/title_pref_lift_to_activate" />
     <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
         android:defaultValue="@bool/pref_proximity_default"
         android:key="@string/pref_proximity_key"
@@ -42,15 +50,24 @@
         android:key="@string/pref_time_feedback_format_key"
         android:summary="%s"
         android:title="@string/pref_time_feedback_format_title"/>
-  </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
-  <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
-      android:key="@string/pref_category_others_key"
-      android:title="@string/title_pref_category_others">
     <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
         android:defaultValue="@bool/pref_reduce_window_delay_default"
         android:key="@string/pref_reduce_window_delay_key"
         android:summary="@string/pref_reduce_window_delay_summary"
         android:title="@string/pref_reduce_window_delay_title"/>
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+        android:defaultValue="@bool/pref_auto_enter_table_navigation_default"
+        android:key="@string/pref_auto_enter_table_navigation_key"
+        android:title="@string/pref_auto_enter_table_navigation_title"/>
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+        android:defaultValue="@bool/pref_smart_browse_mode_default"
+        android:key="@string/pref_smart_browse_mode_key"
+        android:title="@string/title_smart_browse_mode"
+        android:summary="@string/summary_smart_browse_mode"/>
+  </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
+  <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
+      android:key="@string/pref_category_others_key"
+      android:title="@string/title_pref_category_others">
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:fragment="com.google.android.accessibility.talkback.preference.base.DeveloperPrefFragment"
         android:key="@string/pref_category_developer_key"

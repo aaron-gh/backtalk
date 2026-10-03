@@ -466,6 +466,11 @@ public class TalkbackMenuProcessor {
   private void addPauseBacktalk(ContextMenu menu) {
     menu.removeItem(R.id.pause_backtalk);
 
+    // A watch has no volume keys or keyboard to resume with, and the paused notification needs a
+    // permission watches rarely grant, so pausing could leave the user without a screen reader.
+    if (FormFactorUtils.isAndroidWear()) {
+      return;
+    }
     if (!showMenuItem(
         R.string.pref_show_context_menu_pause_backtalk_setting_key,
         R.bool.pref_show_context_menu_pause_backtalk_default)) {
