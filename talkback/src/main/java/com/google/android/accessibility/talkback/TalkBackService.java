@@ -138,6 +138,7 @@ import com.google.android.accessibility.talkback.actor.search.UniversalSearchMan
 import com.google.android.accessibility.talkback.actor.voicecommands.VoiceCommandActor;
 import com.google.android.accessibility.talkback.actor.voicecommands.VoiceCommandProcessor;
 import com.google.android.accessibility.talkback.analytics.TalkBackAnalytics.PeriodicDataProvider;
+import com.google.android.accessibility.talkback.audio.AudioDeviceRouter;
 import com.google.android.accessibility.talkback.braille.BrailleHelper;
 import com.google.android.accessibility.talkback.braille.TalkBackForBrailleCommonImpl;
 import com.google.android.accessibility.talkback.braille.TalkBackForBrailleDisplayImpl;
@@ -733,6 +734,7 @@ public class TalkBackService extends AccessibilityServiceCompat
   private ScreenStateMonitor screenStateMonitor;
   private DirectTouchController directTouchController;
   private PauseController pauseController;
+  private AudioDeviceRouter audioDeviceRouter;
   private InputMethodMonitor inputMethodMonitor;
   private DisplayMonitor displayMonitor;
   private ProcessorEventQueue processorEventQueue;
@@ -909,6 +911,11 @@ public class TalkBackService extends AccessibilityServiceCompat
       directTouchController = null;
     }
 
+    if (audioDeviceRouter != null) {
+      audioDeviceRouter.shutdown();
+      audioDeviceRouter = null;
+    }
+
     if (passThroughModeActor != null) {
       passThroughModeActor.onDestroy();
     }
@@ -1028,6 +1035,9 @@ public class TalkBackService extends AccessibilityServiceCompat
     if (PauseController.isPaused()
         && event.getEventType() != AccessibilityEvent.TYPE_TOUCH_INTERACTION_END) {
       return;
+    }
+    if (audioDeviceRouter != null) {
+      audioDeviceRouter.ensureRouting();
     }
     Performance perf = Performance.getInstance();
     EventId eventId = perf.onEventReceived(event);
@@ -1787,6 +1797,8 @@ public class TalkBackService extends AccessibilityServiceCompat
     accessibilityEventProcessor = new AccessibilityEventProcessor(this, displayMonitor);
     feedbackController = new FeedbackController(this);
     feedbackController.setSoundHaptics(SoundVibrations.patternIds(this));
+    audioDeviceRouter = new AudioDeviceRouter(this);
+    audioDeviceRouter.startMonitoring();
     speechController =
         new SpeechControllerImpl(
             this,
@@ -2892,6 +2904,10 @@ public class TalkBackService extends AccessibilityServiceCompat
     if (feedbackController != null) {
       feedbackController.shutdown();
     }
+    if (audioDeviceRouter != null) {
+      audioDeviceRouter.shutdown();
+      audioDeviceRouter = null;
+    }
     if (keyComboManager != null) {
       keyComboManager.shutdown();
     }
@@ -3211,6 +3227,16 @@ public class TalkBackService extends AccessibilityServiceCompat
         IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs));
     feedbackController.setMutedHaptic(
         IndividualFeedbackSettings.INSTANCE.mutedVibrationResources(prefs));
+
+    if (audioDeviceRouter != null) {
+      String audioOutputPref =
+          SharedPreferencesUtils.getStringPref(
+              prefs,
+              res,
+              R.string.pref_audio_output_device_key,
+              R.string.pref_audio_output_device_default);
+      audioDeviceRouter.setPreferredDevice(audioOutputPref);
+    }
 
     // Update preference: time feedback format.
     String timeFeedbackFormat =

@@ -15,14 +15,22 @@
  */
 package com.google.android.accessibility.talkback.preference.base;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.media.AudioDeviceCallback;
+import android.media.AudioDeviceInfo;
+import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import androidx.fragment.app.FragmentActivity;
 import android.text.TextUtils;
+import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.TwoStatePreference;
 import com.google.android.accessibility.talkback.R;
+import com.google.android.accessibility.talkback.audio.AudioDeviceRouter;
 import com.google.android.accessibility.utils.FeatureSupport;
 import com.google.android.accessibility.utils.PreferenceSettingsUtils;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
@@ -63,8 +71,36 @@ public class SoundAndVibrationFragment extends TalkbackBaseFragment {
             updateTwoStatePreferenceStatus(
                 activity, R.string.pref_vibration_key, R.bool.pref_vibration_default);
           }
+        } else if (TextUtils.equals(key, getString(R.string.pref_audio_output_device_key))) {
+          updateAudioOutputPreference();
         }
       };
+
+  private final AudioDeviceCallback audioDeviceCallback =
+      new AudioDeviceCallback() {
+        @Override
+        public void onAudioDevicesAdded(AudioDeviceInfo[] addedDevices) {
+          updateAudioOutputPreference();
+        }
+
+        @Override
+        public void onAudioDevicesRemoved(AudioDeviceInfo[] removedDevices) {
+          updateAudioOutputPreference();
+        }
+      };
+
+  private void updateAudioOutputPreference() {
+    FragmentActivity activity = getActivity();
+    if (activity == null) {
+      return;
+    }
+    Preference preference =
+        PreferenceSettingsUtils.findPreference(activity, getString(R.string.pref_audio_output_device_key));
+    if (preference instanceof ListPreference) {
+      ListPreference listPref = (ListPreference) preference;
+      AudioDeviceRouter.updatePreference(listPref, activity);
+    }
+  }
 
   @Override
   public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -86,12 +122,47 @@ public class SoundAndVibrationFragment extends TalkbackBaseFragment {
       updateTwoStatePreferenceStatus(
           activity, R.string.pref_vibration_key, R.bool.pref_vibration_default);
     }
+
+    updateAudioOutputPreference();
+    Preference audioPref =
+        PreferenceSettingsUtils.findPreference(activity, getString(R.string.pref_audio_output_device_key));
+    if (audioPref instanceof ListPreference) {
+      ListPreference listPref = (ListPreference) audioPref;
+      listPref.setOnPreferenceClickListener(
+          p -> {
+            AudioDeviceRouter.updatePreference(listPref, activity);
+            return false;
+          });
+      listPref.setOnPreferenceChangeListener(
+          (p, newValue) -> {
+            listPref.setValue((String) newValue);
+            AudioDeviceRouter.updatePreference(listPref, activity);
+            AudioDeviceRouter router = AudioDeviceRouter.getInstance();
+            if (router != null) {
+              router.setPreferredDevice((String) newValue);
+            }
+            return true;
+          });
+    }
+
+    AudioManager audioManager = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
+    if (audioManager != null) {
+      audioManager.registerAudioDeviceCallback(audioDeviceCallback, new Handler(Looper.getMainLooper()));
+    }
   }
 
   @Override
   public void onPause() {
     super.onPause();
     prefs.unregisterOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
+
+    FragmentActivity activity = getActivity();
+    if (activity != null) {
+      AudioManager audioManager = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
+      if (audioManager != null) {
+        audioManager.unregisterAudioDeviceCallback(audioDeviceCallback);
+      }
+    }
   }
 
   /**
