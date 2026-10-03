@@ -66,7 +66,9 @@ internal class LocalGemmaRunner(
       try {
         parse(postData)
       } catch (e: JSONException) {
-        callbackExecutor.execute { callback.onFailure("Bad request: ${e.message}") }
+        callbackExecutor.execute {
+          callback.onFailure(GeminiFailure.other("Bad request: ${e.message}"))
+        }
         return
       }
     cancel()
@@ -89,7 +91,9 @@ internal class LocalGemmaRunner(
       }
       val model = llm()
       if (model == null) {
-        callbackExecutor.execute { callback.onFailure("No on-device model is installed") }
+        callbackExecutor.execute {
+          callback.onFailure(GeminiFailure.other("No on-device model is installed"))
+        }
         return
       }
       val raw = model.generate(job.prompt, job.jpeg)
@@ -97,7 +101,9 @@ internal class LocalGemmaRunner(
       if (job.cancelled.get()) {
         callbackExecutor.execute { callback.onCancelled() }
       } else if (text.isEmpty()) {
-        callbackExecutor.execute { callback.onFailure("The model gave an empty answer") }
+        callbackExecutor.execute {
+          callback.onFailure(GeminiFailure.other("The model gave an empty answer"))
+        }
       } else {
         val response =
           DataFieldUtils.GeminiResponse.builder()
@@ -114,7 +120,7 @@ internal class LocalGemmaRunner(
         callback.onCancelled()
       }
     } catch (e: Exception) {
-      callbackExecutor.execute { callback.onFailure(e.toString()) }
+      callbackExecutor.execute { callback.onFailure(GeminiFailure.other(e.toString())) }
     } finally {
       pending.compareAndSet(job, null)
     }

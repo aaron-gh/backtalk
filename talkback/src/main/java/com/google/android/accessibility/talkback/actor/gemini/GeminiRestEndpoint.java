@@ -46,7 +46,6 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
   private static final String TAG = "GeminiEndpoint";
   private static final String GEMINI_URL =
       "https://generativelanguage.googleapis.com/v1beta/models/";
-  private static final String GEMINI_URL_PARAM = ":generateContent?key=";
   private static final String GEMINI_URL_NO_PARAM = ":generateContent";
 
   private final Context context;
@@ -92,25 +91,23 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
                   : PromptStyle.ON_DEVICE;
             },
             (postData, callback) -> {
-              String urlWithApiKey = urlWithApiKey();
-              requestPerformer.performRequest(
-                  TextUtils.isEmpty(urlWithApiKey) ? url : urlWithApiKey, postData, callback);
+              requestPerformer.performRequest(url, apiKey(), postData, callback);
               return kotlin.Unit.INSTANCE;
-            });
+            },
+            failure -> failure.userMessage(context));
     prefs = SharedPreferencesUtils.getSharedPreferences(context);
   }
 
   /**
-   * Returns the request URL with the API key, or an empty string when there is no key. The key is
-   * read each time, so that a key entered in settings works at once.
+   * Returns the API key, or an empty string when there is none. The key is read each time, so that
+   * a key entered in settings works at once.
    */
-  private String urlWithApiKey() {
-    String apiKey = GeminiApiKey.effectiveKey(prefs, builtInApiKey);
-    return TextUtils.isEmpty(apiKey) ? "" : GEMINI_URL + model + GEMINI_URL_PARAM + apiKey;
+  private String apiKey() {
+    return GeminiApiKey.effectiveKey(prefs, builtInApiKey);
   }
 
   private boolean isSupported() {
-    return !TextUtils.isEmpty(urlWithApiKey()) || requestPerformer.isKeylessInitialized();
+    return !TextUtils.isEmpty(apiKey()) || requestPerformer.isKeylessInitialized();
   }
 
   @Override
@@ -170,10 +167,9 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
       JSONObject postData =
           DataFieldUtils.createPostDataJson(prefixPrompt + text, encodedImage, safetySettings);
 
-      String urlWithApiKey = urlWithApiKey();
-      String urlTarget = TextUtils.isEmpty(urlWithApiKey) ? url : urlWithApiKey;
       requestPerformer.performRequest(
-          urlTarget,
+          url,
+          apiKey(),
           postData,
           new GeminiRestResponseCallback() {
             @Override
@@ -184,9 +180,9 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
                 LogUtils.v(TAG, "Gemini succeeds");
               } else { // Redefine the hint of these kinds when the use cases are understood.
                 geminiResponseListener.onResponse(FinishReason.ERROR_BLOCKED, /* response= */ null);
-                LogUtils.v(
+                LogUtils.e(
                     TAG,
-                    "Gemini finishes by some reason:%s",
+                    "Gemini gave no answer, finish or block reason: %s",
                     (response.blockReason() != null)
                         ? response.blockReason()
                         : response.finishReason());
@@ -194,9 +190,10 @@ public class GeminiRestEndpoint implements GeminiEndpoint {
             }
 
             @Override
-            public void onFailure(String reason) {
-              LogUtils.w(TAG, "ErrorResponse processing Gemini request:%s", reason);
-              geminiResponseListener.onResponse(FinishReason.ERROR_RESPONSE, /* response= */ null);
+            public void onFailure(GeminiFailure failure) {
+              // The request performer has logged the failure. The listener speaks the text.
+              geminiResponseListener.onResponse(
+                  FinishReason.ERROR_RESPONSE, failure.userMessage(context));
             }
 
             @Override
