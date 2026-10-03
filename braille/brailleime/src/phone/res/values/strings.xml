@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <!-- User-facing name of the Soft Braille IME. [CHAR_LIMIT=50] -->
-  <string name="braille_ime_service_name">Backtalk braille keyboard</string>
+  <string name="braille_ime_service_name">Backtalk Aaron braille keyboard</string>
   <!-- User-facing name of the Soft Braille IME when connecting to a braille display. [CHAR_LIMIT=60] -->
   <string name="braille_ime_bd_mode_name">Braille display input</string>
   <!-- Audial announcement that plays when switching to tabletop mode. [CHAR_LIMIT=200] -->
