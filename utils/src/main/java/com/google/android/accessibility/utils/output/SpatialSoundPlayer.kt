@@ -28,6 +28,8 @@ import android.os.Handler
 import android.os.HandlerThread
 import com.google.android.accessibility.utils.R
 import com.google.android.libraries.accessibility.utils.log.LogUtils
+import java.io.File
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -45,17 +47,19 @@ class SpatialSoundPlayer(private val context: Context) {
 
   // Everything below is used only on the player's thread.
   private var hrtf: Hrtf? = null
-  private val sounds = HashMap<Int, FloatArray?>()
+  // Decoded sounds, by file path for custom sounds and by resource ID otherwise.
+  private val sounds = HashMap<String, FloatArray>()
   private var track: AudioTrack? = null
 
   /**
-   * Plays [resId] as if it came from [x] and [y], fractions of the screen from its left and top
-   * edges, at [volume] from 0 to 1.
+   * Plays [resId], or the file at [path] in its place, as if it came from [x] and [y], fractions of
+   * the screen from its left and top edges, at [volume] from 0 to 1.
    */
-  fun play(resId: Int, x: Float, y: Float, volume: Float) {
+  fun play(resId: Int, path: String?, x: Float, y: Float, volume: Float) {
     handler.post {
       try {
-        val mono = sounds.getOrPut(resId) { readSound(resId) } ?: return@post
+        val key = path ?: "res:$resId"
+        val mono = sounds[key] ?: readSound(resId, path)?.also { sounds[key] = it } ?: return@post
         val hrtf = hrtf ?: loadHrtf().also { hrtf = it }
         val stereo =
           hrtf.render(mono, Hrtf.azimuthForScreen(x), Hrtf.elevationForScreen(y))
@@ -65,6 +69,11 @@ class SpatialSoundPlayer(private val context: Context) {
         LogUtils.e(TAG, "Could not play sound %d: %s", resId, e)
       }
     }
+  }
+
+  /** Drops the decoded sounds, so that custom sounds the user has replaced free their memory. */
+  fun forgetSounds() {
+    handler.post { sounds.clear() }
   }
 
   /** Stops the sound playing now, if any, and frees the thread. */
@@ -119,9 +128,22 @@ class SpatialSoundPlayer(private val context: Context) {
   private fun loadHrtf(): Hrtf =
     context.resources.openRawResource(R.raw.hrtf_kemar).use { Hrtf.parse(it.readBytes()) }
 
-  /** Returns a sound resource as mono samples at 44.1 kHz, or null if it cannot be decoded. */
-  private fun readSound(resId: Int): FloatArray? {
-    val bytes = context.resources.openRawResource(resId).use { it.readBytes() }
+  /**
+   * Returns a sound resource, or the file at [path], as mono samples at 44.1 kHz, or null if it
+   * cannot be decoded.
+   */
+  private fun readSound(resId: Int, path: String?): FloatArray? {
+    val bytes =
+      if (path != null) {
+        try {
+          File(path).readBytes()
+        } catch (e: IOException) {
+          LogUtils.w(TAG, "Cannot read sound %s: %s", path, e)
+          return null
+        }
+      } else {
+        context.resources.openRawResource(resId).use { it.readBytes() }
+      }
     val samples = decodeWav(bytes) ?: decodeWithMediaCodec(bytes)
     if (samples == null || samples.isEmpty()) {
       LogUtils.w(TAG, "Cannot decode sound %d", resId)

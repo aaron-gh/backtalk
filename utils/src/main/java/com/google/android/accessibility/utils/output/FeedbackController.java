@@ -28,6 +28,7 @@ import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
+import android.text.TextUtils;
 import android.os.Vibrator;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
@@ -94,6 +95,12 @@ public class FeedbackController {
 
   /** Map from the resource IDs of loaded sounds to SoundPool sound IDs. */
   private final SparseIntArray mSoundIds = new SparseIntArray();
+
+  /** The file each sound in {@link #mSoundIds} was loaded from, if it was a custom sound. */
+  private final SparseArray<String> mLoadedPaths = new SparseArray<>();
+
+  /** Sound files the user chose to play in place of the app's own, by sound resource name. */
+  private Map<String, String> mCustomSoundPaths = Collections.emptyMap();
 
   private final HapticPatternParser parser;
 
@@ -350,7 +357,7 @@ public class FeedbackController {
       if (mSpatialSoundPlayer == null) {
         mSpatialSoundPlayer = new SpatialSoundPlayer(mContext);
       }
-      mSpatialSoundPlayer.play(resId, x, y, adjustedVolume);
+      mSpatialSoundPlayer.play(resId, customSoundPath(resId), x, y, adjustedVolume);
     } else {
       // Full volume in the middle, fading out of the far speaker towards either edge.
       float pan = Math.max(-1f, Math.min(1f, (x - 0.5f) * 2));
@@ -363,7 +370,14 @@ public class FeedbackController {
   }
 
   private void playFromPool(int resId, float rate, float leftVolume, float rightVolume) {
+    @Nullable String path = customSoundPath(resId);
     int soundId = mSoundIds.get(resId);
+    if (soundId != 0 && !TextUtils.equals(path, mLoadedPaths.get(resId))) {
+      // The user chose another sound since this one was loaded.
+      mSoundPool.unload(soundId);
+      mSoundIds.delete(resId);
+      soundId = 0;
+    }
 
     if (soundId != 0) {
       new EarconsPlayTask(mSoundPool, soundId, leftVolume, rightVolume, rate).execute();
@@ -376,8 +390,25 @@ public class FeedbackController {
               new EarconsPlayTask(mSoundPool, sampleId, leftVolume, rightVolume, rate).execute();
             }
           });
-      mSoundIds.put(resId, mSoundPool.load(mContext, resId, 1));
+      try {
+        mSoundIds.put(
+            resId, path != null ? mSoundPool.load(path, 1) : mSoundPool.load(mContext, resId, 1));
+        mLoadedPaths.put(resId, path);
+      } catch (NotFoundException e) {
+        // A sound that only plays as a custom sound, such as a control sound, has no file of its
+        // own.
+        LogUtils.w(TAG, "No sound to play for %d", resId);
+      }
     }
+  }
+
+  /** Returns the file the user chose to play in place of {@code resId}, or null for its own. */
+  private @Nullable String customSoundPath(int resId) {
+    if (mCustomSoundPaths.isEmpty()) {
+      return null;
+    }
+    @Nullable String name = resourceName(resId);
+    return name == null ? null : mCustomSoundPaths.get(name);
   }
 
   private boolean shouldPlayIn3d() {
@@ -551,6 +582,20 @@ public class FeedbackController {
    */
   public void setVolumeAdjustment(float adjustment) {
     mVolumeAdjustment = adjustment;
+  }
+
+  /**
+   * Sets the sound files to play in place of the app's own sounds, by the resource names of the
+   * sounds they replace. Sounds not in the map play as usual.
+   */
+  public void setCustomSounds(Map<String, String> pathsByResourceName) {
+    if (mCustomSoundPaths.equals(pathsByResourceName)) {
+      return;
+    }
+    mCustomSoundPaths = new HashMap<>(pathsByResourceName);
+    if (mSpatialSoundPlayer != null) {
+      mSpatialSoundPlayer.forgetSounds();
+    }
   }
 
   /**

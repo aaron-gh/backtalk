@@ -18,8 +18,6 @@ package com.google.android.accessibility.talkback.individualfeedback
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.media.AudioAttributes
-import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Vibrator
 import androidx.core.view.ViewCompat
@@ -41,7 +39,7 @@ import com.google.android.accessibility.utils.output.HapticPatternParser
  */
 class IndividualFeedbackFragment : TalkbackBaseFragment() {
   private lateinit var prefs: SharedPreferences
-  private var player: MediaPlayer? = null
+  private val soundPreview = SoundPreview()
   // The vibrator playing a preview, so that leaving the screen stops it like a sound preview.
   private var previewVibrator: Vibrator? = null
 
@@ -63,7 +61,7 @@ class IndividualFeedbackFragment : TalkbackBaseFragment() {
           item,
           IndividualFeedbackSettings.isSoundOn(prefs, item),
           onChange = { on -> IndividualFeedbackSettings.setSoundOn(prefs, item, on) },
-          preview = { playSound(context, item) },
+          preview = { soundPreview.play(context, prefs, item) },
         )
       )
     }
@@ -88,7 +86,7 @@ class IndividualFeedbackFragment : TalkbackBaseFragment() {
 
   override fun onPause() {
     super.onPause()
-    stopSound()
+    soundPreview.stop()
     previewVibrator?.cancel()
     previewVibrator = null
   }
@@ -134,34 +132,6 @@ class IndividualFeedbackFragment : TalkbackBaseFragment() {
         },
       )
     }
-  }
-
-  private fun playSound(context: Context, item: FeedbackItem) {
-    stopSound()
-    val resId = resourceId(context, item.resourceNames.first(), "raw")
-    if (resId == 0) {
-      return
-    }
-    val attributes =
-      AudioAttributes.Builder()
-        .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
-        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-        .build()
-    player =
-      MediaPlayer.create(context, resId, attributes, 0)?.apply {
-        setOnCompletionListener {
-          if (player === it) {
-            player = null
-          }
-          it.release()
-        }
-        start()
-      }
-  }
-
-  private fun stopSound() {
-    player?.release()
-    player = null
   }
 
   private fun playVibration(context: Context, item: FeedbackItem) {

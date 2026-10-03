@@ -45,17 +45,20 @@ object ControlSoundsSettings {
     }
 
   /**
-   * The control sounds that play, which are none while control sounds or sound feedback are off,
-   * and leave out the ones turned off in Individual sounds and vibrations. A control whose sound
-   * does not play has its kind spoken.
+   * The control sounds that play, which are none while control sounds or sound feedback are off.
+   * Only the ones with a custom sound in [customSounds] play, and not the ones turned off in
+   * Individual sounds and vibrations. A control whose sound does not play has its kind spoken.
    */
   @JvmStatic
   fun playingSounds(
     prefs: SharedPreferences,
     soundFeedbackOn: Boolean,
     mutedSounds: Set<String>,
+    customSounds: Set<String>,
   ): Set<Int> {
     if (!soundFeedbackOn || !isOn(prefs)) return emptySet()
-    return ControlSounds.SOUNDS.filterKeys { it !in mutedSounds }.values.toSet()
+    return ControlSounds.SOUNDS.filterKeys { it in customSounds && it !in mutedSounds }
+      .values
+      .toSet()
   }
 }

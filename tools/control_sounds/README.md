@@ -1,32 +1,16 @@
 # Control sounds
 
-The control sounds are from the [Unspoken](https://github.com/ahicks92/Unspoken) add-on for NVDA,
-by Bryan Smart and Austin Hicks. Unlike the rest of Backtalk, which is under the Apache License 2.0,
-they are under the GNU General Public License, version 2. Its text, as Unspoken ships it, is in
-[COPYING](COPYING) in this directory. They are data files that Backtalk only reads and plays, so
-the license of Backtalk's code is unchanged.
+Backtalk has no control sounds of its own. Each kind of control plays the custom sound the user
+chooses for it, in **Sound and vibration** > **Custom sounds**, and a control without one plays the
+usual focus sound.
 
-These files are under the GPL:
+`make_unspoken_pack.py` makes a sound pack of the sounds from the
+[Unspoken](https://github.com/ahicks92/Unspoken) add-on for NVDA, by Bryan Smart and Austin Hicks,
+from a checkout of Unspoken. Their license, the GNU General Public License, version 2, goes in the
+pack with them. Backtalk only reads the files the user loads, so it ships no GPL sounds:
 
-    talkback/src/main/res/raw/control_button.wav        (Unspoken's button.wav)
-    talkback/src/main/res/raw/control_checkbox.wav      (checkbox.wav)
-    talkback/src/main/res/raw/control_clock.wav         (clock.wav)
-    talkback/src/main/res/raw/control_combo_box.wav     (combobox.wav)
-    talkback/src/main/res/raw/control_edit_text.wav     (editabletext.wav)
-    talkback/src/main/res/raw/control_image.wav         (icon.wav)
-    talkback/src/main/res/raw/control_link.wav          (link.wav)
-    talkback/src/main/res/raw/control_list_item.wav     (listitem.wav)
-    talkback/src/main/res/raw/control_menu_item.wav     (menuitem.wav)
-    talkback/src/main/res/raw/control_radio_button.wav  (radiobutton.wav)
-    talkback/src/main/res/raw/control_slider.wav        (slider.wav)
-    talkback/src/main/res/raw/control_tab.wav           (tab.wav)
-    talkback/src/main/res/raw/control_tree_item.wav     (treeviewitem.wav)
-
-They were changed only by converting them to mono, 16 bit, 44.1 kHz WAV, with:
-
-    afconvert -f WAVE -d LEI16@44100 -c 1 button.wav control_button.wav
-
-The originals are in the Unspoken repository, in addon/globalPlugins/Unspoken/sounds.
+    git clone https://github.com/ahicks92/Unspoken
+    python3 make_unspoken_pack.py Unspoken unspoken-sounds.zip
 
 `make_hrtf.py` packs the head-related transfer functions that play the sounds in 3D into
 `utils/src/main/res/raw/hrtf_kemar.bin`. Its comments say how to download the measurements.

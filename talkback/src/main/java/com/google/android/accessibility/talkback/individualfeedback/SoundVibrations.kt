@@ -17,6 +17,7 @@
 package com.google.android.accessibility.talkback.individualfeedback
 
 import android.content.Context
+import com.google.android.accessibility.talkback.controlsounds.ControlSounds
 
 /**
  * The vibration that goes with each sound. Every sound has its own vibration, and it plays even
@@ -25,8 +26,9 @@ import android.content.Context
  */
 object SoundVibrations {
   /**
-   * Sounds that play without a vibration. The braille sounds leave vibration to the braille
-   * keyboard, which has its own setting.
+   * Sounds that play without a vibration of their own. The braille sounds leave vibration to the
+   * braille keyboard, which has its own setting. Control sounds take the place of the focus sound,
+   * and the focus vibration plays with them as it would with the focus sound.
    */
   val WITHOUT_VIBRATION: Set<String> =
     setOf(
@@ -36,7 +38,7 @@ object SoundVibrations {
       "turn_on",
       "turn_off",
       "calibration_done",
-    )
+    ) + ControlSounds.SOUNDS.keys
 
   /** Vibration pattern resource names, by sound resource names. */
   val PATTERNS: Map<String, String> =

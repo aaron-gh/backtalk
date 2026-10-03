@@ -133,16 +133,6 @@ class HrtfTest {
     assertTrue(SpatialSoundPlayer.resample(same, 44100, 44100) === same)
   }
 
-  @Test
-  fun everyControlSoundCanPlayIn3d() {
-    val sounds = File("../talkback/src/main/res/raw").listFiles { f -> f.name.startsWith("control_") }
-    assertTrue(sounds!!.isNotEmpty())
-    for (sound in sounds) {
-      val samples = SpatialSoundPlayer.decodeWav(sound.readBytes())
-      assertTrue(sound.name, samples != null && samples.isNotEmpty())
-    }
-  }
-
   private fun wav(channels: Int, rate: Int, vararg samples: Int): ByteArray {
     val data = ByteBuffer.allocate(samples.size * 2).order(ByteOrder.LITTLE_ENDIAN)
     samples.forEach { data.putShort(it.toShort()) }

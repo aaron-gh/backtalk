@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Title of the screen where the user replaces Backtalk's sounds with sound files of their own. [CHAR LIMIT=50] -->
+    <string name="title_pref_custom_sounds">Custom sounds</string>
+    <!-- Summary of the entry that opens the custom sounds screen. [CHAR LIMIT=NONE] -->
+    <string name="summary_pref_custom_sounds">Replace any of Backtalk\'s sounds with your own sound files, one at a time or from a sound pack.</string>
+
+    <!-- Custom sounds: entry that loads a ZIP file of sounds. [CHAR LIMIT=50] -->
+    <string name="title_pref_custom_sounds_load_pack">Load a sound pack</string>
+    <!-- Custom sounds: summary of the entry that loads a ZIP file of sounds. [CHAR LIMIT=NONE] -->
+    <string name="summary_pref_custom_sounds_load_pack">A ZIP file of WAV, OGG, MP3 or FLAC sounds, each named after the sound it replaces, such as focus.wav or control_button.ogg. Sounds the pack does not have stay as they are.</string>
+    <!-- Custom sounds: entry that saves the custom sounds as a ZIP file. [CHAR LIMIT=50] -->
+    <string name="title_pref_custom_sounds_save_pack">Save as a sound pack</string>
+    <!-- Custom sounds: summary of the entry that saves the custom sounds as a ZIP file. [CHAR LIMIT=NONE] -->
+    <string name="summary_pref_custom_sounds_save_pack">Save your sounds as a ZIP file, to keep or to load on another device.</string>
+    <!-- Custom sounds: entry that goes back to Backtalk's own sounds. [CHAR LIMIT=50] -->
+    <string name="title_pref_custom_sounds_reset">Use Backtalk\'s sounds for all</string>
+    <!-- Custom sounds: question before removing every custom sound. [CHAR LIMIT=NONE] -->
+    <string name="custom_sounds_reset_confirm">Remove all your sounds and go back to Backtalk\'s own?</string>
+    <!-- Custom sounds: button that removes every custom sound. [CHAR LIMIT=30] -->
+    <string name="custom_sounds_reset_button">Remove</string>
+    <!-- Custom sounds: heading above the list of sounds. [CHAR LIMIT=40] -->
+    <string name="custom_sounds_category">Sounds</string>
+
+    <!-- Custom sounds: summary of a sound that plays Backtalk's own sound. [CHAR LIMIT=60] -->
+    <string name="custom_sound_summary_default">Backtalk\'s sound</string>
+    <!-- Custom sounds: summary of a sound the user replaced with a file of their own. [CHAR LIMIT=60] -->
+    <string name="custom_sound_summary_custom">Your sound</string>
+    <!-- Custom sounds: summary of a control sound, which Backtalk has no sound for, that has no file chosen. [CHAR LIMIT=NONE] -->
+    <string name="custom_sound_summary_none">No sound chosen. The focus sound plays.</string>
+    <!-- Custom sounds: title of the choices for one sound, with the name its file has in a sound pack, such as "Click (tick)". [CHAR LIMIT=NONE] -->
+    <string name="custom_sound_dialog_title"><xliff:g id="sound" example="Click">%1$s</xliff:g> (<xliff:g id="name" example="tick">%2$s</xliff:g>)</string>
+    <!-- Custom sounds: choice that opens the file picker to choose a sound file. [CHAR LIMIT=50] -->
+    <string name="custom_sound_choose">Choose a sound file</string>
+    <!-- Custom sounds: choice that plays the sound. [CHAR LIMIT=50] -->
+    <string name="custom_sound_preview">Preview</string>
+    <!-- Custom sounds: choice that goes back to Backtalk's own sound. [CHAR LIMIT=50] -->
+    <string name="custom_sound_use_default">Use Backtalk\'s sound</string>
+    <!-- Custom sounds: choice that removes the chosen file of a control sound, which Backtalk has no sound for. [CHAR LIMIT=50] -->
+    <string name="custom_sound_remove">Remove the sound</string>
+
+    <!-- Custom sounds: message when the chosen file is too large. [CHAR LIMIT=NONE] -->
+    <string name="custom_sound_too_large">That file is too large. A sound can be up to 5 MB.</string>
+    <!-- Custom sounds: message when the chosen file cannot be played. [CHAR LIMIT=NONE] -->
+    <string name="custom_sound_not_audio">Backtalk can\'t play that file. Choose a WAV, OGG, MP3 or FLAC sound.</string>
+    <!-- Custom sounds: message when the chosen file cannot be read or written. [CHAR LIMIT=NONE] -->
+    <string name="custom_sound_failed">Backtalk couldn\'t read that file.</string>
+    <!-- Custom sounds: message when there is no app to choose or save files with. [CHAR LIMIT=NONE] -->
+    <string name="custom_sound_no_picker">There is no app on this device to choose files with.</string>
+    <!-- Custom sounds: message after loading a sound pack. [CHAR LIMIT=NONE] -->
+    <plurals name="custom_sounds_pack_loaded">
+        <item quantity="one">Loaded <xliff:g id="count" example="1">%d</xliff:g> sound.</item>
+        <item quantity="other">Loaded <xliff:g id="count" example="13">%d</xliff:g> sounds.</item>
+    </plurals>
+    <!-- Custom sounds: message after loading a sound pack, listing the files that were left out. [CHAR LIMIT=NONE] -->
+    <string name="custom_sounds_pack_skipped">Left out, because no sound has that name or Backtalk can\'t play it: <xliff:g id="files" example="beep.wav, click.wav">%s</xliff:g></string>
+    <!-- Custom sounds: message when a sound pack has no usable sounds. [CHAR LIMIT=NONE] -->
+    <string name="custom_sounds_pack_empty">This sound pack has no sounds Backtalk can use. Each sound must be named after the sound it replaces, such as focus.wav.</string>
+    <!-- Custom sounds: message after saving the custom sounds as a sound pack. [CHAR LIMIT=NONE] -->
+    <plurals name="custom_sounds_pack_saved">
+        <item quantity="one">Saved <xliff:g id="count" example="1">%d</xliff:g> sound.</item>
+        <item quantity="other">Saved <xliff:g id="count" example="13">%d</xliff:g> sounds.</item>
+    </plurals>
+    <!-- Custom sounds: message when the sound pack could not be saved. [CHAR LIMIT=NONE] -->
+    <string name="custom_sounds_pack_save_failed">Backtalk couldn\'t save the sound pack.</string>
+    <!-- Custom sounds: file name suggested when saving a sound pack. [CHAR LIMIT=NONE] -->
+    <string name="custom_sounds_pack_file_name" translatable="false">Backtalk sounds.zip</string>
+</resources>

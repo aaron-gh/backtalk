@@ -28,36 +28,48 @@ import org.junit.Test
 class ControlSoundsSettingsTest {
   private val prefs = FakeSharedPreferences()
 
+  private val allChosen = ControlSounds.SOUNDS.keys
+
   private fun turnOn() = prefs.edit().putBoolean(ControlSoundsSettings.PREF_ON, true).apply()
 
   @Test
   fun offByDefault() {
     assertFalse(ControlSoundsSettings.isOn(prefs))
     assertFalse(ControlSoundsSettings.speakRoles(prefs))
-    assertTrue(ControlSoundsSettings.playingSounds(prefs, true, emptySet()).isEmpty())
+    assertTrue(ControlSoundsSettings.playingSounds(prefs, true, emptySet(), allChosen).isEmpty())
   }
 
   @Test
-  fun everySoundPlaysWhenOn() {
+  fun everyChosenSoundPlaysWhenOn() {
     turnOn()
     assertEquals(
       ControlSounds.SOUNDS.values.toSet(),
-      ControlSoundsSettings.playingSounds(prefs, true, emptySet()),
+      ControlSoundsSettings.playingSounds(prefs, true, emptySet(), allChosen),
     )
+  }
+
+  @Test
+  fun onlyControlsWithAChosenSoundPlay() {
+    turnOn()
+    assertEquals(
+      setOf(R.id.control_button),
+      ControlSoundsSettings.playingSounds(prefs, true, emptySet(), setOf("control_button", "focus")),
+    )
+    assertTrue(ControlSoundsSettings.playingSounds(prefs, true, emptySet(), emptySet()).isEmpty())
   }
 
   @Test
   fun noSoundPlaysWithSoundFeedbackOff() {
     turnOn()
-    assertTrue(ControlSoundsSettings.playingSounds(prefs, false, emptySet()).isEmpty())
+    assertTrue(ControlSoundsSettings.playingSounds(prefs, false, emptySet(), allChosen).isEmpty())
   }
 
   @Test
   fun aSoundTurnedOffOnItsOwnDoesNotPlay() {
     turnOn()
-    val playing = ControlSoundsSettings.playingSounds(prefs, true, setOf("control_button"))
-    assertFalse(R.raw.control_button in playing)
-    assertTrue(R.raw.control_checkbox in playing)
+    val playing = ControlSoundsSettings.playingSounds(prefs, true, setOf("control_button"), allChosen)
+    assertFalse(R.id.control_button in playing)
+    assertTrue(R.id.control_checkbox in playing)
   }
 
   @Test
