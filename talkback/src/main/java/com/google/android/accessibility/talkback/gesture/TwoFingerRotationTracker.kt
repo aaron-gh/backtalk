@@ -23,6 +23,7 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Recognizes two fingers turning around each other, like turning a dial, and reports one step for
@@ -66,6 +67,15 @@ class TwoFingerRotationTracker(
   private var state = State.IDLE
   private var firstId = INVALID_ID
   private var secondId = INVALID_ID
+  private var startX0 = 0f
+  private var startY0 = 0f
+  private var startX1 = 0f
+  private var startY1 = 0f
+  // How far each finger has moved since tracking started, for the debug log.
+  private var moved0X = 0f
+  private var moved0Y = 0f
+  private var moved1X = 0f
+  private var moved1Y = 0f
   private var startMidX = 0f
   private var startMidY = 0f
   private var startDistance = 0f
@@ -144,6 +154,10 @@ class TwoFingerRotationTracker(
     val y0 = event.getY(0)
     val x1 = event.getX(1)
     val y1 = event.getY(1)
+    startX0 = x0
+    startY0 = y0
+    startX1 = x1
+    startY1 = y1
     startMidX = (x0 + x1) / 2
     startMidY = (y0 + y1) / 2
     startDistance = hypot(x1 - x0, y1 - y0)
@@ -176,7 +190,29 @@ class TwoFingerRotationTracker(
     val looksLikeRotation =
       translation <= arc * MAX_TRANSLATION_RATIO && radial <= arc * MAX_RADIAL_RATIO
 
-    if (looksLikeRotation && abs(accumulated) >= COMMIT_DEGREES && arc >= minArcPx) {
+    moved0X = x0 - startX0
+    moved0Y = y0 - startY0
+    moved1X = x1 - startX1
+    moved1Y = y1 - startY1
+    val moved0 = hypot(moved0X, moved0Y)
+    val moved1 = hypot(moved1X, moved1Y)
+    if (
+      moved0 >= minArcPx &&
+        moved1 >= minArcPx &&
+        (moved0X * moved1X + moved0Y * moved1Y) / (moved0 * moved1) > SAME_DIRECTION_COSINE
+    ) {
+      // In a rotation the fingers move in opposite directions. Both moving the same way is a
+      // scroll, even when one finger started first and the line between them turned.
+      debugLog("rejected as scroll, fingers moving the same way", arc, translation, radial)
+      state = State.REJECTED
+      return
+    }
+    // With one finger nearly still, a turn looks the same as the start of a scroll whose other
+    // finger has not moved yet, so it must turn further before it counts.
+    val pivot = min(moved0, moved1) < max(moved0, moved1) * PIVOT_STILL_RATIO
+    val commitDegrees = if (pivot) PIVOT_COMMIT_DEGREES else COMMIT_DEGREES
+
+    if (looksLikeRotation && abs(accumulated) >= commitDegrees && arc >= minArcPx) {
       debugLog("accepted", arc, translation, radial)
       state = State.ROTATING
       rotatingFingersDown = true
@@ -205,8 +241,19 @@ class TwoFingerRotationTracker(
     if (BuildConfig.DEBUG) {
       Log.d(
         DEBUG_TAG,
-        "Rotation $result: angle=%.1f arc=%.0f translation=%.0f radial=%.0f slop=%.0f"
-          .format(accumulated, arc, translation, radial, decisionDistancePx),
+        ("Rotation $result: angle=%.1f arc=%.0f translation=%.0f radial=%.0f slop=%.0f " +
+            "finger1=(%.0f,%.0f) finger2=(%.0f,%.0f)")
+          .format(
+            accumulated,
+            arc,
+            translation,
+            radial,
+            decisionDistancePx,
+            moved0X,
+            moved0Y,
+            moved1X,
+            moved1Y,
+          ),
       )
     }
   }
@@ -264,6 +311,18 @@ class TwoFingerRotationTracker(
 
     /** Rotation that starts the rotation and reports the first step, in degrees. */
     const val COMMIT_DEGREES = 15f
+
+    /** Rotation that starts a rotation where one finger stays nearly still, in degrees. */
+    const val PIVOT_COMMIT_DEGREES = 30f
+
+    /** A finger that moved less than this share of the other's movement counts as still. */
+    const val PIVOT_STILL_RATIO = 0.35f
+
+    /**
+     * Fingers whose movements point within about 60 degrees of each other move the same way, which
+     * is a scroll, not a rotation.
+     */
+    const val SAME_DIRECTION_COSINE = 0.5f
 
     /** A two-finger movement that turns less than this, in degrees, is a scroll. */
     const val SCROLL_MAX_DEGREES = 8f
