@@ -52,11 +52,4 @@
         android:key="@string/pref_multi_tap_timeout_key"
         android:summary="%s"
         android:title="@string/title_pref_multi_tap_timeout" />
-
-    <!-- On phones this is in Text-to-speech settings, which watches do not show. -->
-    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
-        android:defaultValue="@bool/pref_speak_in_phrases_default"
-        android:key="@string/pref_speak_in_phrases_key"
-        android:title="@string/title_pref_speak_in_phrases"
-        android:summary="@string/summary_pref_speak_in_phrases" />
 </PreferenceScreen>
