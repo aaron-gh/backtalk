@@ -43,22 +43,21 @@
         <item>0</item><!-- delayMs -->
     </integer-array>
 
-    <!-- Touching an empty area: a faint flutter. -->
+    <!-- Touching an empty area: one soft tap, softer than focus on an item and firmer than the end
+         of a gesture. Short, because it plays again and again while a finger moves over empty
+         space. Vibrators that can only vary rhythm play two short pulses instead, since a single
+         pulse there would feel like focus or the end of a gesture. -->
     <integer-array name="view_entered_pattern">
         <item>0</item>
-        <item>8</item>
-        <item>30</item>
-        <item>8</item>
+        <item>5</item>
+        <item>12</item>
+        <item>5</item>
         <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
-        <item>10</item>
-        <item>80</item>
-        <item>10</item>
-        <item>50</item>
-        <item>10</item>
-        <item>25</item>
+        <item>8</item>
+        <item>90</item>
         <item>-9999</item><!-- SENTINEL SEPARATOR -->
-        <item>6</item><!-- QUICK_FALL -->
-        <item>90</item><!-- scale -->
+        <item>7</item><!-- TICK -->
+        <item>100</item><!-- scale -->
         <item>0</item><!-- delayMs -->
     </integer-array>
 
@@ -372,27 +371,27 @@
         <item>0</item><!-- delayMs -->
     </integer-array>
 
-    <!-- Loading, repeated every 3 seconds while waiting: a faint, short heartbeat, gentle enough
-         to fade into the background while still showing that the work goes on. -->
+    <!-- Loading, repeated every 3 seconds while waiting: a heartbeat, a firm click and a softer
+         one, strong enough to feel through a case, so it shows that the work goes on. -->
     <integer-array name="loading_pattern">
         <item>0</item>
-        <item>8</item>
-        <item>60</item>
-        <item>8</item>
+        <item>15</item>
+        <item>150</item>
+        <item>10</item>
         <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
-        <item>6</item>
-        <item>80</item>
-        <item>60</item>
+        <item>15</item>
+        <item>180</item>
+        <item>150</item>
         <item>0</item>
-        <item>6</item>
-        <item>50</item>
+        <item>10</item>
+        <item>120</item>
         <item>-9999</item><!-- SENTINEL SEPARATOR -->
-        <item>7</item><!-- TICK -->
-        <item>80</item><!-- scale -->
+        <item>1</item><!-- CLICK -->
+        <item>160</item><!-- scale -->
         <item>0</item><!-- delayMs -->
-        <item>7</item><!-- TICK -->
-        <item>50</item><!-- scale -->
-        <item>60</item><!-- delayMs -->
+        <item>1</item><!-- CLICK -->
+        <item>95</item><!-- scale -->
+        <item>150</item><!-- delayMs -->
     </integer-array>
 
     <!-- Browse mode on: three taps that get stronger. -->

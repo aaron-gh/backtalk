@@ -58,7 +58,7 @@ object SoundVibrations {
       "formatting" to "formatting_pattern",
       "volume_beep" to "volume_pattern",
       // The loading tone repeats while waiting, such as for an image description, so its
-      // vibration is a faint heartbeat that shows the work goes on even with sounds off.
+      // vibration is a heartbeat that shows the work goes on even with sounds off.
       "loading" to "loading_pattern",
       "browse_mode_on_v4_2" to "browse_mode_on_pattern",
       "browse_mode_off_v4_2" to "browse_mode_off_pattern",

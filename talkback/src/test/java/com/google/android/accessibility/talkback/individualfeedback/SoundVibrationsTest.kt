@@ -43,14 +43,29 @@ class SoundVibrationsTest {
   }
 
   @Test
-  fun theRepeatingLoadingVibrationIsFaintAndShort() {
+  fun theRepeatingLoadingVibrationIsShortButFirmEnoughToFeelThroughACase() {
     val loading = patterns.getValue(SoundVibrations.PATTERNS.getValue("loading"))
     val onTimes = loading.onOff.filterIndexed { i, _ -> i % 2 == 1 }
-    assertTrue("too long", onTimes.sum() <= 20)
+    assertTrue("too long", onTimes.sum() <= 30)
     val amplitudes = loading.amplitudes.filterIndexed { i, _ -> i % 2 == 1 }
-    assertTrue("too strong", amplitudes.all { it <= 100 })
-    val scales = loading.premium.filterIndexed { i, _ -> i % 3 == 1 }
-    assertTrue("too strong", scales.all { it <= 100 })
+    assertTrue("too faint", amplitudes.max() >= 160)
+    val primitives = loading.premium.chunked(3)
+    assertTrue("too faint", primitives.first()[0] == CLICK && primitives.first()[1] >= 150)
+  }
+
+  @Test
+  fun theEmptyAreaVibrationIsShortAndGentle() {
+    // It repeats while a finger moves over empty space.
+    val empty = patterns.getValue(SoundVibrations.PATTERNS.getValue("view_entered"))
+    assertTrue("too long", empty.onOff.drop(1).sum() <= 30)
+    assertTrue("too long", empty.amplitudes.filterIndexed { i, _ -> i % 2 == 0 }.sum() <= 30)
+    val amplitudes = empty.amplitudes.filterIndexed { i, _ -> i % 2 == 1 }
+    assertTrue("too harsh", amplitudes.all { it <= 100 })
+    empty.premium.chunked(3).forEach { (primitive, scale, _) ->
+      // Rises and falls last 100 ms or more on some phones.
+      assertEquals("too long", TICK, primitive)
+      assertTrue("too harsh", scale <= 100)
+    }
   }
 
   @Test
@@ -107,6 +122,8 @@ class SoundVibrationsTest {
   private companion object {
     const val AMPLITUDE_SEPARATOR = -9998
     const val SENTINEL_SEPARATOR = -9999
+    const val CLICK = 1
+    const val TICK = 7
 
     /** CLICK, QUICK_RISE, SLOW_RISE, QUICK_FALL and TICK. THUD and SPIN are missing on some phones. */
     val SAFE_PRIMITIVES = setOf(1, 4, 5, 6, 7)
