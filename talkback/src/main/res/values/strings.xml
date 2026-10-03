@@ -213,6 +213,27 @@
       Description: This is spoken to the user. [CHAR LIMIT=NONE]
     -->
     <string name="value_device_unlocked">Device unlocked.</string>
+
+    <!-- Settings for what Backtalk says when the screen turns off or on and when the phone is unlocked. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_screen_announcements">Screen on and off</string>
+    <!-- [CHAR LIMIT=NONE] -->
+    <string name="summary_pref_screen_announcements">Choose what Backtalk says when the screen turns off or on, and when the phone is unlocked</string>
+    <!-- Heading for the settings used when the screen turns off. [CHAR LIMIT=NONE] -->
+    <string name="title_screen_announcements_screen_off">When the screen turns off</string>
+    <!-- Heading for the settings used when the screen turns on. [CHAR LIMIT=NONE] -->
+    <string name="title_screen_announcements_screen_on">When the screen turns on</string>
+    <!-- Heading for the settings used when the phone is unlocked. [CHAR LIMIT=NONE] -->
+    <string name="title_screen_announcements_unlock">When the phone is unlocked</string>
+    <!-- Switch to say "Screen off" when the screen turns off. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_say_screen_off">Say \"Screen off\"</string>
+    <!-- Switch to say "Device unlocked" when the phone is unlocked. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_say_device_unlocked">Say \"Device unlocked\"</string>
+    <!-- Switch to say the time when the screen turns on. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_announce_time">Time</string>
+    <!-- Switch to say the ringer mode. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_announce_ringer_mode">Ringer mode</string>
+    <!-- [CHAR LIMIT=NONE] -->
+    <string name="summary_pref_announce_ringer_mode">Say when the ringer is set to vibrate or silent</string>
     <!-- PREFERENCES -->
     <!--
       Source: Preference category for audio.
@@ -3795,12 +3816,26 @@ Do not use any markdown in your response."</string>
   <string name="gemini_screenshot_unavailable">Screen capture unavailable</string>
   <!-- Gemini response parsing error. [CHAR_LIMIT=NONE]-->
   <string name="gemini_error_parsing_result">Gemini response parsing error</string>
+  <!-- Gemini rejected the API key the user entered in Automatic descriptions settings. [CHAR_LIMIT=NONE]-->
+  <string name="gemini_error_api_key">Gemini didn\'t accept the API key. Check the key in Automatic descriptions settings.</string>
+  <!-- The usage limit of the user's Gemini API key was reached. [CHAR_LIMIT=NONE]-->
+  <string name="gemini_error_quota">The usage limit for your Gemini API key has been reached. Try again later.</string>
+  <!-- Gemini's servers are overloaded or had an internal error. [CHAR_LIMIT=NONE]-->
+  <string name="gemini_error_busy">Gemini is busy right now. Try again in a moment.</string>
+  <!-- Gemini did not answer in time. [CHAR_LIMIT=NONE]-->
+  <string name="gemini_error_timeout">Gemini took too long to answer. Try again.</string>
+  <!-- Gemini answered a request with an HTTP error that has no explanation. [CHAR_LIMIT=NONE]-->
+  <string name="gemini_error_with_code">Gemini couldn\'t answer, error <xliff:g id="http_status" example="400">%1$d</xliff:g>.</string>
+  <!-- Gemini answered a request with an HTTP error and Google's explanation, which is in English. [CHAR_LIMIT=NONE]-->
+  <string name="gemini_error_with_details">Gemini couldn\'t answer, error <xliff:g id="http_status" example="400">%1$d</xliff:g>: <xliff:g id="details" example="User location is not supported for the API use.">%2$s</xliff:g></string>
   <!-- Detailed image description result for icon detection. [CHAR_LIMIT=NONE]-->
   <string name="detailed_image_description_icon_result">Icon: <xliff:g id="detailed_icon_result" example="BACK">%1$s</xliff:g></string>
   <!-- Detailed image description result for OCR. [CHAR_LIMIT=NONE]-->
   <string name="detailed_image_description_ocr_result">Text in image: <xliff:g id="detailed_ocr_result" example="That's a wonderful world.">%1$s</xliff:g></string>
   <!-- Detailed image description fallback result with a common error. [CHAR_LIMIT=NONE]-->
   <string name="detailed_image_description_fallback_result"><xliff:g id="fallback_result" example="Text in image: Hello world!!">%1$s</xliff:g>. Can\'t get a more detailed image description.</string>
+  <!-- The result of the detailed image description when Gemini failed, with the reason it failed. [CHAR_LIMIT=NONE]-->
+  <string name="detailed_image_description_fallback_result_with_reason"><xliff:g id="fallback_result" example="Text in image: Hello world!!">%1$s</xliff:g>. Can\'t get a more detailed image description: <xliff:g id="reason" example="Gemini is busy right now. Try again in a moment.">%2$s</xliff:g></string>
   <!-- Detailed image description fallback result with a network error. [CHAR_LIMIT=NONE]-->
   <string name="detailed_image_description_fallback_result_network_error"><xliff:g id="fallback_result_network_error" example="Text in image: Hello world!!">%1$s</xliff:g>. Connect to the internet for a more detailed image description.</string>
 

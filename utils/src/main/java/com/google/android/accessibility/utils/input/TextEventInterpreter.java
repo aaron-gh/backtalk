@@ -864,13 +864,14 @@ public class TextEventInterpreter {
     if (addedText == null || addedText.length() == 0) {
       return false;
     }
-    char lastChar = addedText.charAt(addedText.length() - 1);
+    final int wordEnd = getWordEchoEnd(addedText);
+    char lastChar = addedText.charAt(wordEnd);
     // Echo word only occurs when the added character is either a space or a punctuation symbol.
     if (!isWhiteSpace(lastChar) && !isPunctuation(lastChar)) {
       return false;
     }
 
-    final int newToIndex = fromIndex + addedText.length() - 1;
+    final int newToIndex = fromIndex + wordEnd;
     final int newFromIndex = getPrecedingWhitespaceOrPunctuation(text, newToIndex);
     // Echo the last char even if it is a punctuation symbol.
     final CharSequence word = text.subSequence(newFromIndex, newToIndex + 1);
@@ -909,6 +910,23 @@ public class TextEventInterpreter {
     return true;
   }
 
+  /**
+   * Returns the index in {@code addedText} of the character that ends the word to echo. That is
+   * the last character, except when a space follows punctuation: a keyboard that adds a word with
+   * its punctuation and the space after it at once, as the braille keyboard does in contracted
+   * braille, would otherwise echo only the space, so the word ends at the punctuation instead.
+   */
+  @VisibleForTesting
+  static int getWordEchoEnd(CharSequence addedText) {
+    int last = addedText.length() - 1;
+    if (last > 0
+        && isWhiteSpace(addedText.charAt(last))
+        && isPunctuation(addedText.charAt(last - 1))) {
+      return last - 1;
+    }
+    return last;
+  }
+
   ////////////////////////////////////////////////////////////////////////////////////////
   // Helper functions for selection-change events.
 
@@ -922,8 +940,12 @@ public class TextEventInterpreter {
     return eventText.get(0);
   }
 
-  /** Returns index of first whitespace or punctuation preceding fromIndex. */
-  private static int getPrecedingWhitespaceOrPunctuation(CharSequence text, int toIndex) {
+  /**
+   * Returns index of first whitespace or punctuation preceding fromIndex. An apostrophe inside a
+   * word, as in "don't", is part of the word.
+   */
+  @VisibleForTesting
+  static int getPrecedingWhitespaceOrPunctuation(CharSequence text, int toIndex) {
     if (toIndex > text.length()) {
       toIndex = text.length();
     }
@@ -931,13 +953,20 @@ public class TextEventInterpreter {
       if (isWhiteSpace(text.charAt(i))) {
         return i + 1;
       }
-      if (isPunctuation(text.charAt(i))) {
+      if (isPunctuation(text.charAt(i)) && !isApostropheInWord(text, i)) {
         // The preceding punctuation is not preserved.
         return i + 1;
       }
     }
 
     return 0;
+  }
+
+  private static boolean isApostropheInWord(CharSequence text, int index) {
+    return text.charAt(index) == '\''
+        && index + 1 < text.length()
+        && Character.isLetterOrDigit(text.charAt(index - 1))
+        && Character.isLetterOrDigit(text.charAt(index + 1));
   }
 
   // Visible for testing only.

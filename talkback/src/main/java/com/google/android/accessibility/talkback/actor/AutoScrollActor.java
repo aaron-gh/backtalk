@@ -27,6 +27,7 @@ import com.google.android.accessibility.talkback.Feedback;
 import com.google.android.accessibility.talkback.Pipeline;
 import com.google.android.accessibility.talkback.Pipeline.FeedbackReturner;
 import com.google.android.accessibility.talkback.Pipeline.SyntheticEvent;
+import com.google.android.accessibility.talkback.focusmanagement.EnsureOnScreenSuccessChecker;
 import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForLogicalNavigation;
 import com.google.android.accessibility.talkback.interpreters.AutoScrollInterpreter;
 import com.google.android.accessibility.utils.AccessibilityNode;
@@ -70,6 +71,15 @@ public class AutoScrollActor {
     public ScrollActionRecord getFailedScrollActionRecord() {
       return AutoScrollActor.this.failedScrollActionRecord;
     }
+
+    /**
+     * Returns the record of the last auto-scroll that was reset as complete, or null. A scroll
+     * counts as complete once it has gone far enough, but an animated scroll carries on after
+     * that, and its later events still come from this record.
+     */
+    public @Nullable ScrollActionRecord getFinishedScrollActionRecord() {
+      return AutoScrollActor.this.finishedScrollActionRecord;
+    }
   }
 
   /** Read-only interface for pulling state data. */
@@ -104,6 +114,7 @@ public class AutoScrollActor {
   // A null scrollActionRecord represents that we are not in scrolling.
   @Nullable private ScrollActionRecord scrollActionRecord = null;
   @Nullable private ScrollActionRecord failedScrollActionRecord = null;
+  @Nullable private ScrollActionRecord finishedScrollActionRecord = null;
 
   public void setPipelineEventReceiver(Pipeline.EventReceiver pipeline) {
     this.pipelineReceiver = pipeline;
@@ -205,7 +216,7 @@ public class AutoScrollActor {
           currentTime,
           scrollTimeout,
           /* autoScrollAttempt= */ 0,
-          /* autoScrollSuccessChecker= */ null);
+          new EnsureOnScreenSuccessChecker(actionNodeCompat));
     }
     LogUtils.d(
         TAG,
@@ -261,6 +272,7 @@ public class AutoScrollActor {
     // Ignores previous failed auto-scroll record if there is a new auto-scroll record (when next
     // auto-scroll action performs).
     failedScrollActionRecord = null;
+    finishedScrollActionRecord = null;
     scrollActionRecord = newRecord;
   }
 
@@ -274,6 +286,9 @@ public class AutoScrollActor {
    */
   public void resetScrollActionRecords() {
     failedScrollActionRecord = null;
+    if (scrollActionRecord != null) {
+      finishedScrollActionRecord = scrollActionRecord;
+    }
     // Once the auto scroll is stopped, we should clear scrollActionRecord. So, if
     // scrollActionRecord is null, it means we are not in auto-scrolling.
     scrollActionRecord = null;

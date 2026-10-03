@@ -175,6 +175,7 @@ import com.google.android.accessibility.talkback.imagecaption.ImageCaptionStorag
 import com.google.android.accessibility.talkback.imagecaption.ImageCaptionUtils.CaptionType;
 import com.google.android.accessibility.talkback.imagecaption.ImageContents;
 import com.google.android.accessibility.talkback.individualfeedback.IndividualFeedbackSettings;
+import com.google.android.accessibility.talkback.individualfeedback.SoundVibrations;
 import com.google.android.accessibility.talkback.interpreters.AccessibilityEventIdleInterpreter;
 import com.google.android.accessibility.talkback.interpreters.AccessibilityFocusInterpreter;
 import com.google.android.accessibility.talkback.interpreters.AutoScrollInterpreter;
@@ -296,6 +297,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -1785,6 +1787,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     displayMonitor = new DisplayMonitor(this);
     accessibilityEventProcessor = new AccessibilityEventProcessor(this, displayMonitor);
     feedbackController = new FeedbackController(this);
+    feedbackController.setSoundHaptics(SoundVibrations.patternIds(this));
     speechController =
         new SpeechControllerImpl(
             this,
@@ -2193,7 +2196,12 @@ public class TalkBackService extends AccessibilityServiceCompat
 
     ringerModeAndScreenMonitor =
         new RingerModeAndScreenMonitor(
-            menuManager, pipeline.getFeedbackReturner(), callStateMonitor, displayMonitor, this);
+            menuManager,
+            pipeline.getFeedbackReturner(),
+            callStateMonitor,
+            displayMonitor,
+            statusReader,
+            this);
     if (speechCacheController != null) {
       ringerModeAndScreenMonitor.addScreenChangedListener(speechCacheController);
     }
@@ -2280,6 +2288,11 @@ public class TalkBackService extends AccessibilityServiceCompat
     final TextEventHistory textEventHistory = new TextEventHistory();
     final TextEventFilter textEventFilter =
         new TextEventFilter(this, textCursorTracker, textEventHistory);
+    textEventFilter.setBrailleKeyboardEchoReader(
+        () -> {
+          BrailleImeForTalkBack brailleIme = getBrailleImeForTalkBack();
+          return brailleIme == null ? OptionalInt.empty() : brailleIme.getOnScreenKeyboardEcho();
+        });
     textEventInterpreter =
         new TextEventInterpreter(
             this,
@@ -3194,6 +3207,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     boolean auditoryEnabled =
         getBooleanPref(R.string.pref_soundback_key, R.bool.pref_soundback_default);
     feedbackController.setAuditoryEnabled(auditoryEnabled);
+    IndividualFeedbackSettings.INSTANCE.migrate(prefs);
     Set<String> mutedSounds = IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs);
     feedbackController.setMutedAuditory(mutedSounds);
     feedbackController.setSpatialMode(ControlSoundsSettings.spatialMode(prefs));

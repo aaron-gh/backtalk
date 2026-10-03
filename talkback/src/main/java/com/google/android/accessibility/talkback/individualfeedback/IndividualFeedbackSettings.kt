@@ -53,7 +53,7 @@ object IndividualFeedbackSettings {
       FeedbackItem("typo", R.string.individual_sound_typo),
       FeedbackItem("hyperlink", R.string.individual_sound_hyperlink),
       FeedbackItem("formatting", R.string.individual_sound_formatting),
-      FeedbackItem("volume_beep", R.string.individual_sound_volume_beep),
+      FeedbackItem("screen_off", R.string.individual_sound_screen_off),
       FeedbackItem("loading", R.string.individual_sound_loading),
       FeedbackItem("browse_mode_on_v4_2", R.string.individual_sound_browse_mode_on),
       FeedbackItem("browse_mode_off_v4_2", R.string.individual_sound_browse_mode_off),
@@ -83,18 +83,89 @@ object IndividualFeedbackSettings {
       FeedbackItem("control_tree_item", R.string.individual_sound_control_tree_item),
     )
 
+  /**
+   * One switch for each sound's vibration, in the same order and with the same titles as the
+   * sounds, and one for announcements, which vibrate without a sound.
+   */
   val VIBRATIONS =
     listOf(
       FeedbackItem("view_hovered_pattern", R.string.individual_vibration_focus),
       FeedbackItem("view_actionable_pattern", R.string.individual_vibration_focus_actionable),
-      FeedbackItem("view_focused_or_selected_pattern", R.string.individual_vibration_selected),
+      FeedbackItem("view_entered_pattern", R.string.individual_sound_view_entered),
       FeedbackItem("view_clicked_pattern", R.string.individual_vibration_clicked),
       FeedbackItem("view_long_clicked_pattern", R.string.individual_vibration_long_clicked),
+      FeedbackItem("scroll_pattern", R.string.individual_sound_scroll_tone),
+      FeedbackItem("list_entered_pattern", R.string.individual_sound_chime_up),
+      FeedbackItem("list_exited_pattern", R.string.individual_sound_chime_down),
+      FeedbackItem("complete_pattern", R.string.individual_sound_complete),
       FeedbackItem("window_state_pattern", R.string.individual_vibration_window_state),
       FeedbackItem("gesture_detection_repeated_pattern", R.string.individual_vibration_gesture),
+      FeedbackItem("gesture_end_pattern", R.string.individual_sound_gesture_end),
       FeedbackItem("typo_pattern", R.string.individual_vibration_typo),
+      FeedbackItem("hyperlink_pattern", R.string.individual_sound_hyperlink),
+      FeedbackItem("formatting_pattern", R.string.individual_sound_formatting),
+      FeedbackItem("screen_off_pattern", R.string.individual_sound_screen_off),
+      FeedbackItem("loading_pattern", R.string.individual_sound_loading),
+      FeedbackItem("browse_mode_on_pattern", R.string.individual_sound_browse_mode_on),
+      FeedbackItem("browse_mode_off_pattern", R.string.individual_sound_browse_mode_off),
+      FeedbackItem(
+        "radial_menu_pattern",
+        R.string.individual_sound_radial_menu,
+        (1..8).map { "radial_menu_${it}_pattern" },
+      ),
       FeedbackItem("notification_pattern", R.string.individual_vibration_notification),
     )
+
+  /**
+   * The Selection vibration switch from before every sound had its own vibration. Selection now
+   * plays the vibration of its sound, the actionable focus vibration.
+   */
+  private const val OLD_SELECTION_VIBRATION = "view_focused_or_selected_pattern"
+  private const val SELECTION_VIBRATION = "view_actionable_pattern"
+
+  /**
+   * Screen off used to play the volume beep and its vibration, under switches named Volume change,
+   * though no volume change plays them. Set once screen off has been given those switches' state.
+   */
+  private const val OLD_VOLUME_SOUND = "volume_beep"
+  private const val OLD_VOLUME_VIBRATION = "volume_pattern"
+  private const val PREF_SCREEN_OFF_SPLIT = "pref_individual_screen_off_split"
+
+  /**
+   * Carries over switches that no longer exist, once: if Selection was turned off, the vibration
+   * selection now plays is turned off instead. And if Volume change was turned off, which only
+   * silenced screen off, Screen off is turned off instead.
+   */
+  fun migrate(prefs: SharedPreferences) {
+    val muted = stringSet(prefs, PREF_MUTED_VIBRATIONS)
+    if (OLD_SELECTION_VIBRATION in muted) {
+      prefs
+        .edit()
+        .putStringSet(PREF_MUTED_VIBRATIONS, muted - OLD_SELECTION_VIBRATION + SELECTION_VIBRATION)
+        .apply()
+    }
+    if (!prefs.getBoolean(PREF_SCREEN_OFF_SPLIT, false)) {
+      val mutedSounds = stringSet(prefs, PREF_MUTED_SOUNDS)
+      val mutedVibrations = stringSet(prefs, PREF_MUTED_VIBRATIONS)
+      prefs
+        .edit()
+        .putStringSet(
+          PREF_MUTED_SOUNDS,
+          if (OLD_VOLUME_SOUND in mutedSounds) mutedSounds - OLD_VOLUME_SOUND + "screen_off"
+          else mutedSounds,
+        )
+        .putStringSet(
+          PREF_MUTED_VIBRATIONS,
+          if (OLD_VOLUME_VIBRATION in mutedVibrations) {
+            mutedVibrations - OLD_VOLUME_VIBRATION + "screen_off_pattern"
+          } else {
+            mutedVibrations
+          },
+        )
+        .putBoolean(PREF_SCREEN_OFF_SPLIT, true)
+        .apply()
+    }
+  }
 
   fun isSoundOn(prefs: SharedPreferences, item: FeedbackItem): Boolean =
     item.key !in stringSet(prefs, PREF_MUTED_SOUNDS)

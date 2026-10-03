@@ -204,6 +204,7 @@ public class ScrollEventInterpreter implements AccessibilityEventListener {
 
   // Inputs
   private Supplier<ScrollActionRecord> scrollActorState;
+  private Supplier<ScrollActionRecord> finishedScrollRecord = () -> null;
   private final @Nullable AudioPlaybackMonitor audioPlaybackMonitor;
   private final @NonNull TouchMonitor touchMonitor;
 
@@ -225,6 +226,14 @@ public class ScrollEventInterpreter implements AccessibilityEventListener {
     this.audioPlaybackMonitor = audioPlaybackMonitor;
     this.touchMonitor = touchMonitor;
     this.supportMultipleAutoScroll = supportMultipleAutoScroll;
+  }
+
+  /**
+   * Sets where to find the last auto-scroll that was reset as complete. Its scroll events that
+   * come after, as an animated scroll finishes, are not mistaken for a manual scroll.
+   */
+  public void setFinishedScrollActionRecord(Supplier<ScrollActionRecord> finishedScrollRecord) {
+    this.finishedScrollRecord = finishedScrollRecord;
   }
 
   public void setScrollActorState(Supplier<ScrollActionRecord> scrollActorState) {
@@ -316,11 +325,18 @@ public class ScrollEventInterpreter implements AccessibilityEventListener {
       // navigation after that, accessibility focus might go to the beginning of screen.
       // We take into account TYPE_WINDOW_CONTENT_CHANGED events to provide more
       // fine-grained manual scroll callback.
-      userAction =
-          scrollDirection == TraversalStrategy.SEARCH_FOCUS_UNKNOWN
-              ? ScrollActionRecord.ACTION_UNKNOWN
-              : ScrollActionRecord.ACTION_MANUAL_SCROLL;
-      LogUtils.i(TAG, "Manual scrolling");
+      if (isFromFinishedAutoScroll(event)) {
+        // TalkBack's own scroll, still moving after it went far enough to count as complete. As a
+        // manual scroll, it would move the focus that the scroll has just placed.
+        userAction = ScrollActionRecord.ACTION_UNKNOWN;
+        LogUtils.i(TAG, "End of an auto scroll");
+      } else {
+        userAction =
+            scrollDirection == TraversalStrategy.SEARCH_FOCUS_UNKNOWN
+                ? ScrollActionRecord.ACTION_UNKNOWN
+                : ScrollActionRecord.ACTION_MANUAL_SCROLL;
+        LogUtils.i(TAG, "Manual scrolling");
+      }
     } else {
       scrollInstanceId = autoScrollRecord.scrollInstanceId;
       userAction = autoScrollRecord.userAction;
@@ -363,6 +379,17 @@ public class ScrollEventInterpreter implements AccessibilityEventListener {
     } else {
       return null;
     }
+  }
+
+  /**
+   * Whether the {@code event} comes from the last auto-scroll that was reset as complete, from the
+   * same node and within the time an auto-scroll record lasts.
+   */
+  private boolean isFromFinishedAutoScroll(AccessibilityEvent event) {
+    @Nullable ScrollActionRecord finished = finishedScrollRecord.get();
+    return finished != null
+        && isFromAutoScrollAction(event, finished)
+        && finished.scrolledNodeMatches(AccessibilityEventUtils.sourceCompat(event));
   }
 
   /** Checks whether the {@code event} is resulted from cached auto-scroll action. */

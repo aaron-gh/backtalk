@@ -47,6 +47,14 @@
         android:summary="@string/summary_pref_flip_dots_vertically"
         android:title="@string/title_pref_flip_dots_vertically" />
 
+    <ListPreference
+        android:defaultValue="@string/pref_brailleime_keyboard_echo_default"
+        android:entries="@array/pref_brailleime_keyboard_echo_entries"
+        android:entryValues="@array/pref_brailleime_keyboard_echo_values"
+        android:key="@string/pref_brailleime_keyboard_echo"
+        android:summary="%s"
+        android:title="@string/title_pref_braille_keyboard_echo" />
+
   </PreferenceCategory>
 
 </PreferenceScreen>

@@ -44,6 +44,10 @@
             android:key="@string/pref_manage_customize_menus_key"
             android:title="@string/title_pref_manage_customize_menus"
             android:fragment="com.google.android.accessibility.talkback.preference.base.CustomizeMenusFragment" />
+        <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
+            android:fragment="com.google.android.accessibility.talkback.status.StatusReadoutFragment"
+            android:key="pref_status_readout"
+            android:title="@string/title_pref_status_readout" />
     </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
         android:key="@string/pref_category_braille_key"

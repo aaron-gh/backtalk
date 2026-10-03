@@ -202,6 +202,8 @@ public class Interpreters {
   public void setActorState(ActorState actorState) {
     inputFocusInterpreter.setActorState(actorState);
     scrollEventInterpreter.setScrollActorState(actorState.getScrollerState());
+    scrollEventInterpreter.setFinishedScrollActionRecord(
+        actorState.getScrollerState()::getFinishedScrollActionRecord);
     manualScrollInterpreter.setActorState(actorState);
     autoScrollInterpreter.setActorState(actorState);
     accessibilityFocusInterpreter.setActorState(actorState);
