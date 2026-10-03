@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">ਬ੍ਰੇਲ ਕੀ-ਬੋਰਡ ਕੈਲੀਬ੍ਰੇਟ ਹੋਇਆ</string>
   <string name="individual_vibration_focus">ਆਈਟਮ \'ਤੇ ਫੋਕਸ</string>
   <string name="individual_vibration_focus_actionable">ਕਾਰਵਾਈਯੋਗ ਆਈਟਮ \'ਤੇ ਫੋਕਸ</string>
-  <string name="individual_vibration_selected">ਚੋਣ</string>
   <string name="individual_vibration_clicked">ਕਲਿੱਕ</string>
   <string name="individual_vibration_long_clicked">ਲੰਮਾ ਦਬਾਉਣਾ</string>
   <string name="individual_vibration_window_state">ਵਿੰਡੋ ਬਦਲੀ</string>

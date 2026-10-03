@@ -42,6 +42,9 @@ public class Utterance {
   /** Key for obtaining the earcon volume meta-data property. */
   public static final String KEY_METADATA_EARCON_VOLUME = "earcon_volume";
 
+  /** Key for whether earcons play their vibrations, true if missing. */
+  public static final String KEY_METADATA_EARCON_VIBRATES = "earcon_vibrates";
+
   /** Key for obtaining the speech parameters meta-data property. Must contain a {@link Bundle}. */
   public static final String KEY_METADATA_SPEECH_PARAMS = "speech_params";
 

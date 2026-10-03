@@ -84,4 +84,29 @@ class IndividualFeedbackSettingsTest {
       IndividualFeedbackSettings.VIBRATIONS.map { it.key }.toSet().size,
     )
   }
+
+  @Test
+  fun theOldSelectionSwitchCarriesOverToTheVibrationSelectionNowPlays() {
+    prefs
+      .edit()
+      .putStringSet(
+        IndividualFeedbackSettings.PREF_MUTED_VIBRATIONS,
+        setOf("view_focused_or_selected_pattern", "typo_pattern"),
+      )
+      .apply()
+    IndividualFeedbackSettings.migrate(prefs)
+    assertEquals(
+      setOf("view_actionable_pattern", "typo_pattern"),
+      IndividualFeedbackSettings.mutedVibrationResources(prefs),
+    )
+  }
+
+  @Test
+  fun migratingLeavesOtherChoicesAlone() {
+    val typo = IndividualFeedbackSettings.VIBRATIONS.first { it.key == "typo_pattern" }
+    IndividualFeedbackSettings.setVibrationOn(prefs, typo, false)
+    IndividualFeedbackSettings.migrate(prefs)
+    IndividualFeedbackSettings.migrate(prefs)
+    assertEquals(setOf("typo_pattern"), IndividualFeedbackSettings.mutedVibrationResources(prefs))
+  }
 }

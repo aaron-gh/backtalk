@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Brajeva tastatura je kalibrisana</string>
   <string name="individual_vibration_focus">Fokus na stavci</string>
   <string name="individual_vibration_focus_actionable">Fokus na stavci koja može da se aktivira</string>
-  <string name="individual_vibration_selected">Izbor</string>
   <string name="individual_vibration_clicked">Klik</string>
   <string name="individual_vibration_long_clicked">Dugi pritisak</string>
   <string name="individual_vibration_window_state">Promena prozora</string>

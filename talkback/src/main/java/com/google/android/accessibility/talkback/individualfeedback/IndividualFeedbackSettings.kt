@@ -70,18 +70,59 @@ object IndividualFeedbackSettings {
       FeedbackItem("calibration_done", R.string.individual_sound_calibration_done),
     )
 
+  /**
+   * One switch for each sound's vibration, in the same order and with the same titles as the
+   * sounds, and one for announcements, which vibrate without a sound.
+   */
   val VIBRATIONS =
     listOf(
       FeedbackItem("view_hovered_pattern", R.string.individual_vibration_focus),
       FeedbackItem("view_actionable_pattern", R.string.individual_vibration_focus_actionable),
-      FeedbackItem("view_focused_or_selected_pattern", R.string.individual_vibration_selected),
+      FeedbackItem("view_entered_pattern", R.string.individual_sound_view_entered),
       FeedbackItem("view_clicked_pattern", R.string.individual_vibration_clicked),
       FeedbackItem("view_long_clicked_pattern", R.string.individual_vibration_long_clicked),
+      FeedbackItem("scroll_pattern", R.string.individual_sound_scroll_tone),
+      FeedbackItem("list_entered_pattern", R.string.individual_sound_chime_up),
+      FeedbackItem("list_exited_pattern", R.string.individual_sound_chime_down),
+      FeedbackItem("complete_pattern", R.string.individual_sound_complete),
       FeedbackItem("window_state_pattern", R.string.individual_vibration_window_state),
       FeedbackItem("gesture_detection_repeated_pattern", R.string.individual_vibration_gesture),
+      FeedbackItem("gesture_end_pattern", R.string.individual_sound_gesture_end),
       FeedbackItem("typo_pattern", R.string.individual_vibration_typo),
+      FeedbackItem("hyperlink_pattern", R.string.individual_sound_hyperlink),
+      FeedbackItem("formatting_pattern", R.string.individual_sound_formatting),
+      FeedbackItem("volume_pattern", R.string.individual_sound_volume_beep),
+      FeedbackItem("loading_pattern", R.string.individual_sound_loading),
+      FeedbackItem("browse_mode_on_pattern", R.string.individual_sound_browse_mode_on),
+      FeedbackItem("browse_mode_off_pattern", R.string.individual_sound_browse_mode_off),
+      FeedbackItem(
+        "radial_menu_pattern",
+        R.string.individual_sound_radial_menu,
+        (1..8).map { "radial_menu_${it}_pattern" },
+      ),
       FeedbackItem("notification_pattern", R.string.individual_vibration_notification),
     )
+
+  /**
+   * The Selection vibration switch from before every sound had its own vibration. Selection now
+   * plays the vibration of its sound, the actionable focus vibration.
+   */
+  private const val OLD_SELECTION_VIBRATION = "view_focused_or_selected_pattern"
+  private const val SELECTION_VIBRATION = "view_actionable_pattern"
+
+  /**
+   * Carries over switches that no longer exist, once: if Selection was turned off, the vibration
+   * selection now plays is turned off instead.
+   */
+  fun migrate(prefs: SharedPreferences) {
+    val muted = stringSet(prefs, PREF_MUTED_VIBRATIONS)
+    if (OLD_SELECTION_VIBRATION in muted) {
+      prefs
+        .edit()
+        .putStringSet(PREF_MUTED_VIBRATIONS, muted - OLD_SELECTION_VIBRATION + SELECTION_VIBRATION)
+        .apply()
+    }
+  }
 
   fun isSoundOn(prefs: SharedPreferences, item: FeedbackItem): Boolean =
     item.key !in stringSet(prefs, PREF_MUTED_SOUNDS)

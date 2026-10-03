@@ -36,6 +36,7 @@ import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -58,6 +59,7 @@ public class FeedbackController {
   private static final int MAX_STREAMS = 10;
 
   public static final long NO_SEPARATION = 0;
+
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Member data
@@ -94,6 +96,12 @@ public class FeedbackController {
   /** Cache of resource names, so muting does not look one up on every sound. */
   private final SparseArray<String> mResourceNames = new SparseArray<>();
 
+  /** The vibration pattern that plays with each sound, by the sound's resource entry name. */
+  private Map<String, Integer> mSoundHaptics = Collections.emptyMap();
+
+  /** Skips an event's own vibration right after its sound vibrated. */
+  private final SoundHapticCover mSoundHapticCover = new SoundHapticCover();
+
   private final Set<HapticFeedbackListener> mHapticFeedbackListeners = new HashSet<>();
 
   private final @NonNull HashMap<Integer, Long> resIdToLastPlayUptimeMillisec = new HashMap<>();
@@ -117,12 +125,38 @@ public class FeedbackController {
   // Methods
 
   /**
-   * Plays the vibration pattern associated with the given resource ID.
+   * Plays the vibration pattern associated with the given resource ID, unless a sound for the same
+   * event just played its own vibration, or would have if the user had not turned it off.
    *
    * @param resId The vibration pattern's resource identifier.
    * @return {@code true} if successful.
    */
   public boolean playHaptic(int resId, @Nullable EventId eventId) {
+    if (mSoundHapticCover.covers(eventId, SystemClock.uptimeMillis())) {
+      LogUtils.v(TAG, "playHaptic() resId=%d skipped, the sound vibrated", resId);
+      return false;
+    }
+    return vibrate(resId, eventId);
+  }
+
+  /**
+   * Plays the vibration that goes with a sound, whether or not sound feedback is on, so that every
+   * sound can be felt as well as heard.
+   */
+  private void playSoundHaptic(int soundResId, @Nullable EventId eventId) {
+    if (!mHapticEnabled || mSoundHaptics.isEmpty()) {
+      return;
+    }
+    @Nullable String name = resourceName(soundResId);
+    @Nullable Integer patternResId = name == null ? null : mSoundHaptics.get(name);
+    if (patternResId != null) {
+      // Even if the user turned this vibration off, the event's own vibration stays quiet.
+      vibrate(patternResId, eventId);
+      mSoundHapticCover.soundVibrated(eventId, SystemClock.uptimeMillis());
+    }
+  }
+
+  private boolean vibrate(int resId, @Nullable EventId eventId) {
     if (!mHapticEnabled || resId == 0 || isMuted(mMutedHapticNames, resId)) {
       return false;
     }
@@ -227,6 +261,32 @@ public class FeedbackController {
       float volume,
       boolean ignoreVolumeAdjustment,
       @Nullable EventId eventId) {
+    if (resId != 0) {
+      playSoundHaptic(resId, eventId);
+    }
+    playSound(resId, rate, volume, ignoreVolumeAdjustment, eventId);
+  }
+
+  /**
+   * Plays a sound without the vibration that goes with it, for sounds that should not be felt,
+   * such as repeating progress tones, or whose vibration is someone else's, such as braille.
+   */
+  public void playAuditoryWithoutHaptic(int resId, @Nullable EventId eventId) {
+    playAuditoryWithoutHaptic(resId, 1.0f /* rate */, 1.0f /* volume */, eventId);
+  }
+
+  /** Plays a sound with the given rate and volume, without its vibration. */
+  public void playAuditoryWithoutHaptic(
+      int resId, float rate, float volume, @Nullable EventId eventId) {
+    playSound(resId, rate, volume, /* ignoreVolumeAdjustment= */ false, eventId);
+  }
+
+  private void playSound(
+      int resId,
+      final float rate,
+      float volume,
+      boolean ignoreVolumeAdjustment,
+      @Nullable EventId eventId) {
     if (!mAuditoryEnabled || resId == 0 || isMuted(mMutedAuditoryNames, resId)) {
       return;
     }
@@ -304,20 +364,36 @@ public class FeedbackController {
     mMutedHapticNames = new HashSet<>(resourceNames);
   }
 
+  /**
+   * Sets the vibration pattern that plays with each sound. Each sound's vibration plays even when
+   * sound feedback is off.
+   *
+   * @param patternsBySoundName Pattern resource IDs, by sound resource entry names such as {@code
+   *     "focus"} for {@code R.raw.focus}.
+   */
+  public void setSoundHaptics(Map<String, Integer> patternsBySoundName) {
+    mSoundHaptics = new HashMap<>(patternsBySoundName);
+  }
+
   private boolean isMuted(Set<String> mutedNames, int resId) {
     if (mutedNames.isEmpty()) {
       return false;
     }
+    @Nullable String name = resourceName(resId);
+    return name != null && mutedNames.contains(name);
+  }
+
+  private @Nullable String resourceName(int resId) {
     String name = mResourceNames.get(resId);
     if (name == null) {
       try {
         name = mResources.getResourceEntryName(resId);
       } catch (NotFoundException e) {
-        return false;
+        return null;
       }
       mResourceNames.put(resId, name);
     }
-    return mutedNames.contains(name);
+    return name;
   }
 
   /**
@@ -335,8 +411,9 @@ public class FeedbackController {
    * selection in Switch Access, gesture completion in TalkBack, etc.).
    */
   public void playActionCompletionFeedback() {
-    playHaptic(R.array.window_state_pattern, EVENT_ID_UNTRACKED);
+    // The sound first, so that its own vibration stands in for the one below.
     playAuditory(R.raw.window_state, EVENT_ID_UNTRACKED);
+    playHaptic(R.array.window_state_pattern, EVENT_ID_UNTRACKED);
   }
 
   private static SoundPool createSoundPool() {

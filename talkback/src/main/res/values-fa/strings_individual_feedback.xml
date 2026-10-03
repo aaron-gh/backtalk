@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">صفحه‌کلید بریل تنظیم شد</string>
   <string name="individual_vibration_focus">تمرکز روی مورد</string>
   <string name="individual_vibration_focus_actionable">تمرکز روی مورد قابل اجرا</string>
-  <string name="individual_vibration_selected">انتخاب</string>
   <string name="individual_vibration_clicked">کلیک</string>
   <string name="individual_vibration_long_clicked">فشار طولانی</string>
   <string name="individual_vibration_window_state">تغییر پنجره</string>

@@ -33,7 +33,6 @@
   <string name="individual_sound_calibration_done">Punktkirja klaviatuur on kalibreeritud</string>
   <string name="individual_vibration_focus">Fookus üksusel</string>
   <string name="individual_vibration_focus_actionable">Fookus aktiveeritaval üksusel</string>
-  <string name="individual_vibration_selected">Valik</string>
   <string name="individual_vibration_clicked">Klõps</string>
   <string name="individual_vibration_long_clicked">Pikk vajutus</string>
   <string name="individual_vibration_window_state">Akna vahetus</string>
