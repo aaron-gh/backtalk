@@ -418,7 +418,7 @@ public class GeminiActor {
             }
             progressTonePlayer.stop();
             if (TextUtils.isEmpty(text)) {
-              // Response blocked.
+              // Response blocked, or a failure the endpoint could not explain.
               text = context.getString(R.string.gemini_error_message);
             }
             speak(text);
@@ -579,7 +579,7 @@ public class GeminiActor {
                               CaptionType.SCREEN_OVERVIEW, overview.getOverview().getSummary()))
                       .showDialog());
         } else if (result.response() instanceof OverviewResponse.Error error) {
-          Toast.makeText(context, getErrorMessage(error), LENGTH_SHORT).show();
+          Toast.makeText(context, getErrorMessage(context, error), LENGTH_SHORT).show();
         }
       }
     } else {
@@ -651,11 +651,13 @@ public class GeminiActor {
       case ERROR_RESPONSE -> {
         analytics.onGeminiFailEvent(
             TalkBackAnalytics.GEMINI_FAIL_PROTOCOL_ERROR, isServerSideRequest(requestId));
+        // The text says what went wrong, when the endpoint knows.
         responseImageCaptionResult(
             requestId,
-            R.string.gemini_error_message,
+            TextUtils.isEmpty(text) ? context.getString(R.string.gemini_error_message) : text,
             /* isSuccess= */ false,
             ERROR_RESPONSE,
+            /* errorReason= */ null,
             manualTrigger);
       }
       case ERROR_BLOCKED -> {
