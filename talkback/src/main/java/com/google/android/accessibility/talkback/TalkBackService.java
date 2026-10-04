@@ -173,6 +173,7 @@ import com.google.android.accessibility.talkback.focusmanagement.record.Accessib
 import com.google.android.accessibility.talkback.gesture.GestureController;
 import com.google.android.accessibility.talkback.gesture.GestureHistory;
 import com.google.android.accessibility.talkback.gesture.GestureShortcutMapping;
+import com.google.android.accessibility.talkback.gesture.TwoFingerRotationTracker;
 import com.google.android.accessibility.talkback.imagecaption.ImageCaptionStorage;
 import com.google.android.accessibility.talkback.imagecaption.ImageCaptionUtils.CaptionType;
 import com.google.android.accessibility.talkback.imagecaption.ImageContents;
@@ -3105,6 +3106,12 @@ public class TalkBackService extends AccessibilityServiceCompat
             res,
             R.string.pref_typing_long_press_duration_key,
             R.string.pref_typing_long_press_duration_default));
+    TwoFingerRotationTracker.setStepDegrees(
+        SharedPreferencesUtils.getIntFromStringPref(
+            prefs,
+            res,
+            R.string.pref_rotor_step_degrees_key,
+            R.string.pref_rotor_step_degrees_default));
     globalVariables.setInterpretAsEntryKey(
         accessibilityFocusInterpreter.getTypingMethod() == FORCE_LIFT_TO_TYPE_ON_IME);
 
