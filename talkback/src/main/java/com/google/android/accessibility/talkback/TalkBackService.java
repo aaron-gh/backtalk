@@ -1124,6 +1124,10 @@ public class TalkBackService extends AccessibilityServiceCompat
   public void clearQueues() {
     interruptAllFeedback(/* stopTtsSpeechCompletely= */ false);
     processorEventQueue.clearQueue();
+    if (earlyFocusSpeech != null) {
+      // A focus spoken early whose event is thrown away must not hide a later focus of its node.
+      earlyFocusSpeech.clear();
+    }
     if (windowEventInterpreter != null) {
       windowEventInterpreter.clearQueue();
     }
@@ -2277,7 +2281,15 @@ public class TalkBackService extends AccessibilityServiceCompat
     // in the order they are added.
     eventFilter =
         new EventFilter(this, compositor, touchMonitor, globalVariables, earlyFocusSpeech);
-    focuser.setFocusSetListener(eventFilter::speakFocusEarly);
+    focuser.setFocusSetListener(
+        (node, info, eventId, actionTime) ->
+            eventFilter.onAccessibilityFocusSet(
+                node,
+                info,
+                eventId,
+                actionTime,
+                /* continuousReading= */ fullScreenReadActor != null
+                    && fullScreenReadActor.isActive()));
     eventFilter.setVoiceActionDelegate(voiceActionMonitor);
     eventFilter.setAccessibilityFocusEventInterpreter(accessibilityFocusInterpreter);
     ActorStateProvider actorStateProvider =

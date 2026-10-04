@@ -94,8 +94,9 @@ public class Monitors {
   }
 
   public void onAccessibilityEvent(@NonNull AccessibilityEvent event) {
-    // Focus spoken before its event arrived already moved the collection state to its node.
-    if (!earlyFocusSpeech.isSpoken(event)) {
+    // Focus spoken before its event arrived already moved the collection state to its node, and a
+    // focus event older than that focus must not move it back.
+    if (!earlyFocusSpeech.isHandled(event)) {
       collectionState.onAccessibilityEvent(event);
     }
     touchMonitor.onAccessibilityEvent(event);

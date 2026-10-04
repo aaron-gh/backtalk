@@ -16,7 +16,9 @@
 
 package com.google.android.accessibility.talkback.compositor
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -71,5 +73,27 @@ class RecentItemsTest {
     assertTrue(items.remove("a"))
     assertTrue(items.remove("a"))
     assertFalse(items.remove("a"))
+  }
+
+  @Test
+  fun removeFirstTakesTheOldestMatch() {
+    items.add("a1")
+    items.add("b")
+    items.add("a2")
+    assertEquals("a1", items.removeFirst { it.startsWith("a") })
+    assertEquals("a2", items.find { it.startsWith("a") })
+    assertNull(items.removeFirst { it == "c" })
+  }
+
+  @Test
+  fun removeAllAndClearForget() {
+    items.add("a")
+    items.add("b")
+    items.add("a")
+    items.removeAll { it == "a" }
+    assertFalse(items.contains("a"))
+    assertTrue(items.contains("b"))
+    items.clear()
+    assertTrue(items.isEmpty())
   }
 }

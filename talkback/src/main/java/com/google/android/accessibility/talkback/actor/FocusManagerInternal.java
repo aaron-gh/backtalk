@@ -114,8 +114,15 @@ public class FocusManagerInternal {
 
   /** Told when accessibility focus has been set, before the app's focus event for it arrives. */
   public interface FocusSetListener {
+    /**
+     * @param actionTime when the focus action started, in {@link SystemClock#uptimeMillis()} time,
+     *     before the app could send its focus event for it
+     */
     void onAccessibilityFocusSet(
-        AccessibilityNodeInfoCompat node, FocusActionInfo info, @Nullable EventId eventId);
+        AccessibilityNodeInfoCompat node,
+        FocusActionInfo info,
+        @Nullable EventId eventId,
+        long actionTime);
   }
 
   private @Nullable FocusSetListener focusSetListener;
@@ -465,7 +472,7 @@ public class FocusManagerInternal {
       history.onAccessibilityFocusAction(
           node, focusActionInfo, currentTime, screenState.getStableScreenState());
       if (focusSetListener != null) {
-        focusSetListener.onAccessibilityFocusSet(node, focusActionInfo, eventId);
+        focusSetListener.onAccessibilityFocusSet(node, focusActionInfo, eventId, currentTime);
       }
     }
     LogUtils.d(
