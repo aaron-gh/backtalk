@@ -2234,6 +2234,10 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <string name="value_typing_long_press_5000ms">5 seconds</string>
 
     <!-- Label for touch explore time out. [CHAR LIMIT=NONE]-->
+    <string name="value_touch_explore_time_out_50ms">0.05 seconds</string>
+    <!-- Label for touch explore time out. [CHAR LIMIT=NONE]-->
+    <string name="value_touch_explore_time_out_100ms">0.1 seconds</string>
+    <!-- Label for touch explore time out. [CHAR LIMIT=NONE]-->
     <string name="value_touch_explore_time_out_150ms">0.15 seconds</string>
     <!-- Label for touch explore time out. [CHAR LIMIT=NONE]-->
     <string name="value_touch_explore_time_out_200ms">0.2 seconds</string>

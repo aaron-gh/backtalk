@@ -207,7 +207,9 @@ public class TouchExplorationInterpreter implements AccessibilityEventListener {
    */
   private static final class PostDelayHandler
       extends WeakReferenceHandler<TouchExplorationInterpreter> {
-    private static final int EMPTY_TOUCH_AREA_DELAY_MS = 100;
+    // Long enough for the hover event of a focusable item under the finger, which comes straight
+    // after its containers', and short enough that empty space answers almost as fast as an item.
+    private static final int EMPTY_TOUCH_AREA_DELAY_MS = 50;
     private static final int TOUCH_END_DELAY_MS = 70;
 
     private static final int MSG_EMPTY_TOUCH_ACTION = 0;
