@@ -694,6 +694,12 @@ public class FailoverTextToSpeech {
    * made to this object after calling this method.
    */
   public void shutdown() {
+    // The player outlives this engine, so speech it holds or waits for must not block the next.
+    mHandler.removeCallbacks(dropHeldSpeech);
+    heldUtteranceId = null;
+    lowLatencyStreams.clear();
+    lowLatencyRequests.clear();
+    LowLatencyAudio.stopAllStreams();
     allowDeviceSleep();
     context.unregisterReceiver(mediaStateMonitor);
     unregisterGoogleTtsFixCallbacks();
@@ -1313,6 +1319,12 @@ public class FailoverTextToSpeech {
         }
 
         @Override
+        public void onStalled(String id) {
+          // Say it the usual way, and speak the usual way with this engine from now on.
+          mHandler.post(() -> speakAgainWithoutLowLatency(id, /* stream= */ null));
+        }
+
+        @Override
         public void onNoAudio(String id) {
           // The engine plays its own audio rather than giving it to Backtalk, so it was heard
           // already. Speak the usual way with this engine from now on.
@@ -1331,9 +1343,13 @@ public class FailoverTextToSpeech {
   }
 
   /** Says a low-latency utterance that failed again the usual way, and stops using low latency. */
-  private void speakAgainWithoutLowLatency(String utteranceId, LowLatencyAudio.SpeechStream stream) {
-    stream.discard();
-    stopUsingLowLatencyAudio("engine error");
+  private void speakAgainWithoutLowLatency(
+      String utteranceId, LowLatencyAudio.@Nullable SpeechStream stream) {
+    if (stream != null) {
+      stream.discard();
+    }
+    lowLatencyStreams.remove(utteranceId);
+    stopUsingLowLatencyAudio(stream == null ? "no audio in time" : "engine error");
     @Nullable Pair<CharSequence, Bundle> request = lowLatencyRequests.remove(utteranceId);
     if (request != null && tts != null) {
       mHandler.post(() -> tts.speak(request.first, QUEUE_ADD, request.second, utteranceId));
@@ -1556,6 +1572,12 @@ public class FailoverTextToSpeech {
     if (isSwitchingEngines) {
       TextToSpeechUtils.attemptTtsShutdown(tts);
     }
+    // Speech from an engine that is gone never finishes, so it must not hold up the new engine's.
+    mHandler.removeCallbacks(dropHeldSpeech);
+    heldUtteranceId = null;
+    lowLatencyStreams.clear();
+    lowLatencyRequests.clear();
+    LowLatencyAudio.stopAllStreams();
 
     tts = tempTts;
     tts.setOnUtteranceProgressListener(lowLatencyRouter);
