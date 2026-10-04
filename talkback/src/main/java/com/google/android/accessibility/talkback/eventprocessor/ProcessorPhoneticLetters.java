@@ -188,7 +188,7 @@ public class ProcessorPhoneticLetters implements AccessibilityEventListener {
 
     // For platform since lollipop, check that the current window is an
     // Input Method.
-    final AccessibilityNodeInfo source = event.getSource();
+    final AccessibilityNodeInfo source = AccessibilityEventUtils.getSource(event);
     AccessibilityWindowInfo window = AccessibilityNodeInfoUtils.getWindow(source);
     return (AccessibilityWindowInfoUtils.getType(window) == TYPE_INPUT_METHOD);
   }

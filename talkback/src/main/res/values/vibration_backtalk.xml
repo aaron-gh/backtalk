@@ -111,6 +111,19 @@
         <item>0</item><!-- delayMs -->
     </integer-array>
 
+    <!-- One item scrolling past: a single light tick. -->
+    <integer-array name="scroll_item_pattern">
+        <item>0</item>
+        <item>10</item>
+        <item>-9998</item><!-- AMPLITUDES: ms, amplitude -->
+        <item>8</item>
+        <item>120</item>
+        <item>-9999</item><!-- SENTINEL SEPARATOR -->
+        <item>7</item><!-- TICK -->
+        <item>120</item><!-- scale -->
+        <item>0</item><!-- delayMs -->
+    </integer-array>
+
     <!-- Scroll: three quick light ticks. -->
     <integer-array name="scroll_pattern">
         <item>0</item>
