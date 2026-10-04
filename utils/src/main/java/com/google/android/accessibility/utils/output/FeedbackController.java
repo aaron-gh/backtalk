@@ -729,16 +729,9 @@ public class FeedbackController {
   }
 
   /**
-   * Plays the sound through the low-latency player, and returns whether it did. A sound plays the
-   * usual way the first time, while it is decoded for next time, and whenever it cannot be decoded.
-   */
-  private boolean playLowLatency(int resId, float rate, float leftVolume, float rightVolume) {
-    return playLowLatency(resId, /* path= */ null, rate, leftVolume, rightVolume);
-  }
-
-  /**
    * Plays the sound, or the file at {@code path} in its place, through the low-latency player, and
-   * returns whether it did.
+   * returns whether it did. A sound plays the usual way the first time, while it is decoded for
+   * next time, and whenever it cannot be decoded.
    */
   private boolean playLowLatency(
       int resId, @Nullable String path, float rate, float leftVolume, float rightVolume) {
