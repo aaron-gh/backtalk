@@ -35,7 +35,7 @@ object TraversalTreeCache {
   private const val TAG = "BacktalkTreeCache"
 
   /** Events that never change the nodes or their order. */
-  private const val IGNORED_EVENT_TYPES =
+  internal const val IGNORED_EVENT_TYPES =
     AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED or
       AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED or
       AccessibilityEvent.TYPE_VIEW_HOVER_ENTER or
@@ -68,7 +68,7 @@ object TraversalTreeCache {
   private const val MAX_AGE_AFTER_TEXT_CHANGE_MS = 1500L
 
   /** Node actions that only move focus, and so do not change the nodes or their order. */
-  private val FOCUS_ACTIONS =
+  internal val FOCUS_ACTIONS =
     setOf(
       AccessibilityNodeInfoCompat.ACTION_ACCESSIBILITY_FOCUS,
       AccessibilityNodeInfoCompat.ACTION_CLEAR_ACCESSIBILITY_FOCUS,

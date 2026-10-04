@@ -154,6 +154,15 @@ public class TouchInteractionMonitor
   private Thread executorThread;
   private final GestureManifold gestureDetector;
   private boolean gestureStarted = false;
+
+  // Whether a finger is on the screen, from the raw touch, for any thread. Unlike the touch
+  // interaction, it ends as soon as the last finger lifts, not after gesture detection gives up.
+  private static volatile boolean fingerDown = false;
+
+  /** Returns whether a finger is on the screen, as far as gesture detection has seen. */
+  public static boolean isFingerDown() {
+    return fingerDown;
+  }
   // A gesture was dispatched before the controller cleared the interaction. The rest of that
   // gesture's events cancel the gesture matchers, so a new first finger down in the same
   // interaction must clear them again.
@@ -474,6 +483,14 @@ public class TouchInteractionMonitor
   @SuppressWarnings("Override")
   @Override
   public void onMotionEvent(MotionEvent event) {
+    if (event != null) {
+      int action = event.getActionMasked();
+      if (action == ACTION_DOWN) {
+        fingerDown = true;
+      } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+        fingerDown = false;
+      }
+    }
     if (event != null) {
       if (logMotionEvent) {
         LogUtils.v(LOG_TAG, "Received motion event : %s", event.toString());

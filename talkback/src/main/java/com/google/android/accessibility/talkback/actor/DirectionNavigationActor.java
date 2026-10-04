@@ -148,6 +148,16 @@ public class DirectionNavigationActor implements UserInputEventListener {
             globalVariables);
   }
 
+  /**
+   * Returns the node that a plain swipe in {@code searchDirection} from {@code pivot} would most
+   * likely focus, without changing anything. See {@link
+   * FocusProcessorForLogicalNavigation#predictTarget}.
+   */
+  public @Nullable AccessibilityNodeInfoCompat predictTarget(
+      AccessibilityNodeInfoCompat pivot, @SearchDirection int searchDirection) {
+    return focusProcessorForLogicalNavigation.predictTarget(pivot, searchDirection);
+  }
+
   public void setPipeline(Pipeline.FeedbackReturner pipeline) {
     this.pipeline = pipeline;
     focusProcessorForLogicalNavigation.setPipeline(pipeline);

@@ -365,6 +365,43 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
     mCurrentWindowId = node.getWindowId();
   }
 
+  /** The state that follows accessibility focus, from {@link #saveFocusState()}. */
+  public static final class SavedFocusState {
+    private final boolean isLastFocusInScrollableNode;
+    private final boolean isCurrentFocusInScrollableNode;
+    private final boolean isFocusPage;
+    private final int lastWindowId;
+    private final int currentWindowId;
+    private final CollectionState.SavedState collection;
+
+    private SavedFocusState(GlobalVariables variables) {
+      isLastFocusInScrollableNode = variables.isLastFocusInScrollableNode;
+      isCurrentFocusInScrollableNode = variables.isCurrentFocusInScrollableNode;
+      isFocusPage = variables.isFocusPage;
+      lastWindowId = variables.mLastWindowId;
+      currentWindowId = variables.mCurrentWindowId;
+      collection = variables.collectionState.save();
+    }
+  }
+
+  /**
+   * Returns the state that follows accessibility focus, including the collection state, so that
+   * {@link #restoreFocusState} can put it back after working out what focusing a node would say.
+   */
+  public SavedFocusState saveFocusState() {
+    return new SavedFocusState(this);
+  }
+
+  /** Puts back the state from {@link #saveFocusState()}. */
+  public void restoreFocusState(SavedFocusState saved) {
+    isLastFocusInScrollableNode = saved.isLastFocusInScrollableNode;
+    isCurrentFocusInScrollableNode = saved.isCurrentFocusInScrollableNode;
+    isFocusPage = saved.isFocusPage;
+    mLastWindowId = saved.lastWindowId;
+    mCurrentWindowId = saved.currentWindowId;
+    collectionState.restore(saved.collection);
+  }
+
   /**
    * Updates the collection state for focus that moved to {@code node}, as the focus event for it
    * would.

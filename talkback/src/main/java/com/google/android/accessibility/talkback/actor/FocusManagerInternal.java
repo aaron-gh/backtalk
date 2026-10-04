@@ -468,12 +468,14 @@ public class FocusManagerInternal {
             Feedback.nodeAction(node, AccessibilityNodeInfoCompat.ACTION_ACCESSIBILITY_FOCUS));
     if (result) {
       focusActionInfo = updateFocusActionInfoIfNecessary(focusActionInfo, node);
-      // AccessibilityFocusActionHistory makes copy of the node, no need to obtain() here.
-      history.onAccessibilityFocusAction(
-          node, focusActionInfo, currentTime, screenState.getStableScreenState());
+      // Told first, so that speech can start before the history walks the node's ancestors. The
+      // history only has to be ready by the time the app's focus event arrives.
       if (focusSetListener != null) {
         focusSetListener.onAccessibilityFocusSet(node, focusActionInfo, eventId, currentTime);
       }
+      // AccessibilityFocusActionHistory makes copy of the node, no need to obtain() here.
+      history.onAccessibilityFocusAction(
+          node, focusActionInfo, currentTime, screenState.getStableScreenState());
     }
     LogUtils.d(
         TAG,
