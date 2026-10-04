@@ -14,6 +14,14 @@
       android:key="@string/pref_soundback_volume_key"
       android:summary="%s"
       android:title="@string/title_pref_soundback_volume" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
+      android:defaultValue="@string/pref_audio_output_device_default"
+      android:dialogTitle="@string/dialog_title_audio_output_device"
+      android:entries="@array/pref_audio_output_device_entries"
+      android:entryValues="@array/pref_audio_output_device_values"
+      android:key="@string/pref_audio_output_device_key"
+      android:summary="%s"
+      android:title="@string/title_pref_audio_output_device" />
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
       android:defaultValue="@bool/pref_use_audio_focus_default"
       android:key="@string/pref_use_audio_focus_key"

@@ -405,6 +405,12 @@ public class FailoverTextToSpeech {
   }
 
   public static boolean shouldUseAccessibilityStream(Context context) {
+    String audioTarget =
+        SharedPreferencesUtils.getSharedPreferences(context)
+            .getString("pref_audio_output_device", "default");
+    if (!TextUtils.isEmpty(audioTarget) && !"default".equals(audioTarget)) {
+      return true;
+    }
     return SharedPreferencesUtils.getSharedPreferences(context)
         .getBoolean(PREF_USE_ACCESSIBILITY_STREAM_KEY, USE_ACCESSIBILITY_STREAM_DEFAULT);
   }
@@ -1300,6 +1306,7 @@ public class FailoverTextToSpeech {
     tts.setAudioAttributes(
         new AudioAttributes.Builder()
             .setUsage(usage)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
             .setFlags(AudioAttributes.FLAG_LOW_LATENCY)
             .build());
   }

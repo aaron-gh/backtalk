@@ -26,6 +26,8 @@
     <string name="pref_use_audio_focus_key">pref_use_audio_focus</string>
     <string name="pref_category_developer_key">pref_category_developer</string>
     <string name="pref_soundback_volume_key">pref_soundback_volume</string>
+    <string name="pref_audio_output_device_key">pref_audio_output_device</string>
+    <string name="pref_audio_output_device_default">default</string>
     <string name="pref_tts_settings_key">pref_tts_settings</string>
     <string name="pref_system_tts_settings_key">pref_system_tts_settings</string>
     <string name="pref_tts_engine_key">pref_tts_engine</string>
@@ -832,6 +834,18 @@
         <item>75</item>
         <item>50</item>
         <item>25</item>
+    </string-array>
+
+    <!-- Audio output device preference entries -->
+    <string-array name="pref_audio_output_device_entries">
+        <item>@string/value_audio_output_device_default</item>
+        <item>@string/value_audio_output_device_speaker</item>
+    </string-array>
+
+    <!-- Audio output device preference values -->
+    <string-array name="pref_audio_output_device_values">
+        <item>default</item>
+        <item>speaker</item>
     </string-array>
 
     <string name="pref_a11y_volume_control_hint_times">pref_a11y_volume_control_hint_times</string>
