@@ -255,6 +255,37 @@ public class FailoverTextToSpeech {
   private final Map<String, LowLatencyAudio.SpeechStream> lowLatencyStreams =
       new ConcurrentHashMap<>();
 
+  /**
+   * The utterance whose low-latency speech is held, mid-word, since a touch interrupted it, or null.
+   * If the pause gesture follows, it stays held until speech resumes, and carries on from exactly
+   * where it stopped. Otherwise it is dropped after {@link #HELD_SPEECH_TIMEOUT_MS}.
+   */
+  private volatile @Nullable String heldUtteranceId;
+
+  /** How long held speech waits for the pause gesture, as long as saved speech waits for it. */
+  private static final long HELD_SPEECH_TIMEOUT_MS = 800;
+
+  private final Runnable dropHeldSpeech = this::dropHeldSpeech;
+
+  /** The text of recent utterances, by ID, to match a resumed utterance with its held speech. */
+  private final Map<String, CharSequence> utteranceTexts =
+      Collections.synchronizedMap(
+          new java.util.LinkedHashMap<String, CharSequence>(16, 0.75f, false) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, CharSequence> eldest) {
+              return size() > 8;
+            }
+          });
+
+  /** Where each piece of a split utterance started in its text, before any resume. */
+  private final Map<String, Integer> chunkStartsInText = new ConcurrentHashMap<>();
+
+  /**
+   * How far into its text a resumed utterance's held speech carried on, by utterance ID. Backtalk
+   * resumes with the rest of the text, so word positions in the held speech are reported from there.
+   */
+  private final Map<String, Integer> resumeOffsets = new ConcurrentHashMap<>();
+
   /** What each low-latency utterance said, to say it again the usual way if it gives no audio. */
   private final Map<String, Pair<CharSequence, Bundle>> lowLatencyRequests =
       new ConcurrentHashMap<>();
@@ -631,6 +662,7 @@ public class FailoverTextToSpeech {
 
   /** Stops speech from all applications. No utterance callbacks will be sent. */
   public void stopAll() {
+    dropHeldSpeech();
     stopLowLatencySpeech();
     try {
       allowDeviceSleep();
@@ -643,6 +675,11 @@ public class FailoverTextToSpeech {
 
   /** Stops all speech that originated from TalkBack. No utterance callbacks will be sent. */
   public void stopFromTalkBack() {
+    if (holdLowLatencySpeech()) {
+      // The engine keeps making the held speech, so it can carry on if speech is paused.
+      allowDeviceSleep();
+      return;
+    }
     stopLowLatencySpeech();
     try {
       allowDeviceSleep();
@@ -939,6 +976,16 @@ public class FailoverTextToSpeech {
    */
   private int speakWithCacheOrTts(
       String utteranceId, CharSequence text, int queueMode, Locale locale, Bundle bundle) {
+    if (heldUtteranceId != null) {
+      if (resumeHeldSpeech(utteranceId, text)) {
+        return TextToSpeech.SUCCESS;
+      }
+      // New speech ends a pause.
+      dropHeldSpeech();
+    }
+    if (utteranceId != null) {
+      utteranceTexts.put(utteranceId, text);
+    }
     if (speechCacheManager == null) {
       return speakInChunks(text, queueMode, bundle, utteranceId, locale);
     }
@@ -1027,6 +1074,7 @@ public class FailoverTextToSpeech {
       int end = last ? text.length() : starts.get(i + 1);
       String chunkId = utteranceId + CHUNK_ID_SEPARATOR + i;
       speechChunks.put(chunkId, new SpeechChunk(utteranceId, start, i == 0, last));
+      chunkStartsInText.put(chunkId, start);
       int result =
           ttsSpeak(text.subSequence(start, end), i == 0 ? queueMode : QUEUE_ADD, bundle, chunkId);
       if (result != TextToSpeech.SUCCESS) {
@@ -1130,10 +1178,103 @@ public class FailoverTextToSpeech {
     return defaultValue;
   }
 
+  /**
+   * Holds the low-latency speech playing now, and returns whether there was any. Speech that is
+   * held already stays held.
+   */
+  private boolean holdLowLatencySpeech() {
+    if (heldUtteranceId != null) {
+      return true;
+    }
+    @Nullable LowLatencyAudio player =
+        lowLatencyStreams.isEmpty() && lowLatencyRequests.isEmpty()
+            ? null
+            : LowLatencyAudio.get(context, speechAttributes());
+    @Nullable String head = player == null ? null : player.headStreamId();
+    if (player == null || head == null) {
+      return false;
+    }
+    player.hold();
+    heldUtteranceId = parentUtteranceId(head);
+    mHandler.removeCallbacks(dropHeldSpeech);
+    mHandler.postDelayed(dropHeldSpeech, HELD_SPEECH_TIMEOUT_MS);
+    LogUtils.d(TAG, "Holding speech of %s", heldUtteranceId);
+    return true;
+  }
+
+  /**
+   * Keeps held speech held until speech resumes, for the pause gesture, and returns whether there is
+   * any.
+   */
+  public boolean keepHeldSpeech() {
+    mHandler.removeCallbacks(dropHeldSpeech);
+    return heldUtteranceId != null;
+  }
+
+  /**
+   * Carries on held speech from exactly where it stopped, if {@code utteranceId} is the held
+   * utterance and {@code text} is the rest of its text, as Backtalk resumes it. Returns whether it
+   * did.
+   */
+  private boolean resumeHeldSpeech(@Nullable String utteranceId, CharSequence text) {
+    @Nullable String held = heldUtteranceId;
+    @Nullable CharSequence fullText = held == null ? null : utteranceTexts.get(held);
+    if (held == null
+        || !held.equals(utteranceId)
+        || fullText == null
+        || !fullText.toString().endsWith(text.toString())) {
+      return false;
+    }
+    int offset = fullText.length() - text.length();
+    // Word positions are reported from the start of the rest of the text, which Backtalk now holds.
+    resumeOffsets.put(held, offset);
+    for (Map.Entry<String, Integer> start : chunkStartsInText.entrySet()) {
+      @Nullable SpeechChunk chunk = speechChunks.get(start.getKey());
+      if (chunk != null && held.equals(chunk.utteranceId())) {
+        speechChunks.put(
+            start.getKey(),
+            new SpeechChunk(held, start.getValue() - offset, chunk.first(), chunk.last()));
+      }
+    }
+    mHandler.removeCallbacks(dropHeldSpeech);
+    heldUtteranceId = null;
+    @Nullable LowLatencyAudio player = LowLatencyAudio.get(context, speechAttributes());
+    if (player != null) {
+      player.release();
+    }
+    LogUtils.d(TAG, "Resuming held speech of %s from %d", held, offset);
+    return true;
+  }
+
+  /** Drops held speech, and stops the engine making the rest of it. */
+  private void dropHeldSpeech() {
+    mHandler.removeCallbacks(dropHeldSpeech);
+    if (heldUtteranceId == null) {
+      return;
+    }
+    LogUtils.d(TAG, "Dropping held speech of %s", heldUtteranceId);
+    heldUtteranceId = null;
+    stopLowLatencySpeech();
+    try {
+      // Stopping rather than speaking nothing, which would queue ahead of new speech.
+      tts.stop();
+    } catch (Exception e) {
+      // Not speaking.
+    }
+  }
+
+  private static String parentUtteranceId(String utteranceId) {
+    int separator = utteranceId.indexOf(CHUNK_ID_SEPARATOR);
+    return separator < 0 ? utteranceId : utteranceId.substring(0, separator);
+  }
+
   /** Stops the speech playing through {@link LowLatencyAudio}. */
   private void stopLowLatencySpeech() {
+    // Speech the engine has finished making may still be playing, until it reports finishing.
     @Nullable LowLatencyAudio player =
-        lowLatencyStreams.isEmpty() ? null : LowLatencyAudio.get(context, speechAttributes());
+        lowLatencyStreams.isEmpty() && lowLatencyRequests.isEmpty()
+            ? null
+            : LowLatencyAudio.get(context, speechAttributes());
     if (player != null) {
       player.stopStreams();
     }
@@ -1149,6 +1290,15 @@ public class FailoverTextToSpeech {
 
         @Override
         public void onRange(String id, int start, int end) {
+          // Pieces of a split utterance have their starts moved instead.
+          @Nullable Integer offset = id.contains(CHUNK_ID_SEPARATOR) ? null : resumeOffsets.get(id);
+          if (offset != null) {
+            start -= offset;
+            end -= offset;
+            if (end < 0) {
+              return;
+            }
+          }
           utteranceProgressCallback.onRangeStart(id, start, end, /* frame= */ 0);
         }
 
