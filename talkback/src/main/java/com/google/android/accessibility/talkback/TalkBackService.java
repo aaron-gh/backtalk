@@ -39,7 +39,6 @@ import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_ICON_DETECTION_UNAVAILABLE;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_IMAGE_DESCRIPTION_UNAVAILABLE;
 import static com.google.android.accessibility.talkback.logging.EventLatencyLogger.EVENTS_TO_LOG_ATTRIBUTES;
-import static com.google.android.accessibility.talkback.permission.PermissionRequestActivity.PERMISSIONS;
 import static com.google.android.accessibility.talkback.speech.SpeechCacheController.DEFAULT_CACHE_SUPPORT_TTS_ENGINE;
 import static com.google.android.accessibility.talkback.speech.SpeechCacheController.DEFAULT_MAX_CACHED_WINDOWS_SIZE;
 import static com.google.android.accessibility.talkback.trainingcommon.PageConfig.PageId.PAGE_ID_FINISHED;
@@ -52,10 +51,8 @@ import static com.google.android.accessibility.utils.gestures.GestureAnalyticsEv
 import static com.google.android.accessibility.utils.gestures.GestureAnalyticsEvent.EVENT_TAP_TO_TOUCH_EXPLORE;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_FAKED_SPLIT_TYPING;
 import static com.google.android.accessibility.utils.output.SpeechControllerImpl.CAPITAL_LETTERS_TYPE_SPEAK_CAP;
-import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toCollection;
 
-import android.Manifest.permission;
 import android.accessibilityservice.AccessibilityGestureEvent;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.accessibilityservice.FingerprintGestureController;
@@ -154,6 +151,7 @@ import com.google.android.accessibility.talkback.compositor.roledescription.Role
 import com.google.android.accessibility.talkback.contextmenu.ListMenuManager;
 import com.google.android.accessibility.talkback.controller.TelevisionNavigationController;
 import com.google.android.accessibility.talkback.controlsounds.ControlSoundsSettings;
+import com.google.android.accessibility.talkback.dialog.NotificationPermissionDialog;
 import com.google.android.accessibility.talkback.directtouch.DirectTouchController;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor.TalkBackListener;
@@ -275,6 +273,7 @@ import com.google.android.accessibility.utils.monitor.DisplayMonitor;
 import com.google.android.accessibility.utils.monitor.HeadphoneStateMonitor;
 import com.google.android.accessibility.utils.monitor.InputDeviceMonitor;
 import com.google.android.accessibility.utils.monitor.InputModeTracker;
+import com.google.android.accessibility.utils.monitor.ScreenMonitor;
 import com.google.android.accessibility.utils.monitor.SpeechStateMonitor;
 import com.google.android.accessibility.utils.monitor.TouchMonitor;
 import com.google.android.accessibility.utils.output.ActorStateProvider;
@@ -452,24 +451,9 @@ public class TalkBackService extends AccessibilityServiceCompat
       if (NotificationUtils.hasPostNotificationPermission(talkBackService)) {
         talkBackService.helper.flushPendingNotification();
       } else {
-        // Post notification permission.
-        NotificationUtils.requestPostNotificationPermissionIfNeeded(
-            talkBackService,
-            new BroadcastReceiver() {
-              @Override
-              public void onReceive(Context context, Intent intent) {
-                String[] permissions = intent.getStringArrayExtra(PERMISSIONS);
-                boolean requestPostNotificationPermission =
-                    stream(permissions)
-                        .anyMatch(p -> TextUtils.equals(p, permission.POST_NOTIFICATIONS));
-                if (requestPostNotificationPermission) {
-                  context.unregisterReceiver(this);
-                  // Even if a user declines the notification permission and we still need to make
-                  // notification for some change in talkback upgrade, we will ask permission again.
-                  talkBackService.helper.flushPendingNotification();
-                }
-              }
-            });
+        // Android ignores the notification permission request of an app that targets Android 12L
+        // or lower, as Backtalk does, so ask the user to allow notifications in settings.
+        talkBackService.askForNotificationsIfNeeded();
       }
       // Phone permission.
       @Nullable CallStateMonitor callStateMonitor = talkBackService.callStateMonitor;
@@ -728,6 +712,9 @@ public class TalkBackService extends AccessibilityServiceCompat
 
   /** Keeps track of whether we need to run the locked-boot-completed callback when connected. */
   private boolean lockedBootCompletedPending;
+
+  /** Whether to ask for notifications once the phone is unlocked. */
+  private boolean notificationPermissionPending;
 
   private final InputModeTracker inputModeTracker = new InputModeTracker();
   private WindowEventInterpreter windowEventInterpreter;
@@ -1690,6 +1677,9 @@ public class TalkBackService extends AccessibilityServiceCompat
         // When the Tutorial is blocked, during the OOBE for instance, we should delay the
         // on-boarding to next TalkBack cycle.
         helper.flushPendingNotification();
+        // Stock TalkBack asks for notifications when the tutorial ends, which people who moved
+        // from TalkBack, or from Backtalk's old app ID, never see. So they are asked here, once.
+        askForNotificationsIfNeeded();
 
         // Show watermark again if onboarding is not confirmed finished by user.
         if (!OnboardingInitiator.showOnboardingIfNecessary(this)
@@ -2239,6 +2229,13 @@ public class TalkBackService extends AccessibilityServiceCompat
     }
 
     ringerModeAndScreenMonitor.addScreenChangedListener(proximitySensorMonitor);
+    ringerModeAndScreenMonitor.addDeviceUnlockedListener(
+        () -> {
+          if (notificationPermissionPending) {
+            notificationPermissionPending = false;
+            askForNotificationsIfNeeded();
+          }
+        });
     accessibilityEventProcessor.setRingerModeAndScreenMonitor(ringerModeAndScreenMonitor);
 
     headphoneStateMonitor = new HeadphoneStateMonitor(this);
@@ -3668,6 +3665,21 @@ public class TalkBackService extends AccessibilityServiceCompat
 
   private boolean isFirstTimeUser() {
     return prefs.getBoolean(PREF_FIRST_TIME_USER, true);
+  }
+
+  /**
+   * Asks the user once to allow notifications, if Backtalk can't show them. On the lock screen it
+   * waits until the phone is unlocked, since the dialog opens settings.
+   */
+  void askForNotificationsIfNeeded() {
+    if (prefs == null || !NotificationPermissionDialog.shouldAsk(this, prefs)) {
+      return;
+    }
+    if (ScreenMonitor.isDeviceLocked(this)) {
+      notificationPermissionPending = true;
+      return;
+    }
+    NotificationPermissionDialog.show(this, prefs);
   }
 
   void setTrainingFinished(boolean newValue) {
