@@ -41,7 +41,6 @@ import android.os.Bundle;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
-import android.os.ParcelFileDescriptor;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.Process;
@@ -1114,13 +1113,7 @@ public class FailoverTextToSpeech {
       return tts.speak(text, queueMode, bundle, utteranceId);
     }
     if (queueMode != QUEUE_ADD) {
-      // Synthesizing to a file always queues, so flush the engine and the player first. Stopping
-      // flushes Backtalk's own speech without queueing an empty utterance ahead of this one.
-      if (queueMode == TextToSpeech.QUEUE_FLUSH) {
-        tts.stop();
-      } else {
-        tts.speak("", queueMode, null, null);
-      }
+      // The engine flushes its own queue for this queue mode.
       player.stopStreams();
     }
     LowLatencyAudio.SpeechStream stream =
@@ -1131,14 +1124,12 @@ public class FailoverTextToSpeech {
             lowLatencyListener);
     lowLatencyStreams.put(utteranceId, stream);
     lowLatencyRequests.put(utteranceId, Pair.create(text, bundle));
-    int result;
-    try (ParcelFileDescriptor sink =
-        ParcelFileDescriptor.open(new File("/dev/null"), ParcelFileDescriptor.MODE_WRITE_ONLY)) {
-      result = tts.synthesizeToFile(text, bundle, sink, utteranceId);
-    } catch (IOException e) {
-      LogUtils.w(TAG, "Cannot synthesize for low-latency playback: %s", e);
-      result = TextToSpeech.ERROR;
-    }
+    // The engine speaks as usual but at no volume, and Backtalk plays the copy of its audio that
+    // Android gives it. As the engine is still playing audio, Android and phone makers' battery
+    // savers keep it running, which they do not do for an engine only making audio for an app.
+    Bundle silent = new Bundle(bundle);
+    silent.putFloat(SpeechParam.VOLUME, 0f);
+    int result = tts.speak(text, queueMode, silent, utteranceId);
     if (result != TextToSpeech.SUCCESS) {
       stream.discard();
       lowLatencyStreams.remove(utteranceId);
@@ -1319,6 +1310,17 @@ public class FailoverTextToSpeech {
         }
 
         @Override
+        public void onSilent(String id) {
+          // The engine applied the zero volume to its audio itself. Say it the usual way, and
+          // speak the usual way with this engine from now on.
+          mHandler.post(
+              () -> {
+                LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.get(id);
+                speakAgainWithoutLowLatency(id, stream);
+              });
+        }
+
+        @Override
         public void onStalled(String id) {
           // Say it the usual way, and speak the usual way with this engine from now on.
           mHandler.post(() -> speakAgainWithoutLowLatency(id, /* stream= */ null));
@@ -1347,6 +1349,10 @@ public class FailoverTextToSpeech {
       String utteranceId, LowLatencyAudio.@Nullable SpeechStream stream) {
     if (stream != null) {
       stream.discard();
+    }
+    @Nullable LowLatencyAudio player = LowLatencyAudio.get(context, speechAttributes());
+    if (player != null) {
+      player.discardStream(utteranceId);
     }
     lowLatencyStreams.remove(utteranceId);
     stopUsingLowLatencyAudio(stream == null ? "no audio in time" : "engine error");
@@ -1396,7 +1402,7 @@ public class FailoverTextToSpeech {
         public void onRangeStart(String utteranceId, int start, int end, int frame) {
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.get(utteranceId);
           if (stream != null) {
-            stream.range(start, end);
+            stream.range(start, end, frame);
           } else {
             utteranceProgressCallback.onRangeStart(utteranceId, start, end, frame);
           }
