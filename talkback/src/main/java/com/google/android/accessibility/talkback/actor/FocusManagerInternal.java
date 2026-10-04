@@ -112,6 +112,18 @@ public class FocusManagerInternal {
     this.pipeline = pipeline;
   }
 
+  /** Told when accessibility focus has been set, before the app's focus event for it arrives. */
+  public interface FocusSetListener {
+    void onAccessibilityFocusSet(
+        AccessibilityNodeInfoCompat node, FocusActionInfo info, @Nullable EventId eventId);
+  }
+
+  private @Nullable FocusSetListener focusSetListener;
+
+  public void setFocusSetListener(@Nullable FocusSetListener listener) {
+    focusSetListener = listener;
+  }
+
   ////////////////////////////////////////////////////////////////////////////////////////////////
   // Methods
 
@@ -452,6 +464,9 @@ public class FocusManagerInternal {
       // AccessibilityFocusActionHistory makes copy of the node, no need to obtain() here.
       history.onAccessibilityFocusAction(
           node, focusActionInfo, currentTime, screenState.getStableScreenState());
+      if (focusSetListener != null) {
+        focusSetListener.onAccessibilityFocusSet(node, focusActionInfo, eventId);
+      }
     }
     LogUtils.d(
         TAG,

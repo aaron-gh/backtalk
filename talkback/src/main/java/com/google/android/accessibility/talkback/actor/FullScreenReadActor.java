@@ -268,9 +268,14 @@ public class FullScreenReadActor {
 
   /** Ignore the pause speech and reset the continuous reading pause node. */
   public void ignore() {
+    @Nullable AccessibilityNodeInfoCompat paused = pausedNode;
+    if (paused == null) {
+      // Nothing to compare, so don't ask the app for the focused node on every event.
+      return;
+    }
     @Nullable AccessibilityNodeInfoCompat currentFocused =
         accessibilityFocusMonitor.getAccessibilityFocus(/* useInputFocusIfEmpty= */ false);
-    if (pausedNode != null && !pausedNode.equals(currentFocused)) {
+    if (!paused.equals(currentFocused)) {
       previousState = currentState;
       speechController.ignorePause();
       pausedNode = null;

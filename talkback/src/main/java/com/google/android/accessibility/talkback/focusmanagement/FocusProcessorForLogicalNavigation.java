@@ -370,9 +370,9 @@ public class FocusProcessorForLogicalNavigation {
         accessibilityFocusMonitor.getAccessibilityFocus(
             navigationAction.useInputFocusAsPivotIfEmpty, /* requireEditable= */ false);
 
-    // If we cannot find a pivot, or the pivot is not accessible, choose the root node if the
-    // active window.
-    if (pivot == null || !pivot.refresh()) {
+    // If we cannot find a pivot, choose the root node of the active window. The focus monitor only
+    // returns nodes it has just fetched or refreshed, so the pivot needs no second refresh.
+    if (pivot == null) {
       // TODO: We might need to define our own "active window" in TalkBack side.
       pivot = AccessibilityServiceCompatUtils.getRootInActiveWindow(service);
     }

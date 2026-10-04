@@ -456,6 +456,17 @@ public class Compositor {
     handleEvent(eventType, eventId, options);
   }
 
+  /** Handles an event made inside Backtalk for {@code sourceNode}, which the event cannot hold. */
+  public void handleEvent(
+      AccessibilityEvent event,
+      AccessibilityNodeInfoCompat sourceNode,
+      @Nullable EventId eventId,
+      EventInterpretation eventInterpreted) {
+    HandleEventOptions options =
+        new HandleEventOptions().object(event).interpretation(eventInterpreted).source(sourceNode);
+    handleEvent(eventInterpreted.getEvent(), eventId, options);
+  }
+
   private void handleEvent(int event, @Nullable EventId eventId, HandleEventOptions options) {
     handleEvent(event, eventId, options, null);
   }

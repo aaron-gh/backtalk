@@ -344,20 +344,34 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
     int eventType = event.getEventType();
     if (eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED) {
       final AccessibilityNodeInfoCompat sourceNode =
-          AccessibilityNodeInfoUtils.toCompat(event.getSource());
+          AccessibilityEventUtils.sourceCompat(event);
       if (sourceNode != null) {
-        final AccessibilityNodeInfoCompat scrollableNode =
-            AccessibilityNodeInfoUtils.getSelfOrMatchingAncestor(
-                sourceNode, AccessibilityNodeInfoUtils.FILTER_SCROLLABLE);
-        isLastFocusInScrollableNode = isCurrentFocusInScrollableNode;
-        isCurrentFocusInScrollableNode = (scrollableNode != null);
-        isFocusPage = AccessibilityNodeInfoUtils.isPage(sourceNode);
-
-        mLastWindowId = mCurrentWindowId;
-        mCurrentWindowId = sourceNode.getWindowId();
+        updateStateFromFocusedNode(sourceNode);
         currentDisplayId = AccessibilityEventUtils.getDisplayId(event);
       }
     }
+  }
+
+  /** Updates the state that follows accessibility focus, for focus that moved to {@code node}. */
+  public void updateStateFromFocusedNode(AccessibilityNodeInfoCompat node) {
+    final AccessibilityNodeInfoCompat scrollableNode =
+        AccessibilityNodeInfoUtils.getSelfOrMatchingAncestor(
+            node, AccessibilityNodeInfoUtils.FILTER_SCROLLABLE);
+    isLastFocusInScrollableNode = isCurrentFocusInScrollableNode;
+    isCurrentFocusInScrollableNode = (scrollableNode != null);
+    isFocusPage = AccessibilityNodeInfoUtils.isPage(node);
+
+    mLastWindowId = mCurrentWindowId;
+    mCurrentWindowId = node.getWindowId();
+  }
+
+  /**
+   * Updates the collection state for focus that moved to {@code node}, as the focus event for it
+   * would.
+   */
+  public void updateCollectionStateFromFocusedNode(
+      AccessibilityNodeInfoCompat node, AccessibilityEvent event) {
+    collectionState.updateCollectionInformation(node, event);
   }
 
   /** Returns whether TalkBack should announce the media control hint to answer a call. */
@@ -488,6 +502,13 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
   public boolean resettingNodeCursor() {
     return checkAndClearRecentFlag(EVENT_SKIP_SELECTION_CHANGED_AFTER_FOCUSED)
         || checkAndClearRecentFlag(EVENT_SKIP_SELECTION_CHANGED_AFTER_CURSOR_RESET);
+  }
+
+  /** Returns whether a skip focus state flag is set, without clearing it. */
+  public boolean hasSkipFocusProcessing() {
+    return checkRecentFlag(EVENT_SKIP_FOCUS_PROCESSING_AFTER_GRANULARITY_MOVE)
+        || checkRecentFlag(EVENT_SKIP_FOCUS_PROCESSING_AFTER_CURSOR_CONTROL)
+        || checkRecentFlag(EVENT_SKIP_FOCUS_PROCESSING_AFTER_IME_CLOSED);
   }
 
   /** Returns and clears the state of skip focus state flags. */
