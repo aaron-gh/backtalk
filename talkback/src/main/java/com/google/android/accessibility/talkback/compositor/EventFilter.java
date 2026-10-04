@@ -23,6 +23,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.text.TextUtils;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityWindowInfo;
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
@@ -321,7 +322,19 @@ public class EventFilter {
     globalVariables.updateCollectionStateFromFocusedNode(node, event);
     lastHoverEnteredNode = null;
     try {
-      compositor.handleEvent(event, node, eventId, eventInterpreted, preparedFeedback);
+      EventFeedback feedback =
+          (preparedFeedback != null)
+              ? preparedFeedback
+              : compositor.getFeedback(event, node, eventInterpreted);
+      if (!hasSpeech(feedback)) {
+        // Some nodes only show their content once focused, such as the second notification of a
+        // collapsed group, whose text is hidden until then. Nothing to say yet means the app's
+        // event, which comes after it shows the content, should say it.
+        earlyFocusSpeech.addStateUpdated(node, actionTime);
+        onFocusMoved(node);
+        return true;
+      }
+      compositor.handleEvent(event, node, eventId, eventInterpreted, feedback);
     } catch (RuntimeException e) {
       // Something on the way to speech needed more than a Backtalk-made event has. Leave the
       // focus to be spoken from the app's event rather than stop Backtalk.
@@ -443,7 +456,14 @@ public class EventFilter {
     } finally {
       globalVariables.restoreFocusState(saved);
     }
-    PreparedFocusSpeech.put(node, feedback);
+    if (hasSpeech(feedback)) {
+      PreparedFocusSpeech.put(node, feedback);
+    }
+  }
+
+  /** Whether {@code feedback} says anything. */
+  private static boolean hasSpeech(EventFeedback feedback) {
+    return !TextUtils.isEmpty(feedback.ttsOutput().orElse(null));
   }
 
   /** Makes the focus event the app would send for {@code node}, without its source. */
