@@ -149,6 +149,7 @@ import com.google.android.accessibility.talkback.compositor.CompositorUtils;
 import com.google.android.accessibility.talkback.compositor.EarlyFocusSpeech;
 import com.google.android.accessibility.talkback.compositor.EventFilter;
 import com.google.android.accessibility.talkback.compositor.GlobalVariables;
+import com.google.android.accessibility.talkback.compositor.PreparedFocusSpeech;
 import com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DescriptionOrder;
 import com.google.android.accessibility.talkback.contextmenu.ListMenuManager;
 import com.google.android.accessibility.talkback.controller.TelevisionNavigationController;
@@ -1052,6 +1053,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     EventId eventId = perf.onEventReceived(event);
     int eventType = event.getEventType();
     TraversalTreeCache.onAccessibilityEvent(event);
+    PreparedFocusSpeech.onAccessibilityEvent(event);
     if (directTouchController != null) {
       directTouchController.onAccessibilityEvent(event);
     }
@@ -2299,6 +2301,12 @@ public class TalkBackService extends AccessibilityServiceCompat
                 actionTime,
                 /* continuousReading= */ fullScreenReadActor != null
                     && fullScreenReadActor.isActive()));
+    eventFilter.setTargetPredictor(directionNavigationActor::predictTarget);
+    eventFilter.setFingerDownSupplier(
+        () ->
+            FeatureSupport.supportGestureDetection()
+                ? TouchInteractionMonitor.isFingerDown()
+                : touchMonitor.isUserTouchingScreen());
     eventFilter.setVoiceActionDelegate(voiceActionMonitor);
     eventFilter.setAccessibilityFocusEventInterpreter(accessibilityFocusInterpreter);
     ActorStateProvider actorStateProvider =
