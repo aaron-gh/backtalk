@@ -26,6 +26,7 @@ import android.media.AudioDeviceCallback;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.os.Build;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.text.TextUtils;
@@ -159,6 +160,12 @@ public class FeedbackController {
   private @Nullable AudioDeviceCallback mAudioDeviceCallback;
 
   private volatile boolean mHeadphonesConnected;
+
+  /** When {@link #mHeadphonesConnected} was worked out, or 0 to work it out again. */
+  private volatile long mHeadphonesCheckedAt;
+
+  /** How long whether sounds go to headphones is kept before asking again. */
+  private static final long HEADPHONES_CHECK_MS = 1000;
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Construction
@@ -509,35 +516,51 @@ public class FeedbackController {
   }
 
   /**
-   * Returns whether headphones are connected: any Bluetooth audio device, wired or USB headphones,
-   * or hearing aids. The answer is kept up to date by a callback from the first time it is asked.
+   * Returns whether Backtalk's sounds go to headphones: a Bluetooth headset or headphones, wired or
+   * USB headphones, or hearing aids. On Android 13 and later it asks where audio with Backtalk's
+   * attributes goes, so that sounds stay flat on the phone speaker, and on a Bluetooth speaker or
+   * car that is connected but not playing them. Before that, it can only tell what is connected.
    */
   private boolean isHeadphoneOutput() {
+    AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+    if (audioManager == null) {
+      return false;
+    }
     if (mAudioDeviceCallback == null) {
-      AudioManager audioManager = mContext.getSystemService(AudioManager.class);
-      if (audioManager == null) {
-        return false;
-      }
       mAudioDeviceCallback =
           new AudioDeviceCallback() {
             @Override
             public void onAudioDevicesAdded(AudioDeviceInfo[] addedDevices) {
-              mHeadphonesConnected = hasHeadphones(audioManager);
+              mHeadphonesCheckedAt = 0;
             }
 
             @Override
             public void onAudioDevicesRemoved(AudioDeviceInfo[] removedDevices) {
-              mHeadphonesConnected = hasHeadphones(audioManager);
+              mHeadphonesCheckedAt = 0;
             }
           };
-      // Registering reports the devices already connected, but only later on the main thread.
-      mHeadphonesConnected = hasHeadphones(audioManager);
       audioManager.registerAudioDeviceCallback(mAudioDeviceCallback, null);
+    }
+    // Asking goes to the audio service, so the answer is kept for a moment, and until a device
+    // comes or goes.
+    long now = SystemClock.uptimeMillis();
+    if (mHeadphonesCheckedAt == 0 || now - mHeadphonesCheckedAt > HEADPHONES_CHECK_MS) {
+      mHeadphonesConnected = headphonesPlaySounds(audioManager);
+      mHeadphonesCheckedAt = now;
     }
     return mHeadphonesConnected;
   }
 
-  private static boolean hasHeadphones(AudioManager audioManager) {
+  private static boolean headphonesPlaySounds(AudioManager audioManager) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      for (AudioDeviceInfo device :
+          audioManager.getAudioDevicesForAttributes(FEEDBACK_ATTRIBUTES)) {
+        if (isHeadphone(device)) {
+          return true;
+        }
+      }
+      return false;
+    }
     for (AudioDeviceInfo device : audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
       if (isHeadphone(device)) {
         return true;
@@ -552,11 +575,11 @@ public class FeedbackController {
       case AudioDeviceInfo.TYPE_WIRED_HEADSET:
       case AudioDeviceInfo.TYPE_USB_HEADSET:
       case AudioDeviceInfo.TYPE_HEARING_AID:
+      // A2DP is also used by Bluetooth speakers and cars, which can't be told apart from
+      // headphones, so it counts. Bluetooth LE says when a device is a speaker, and SCO carries
+      // calls.
       case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
-      case AudioDeviceInfo.TYPE_BLUETOOTH_SCO:
       case AudioDeviceInfo.TYPE_BLE_HEADSET:
-      case AudioDeviceInfo.TYPE_BLE_SPEAKER:
-      case AudioDeviceInfo.TYPE_BLE_BROADCAST:
         return true;
       default:
         return false;

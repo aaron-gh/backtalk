@@ -216,16 +216,22 @@ data class SoundThemeManifest(
       if (strength != null) {
         require(strength.length() in 1..MAX_STEPS) { "$STRENGTH must have 1 to $MAX_STEPS steps" }
         pattern += AMPLITUDE_SEPARATOR
+        var strengthMs = 0
         for (i in 0 until strength.length()) {
           val step = strength.getJSONArray(i)
           require(step.length() == 2) { "each $STRENGTH step is [ms, strength]" }
-          pattern += number(step, 0, MAX_MS, STRENGTH)
+          val ms = number(step, 0, MAX_MS, STRENGTH)
+          strengthMs += ms
+          pattern += ms
           pattern += number(step, 1, MAX_LEVEL, STRENGTH)
         }
+        // Each form is played on its own, so each must keep to the limit, not just the pattern.
+        require(strengthMs in 1..MAX_MS) { "$STRENGTH must last 1 to $MAX_MS ms" }
       }
       value.optJSONArray(EFFECTS)?.let { effects ->
         require(effects.length() in 1..MAX_STEPS) { "$EFFECTS must have 1 to $MAX_STEPS effects" }
         pattern += SENTINEL_SEPARATOR
+        var delayMs = 0
         for (i in 0 until effects.length()) {
           val effect = effects.getJSONArray(i)
           require(effect.length() == 3) { "each effect is [name, strength, delay in ms]" }
@@ -235,8 +241,11 @@ data class SoundThemeManifest(
               "$name is not an effect; use one of ${EFFECT_IDS.keys.joinToString()}"
             }
           pattern += number(effect, 1, MAX_LEVEL, EFFECTS)
-          pattern += number(effect, 2, MAX_MS, EFFECTS)
+          val delay = number(effect, 2, MAX_MS, EFFECTS)
+          delayMs += delay
+          pattern += delay
         }
+        require(delayMs <= MAX_MS) { "$EFFECTS delays must add up to at most $MAX_MS ms" }
       }
       return pattern.toIntArray()
     }

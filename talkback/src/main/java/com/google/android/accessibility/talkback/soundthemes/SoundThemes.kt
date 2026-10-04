@@ -30,6 +30,7 @@ import com.google.android.accessibility.talkback.individualfeedback.IndividualFe
 import com.google.android.accessibility.talkback.individualfeedback.SoundVibrations
 import com.google.android.libraries.accessibility.utils.log.LogUtils
 import java.io.File
+import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -401,10 +402,11 @@ object SoundThemes {
                 continue
               }
               val target = File(staging, fileName(key, extension, System.currentTimeMillis()))
-              val result =
-                file.getInputStream(file.getEntry(path)).use {
-                  copySound(it, target, MAX_SOUND_BYTES)
-                }
+              // Every byte read counts toward the theme's total, even of sounds that are refused,
+              // so that a small ZIP of many large, refused sounds cannot write and check gigabytes.
+              val counted = CountingInputStream(file.getInputStream(file.getEntry(path)))
+              val result = counted.use { copySound(it, target, MAX_SOUND_BYTES) }
+              total += counted.count
               when (result) {
                 Result.OK -> {
                   // A theme with two files for one sound keeps the last.
@@ -414,7 +416,6 @@ object SoundThemes {
                       .forEach { it.delete() }
                   }
                   sounds += key
-                  total += target.length()
                 }
                 Result.TOO_LARGE -> skipped += "$name: larger than 5 MB"
                 else -> skipped += "$name: Android can't play it"
@@ -554,6 +555,17 @@ object SoundThemes {
   private fun write(theme: SoundTheme) {
     theme.directory.mkdirs()
     File(theme.directory, SoundThemeManifest.FILE_NAME).writeText(theme.manifest.toJson())
+  }
+
+  /** An input stream that counts the bytes read from it. */
+  private class CountingInputStream(input: InputStream) : FilterInputStream(input) {
+    var count = 0L
+      private set
+
+    override fun read(): Int = super.read().also { if (it >= 0) count++ }
+
+    override fun read(buffer: ByteArray, offset: Int, length: Int): Int =
+      super.read(buffer, offset, length).also { if (it > 0) count += it }
   }
 
   /** Copies a sound into [file], keeping it only if it is small enough and Android can play it. */
