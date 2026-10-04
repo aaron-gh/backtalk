@@ -9,7 +9,6 @@
     <string name="pref_proximity_key">pref_proximity</string>
     <!-- Must match SpeakerphoneSettings.PREF_ENABLED. -->
     <string name="pref_speakerphone_away_from_ear_key">pref_speakerphone_away_from_ear</string>
-    <string name="pref_wrap_navigation_key">pref_wrap_navigation</string>
     <string name="pref_check_for_updates_key" translatable="false">pref_check_for_updates</string>
     <string name="pref_auto_update_check_key" translatable="false">pref_auto_update_check</string>
     <string name="pref_show_exit_watermark_key">pref_show_exit_watermark</string>
@@ -203,6 +202,8 @@
     <string name="pref_selector_change_typing_focus_latency_key" translatable="false">pref_selector_change_typing_focus_latency_key</string>
     <string name="pref_selector_change_lift_to_activate_key" translatable="false">pref_selector_change_lift_to_activate_key</string>
     <string name="pref_lift_to_activate_key" translatable="false">pref_lift_to_activate_key</string>
+    <string name="pref_selector_wrap_around_key" translatable="false">pref_selector_wrap_around_key</string>
+    <string name="pref_wrap_around_key" translatable="false">pref_wrap_around_key</string>
     <string name="pref_lift_to_activate_default" translatable="false">0</string>
     <string-array name="pref_lift_to_activate_entries">
       <item>@string/value_lift_to_activate_disabled</item>
@@ -1341,6 +1342,7 @@
     <bool name="pref_multiple_gesture_set_default">false</bool>
     <bool name="pref_echo_recognized_text_default">false</bool>
     <bool name="pref_reduce_window_delay_default">true</bool>
+    <bool name="pref_wrap_around_default">true</bool>
     <bool name="pref_auto_enter_table_navigation_default">false</bool>
     <bool name="pref_tree_debug_default">false</bool>
     <bool name="pref_performance_stats_default">false</bool>
@@ -1355,7 +1357,6 @@
     <bool name="pref_a11y_hints_default">true</bool>
     <bool name="pref_speak_container_element_positions_default">true</bool>
     <bool name="pref_tell_time_default">true</bool>
-    <bool name="pref_wrap_navigation_default">true</bool>
     <bool name="pref_speak_roles_default">true</bool>
     <bool name="pref_speak_system_window_titles_default">true</bool>
     <bool name="pref_allow_frequent_content_change_announcement_default">true</bool>
@@ -1395,6 +1396,7 @@
     <bool name="pref_selector_brightness_default">true</bool>
     <bool name="pref_selector_typing_focus_latency_default">false</bool>
     <bool name="pref_selector_lift_to_activate_default">true</bool>
+    <bool name="pref_selector_wrap_around_default">true</bool>
     <bool name="pref_selector_switch_tts_engine_default">false</bool>
     <bool name="pref_selector_touch_focus_latency_default">false</bool>
     <bool name="pref_selector_control_telling_time_default">false</bool>
@@ -1710,6 +1712,7 @@
     <string name="selector_brightness_change" translatable="false">SELECTOR_BRIGHTNESS_CHANGE</string>
     <string name="selector_typing_focus_latency_change" translatable="false">SELECTOR_TYPING_FOCUS_LATENCY_CHANGE</string>
     <string name="selector_lift_to_activate_change" translatable="false">SELECTOR_LIFT_TO_ACTIVATE_CHANGE</string>
+    <string name="selector_wrap_around" translatable="false">SELECTOR_WRAP_AROUND</string>
     <string name="selector_switch_tts_engine" translatable="false">SELECTOR_SWITCH_TTS_ENGINE</string>
     <string name="selector_touch_focus_latency_change" translatable="false">SELECTOR_TOUCH_FOCUS_LATENCY_CHANGE</string>
     <string name="selector_control_telling_time" translatable="false">SELECTOR_CONTROL_TELLING_TIME</string>

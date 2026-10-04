@@ -172,11 +172,7 @@ public class FocusProcessorForLogicalNavigation {
   // successfully finding the focus.
   private boolean reachEdge = false;
 
-  /**
-   * Set from the "Wrap around" setting. When off, moving past the first or last item stays at the
-   * edge and fails, which plays the "Action done or end reached" sound.
-   */
-  private static volatile boolean wrapAround = true;
+  private static boolean wrapAround = true;
 
   /** The last node that was scrolled while navigating with native macro granularity. */
   private @Nullable AccessibilityNodeInfoCompat lastScrolledNodeForNativeMacroGranularity;
@@ -1792,7 +1788,7 @@ public class FocusProcessorForLogicalNavigation {
       return NavigationResult.create(NavigationResult.Type.EXCEPTION);
     }
 
-    // Skip one swipe if it's the last element in the last window. With wrapping off, stop there.
+    // Skip one swipe if it's the last element in the last window. Without wrapping, stop there on every swipe, rather than going on to the first window.
     if ((!reachEdge || !wrapAround)
         && (!windowFilter.accept(currentWindow)
             || needPauseWhenTraverseAcrossWindow(
@@ -2088,7 +2084,7 @@ public class FocusProcessorForLogicalNavigation {
     while (true) {
       // Although we already check last window before searching, but sometimes we may find out the
       // window is empty so it searches next window repeatly, in this case we should check last
-      // window again to prevent traversing in loops.
+      // window again to prevent traversing in loops. Without wrapping, always stop at the last window.
       if ((!reachEdge || !wrapAround)
           && needPauseWhenTraverseAcrossWindow(
               windowTraversal, isScreenRtl, targetWindow, direction, windowFilter)) {

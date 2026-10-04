@@ -3069,7 +3069,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     WindowEventInterpreter.setReduceWindowDelay(reduceDelayPref);
 
     FocusProcessorForLogicalNavigation.setWrapAround(
-        getBooleanPref(R.string.pref_wrap_navigation_key, R.bool.pref_wrap_navigation_default));
+        getBooleanPref(R.string.pref_wrap_around_key, R.bool.pref_wrap_around_default));
 
     // If performance statistics changing enabled setting... clear collected stats.
     boolean performanceEnabled =
