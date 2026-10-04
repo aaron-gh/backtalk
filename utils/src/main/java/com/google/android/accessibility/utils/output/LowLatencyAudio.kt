@@ -22,6 +22,7 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Process
+import android.os.SystemClock
 import com.google.android.libraries.accessibility.utils.log.LogUtils
 import java.nio.ByteBuffer
 import java.util.ArrayDeque
@@ -101,6 +102,12 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
 
     /** The engine finished without giving any audio, so the stream played nothing. */
     fun onNoAudio(id: String)
+
+    /**
+     * The stream waited at the front of the queue for [STALL_MS] without the engine giving it any
+     * audio or finishing, so it was dropped, to let the speech after it play.
+     */
+    fun onStalled(id: String)
   }
 
   /**
@@ -123,12 +130,16 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     private var started = false
     private var ended = false
     private var finished = false
+    // When the engine last gave this stream anything, or it reached the front of the queue.
+    private var lastActivity = SystemClock.uptimeMillis()
+    private var wasHead = false
     // Word ranges by the output frame they start at.
     private val ranges = ArrayDeque<LongArray>()
 
     /** The engine's format, from the start of synthesis. */
     fun begin(rate: Int, encoding: Int, channels: Int) {
       synchronized(lock) {
+        lastActivity = SystemClock.uptimeMillis()
         inChannels = channels.coerceAtLeast(1)
         inEncoding = encoding
         resampler = SincResampler(rate, sampleRate, inChannels)
@@ -140,6 +151,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
       val samples = AudioDecoder.FloatList()
       AudioDecoder.toFloats(ByteBuffer.wrap(audio), inEncoding, samples)
       synchronized(lock) {
+        lastActivity = SystemClock.uptimeMillis()
         val resampler = resampler ?: return
         if (finished) return
         add(toStereo(resampler.process(samples.toArray()), inChannels))
@@ -169,6 +181,17 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
 
     /** Mixes this stream's next frames into [out], and returns whether it has more to play. */
     internal fun mixInto(out: FloatArray, frames: Int): Boolean {
+      val now = SystemClock.uptimeMillis()
+      if (!wasHead) {
+        wasHead = true
+        lastActivity = maxOf(lastActivity, now)
+      }
+      if (!ended && pending.isEmpty() && now - lastActivity > STALL_MS) {
+        // The engine stopped giving audio, such as after it was shut down. Never block speech.
+        finished = true
+        callbacks.execute { listener.onStalled(id) }
+        return false
+      }
       var written = 0
       while (written < frames && pending.isNotEmpty()) {
         val head = pending.peekFirst()!!
@@ -378,7 +401,17 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     private const val QUEUED_BURSTS = 2
     private const val IDLE_MS = 2_000
 
+    /** How long a stream at the front of the queue waits for audio before it is dropped. */
+    const val STALL_MS = 4_000L
+
     private val instances = HashMap<Int, LowLatencyAudio>()
+
+    /** Stops every speech stream of every player made so far, without making new ones. */
+    @JvmStatic
+    fun stopAllStreams() {
+      val players = synchronized(instances) { instances.values.toList() }
+      for (player in players) player.stopStreams()
+    }
 
     /**
      * The player for [attributes]' usage, one for each kind of audio, or null if the device cannot
