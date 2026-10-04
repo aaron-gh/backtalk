@@ -88,6 +88,8 @@ class TwoFingerRotationTracker(
   private var peak = 0f
   // 1 if the last step was clockwise, -1 if counterclockwise.
   private var direction = 0
+  // When the rotation was accepted, in event time.
+  private var acceptedTime = 0L
   // False when one of the two rotating fingers was lifted. The rotation then waits for the rest.
   private var rotatingFingersDown = false
 
@@ -223,7 +225,11 @@ class TwoFingerRotationTracker(
       state = State.ROTATING
       rotatingFingersDown = true
       direction = if (accumulated > 0) 1 else -1
-      anchor = accumulated
+      // The first step covers a whole step of rotation, even when the turn was accepted sooner, so
+      // the second step always comes at the same angle. Otherwise a quick turn with both fingers,
+      // accepted at a smaller angle than a pivot, gives two steps where a pivot gives one.
+      anchor = direction * max(stepDegrees, abs(accumulated))
+      acceptedTime = event.eventTime
       peak = accumulated
       listener.onRotationStep(direction > 0)
     } else if (translation > decisionDistancePx && abs(accumulated) < SCROLL_MAX_DEGREES) {
@@ -282,6 +288,12 @@ class TwoFingerRotationTracker(
     if ((accumulated - peak) * direction > 0) {
       peak = accumulated
     }
+    if (event.eventTime - acceptedTime < FLICK_MILLIS) {
+      // A quick flick turns far in a moment. It is one step, so the next step is counted from
+      // where the fingers are when the flick is over.
+      if ((accumulated - anchor) * direction > 0) anchor = accumulated
+      return
+    }
     while (true) {
       val step = stepDegrees
       if ((accumulated - anchor) * direction >= step) {
@@ -328,6 +340,9 @@ class TwoFingerRotationTracker(
 
     /** Rotation that starts the rotation and reports the first step, in degrees. */
     private const val COMMIT_DEGREES = 15f
+
+    /** Time after the first step, in milliseconds, during which the rotation reports no steps. */
+    private const val FLICK_MILLIS = 200L
 
     /** Rotation that starts a rotation where one finger stays nearly still, in degrees. */
     private const val PIVOT_COMMIT_DEGREES = 30f
