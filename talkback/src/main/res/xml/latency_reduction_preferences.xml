@@ -18,6 +18,12 @@
         android:title="@string/title_pref_touch_focus_timeout" />
 
     <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+        android:defaultValue="false"
+        android:title="@string/title_pref_low_latency_audio"
+        android:summary="@string/summary_pref_low_latency_audio"
+        android:key="pref_low_latency_audio" />
+
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
         android:defaultValue="@bool/pref_cache_keyboard_keys_default"
         android:title="@string/title_pref_cache_keyboard_keys"
         android:summary="@string/summary_cache_keyboard_keys"

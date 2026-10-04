@@ -2245,6 +2245,11 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <!-- Label for type and hold duration. [CHAR LIMIT=NONE]-->
     <string name="value_typing_long_press_5000ms">5 seconds</string>
 
+    <!-- Reduce delays: switch that plays sounds and speech through the fastest audio path. [CHAR LIMIT=50] -->
+    <string name="title_pref_low_latency_audio">Low-latency audio</string>
+    <!-- Reduce delays: summary of the low-latency audio switch. [CHAR LIMIT=NONE] -->
+    <string name="summary_pref_low_latency_audio">Play Backtalk\'s sounds and speech through the phone\'s fastest audio path, so you hear them sooner. Turn it off if speech or sounds break up or sound wrong.</string>
+
     <!-- Label for touch explore time out. [CHAR LIMIT=NONE]-->
     <string name="value_touch_explore_time_out_150ms">0.15 seconds</string>
     <!-- Label for touch explore time out. [CHAR LIMIT=NONE]-->

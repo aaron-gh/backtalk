@@ -44,6 +44,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -97,6 +98,17 @@ public class FeedbackController {
 
   /** The SoundPool instance for loading sounds and playing previously loaded sounds. */
   private final SoundPool mSoundPool;
+
+  /** Whether sounds play through {@link LowLatencyAudio}. */
+  private volatile boolean mLowLatencyAudio;
+
+  /**
+   * Sounds decoded for {@link LowLatencyAudio}, by resource or file, or null while being decoded or
+   * if they cannot be.
+   */
+  private final Map<String, LowLatencyAudio.@Nullable Clip> mClips = new HashMap<>();
+
+  private final ExecutorService mDecoder = Executors.newSingleThreadExecutor();
 
   /** The vibration service used to play vibration patterns. */
   private final Vibrator mVibrator;
@@ -448,6 +460,9 @@ public class FeedbackController {
 
   private void playFromPool(int resId, float rate, float leftVolume, float rightVolume) {
     @Nullable String path = customSoundPath(resId);
+    if (mLowLatencyAudio && playLowLatency(resId, path, rate, leftVolume, rightVolume)) {
+      return;
+    }
     int soundId = mSoundIds.get(resId);
     if (soundId != 0 && !TextUtils.equals(path, mLoadedPaths.get(resId))) {
       // The user chose another sound since this one was loaded.
@@ -741,6 +756,53 @@ public class FeedbackController {
         .setMaxStreams(MAX_STREAMS)
         .setAudioAttributes(FEEDBACK_ATTRIBUTES)
         .build();
+  }
+
+  /**
+   * Plays the sound, or the file at {@code path} in its place, through the low-latency player, and
+   * returns whether it did. A sound plays the usual way the first time, while it is decoded for
+   * next time, and whenever it cannot be decoded.
+   */
+  private boolean playLowLatency(
+      int resId, @Nullable String path, float rate, float leftVolume, float rightVolume) {
+    @Nullable LowLatencyAudio player = LowLatencyAudio.get(mContext, FEEDBACK_ATTRIBUTES);
+    if (player == null) {
+      return false;
+    }
+    // By file for a file, so that a replaced file is decoded again.
+    String key = path != null ? path : "res:" + resId;
+    LowLatencyAudio.@Nullable Clip clip;
+    synchronized (mClips) {
+      clip = mClips.get(key);
+      if (clip == null) {
+        if (!mClips.containsKey(key)) {
+          // Null marks a sound being decoded, or one that cannot be.
+          mClips.put(key, null);
+          mDecoder.execute(
+              () -> {
+                AudioDecoder.@Nullable Decoded decoded =
+                    path != null ? AudioDecoder.decode(path) : AudioDecoder.decode(mContext, resId);
+                if (decoded != null) {
+                  LowLatencyAudio.Clip prepared = player.prepare(decoded);
+                  synchronized (mClips) {
+                    mClips.put(key, prepared);
+                  }
+                }
+              });
+        }
+        return false;
+      }
+    }
+    player.play(clip, leftVolume, rightVolume, rate);
+    return true;
+  }
+
+  /**
+   * Sets whether sounds play through the low-latency player, which reaches the speaker sooner than
+   * the usual way.
+   */
+  public void setLowLatencyAudio(boolean enabled) {
+    mLowLatencyAudio = enabled;
   }
 
   /**
