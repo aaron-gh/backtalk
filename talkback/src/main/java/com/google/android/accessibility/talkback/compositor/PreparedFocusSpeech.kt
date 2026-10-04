@@ -32,10 +32,24 @@ object PreparedFocusSpeech {
   /** How long a prepared announcement is kept, in case a change came without an event. */
   const val MAX_AGE_MS = 5_000L
 
+  /**
+   * How long before a swipe an announcement must have been prepared to be used. One prepared just
+   * before may predate a change whose event has not arrived yet, so the swipe reads the node again.
+   */
+  const val MIN_AGE_MS = 100L
+
   private const val NO_WINDOW_ID = -1
 
-  /** An announcement of focusing [node], which was read from the app to prepare it. */
-  class Prepared(val node: AccessibilityNodeInfoCompat, val feedback: EventFeedback) {
+  /**
+   * An announcement of focusing [node], which was read from the app to prepare it, and
+   * [containerTitle], the title of the container that working it out left focus in, which giving it
+   * must leave focus in too.
+   */
+  class Prepared(
+    val node: AccessibilityNodeInfoCompat,
+    val feedback: EventFeedback,
+    val containerTitle: CharSequence,
+  ) {
     internal val time = SystemClock.uptimeMillis()
 
     internal fun isFor(other: AccessibilityNodeInfoCompat): Boolean = node == other
@@ -44,15 +58,19 @@ object PreparedFocusSpeech {
   private val prepared = ArrayList<Prepared>(2)
   private var windowId = NO_WINDOW_ID
 
-  /** Keeps [feedback] as the announcement of focusing [node]. */
+  /** Keeps [feedback] as the announcement of focusing [node]; see [Prepared]. */
   @JvmStatic
-  fun put(node: AccessibilityNodeInfoCompat, feedback: EventFeedback) {
+  fun put(
+    node: AccessibilityNodeInfoCompat,
+    feedback: EventFeedback,
+    containerTitle: CharSequence,
+  ) {
     if (node.windowId != windowId) {
       clear()
       windowId = node.windowId
     }
     prepared.removeAll { it.isFor(node) }
-    prepared += Prepared(node, feedback)
+    prepared += Prepared(node, feedback, containerTitle)
   }
 
   /** Returns whether an announcement of focusing [node] is kept. */
@@ -60,15 +78,19 @@ object PreparedFocusSpeech {
   fun has(node: AccessibilityNodeInfoCompat): Boolean = find(node) != null
 
   /**
-   * Returns the announcement of focusing [node], or null if there is none, and forgets them all,
-   * since the focus is moving.
+   * Returns the announcement of focusing [node], or null if there is none or it was prepared less
+   * than [MIN_AGE_MS] ago, and forgets them all, since the focus is moving.
    */
   @JvmStatic
   fun take(node: AccessibilityNodeInfoCompat): Prepared? {
     val found = find(node)
     clear()
-    return found
+    return found?.takeIf { isOldEnough(it.time, SystemClock.uptimeMillis()) }
   }
+
+  /** Whether an announcement prepared at [preparedTime] may be used at [now]; see [MIN_AGE_MS]. */
+  @JvmStatic
+  fun isOldEnough(preparedTime: Long, now: Long): Boolean = now - preparedTime >= MIN_AGE_MS
 
   /** Forgets all announcements. */
   @JvmStatic

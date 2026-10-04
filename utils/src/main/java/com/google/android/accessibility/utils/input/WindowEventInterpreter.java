@@ -404,11 +404,22 @@ public class WindowEventInterpreter implements WindowsDelegate, DisplayStateChan
       return null;
     }
 
-    SparseArray<List<AccessibilityWindowInfo>> windowsOnAllDisplays = windowsOnAllDisplays();
+    long fetchedBefore = cachedWindowsTime;
+    @Nullable AccessibilityWindowInfo window = findWindow(windowsOnAllDisplays(), windowId);
+    if (window == null && cachedWindowsTime == fetchedBefore) {
+      // The window may have appeared since the windows were fetched, before its windows event.
+      cachedWindowsOnAllDisplays = null;
+      window = findWindow(windowsOnAllDisplays(), windowId);
+    }
+    return (window == null) ? null : AccessibilityWindowInfoUtils.getTitle(window);
+  }
+
+  private static @Nullable AccessibilityWindowInfo findWindow(
+      SparseArray<List<AccessibilityWindowInfo>> windowsOnAllDisplays, int windowId) {
     for (int i = 0; i < windowsOnAllDisplays.size(); i++) {
       for (AccessibilityWindowInfo window : windowsOnAllDisplays.valueAt(i)) {
         if (window.getId() == windowId) {
-          return AccessibilityWindowInfoUtils.getTitle(window);
+          return window;
         }
       }
     }

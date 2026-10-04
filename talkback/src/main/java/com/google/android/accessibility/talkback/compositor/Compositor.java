@@ -375,6 +375,8 @@ public class Compositor {
   /** Sets the user preferred locale changed using language switcher. */
   public void setUserPreferredLanguage(Locale locale) {
     globalVariables.setUserPreferredLocale(locale);
+    // The prepared announcements were worked out in the language used before.
+    PreparedFocusSpeech.clear();
   }
 
   /////////////////////////////////////////////////////////////////////////////////
