@@ -55,6 +55,21 @@ object AudioDecoder {
     }
   }
 
+  /** Decodes a sound file, or returns null if Android cannot decode it. */
+  @JvmStatic
+  fun decode(path: String): Decoded? {
+    val extractor = MediaExtractor()
+    return try {
+      extractor.setDataSource(path)
+      decode(extractor)
+    } catch (e: Exception) {
+      LogUtils.w(TAG, "Cannot decode sound %s: %s", path, e)
+      null
+    } finally {
+      extractor.release()
+    }
+  }
+
   private fun decode(extractor: MediaExtractor): Decoded? {
     val track =
       (0 until extractor.trackCount).firstOrNull {

@@ -85,8 +85,11 @@ public class FeedbackController {
   /** Whether sounds play through {@link LowLatencyAudio}. */
   private volatile boolean mLowLatencyAudio;
 
-  /** Sounds decoded for {@link LowLatencyAudio}, by resource ID, or null while being decoded. */
-  private final SparseArray<LowLatencyAudio.@Nullable Clip> mClips = new SparseArray<>();
+  /**
+   * Sounds decoded for {@link LowLatencyAudio}, by resource or file, or null while being decoded or
+   * if they cannot be.
+   */
+  private final Map<String, LowLatencyAudio.@Nullable Clip> mClips = new HashMap<>();
 
   private final ExecutorService mDecoder = Executors.newSingleThreadExecutor();
 
@@ -310,7 +313,7 @@ public class FeedbackController {
     LogUtils.v(TAG, "playAuditory() resId=%d eventId=%s", resId, eventId);
 
     final float adjustedVolume = ignoreVolumeAdjustment ? volume : volume * mVolumeAdjustment;
-    if (mLowLatencyAudio && playLowLatency(resId, rate, adjustedVolume)) {
+    if (mLowLatencyAudio && playLowLatency(resId, rate, adjustedVolume, adjustedVolume)) {
       return;
     }
     int soundId = mSoundIds.get(resId);
@@ -447,25 +450,37 @@ public class FeedbackController {
    * Plays the sound through the low-latency player, and returns whether it did. A sound plays the
    * usual way the first time, while it is decoded for next time, and whenever it cannot be decoded.
    */
-  private boolean playLowLatency(int resId, float rate, float volume) {
+  private boolean playLowLatency(int resId, float rate, float leftVolume, float rightVolume) {
+    return playLowLatency(resId, /* path= */ null, rate, leftVolume, rightVolume);
+  }
+
+  /**
+   * Plays the sound, or the file at {@code path} in its place, through the low-latency player, and
+   * returns whether it did.
+   */
+  private boolean playLowLatency(
+      int resId, @Nullable String path, float rate, float leftVolume, float rightVolume) {
     @Nullable LowLatencyAudio player = LowLatencyAudio.get(mContext, FEEDBACK_ATTRIBUTES);
     if (player == null) {
       return false;
     }
+    // By file for a file, so that a replaced file is decoded again.
+    String key = path != null ? path : "res:" + resId;
     LowLatencyAudio.@Nullable Clip clip;
     synchronized (mClips) {
-      clip = mClips.get(resId);
+      clip = mClips.get(key);
       if (clip == null) {
-        if (mClips.indexOfKey(resId) < 0) {
+        if (!mClips.containsKey(key)) {
           // Null marks a sound being decoded, or one that cannot be.
-          mClips.put(resId, null);
+          mClips.put(key, null);
           mDecoder.execute(
               () -> {
-                AudioDecoder.@Nullable Decoded decoded = AudioDecoder.decode(mContext, resId);
+                AudioDecoder.@Nullable Decoded decoded =
+                    path != null ? AudioDecoder.decode(path) : AudioDecoder.decode(mContext, resId);
                 if (decoded != null) {
                   LowLatencyAudio.Clip prepared = player.prepare(decoded);
                   synchronized (mClips) {
-                    mClips.put(resId, prepared);
+                    mClips.put(key, prepared);
                   }
                 }
               });
@@ -473,7 +488,7 @@ public class FeedbackController {
         return false;
       }
     }
-    player.play(clip, volume, volume, rate);
+    player.play(clip, leftVolume, rightVolume, rate);
     return true;
   }
 
