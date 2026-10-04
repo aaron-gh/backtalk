@@ -542,6 +542,20 @@ public class TouchInteractionMonitor
             break;
           case 2:
             if (gestureDetector.isTwoFingerPassthroughEnabled()) {
+              // Each finger must move passthroughTotalSlop (3x touchSlop) before the touch goes
+              // to the app. MultiFingerSwipe lets the first fingers of a 3-finger swipe move up to
+              // fingerCount x touchSlop (the same touchSlop) before the last finger lands, and
+              // only cancels itself once a finger moves that far with too few fingers down; a
+              // 3-finger tap (MultiFingerMultiTap) likewise allows 3x touchSlop. Dragging stops
+              // gesture detection, so passing the touch on any sooner would turn those gestures
+              // into scrolls.
+              // A scroll's slower finger can lag well behind, though. So once both fingers have
+              // moved the same way (rotationTracker.isScroll()) and the faster one has moved
+              // passthroughTotalSlop, by which point the 3-finger swipe has already cancelled
+              // itself (the gesture detector saw this event first), the touch is a scroll: pass
+              // it on without waiting for the slower finger.
+              double maxMoveDelta = 0;
+              double minMoveDelta = Double.MAX_VALUE;
               for (int index = 0; index < event.getPointerCount(); ++index) {
                 int id = event.getPointerId(index);
                 if (!receivedPointerTracker.isReceivedPointerDown(id)) {
@@ -554,13 +568,13 @@ public class TouchInteractionMonitor
                 final float deltaY =
                     receivedPointerTracker.getReceivedPointerDownY(id) - event.getY(index);
                 final double moveDelta = Math.hypot(deltaX, deltaY);
-                if (moveDelta < passthroughTotalSlop) {
-                  // For 3 finger swipe gestures which bear the 3 times of touchSlop during the
-                  // detection. If the monitor issues state change to drag/delegate before the 3rd
-                  // finger down due to the touch-slop over, the 3-finger swipe gesture detector
-                  // fails. So we align the moveDelta to 3-times of touch-slop.
-                  return;
-                }
+                maxMoveDelta = Math.max(maxMoveDelta, moveDelta);
+                minMoveDelta = Math.min(minMoveDelta, moveDelta);
+              }
+              boolean scrollPastSwipeSlop =
+                  rotationTracker.isScroll() && maxMoveDelta >= passthroughTotalSlop;
+              if (minMoveDelta < passthroughTotalSlop && !scrollPastSwipeSlop) {
+                return;
               }
             }
             if (rotationTracker.isPossibleRotation()) {
@@ -641,6 +655,8 @@ public class TouchInteractionMonitor
     }
     if (state == STATE_TOUCH_INTERACTING) {
       waitFirstMotionEvent = true;
+    } else if (state == STATE_DRAGGING) {
+      service.onDragStarted();
     } else if (state == STATE_TOUCH_EXPLORING) {
       // Log isDefaultDisplay/gestureId/onGestureDetectedTime. The targetGestureTimeout is the
       // current time minus lastMotionEventTransmissionLatency
