@@ -17,7 +17,6 @@
 package com.google.android.accessibility.utils.output
 
 import android.content.Context
-import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
 import android.media.MediaCodec
@@ -89,12 +88,7 @@ class SpatialSoundPlayer(private val context: Context) {
     val frames = stereo.size / 2
     val newTrack =
       AudioTrack.Builder()
-        .setAudioAttributes(
-          AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
-            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-            .build()
-        )
+        .setAudioAttributes(FeedbackController.FEEDBACK_ATTRIBUTES)
         .setAudioFormat(
           AudioFormat.Builder()
             .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)

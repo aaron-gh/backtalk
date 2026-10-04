@@ -39,6 +39,7 @@ import com.google.android.accessibility.talkback.Feedback;
 import com.google.android.accessibility.talkback.Pipeline.FeedbackReturner;
 import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.TalkBackService;
+import com.google.android.accessibility.talkback.audio.AudioDeviceRouter;
 import com.google.android.accessibility.talkback.contextmenu.ListMenuManager;
 import com.google.android.accessibility.talkback.controller.TelevisionNavigationController;
 import com.google.android.accessibility.talkback.status.StatusReader;
@@ -204,13 +205,30 @@ public class RingerModeAndScreenMonitor extends SameThreadBroadcastReceiver
               intent.getIntExtra(AudioManager.EXTRA_RINGER_MODE, AudioManager.RINGER_MODE_NORMAL));
       case Intent.ACTION_SCREEN_ON -> {
         isInteractive = true;
+        AudioDeviceRouter router = AudioDeviceRouter.getInstance();
+        if (router != null) {
+          router.ensureRouting();
+          router.scheduleReassertion();
+        }
         handleScreenOn(eventId);
       }
       case Intent.ACTION_SCREEN_OFF -> {
         isInteractive = false;
+        AudioDeviceRouter router = AudioDeviceRouter.getInstance();
+        if (router != null) {
+          router.ensureRouting();
+          router.scheduleReassertion();
+        }
         handleScreenOff(eventId);
       }
-      case Intent.ACTION_USER_PRESENT -> handleDeviceUnlocked(eventId);
+      case Intent.ACTION_USER_PRESENT -> {
+        AudioDeviceRouter router = AudioDeviceRouter.getInstance();
+        if (router != null) {
+          router.ensureRouting();
+          router.scheduleReassertion();
+        }
+        handleDeviceUnlocked(eventId);
+      }
     }
   }
 

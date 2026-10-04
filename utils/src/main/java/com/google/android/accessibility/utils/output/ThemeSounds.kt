@@ -16,7 +16,6 @@
 
 package com.google.android.accessibility.utils.output
 
-import android.media.AudioAttributes
 import android.media.SoundPool
 
 /**
@@ -46,12 +45,7 @@ object ThemeSounds {
       val newPool =
         SoundPool.Builder()
           .setMaxStreams(MAX_STREAMS)
-          .setAudioAttributes(
-            AudioAttributes.Builder()
-              .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
-              .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-              .build()
-          )
+          .setAudioAttributes(FeedbackController.FEEDBACK_ATTRIBUTES)
           .build()
       for (path in paths.values.toSet()) {
         soundIds[path] = newPool.load(path, 1)

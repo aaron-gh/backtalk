@@ -73,10 +73,14 @@ public class FeedbackController {
   /** Positioned sounds are played in 3D when headphones are connected, and panned otherwise. */
   public static final int SPATIAL_3D_WITH_HEADPHONES = 2;
 
-  private static final AudioAttributes FEEDBACK_ATTRIBUTES =
+  /**
+   * How Backtalk's sounds play: as speech, so that they follow the audio output device chosen for
+   * speech.
+   */
+  public static final AudioAttributes FEEDBACK_ATTRIBUTES =
       new AudioAttributes.Builder()
           .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
-          .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+          .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
           .build();
 
   //////////////////////////////////////////////////////////////////////////////////////////

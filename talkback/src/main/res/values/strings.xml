@@ -1111,6 +1111,71 @@
       Description: Contains a list of volume settings. [CHAR LIMIT=25]
     -->
     <string name="title_pref_soundback_volume">Sound feedback volume</string>
+    <!--
+      Source: Preference for choosing the audio output device for TalkBack.
+      Description: Title of the audio output device setting. [CHAR LIMIT=35]
+    -->
+    <string name="title_pref_audio_output_device">Audio output device</string>
+    <!--
+      Source: Dialog title when choosing the audio output device.
+      Description: Dialog title for selecting audio output target. [CHAR LIMIT=45]
+    -->
+    <string name="dialog_title_audio_output_device">Choose where to play TalkBack sound</string>
+    <!--
+      Source: Entry in the audio output device list for using system default.
+      Description: Follows Android system default audio routing. [CHAR LIMIT=30]
+    -->
+    <string name="value_audio_output_device_default">System default</string>
+    <!--
+      Source: Entry in the audio output device list for forcing playback to the phone speaker.
+      Description: Plays TalkBack audio through the built-in speaker. [CHAR LIMIT=30]
+    -->
+    <string name="value_audio_output_device_speaker">Phone speaker</string>
+    <!--
+      Source: Entry in the audio output device list for routing to connected Bluetooth or wired device.
+      Description: Plays TalkBack audio through connected Bluetooth or wired devices. [CHAR LIMIT=45]
+    -->
+    <string name="value_audio_output_device_bluetooth_or_wired">Connected Bluetooth device or wired</string>
+    <!--
+      Source: Entry in the audio output device list when no Bluetooth or wired device is connected.
+      Description: Indicates no external audio device is connected. [CHAR LIMIT=45]
+    -->
+    <string name="value_audio_output_device_none_connected">Bluetooth or wired (none connected)</string>
+    <!--
+      Source: Status suffix in the audio output device summary when the chosen device is not currently connected.
+      Description: Status for disconnected device. [CHAR LIMIT=20]
+    -->
+    <string name="value_audio_output_device_disconnected">disconnected</string>
+    <!--
+      Source: Fallback label for Bluetooth audio device without a name.
+      Description: Fallback name for Bluetooth device. [CHAR LIMIT=30]
+    -->
+    <string name="value_audio_output_device_bluetooth_default">Bluetooth audio device</string>
+    <!--
+      Source: Fallback label for wired headset without a name.
+      Description: Fallback name for wired headset. [CHAR LIMIT=30]
+    -->
+    <string name="value_audio_output_device_wired_headset">Wired headset</string>
+    <!--
+      Source: Fallback label for wired headphones without a name.
+      Description: Fallback name for wired headphones. [CHAR LIMIT=30]
+    -->
+    <string name="value_audio_output_device_wired_headphones">Wired headphones</string>
+    <!--
+      Source: Fallback label for USB headset without a name.
+      Description: Fallback name for USB headset. [CHAR LIMIT=30]
+    -->
+    <string name="value_audio_output_device_usb_headset">USB headset</string>
+    <!--
+      Source: Fallback label for USB audio device without a name.
+      Description: Fallback name for USB audio device. [CHAR LIMIT=30]
+    -->
+    <string name="value_audio_output_device_usb_device">USB audio device</string>
+    <!--
+      Source: Fallback label for AUX line audio output without a name.
+      Description: Fallback name for AUX line device. [CHAR LIMIT=30]
+    -->
+    <string name="value_audio_output_device_aux_line">Auxiliary audio line</string>
 
     <!--
       Source: Preference category title.
