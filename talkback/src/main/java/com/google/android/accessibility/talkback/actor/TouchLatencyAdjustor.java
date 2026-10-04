@@ -40,7 +40,9 @@ import com.google.android.libraries.accessibility.utils.log.LogUtils;
 public class TouchLatencyAdjustor {
   private static final String TAG = "TouchLatencyAdjustor";
   private static final int MAX_LATENCY = 300;
-  private static final int MIN_LATENCY = 150;
+  // Touch focus can go lower than typing focus, which double-tap typing needs time for.
+  private static final int MIN_TOUCH_LATENCY = 50;
+  private static final int MIN_TYPING_LATENCY = 150;
   private final Context context;
   private final SharedPreferences prefs;
   private Pipeline.FeedbackReturner pipeline;
@@ -81,15 +83,17 @@ public class TouchLatencyAdjustor {
                 : R.string.pref_touch_explore_time_out_default);
     LogUtils.d(TAG, "Adjust latency value:%s", touchLatency);
 
+    int minLatency =
+        action == TOUCH_FOCUS_LATENCY_ACTION ? MIN_TOUCH_LATENCY : MIN_TYPING_LATENCY;
     if ((upward && imeUserIntentTimeout >= MAX_LATENCY)
-        || (!upward && imeUserIntentTimeout <= MIN_LATENCY)) {
+        || (!upward && imeUserIntentTimeout <= minLatency)) {
       return false;
     }
     imeUserIntentTimeout += upward ? 50 : -50;
     if (imeUserIntentTimeout > MAX_LATENCY) {
       imeUserIntentTimeout = MAX_LATENCY;
-    } else if (imeUserIntentTimeout < MIN_LATENCY) {
-      imeUserIntentTimeout = MIN_LATENCY;
+    } else if (imeUserIntentTimeout < minLatency) {
+      imeUserIntentTimeout = minLatency;
     }
     if (action == TOUCH_FOCUS_LATENCY_ACTION) {
       updateFocusDelayPreference(imeUserIntentTimeout);
