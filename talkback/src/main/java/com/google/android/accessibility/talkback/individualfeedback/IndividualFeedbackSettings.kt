@@ -94,7 +94,11 @@ object IndividualFeedbackSettings {
       FeedbackItem("view_entered_pattern", R.string.individual_sound_view_entered),
       FeedbackItem("view_clicked_pattern", R.string.individual_vibration_clicked),
       FeedbackItem("view_long_clicked_pattern", R.string.individual_vibration_long_clicked),
-      FeedbackItem("scroll_pattern", R.string.individual_sound_scroll_tone),
+      FeedbackItem(
+        "scroll_pattern",
+        R.string.individual_sound_scroll_tone,
+        listOf("scroll_pattern", "scroll_item_pattern"),
+      ),
       FeedbackItem("list_entered_pattern", R.string.individual_sound_chime_up),
       FeedbackItem("list_exited_pattern", R.string.individual_sound_chime_down),
       FeedbackItem("complete_pattern", R.string.individual_sound_complete),
