@@ -38,6 +38,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -72,6 +74,21 @@ public class FeedbackController {
 
   /** The SoundPool instance for loading sounds and playing previously loaded sounds. */
   private final SoundPool mSoundPool;
+
+  /** How Backtalk's sounds play: as speech, so that they follow the output chosen for speech. */
+  private static final AudioAttributes FEEDBACK_ATTRIBUTES =
+      new AudioAttributes.Builder()
+          .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
+          .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+          .build();
+
+  /** Whether sounds play through {@link LowLatencyAudio}. */
+  private volatile boolean mLowLatencyAudio;
+
+  /** Sounds decoded for {@link LowLatencyAudio}, by resource ID, or null while being decoded. */
+  private final SparseArray<LowLatencyAudio.@Nullable Clip> mClips = new SparseArray<>();
+
+  private final ExecutorService mDecoder = Executors.newSingleThreadExecutor();
 
   /** The vibration service used to play vibration patterns. */
   private final Vibrator mVibrator;
@@ -293,6 +310,9 @@ public class FeedbackController {
     LogUtils.v(TAG, "playAuditory() resId=%d eventId=%s", resId, eventId);
 
     final float adjustedVolume = ignoreVolumeAdjustment ? volume : volume * mVolumeAdjustment;
+    if (mLowLatencyAudio && playLowLatency(resId, rate, adjustedVolume)) {
+      return;
+    }
     int soundId = mSoundIds.get(resId);
 
     if (soundId != 0) {
@@ -417,12 +437,52 @@ public class FeedbackController {
   }
 
   private static SoundPool createSoundPool() {
-    AudioAttributes aa =
-        new AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-            .build();
-    return new SoundPool.Builder().setMaxStreams(MAX_STREAMS).setAudioAttributes(aa).build();
+    return new SoundPool.Builder()
+        .setMaxStreams(MAX_STREAMS)
+        .setAudioAttributes(FEEDBACK_ATTRIBUTES)
+        .build();
+  }
+
+  /**
+   * Plays the sound through the low-latency player, and returns whether it did. A sound plays the
+   * usual way the first time, while it is decoded for next time, and whenever it cannot be decoded.
+   */
+  private boolean playLowLatency(int resId, float rate, float volume) {
+    @Nullable LowLatencyAudio player = LowLatencyAudio.get(mContext, FEEDBACK_ATTRIBUTES);
+    if (player == null) {
+      return false;
+    }
+    LowLatencyAudio.@Nullable Clip clip;
+    synchronized (mClips) {
+      clip = mClips.get(resId);
+      if (clip == null) {
+        if (mClips.indexOfKey(resId) < 0) {
+          // Null marks a sound being decoded, or one that cannot be.
+          mClips.put(resId, null);
+          mDecoder.execute(
+              () -> {
+                AudioDecoder.@Nullable Decoded decoded = AudioDecoder.decode(mContext, resId);
+                if (decoded != null) {
+                  LowLatencyAudio.Clip prepared = player.prepare(decoded);
+                  synchronized (mClips) {
+                    mClips.put(resId, prepared);
+                  }
+                }
+              });
+        }
+        return false;
+      }
+    }
+    player.play(clip, volume, volume, rate);
+    return true;
+  }
+
+  /**
+   * Sets whether sounds play through the low-latency player, which reaches the speaker sooner than
+   * the usual way.
+   */
+  public void setLowLatencyAudio(boolean enabled) {
+    mLowLatencyAudio = enabled;
   }
 
   /**

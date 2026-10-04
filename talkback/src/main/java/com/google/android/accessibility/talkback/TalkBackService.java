@@ -3222,6 +3222,10 @@ public class TalkBackService extends AccessibilityServiceCompat
     boolean auditoryEnabled =
         getBooleanPref(R.string.pref_soundback_key, R.bool.pref_soundback_default);
     feedbackController.setAuditoryEnabled(auditoryEnabled);
+    feedbackController.setLowLatencyAudio(
+        prefs.getBoolean(
+            FailoverTextToSpeech.PREF_LOW_LATENCY_AUDIO_KEY,
+            FailoverTextToSpeech.LOW_LATENCY_AUDIO_DEFAULT));
     IndividualFeedbackSettings.INSTANCE.migrate(prefs);
     feedbackController.setMutedAuditory(
         IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs));
