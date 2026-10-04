@@ -285,6 +285,28 @@ public class FailoverTextToSpeech {
    */
   private final Map<String, Integer> resumeOffsets = new ConcurrentHashMap<>();
 
+  /**
+   * How long an engine with nothing else to do may say nothing at all about new speech before it
+   * counts as hung. A hung engine takes speech and never makes it, for every app, until its process
+   * is restarted, so Backtalk moves to another engine rather than going silent. This is shorter
+   * than {@link LowLatencyAudio#STALL_MS}, so a hung engine is not taken for a low-latency failure.
+   */
+  private static final long ENGINE_HANG_MS = 3000;
+
+  /** How long an engine that says it is speaking, perhaps for another app, may say nothing. */
+  private static final long ENGINE_BUSY_HANG_MS = 20_000;
+
+  /** When speech went to an engine with nothing else to do, or 0 once the engine responded. */
+  private volatile long engineQuietSince;
+
+  /** The utterance that {@link #engineQuietSince} waits on. */
+  private volatile @Nullable String engineQuietUtteranceId;
+
+  /** Utterances the engine has taken but not yet reported finishing, stopping or failing. */
+  private final Set<String> unfinishedUtterances = ConcurrentHashMap.newKeySet();
+
+  private final Runnable checkEngineHang = this::checkEngineHang;
+
   /** What each low-latency utterance said, to say it again the usual way if it gives no audio. */
   private final Map<String, Pair<CharSequence, Bundle>> lowLatencyRequests =
       new ConcurrentHashMap<>();
@@ -667,6 +689,7 @@ public class FailoverTextToSpeech {
       allowDeviceSleep();
       ensureQueueFlush();
       tts.speak("", SPEECH_FLUSH_ALL, null);
+      unfinishedUtterances.clear();
     } catch (Exception e) {
       // Don't care, we're not speaking.
     }
@@ -683,6 +706,7 @@ public class FailoverTextToSpeech {
     try {
       allowDeviceSleep();
       tts.speak("", TextToSpeech.QUEUE_FLUSH, null);
+      unfinishedUtterances.clear();
     } catch (Exception e) {
       // Don't care, we're not speaking.
     }
@@ -1108,6 +1132,7 @@ public class FailoverTextToSpeech {
    */
   private int ttsSpeak(
       CharSequence text, int queueMode, Bundle bundle, @Nullable String utteranceId) {
+    watchForEngineHang(queueMode, utteranceId);
     @Nullable LowLatencyAudio player = lowLatencyPlayer();
     if (player == null || utteranceId == null || TextUtils.isEmpty(text)) {
       return tts.speak(text, queueMode, bundle, utteranceId);
@@ -1255,6 +1280,7 @@ public class FailoverTextToSpeech {
     try {
       // Stopping rather than speaking nothing, which would queue ahead of new speech.
       tts.stop();
+      unfinishedUtterances.clear();
     } catch (Exception e) {
       // Not speaking.
     }
@@ -1336,6 +1362,80 @@ public class FailoverTextToSpeech {
         }
       };
 
+  /**
+   * Starts waiting for the engine to respond to {@code utteranceId}, if the engine has nothing else
+   * to do first, so it should respond at once.
+   */
+  private void watchForEngineHang(int queueMode, @Nullable String utteranceId) {
+    if (utteranceId == null) {
+      return;
+    }
+    boolean idle = queueMode != QUEUE_ADD || unfinishedUtterances.isEmpty();
+    if (queueMode != QUEUE_ADD) {
+      // The engine may never report on the speech this flushes.
+      unfinishedUtterances.clear();
+    }
+    unfinishedUtterances.add(utteranceId);
+    if (idle && engineQuietSince == 0) {
+      engineQuietUtteranceId = utteranceId;
+      engineQuietSince = SystemClock.uptimeMillis();
+      mHandler.removeCallbacks(checkEngineHang);
+      mHandler.postDelayed(checkEngineHang, ENGINE_HANG_MS);
+    }
+  }
+
+  /** Whether the engine says it is speaking, for any app. A hung engine says it is not. */
+  private boolean isEngineSpeaking() {
+    try {
+      return tts.isSpeaking();
+    } catch (RuntimeException e) {
+      return false;
+    }
+  }
+
+  /** Notes that the engine said something about {@code utteranceId}, so it is not hung. */
+  private void engineResponded(String utteranceId, boolean finished) {
+    engineQuietSince = 0;
+    if (finished) {
+      unfinishedUtterances.remove(utteranceId);
+    }
+  }
+
+  /** Moves to another engine if the engine has said nothing about new speech in time. */
+  private void checkEngineHang() {
+    long since = engineQuietSince;
+    if (since == 0 || tts == null) {
+      return;
+    }
+    long quiet = SystemClock.uptimeMillis() - since;
+    if (quiet < ENGINE_HANG_MS) {
+      mHandler.postDelayed(checkEngineHang, ENGINE_HANG_MS - quiet);
+      return;
+    }
+    if (quiet < ENGINE_BUSY_HANG_MS && isEngineSpeaking()) {
+      // Another app's speech with the same engine comes first.
+      mHandler.postDelayed(checkEngineHang, ENGINE_HANG_MS);
+      return;
+    }
+    @Nullable String hungUtteranceId = engineQuietUtteranceId;
+    LogUtils.e(TAG, "TTS engine %s said nothing for %d ms, so it is hung", ttsEngine, quiet);
+    engineQuietSince = 0;
+    unfinishedUtterances.clear();
+    boolean lowLatency = hungUtteranceId != null && lowLatencyRequests.containsKey(hungUtteranceId);
+    // Speech waiting on the hung engine stops, so that it holds up nothing.
+    mHandler.removeCallbacks(dropHeldSpeech);
+    heldUtteranceId = null;
+    lowLatencyStreams.clear();
+    LowLatencyAudio.stopAllStreams();
+    lowLatencyRequests.clear();
+    // Restarting the same engine does not help, since its process stays hung.
+    ttsFailures = Math.max(ttsFailures, MAX_TTS_FAILURES - 1);
+    attemptTtsFailover(ttsEngine);
+    if (hungUtteranceId != null && !lowLatency) {
+      utteranceProgressCallback.onError(hungUtteranceId);
+    }
+  }
+
   /** Speaks the usual way with the current engine from now on. */
   private void stopUsingLowLatencyAudio(String reason) {
     if (ttsEngine != null) {
@@ -1372,6 +1472,7 @@ public class FailoverTextToSpeech {
       new UtteranceProgressListener() {
         @Override
         public void onStart(String utteranceId) {
+          engineResponded(utteranceId, /* finished= */ false);
           if (!lowLatencyStreams.containsKey(utteranceId)) {
             utteranceProgressCallback.onStart(utteranceId);
           }
@@ -1380,6 +1481,7 @@ public class FailoverTextToSpeech {
         @Override
         public void onBeginSynthesis(
             String utteranceId, int sampleRateInHz, int audioFormat, int channelCount) {
+          engineResponded(utteranceId, /* finished= */ false);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.get(utteranceId);
           if (stream != null) {
             stream.begin(sampleRateInHz, audioFormat, channelCount);
@@ -1391,6 +1493,7 @@ public class FailoverTextToSpeech {
 
         @Override
         public void onAudioAvailable(String utteranceId, byte[] audio) {
+          engineResponded(utteranceId, /* finished= */ false);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.get(utteranceId);
           if (stream != null) {
             stream.write(audio);
@@ -1400,6 +1503,7 @@ public class FailoverTextToSpeech {
 
         @Override
         public void onRangeStart(String utteranceId, int start, int end, int frame) {
+          engineResponded(utteranceId, /* finished= */ false);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.get(utteranceId);
           if (stream != null) {
             stream.range(start, end, frame);
@@ -1410,6 +1514,7 @@ public class FailoverTextToSpeech {
 
         @Override
         public void onDone(String utteranceId) {
+          engineResponded(utteranceId, /* finished= */ true);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.remove(utteranceId);
           if (stream != null) {
             stream.end();
@@ -1420,6 +1525,7 @@ public class FailoverTextToSpeech {
 
         @Override
         public void onStop(String utteranceId, boolean interrupted) {
+          engineResponded(utteranceId, /* finished= */ true);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.remove(utteranceId);
           if (stream != null) {
             stream.stop();
@@ -1430,6 +1536,7 @@ public class FailoverTextToSpeech {
 
         @Override
         public void onError(String utteranceId) {
+          engineResponded(utteranceId, /* finished= */ true);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.remove(utteranceId);
           if (stream != null) {
             speakAgainWithoutLowLatency(utteranceId, stream);
@@ -1440,6 +1547,7 @@ public class FailoverTextToSpeech {
 
         @Override
         public void onError(String utteranceId, int errorCode) {
+          engineResponded(utteranceId, /* finished= */ true);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.remove(utteranceId);
           if (stream != null) {
             speakAgainWithoutLowLatency(utteranceId, stream);
@@ -1584,6 +1692,9 @@ public class FailoverTextToSpeech {
     lowLatencyStreams.clear();
     lowLatencyRequests.clear();
     LowLatencyAudio.stopAllStreams();
+    mHandler.removeCallbacks(checkEngineHang);
+    engineQuietSince = 0;
+    unfinishedUtterances.clear();
 
     tts = tempTts;
     tts.setOnUtteranceProgressListener(lowLatencyRouter);
