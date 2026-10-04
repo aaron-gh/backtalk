@@ -254,6 +254,7 @@ public class TalkBackPreferenceFilter {
     CUSTOMIZE_GESTURE_2FINGER_ROTATE_COUNTERCLOCKWISE(
         R.string.pref_shortcut_2finger_rotate_counterclockwise_key,
         SHOW_IF_SERVICE_GESTURE_DETECTION),
+    ROTOR_STEP_DEGREES(R.string.pref_rotor_step_degrees_key, SHOW_IF_SERVICE_GESTURE_DETECTION),
     CUSTOMIZE_FOCUS_INDICATOR(
         R.string.pref_category_manage_focus_indicator_key, SHOW_FOCUS_INDICATOR),
     AUTOMATIC_DESCRIPTIONS(R.string.pref_auto_image_captioning_key, HIDDEN_ON_TV | HIDDEN_ON_XR),
