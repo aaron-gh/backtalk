@@ -116,8 +116,8 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     fun onStalled(id: String)
 
     /**
-     * The engine's audio has been digital silence for [SILENT_MS] or to its end, as if it applied
-     * the zero volume Backtalk gives it itself, so the stream plays nothing.
+     * The engine's audio has been digital silence for [SILENT_MS], as if it applied the zero volume
+     * Backtalk gives it itself, so the stream plays nothing.
      */
     fun onSilent(id: String)
   }
@@ -201,7 +201,8 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     /** The engine finished making the audio. */
     fun end() {
       synchronized(lock) {
-        if (inFrames > 0 && !heardSound) reportSilent()
+        // A short utterance that is all silence, such as a pause or punctuation, says nothing
+        // about whether the engine silenced its audio. Only SILENT_MS of silence does.
         resampler?.let { add(toStereo(it.flush(), inChannels)) }
         ended = true
         wake()
