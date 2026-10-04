@@ -769,9 +769,6 @@ public class GestureController {
   }
 
   private boolean gestureHandledByTraining(int gestureId, boolean isFingerprintGesture) {
-    if (!isOnTrainingPage()) {
-      return false;
-    }
     // TalkBack can ignore the gesture, which is handled by OnGestureListener.onCaptureGesture(), if
     // captured gesture list exists and the current window is training.
     @Nullable Integer feedbackResId =
@@ -779,6 +776,10 @@ public class GestureController {
             ? captureFingerprintGestureIdToAnnouncements.get(gestureId)
             : captureGestureIdToAnnouncements.get(gestureId);
     if (feedbackResId == null || feedbackResId == UNKNOWN_ANNOUNCEMENT) {
+      return false;
+    }
+    // Checked last: it asks the app for the window's nodes, which holds up every gesture.
+    if (!isOnTrainingPage()) {
       return false;
     }
 

@@ -658,7 +658,7 @@ public class Role {
     }
 
     // Extract event's source node, and map source node class to role.
-    return getRole(event.getSource());
+    return getRole(AccessibilityEventUtils.getSource(event));
   }
 
   /** Find role from source event's class name string. */
