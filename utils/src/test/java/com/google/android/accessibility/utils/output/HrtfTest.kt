@@ -127,6 +127,29 @@ class HrtfTest {
   }
 
   @Test
+  fun rejectsSampleRatesThatWouldNeedHugeBuffers() {
+    // Resampling 100,000 samples claimed to be at 10 Hz would need about 441 million floats.
+    assertNull(SpatialSoundPlayer.decodeWav(wav(channels = 1, rate = 10, *IntArray(100_000))))
+    assertNull(SpatialSoundPlayer.decodeWav(wav(channels = 1, rate = 400_000, 0, 1)))
+  }
+
+  @Test
+  fun rejectsSoundsLongerThanTheLimit() {
+    val rate = SpatialSoundPlayer.MIN_SAMPLE_RATE
+    val tooLong = IntArray(rate * SpatialSoundPlayer.MAX_SECONDS + 1)
+    assertNull(SpatialSoundPlayer.decodeWav(wav(channels = 1, rate = rate, *tooLong)))
+    val longest = IntArray(rate * SpatialSoundPlayer.MAX_SECONDS)
+    assertTrue(SpatialSoundPlayer.decodeWav(wav(channels = 1, rate = rate, *longest)) != null)
+  }
+
+  @Test
+  fun rejectsTooManyChannels() {
+    assertNull(SpatialSoundPlayer.decodeWav(wav(channels = 9, rate = 44100, *IntArray(9))))
+    assertTrue(SpatialSoundPlayer.isSupportedFormat(44100, 8))
+    assertTrue(!SpatialSoundPlayer.isSupportedFormat(44100, 0))
+  }
+
+  @Test
   fun resamplingKeepsTheLength() {
     assertEquals(44100, SpatialSoundPlayer.resample(FloatArray(48000), 48000, 44100).size)
     val same = FloatArray(10)
