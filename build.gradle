@@ -27,6 +27,14 @@ android {
         testInstrumentationRunner = 'android.test.InstrumentationTestRunner'
         multiDexEnabled = true
     }
+    buildTypes {
+        // The published builds are debug builds, signed with the debug key. Android runs a
+        // debuggable app without compiling it, which makes navigation several times slower on
+        // a watch, so they are not debuggable. Debug logging in the libraries stays on.
+        debug {
+            debuggable = false
+        }
+    }
     packaging {
         resources {
             excludes += ['LICENSE', 'README']
