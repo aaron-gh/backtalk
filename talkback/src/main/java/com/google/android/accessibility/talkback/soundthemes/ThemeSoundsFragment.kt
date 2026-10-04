@@ -74,6 +74,8 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
     val context = requireContext()
     prefs = SharedPreferencesUtils.getSharedPreferences(context)
     choosingFor = savedInstanceState?.getString(STATE_CHOOSING_FOR)
+    // Like every settings screen, so that nothing is ever saved outside Backtalk's settings.
+    preferenceManager.setStorageDeviceProtected()
     val screen = preferenceManager.createPreferenceScreen(context)
     preferenceScreen = screen
 

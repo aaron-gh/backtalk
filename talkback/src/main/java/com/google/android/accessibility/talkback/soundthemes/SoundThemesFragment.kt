@@ -79,6 +79,11 @@ class SoundThemesFragment : TalkbackBaseFragment() {
     val context = requireContext()
     prefs = SharedPreferencesUtils.getSharedPreferences(context)
     exporting = savedInstanceState?.getString(STATE_EXPORTING)
+    // The control sounds and 3D audio switches save to Backtalk's settings, which are in device
+    // protected storage. Without this they would save to a second settings file in credential
+    // protected storage, which the service moves over the real one when it starts, losing every
+    // other setting.
+    preferenceManager.setStorageDeviceProtected()
     preferenceScreen = preferenceManager.createPreferenceScreen(context)
   }
 
