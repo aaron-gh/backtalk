@@ -1060,8 +1060,13 @@ public class FailoverTextToSpeech {
       return tts.speak(text, queueMode, bundle, utteranceId);
     }
     if (queueMode != QUEUE_ADD) {
-      // Synthesizing to a file always queues, so flush the engine and the player first.
-      tts.speak("", queueMode, null, null);
+      // Synthesizing to a file always queues, so flush the engine and the player first. Stopping
+      // flushes Backtalk's own speech without queueing an empty utterance ahead of this one.
+      if (queueMode == TextToSpeech.QUEUE_FLUSH) {
+        tts.stop();
+      } else {
+        tts.speak("", queueMode, null, null);
+      }
       player.stopStreams();
     }
     LowLatencyAudio.SpeechStream stream =
