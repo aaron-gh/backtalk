@@ -36,6 +36,7 @@ import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.compositor.parsetree.ParseTree;
 import com.google.android.accessibility.talkback.compositor.parsetree.ParseTree.VariableDelegate;
 import com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DescriptionOrder;
+import com.google.android.accessibility.talkback.compositor.rule.EventTypeViewAccessibilityFocusedFeedbackRule;
 import com.google.android.accessibility.talkback.compositor.rule.InputTextFeedbackRules;
 import com.google.android.accessibility.talkback.compositor.rule.MagnificationStateChangedFeedbackRule;
 import com.google.android.accessibility.talkback.controlsounds.ControlSounds;
@@ -384,6 +385,9 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
     private final int lastWindowId;
     private final int currentWindowId;
     private final CollectionState.SavedState collection;
+    // The title of the container that focus is in, which the focus announcement both reads, to say
+    // when focus moves into or out of a container, and changes.
+    private final CharSequence containerTitle;
 
     private SavedFocusState(GlobalVariables variables) {
       isLastFocusInScrollableNode = variables.isLastFocusInScrollableNode;
@@ -392,6 +396,7 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
       lastWindowId = variables.mLastWindowId;
       currentWindowId = variables.mCurrentWindowId;
       collection = variables.collectionState.save();
+      containerTitle = EventTypeViewAccessibilityFocusedFeedbackRule.currentContainerTitle;
     }
   }
 
@@ -411,6 +416,7 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
     mLastWindowId = saved.lastWindowId;
     mCurrentWindowId = saved.currentWindowId;
     collectionState.restore(saved.collection);
+    EventTypeViewAccessibilityFocusedFeedbackRule.currentContainerTitle = saved.containerTitle;
   }
 
   /**

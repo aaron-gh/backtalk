@@ -80,4 +80,15 @@ class PreparedFocusSpeechTest {
       assertFalse(PreparedFocusSpeech.canChange(type, window, window))
     }
   }
+
+  @Test
+  fun announcementPreparedJustBeforeTheSwipeIsNotUsed() {
+    val prepared = 1_000L
+    assertFalse(PreparedFocusSpeech.isOldEnough(prepared, prepared))
+    assertFalse(
+      PreparedFocusSpeech.isOldEnough(prepared, prepared + PreparedFocusSpeech.MIN_AGE_MS - 1)
+    )
+    assertTrue(PreparedFocusSpeech.isOldEnough(prepared, prepared + PreparedFocusSpeech.MIN_AGE_MS))
+    assertTrue(PreparedFocusSpeech.isOldEnough(prepared, prepared + 2_000L))
+  }
 }

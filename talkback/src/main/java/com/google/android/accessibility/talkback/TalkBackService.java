@@ -3772,6 +3772,9 @@ public class TalkBackService extends AccessibilityServiceCompat
   private final OnSharedPreferenceChangeListener sharedPreferenceChangeListener =
       (prefs, key) -> {
         LogUtils.d(TAG, "A shared preference changed: %s", key);
+        // The prepared announcements may have been worked out with the setting as it was, such as
+        // a verbosity setting changed from the reading controls.
+        PreparedFocusSpeech.clear();
         // Skip reloadPreferences to avoid the additional of Talkback re-configuration for some
         // settings changes.
         if (getString(R.string.pref_previous_global_window_animation_scale_key).equals(key)

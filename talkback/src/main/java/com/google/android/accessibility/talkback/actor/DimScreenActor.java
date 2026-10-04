@@ -25,6 +25,7 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Insets;
 import android.graphics.PixelFormat;
+import android.os.Build;
 import android.graphics.Point;
 import android.os.Handler;
 import android.os.Looper;
@@ -60,7 +61,9 @@ public class DimScreenActor implements OnConfigurationChangedListener {
   ////////////////////////////////////////////////////////////////////////////////////////////////
   // Constants
 
-  private static final float MAX_DIM_AMOUNT = 0.9f;
+  // With FLAG_DIM_BEHIND, Android blacks out everything behind the curtain, so the screen stays
+  // black even if the curtain itself is not drawn, as on some Android 17 Pixels.
+  private static final float MAX_DIM_AMOUNT = 1f;
   private static final float MIN_BRIGHTNESS = 0.1f;
 
   private static final int START_DIMMING_MESSAGE = 1;
@@ -225,6 +228,14 @@ public class DimScreenActor implements OnConfigurationChangedListener {
       viewParams.flags |= LayoutParams.FLAG_NOT_TOUCHABLE;
       viewParams.flags |= LayoutParams.FLAG_FULLSCREEN;
       viewParams.flags |= LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+      viewParams.flags |= LayoutParams.FLAG_DIM_BEHIND;
+      // Cover the camera cutout too, so the status bar doesn't show beside it.
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        viewParams.layoutInDisplayCutoutMode = LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
+      } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        viewParams.layoutInDisplayCutoutMode =
+            LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+      }
       viewParams.flags &= ~LayoutParams.FLAG_TURN_SCREEN_ON;
       viewParams.flags &= ~LayoutParams.FLAG_KEEP_SCREEN_ON;
       viewParams.format = PixelFormat.OPAQUE;

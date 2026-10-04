@@ -27,6 +27,7 @@ import android.text.TextUtils;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityWindowInfo;
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
+import com.google.android.accessibility.talkback.compositor.rule.EventTypeViewAccessibilityFocusedFeedbackRule;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.talkback.focusmanagement.record.FocusActionInfo;
 import com.google.android.accessibility.utils.AccessibilityEventUtils;
@@ -291,12 +292,14 @@ public class EventFilter {
     }
     AccessibilityNodeInfoCompat node;
     @Nullable EventFeedback preparedFeedback;
+    @Nullable CharSequence preparedContainerTitle = null;
     if (prepared != null) {
       // Prepared from the node read again from the app, and thrown away had anything in its
       // window changed since, even its text or state. So it needs no second read, which would
       // wait for the app to finish drawing the focus it was just given.
       node = prepared.getNode();
       preparedFeedback = prepared.getFeedback();
+      preparedContainerTitle = prepared.getContainerTitle();
     } else {
       // The node may come from the saved reading order, which keeps nodes for a while after their
       // text or state changes, such as a progress label or a switch the app turned on. Read it
@@ -322,10 +325,16 @@ public class EventFilter {
     globalVariables.updateCollectionStateFromFocusedNode(node, event);
     lastHoverEnteredNode = null;
     try {
-      EventFeedback feedback =
-          (preparedFeedback != null)
-              ? preparedFeedback
-              : compositor.getFeedback(event, node, eventInterpreted);
+      EventFeedback feedback;
+      if (preparedFeedback != null) {
+        feedback = preparedFeedback;
+        // Working the feedback out would have moved the container title to the node's, as
+        // preparing it did before putting it back.
+        EventTypeViewAccessibilityFocusedFeedbackRule.currentContainerTitle =
+            preparedContainerTitle;
+      } else {
+        feedback = compositor.getFeedback(event, node, eventInterpreted);
+      }
       if (!hasSpeech(feedback)) {
         // Some nodes only show their content once focused, such as the second notification of a
         // collapsed group, whose text is hidden until then. Nothing to say yet means the app's
@@ -446,10 +455,12 @@ public class EventFilter {
     // Working it out moves the focus state to the node, as a swipe would, so put it back after.
     GlobalVariables.SavedFocusState saved = globalVariables.saveFocusState();
     EventFeedback feedback;
+    CharSequence containerTitle;
     try {
       globalVariables.updateStateFromFocusedNode(node);
       globalVariables.updateCollectionStateFromFocusedNode(node, event);
       feedback = compositor.getFeedback(event, node, focusInterpretation(info));
+      containerTitle = EventTypeViewAccessibilityFocusedFeedbackRule.currentContainerTitle;
     } catch (RuntimeException e) {
       LogUtils.e(TAG, "Cannot prepare focus speech: %s", e);
       return;
@@ -457,7 +468,7 @@ public class EventFilter {
       globalVariables.restoreFocusState(saved);
     }
     if (hasSpeech(feedback)) {
-      PreparedFocusSpeech.put(node, feedback);
+      PreparedFocusSpeech.put(node, feedback, containerTitle);
     }
   }
 
