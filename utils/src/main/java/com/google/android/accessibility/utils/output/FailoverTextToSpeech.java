@@ -41,6 +41,7 @@ import android.os.Bundle;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
+import android.os.ParcelFileDescriptor;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.Process;
@@ -236,6 +237,27 @@ public class FailoverTextToSpeech {
   public static final String PREF_SPEAK_IN_PHRASES_KEY = "pref_speak_in_phrases";
   private static final boolean SPEAK_IN_PHRASES_DEFAULT = false;
   private volatile boolean speakInPhrases = SPEAK_IN_PHRASES_DEFAULT;
+
+  /** Plays speech through {@link LowLatencyAudio}, which reaches the speaker sooner. */
+  public static final String PREF_LOW_LATENCY_AUDIO_KEY = "pref_low_latency_audio";
+
+  public static final boolean LOW_LATENCY_AUDIO_DEFAULT = false;
+  private volatile boolean lowLatencyAudio = LOW_LATENCY_AUDIO_DEFAULT;
+
+  /** Engines that gave no audio when synthesizing to a file, which speak the usual way. */
+  private final Set<String> enginesWithoutFileAudio = ConcurrentHashMap.newKeySet();
+
+  /**
+   * Utterances sent to the engine to synthesize for {@link LowLatencyAudio}, by ID, until the
+   * engine finishes with them. The engine's callbacks for these go to their streams, and the streams
+   * report the utterance's progress as it plays.
+   */
+  private final Map<String, LowLatencyAudio.SpeechStream> lowLatencyStreams =
+      new ConcurrentHashMap<>();
+
+  /** What each low-latency utterance said, to say it again the usual way if it gives no audio. */
+  private final Map<String, Pair<CharSequence, Bundle>> lowLatencyRequests =
+      new ConcurrentHashMap<>();
   private @Nullable String preferredTtsEngine;
 
   private final OnSharedPreferenceChangeListener preferenceChangeListener =
@@ -247,6 +269,8 @@ public class FailoverTextToSpeech {
           applyAudioAttributes();
         } else if (PREF_SPEAK_IN_PHRASES_KEY.equals(key)) {
           speakInPhrases = sharedPrefs.getBoolean(key, SPEAK_IN_PHRASES_DEFAULT);
+        } else if (PREF_LOW_LATENCY_AUDIO_KEY.equals(key)) {
+          lowLatencyAudio = sharedPrefs.getBoolean(key, LOW_LATENCY_AUDIO_DEFAULT);
         }
       };
 
@@ -333,6 +357,7 @@ public class FailoverTextToSpeech {
     SharedPreferences prefs = SharedPreferencesUtils.getSharedPreferences(context);
     preferredTtsEngine = readPreferredEngine(prefs);
     speakInPhrases = prefs.getBoolean(PREF_SPEAK_IN_PHRASES_KEY, SPEAK_IN_PHRASES_DEFAULT);
+    lowLatencyAudio = prefs.getBoolean(PREF_LOW_LATENCY_AUDIO_KEY, LOW_LATENCY_AUDIO_DEFAULT);
     prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
 
     // Updating the default engine reloads the list of installed engines and
@@ -606,6 +631,7 @@ public class FailoverTextToSpeech {
 
   /** Stops speech from all applications. No utterance callbacks will be sent. */
   public void stopAll() {
+    stopLowLatencySpeech();
     try {
       allowDeviceSleep();
       ensureQueueFlush();
@@ -617,6 +643,7 @@ public class FailoverTextToSpeech {
 
   /** Stops all speech that originated from TalkBack. No utterance callbacks will be sent. */
   public void stopFromTalkBack() {
+    stopLowLatencySpeech();
     try {
       allowDeviceSleep();
       tts.speak("", TextToSpeech.QUEUE_FLUSH, null);
@@ -880,7 +907,7 @@ public class FailoverTextToSpeech {
                   () -> {
                     if (isReady()) {
                       attemptSetLanguage(speakRequest.locale);
-                      tts.speak(
+                      ttsSpeak(
                           speakRequest.text,
                           speakRequest.queueMode,
                           speakRequest.bundle,
@@ -992,7 +1019,7 @@ public class FailoverTextToSpeech {
       if (utteranceId != null) {
         progressEstimator.onQueued(utteranceId, text, requestRate, ttsEngine);
       }
-      return tts.speak(text, queueMode, bundle, utteranceId);
+      return ttsSpeak(text, queueMode, bundle, utteranceId);
     }
     for (int i = 0; i < starts.size(); i++) {
       int start = starts.get(i);
@@ -1001,7 +1028,7 @@ public class FailoverTextToSpeech {
       String chunkId = utteranceId + CHUNK_ID_SEPARATOR + i;
       speechChunks.put(chunkId, new SpeechChunk(utteranceId, start, i == 0, last));
       int result =
-          tts.speak(text.subSequence(start, end), i == 0 ? queueMode : QUEUE_ADD, bundle, chunkId);
+          ttsSpeak(text.subSequence(start, end), i == 0 ? queueMode : QUEUE_ADD, bundle, chunkId);
       if (result != TextToSpeech.SUCCESS) {
         speechChunks.remove(chunkId);
         if (i == 0) {
@@ -1020,6 +1047,230 @@ public class FailoverTextToSpeech {
     LogUtils.d(TAG, "speakInChunks: %s in %d pieces", utteranceId, starts.size());
     return TextToSpeech.SUCCESS;
   }
+
+  /**
+   * Speaks text with the engine, through {@link LowLatencyAudio} if the setting is on and it can.
+   * Then the engine synthesizes the speech and Backtalk plays it, so that it reaches the speaker
+   * sooner than the engine's own playback.
+   */
+  private int ttsSpeak(
+      CharSequence text, int queueMode, Bundle bundle, @Nullable String utteranceId) {
+    @Nullable LowLatencyAudio player = lowLatencyPlayer();
+    if (player == null || utteranceId == null || TextUtils.isEmpty(text)) {
+      return tts.speak(text, queueMode, bundle, utteranceId);
+    }
+    if (queueMode != QUEUE_ADD) {
+      // Synthesizing to a file always queues, so flush the engine and the player first.
+      tts.speak("", queueMode, null, null);
+      player.stopStreams();
+    }
+    LowLatencyAudio.SpeechStream stream =
+        player.openStream(
+            utteranceId,
+            floatParam(bundle, SpeechParam.VOLUME, 1f),
+            floatParam(bundle, Engine.KEY_PARAM_PAN, 0f),
+            lowLatencyListener);
+    lowLatencyStreams.put(utteranceId, stream);
+    lowLatencyRequests.put(utteranceId, Pair.create(text, bundle));
+    int result;
+    try (ParcelFileDescriptor sink =
+        ParcelFileDescriptor.open(new File("/dev/null"), ParcelFileDescriptor.MODE_WRITE_ONLY)) {
+      result = tts.synthesizeToFile(text, bundle, sink, utteranceId);
+    } catch (IOException e) {
+      LogUtils.w(TAG, "Cannot synthesize for low-latency playback: %s", e);
+      result = TextToSpeech.ERROR;
+    }
+    if (result != TextToSpeech.SUCCESS) {
+      stream.discard();
+      lowLatencyStreams.remove(utteranceId);
+      lowLatencyRequests.remove(utteranceId);
+      return tts.speak(text, queueMode, bundle, utteranceId);
+    }
+    return result;
+  }
+
+  /** The player for speech, or null if speech should play the usual way. */
+  private @Nullable LowLatencyAudio lowLatencyPlayer() {
+    if (!lowLatencyAudio
+        || android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.R
+        || (ttsEngine != null && enginesWithoutFileAudio.contains(ttsEngine))) {
+      return null;
+    }
+    return LowLatencyAudio.get(context, speechAttributes());
+  }
+
+  private AudioAttributes speechAttributes() {
+    return new AudioAttributes.Builder()
+        .setUsage(
+            shouldUseAccessibilityStream(context)
+                ? AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY
+                : AudioAttributes.USAGE_MEDIA)
+        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+        .build();
+  }
+
+  /** Reads a number parameter, which can be a float or a string. */
+  private static float floatParam(Bundle bundle, String key, float defaultValue) {
+    Object value = bundle.get(key);
+    if (value instanceof Number number) {
+      return number.floatValue();
+    }
+    if (value instanceof String string) {
+      try {
+        return Float.parseFloat(string);
+      } catch (NumberFormatException e) {
+        return defaultValue;
+      }
+    }
+    return defaultValue;
+  }
+
+  /** Stops the speech playing through {@link LowLatencyAudio}. */
+  private void stopLowLatencySpeech() {
+    @Nullable LowLatencyAudio player =
+        lowLatencyStreams.isEmpty() ? null : LowLatencyAudio.get(context, speechAttributes());
+    if (player != null) {
+      player.stopStreams();
+    }
+  }
+
+  /** Reports the progress of low-latency speech as it plays, as the engine would. */
+  private final LowLatencyAudio.StreamListener lowLatencyListener =
+      new LowLatencyAudio.StreamListener() {
+        @Override
+        public void onStarted(String id) {
+          utteranceProgressCallback.onStart(id);
+        }
+
+        @Override
+        public void onRange(String id, int start, int end) {
+          utteranceProgressCallback.onRangeStart(id, start, end, /* frame= */ 0);
+        }
+
+        @Override
+        public void onFinished(String id, boolean completed) {
+          lowLatencyRequests.remove(id);
+          if (completed) {
+            utteranceProgressCallback.onDone(id);
+          } else {
+            utteranceProgressCallback.onStop(id, /* interrupted= */ true);
+          }
+        }
+
+        @Override
+        public void onNoAudio(String id) {
+          // The engine plays its own audio rather than giving it to Backtalk, so it was heard
+          // already. Speak the usual way with this engine from now on.
+          lowLatencyRequests.remove(id);
+          stopUsingLowLatencyAudio("no audio");
+          utteranceProgressCallback.onDone(id);
+        }
+      };
+
+  /** Speaks the usual way with the current engine from now on. */
+  private void stopUsingLowLatencyAudio(String reason) {
+    if (ttsEngine != null) {
+      enginesWithoutFileAudio.add(ttsEngine);
+    }
+    LogUtils.w(TAG, "Low-latency playback off for %s: %s", ttsEngine, reason);
+  }
+
+  /** Says a low-latency utterance that failed again the usual way, and stops using low latency. */
+  private void speakAgainWithoutLowLatency(String utteranceId, LowLatencyAudio.SpeechStream stream) {
+    stream.discard();
+    stopUsingLowLatencyAudio("engine error");
+    @Nullable Pair<CharSequence, Bundle> request = lowLatencyRequests.remove(utteranceId);
+    if (request != null && tts != null) {
+      mHandler.post(() -> tts.speak(request.first, QUEUE_ADD, request.second, utteranceId));
+    } else {
+      utteranceProgressCallback.onError(utteranceId);
+    }
+  }
+
+  /**
+   * Sends the engine's callbacks for low-latency utterances to their streams, and the rest to
+   * {@link #utteranceProgressCallback}.
+   */
+  private final UtteranceProgressListener lowLatencyRouter =
+      new UtteranceProgressListener() {
+        @Override
+        public void onStart(String utteranceId) {
+          if (!lowLatencyStreams.containsKey(utteranceId)) {
+            utteranceProgressCallback.onStart(utteranceId);
+          }
+        }
+
+        @Override
+        public void onBeginSynthesis(
+            String utteranceId, int sampleRateInHz, int audioFormat, int channelCount) {
+          LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.get(utteranceId);
+          if (stream != null) {
+            stream.begin(sampleRateInHz, audioFormat, channelCount);
+          } else {
+            utteranceProgressCallback.onBeginSynthesis(
+                utteranceId, sampleRateInHz, audioFormat, channelCount);
+          }
+        }
+
+        @Override
+        public void onAudioAvailable(String utteranceId, byte[] audio) {
+          LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.get(utteranceId);
+          if (stream != null) {
+            stream.write(audio);
+          }
+          utteranceProgressCallback.onAudioAvailable(utteranceId, audio);
+        }
+
+        @Override
+        public void onRangeStart(String utteranceId, int start, int end, int frame) {
+          LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.get(utteranceId);
+          if (stream != null) {
+            stream.range(start, end);
+          } else {
+            utteranceProgressCallback.onRangeStart(utteranceId, start, end, frame);
+          }
+        }
+
+        @Override
+        public void onDone(String utteranceId) {
+          LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.remove(utteranceId);
+          if (stream != null) {
+            stream.end();
+          } else {
+            utteranceProgressCallback.onDone(utteranceId);
+          }
+        }
+
+        @Override
+        public void onStop(String utteranceId, boolean interrupted) {
+          LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.remove(utteranceId);
+          if (stream != null) {
+            stream.stop();
+          } else {
+            utteranceProgressCallback.onStop(utteranceId, interrupted);
+          }
+        }
+
+        @Override
+        public void onError(String utteranceId) {
+          LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.remove(utteranceId);
+          if (stream != null) {
+            speakAgainWithoutLowLatency(utteranceId, stream);
+          } else {
+            utteranceProgressCallback.onError(utteranceId);
+          }
+        }
+
+        @Override
+        public void onError(String utteranceId, int errorCode) {
+          LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.remove(utteranceId);
+          if (stream != null) {
+            speakAgainWithoutLowLatency(utteranceId, stream);
+          } else {
+            utteranceProgressCallback.onError(utteranceId, errorCode);
+          }
+        }
+      };
 
   /**
    * Returns the piece for a split utterance's progress callback, or {@code null} if {@code
@@ -1152,7 +1403,7 @@ public class FailoverTextToSpeech {
     }
 
     tts = tempTts;
-    tts.setOnUtteranceProgressListener(utteranceProgressCallback);
+    tts.setOnUtteranceProgressListener(lowLatencyRouter);
 
     if (tempTtsEngine == null) {
       ttsEngine = TextToSpeechCompatUtils.getCurrentEngine(tts);
