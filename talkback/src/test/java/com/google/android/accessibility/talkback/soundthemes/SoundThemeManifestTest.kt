@@ -106,6 +106,9 @@ class SoundThemeManifestTest {
         """{"pattern": [0, 20], "strength": [[20, 300]]}""",
         """{"pattern": [0, 20], "effects": [["buzz", 100, 0]]}""",
         """{"pattern": [0, 20], "effects": [["click", 100]]}""",
+        // Each form may last at most 5 s in all, not 5 s a step.
+        """{"pattern": [0, 20], "strength": [[5000, 100], [5000, 100]]}""",
+        """{"pattern": [0, 20], "effects": [["click", 100, 5000], ["click", 100, 5000]]}""",
       )) {
       assertThrows(bad, IllegalArgumentException::class.java) {
         SoundThemeManifest.toPatternOrThrow(JSONObject(bad))

@@ -47,8 +47,12 @@ class SpatialSoundPlayer(private val context: Context) {
 
   // Everything below is used only on the player's thread.
   private var hrtf: Hrtf? = null
-  // Decoded sounds, by file path for custom sounds and by resource ID otherwise.
-  private val sounds = HashMap<String, FloatArray>()
+  // Decoded sounds, by file path for custom sounds and by resource ID otherwise, the least recently
+  // played first, holding at most MAX_CACHED_SAMPLES samples in all.
+  private val sounds = LinkedHashMap<String, FloatArray>(16, 0.75f, /* accessOrder= */ true)
+  private var cachedSamples = 0L
+  // Sounds that could not be decoded, which are not tried again until the theme changes.
+  private val brokenSounds = HashSet<String>()
   // The sounds playing, with when each was asked for.
   private val tracks = ArrayList<Pair<AudioTrack, Long>>()
 
@@ -60,23 +64,57 @@ class SpatialSoundPlayer(private val context: Context) {
     // When it was asked for, since decoding a sound the first time delays its start.
     val requested = SystemClock.uptimeMillis()
     handler.post {
+      val key = path ?: "res:$resId"
+      if (key in brokenSounds) return@post
       try {
-        val key = path ?: "res:$resId"
-        val mono = sounds[key] ?: readSound(resId, path)?.also { sounds[key] = it } ?: return@post
+        val mono = sounds[key] ?: decodeOnce(key, resId, path) ?: return@post
         val hrtf = hrtf ?: loadHrtf().also { hrtf = it }
         val stereo =
           hrtf.render(mono, Hrtf.azimuthForScreen(x), Hrtf.elevationForScreen(y))
         start(stereo, volume, requested)
-      } catch (e: RuntimeException) {
-        // A broken sound or a refused audio track must never take the screen reader down.
+      } catch (e: Throwable) {
+        // A broken sound, a refused audio track or running out of memory must never take the
+        // screen reader down, and an OutOfMemoryError is not a RuntimeException.
         LogUtils.e(TAG, "Could not play sound %d: %s", resId, e)
       }
     }
   }
 
+  /**
+   * Decodes a sound and keeps it, or returns null and remembers that it is broken, so that a sound
+   * that fails once is not decoded again on every focus.
+   */
+  private fun decodeOnce(key: String, resId: Int, path: String?): FloatArray? {
+    val mono =
+      try {
+        readSound(resId, path)
+      } catch (e: Throwable) {
+        LogUtils.e(TAG, "Cannot decode sound %s: %s", key, e)
+        null
+      }
+    if (mono == null) {
+      brokenSounds += key
+      return null
+    }
+    sounds[key] = mono
+    cachedSamples += mono.size
+    // Forget the least recently played sounds beyond the limit, but never the one just decoded.
+    val oldest = sounds.entries.iterator()
+    while (cachedSamples > MAX_CACHED_SAMPLES && sounds.size > 1) {
+      val entry = oldest.next()
+      cachedSamples -= entry.value.size
+      oldest.remove()
+    }
+    return mono
+  }
+
   /** Drops the decoded sounds, so that custom sounds the user has replaced free their memory. */
   fun forgetSounds() {
-    handler.post { sounds.clear() }
+    handler.post {
+      sounds.clear()
+      cachedSamples = 0
+      brokenSounds.clear()
+    }
   }
 
   /** Stops the sounds playing now, if any, and frees the thread. */
@@ -170,6 +208,7 @@ class SpatialSoundPlayer(private val context: Context) {
       val inputFormat = extractor.getTrackFormat(trackIndex)
       var rate = inputFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
       var channels = inputFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+      if (!isSupportedFormat(rate, channels)) return null
       var encoding = AudioFormat.ENCODING_PCM_16BIT
       val decoder = MediaCodec.createDecoderByType(inputFormat.getString(MediaFormat.KEY_MIME)!!)
       codec = decoder
@@ -200,6 +239,7 @@ class SpatialSoundPlayer(private val context: Context) {
           val format = decoder.outputFormat
           rate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
           channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+          if (!isSupportedFormat(rate, channels)) return null
           if (format.containsKey(MediaFormat.KEY_PCM_ENCODING)) {
             encoding = format.getInteger(MediaFormat.KEY_PCM_ENCODING)
           }
@@ -207,11 +247,14 @@ class SpatialSoundPlayer(private val context: Context) {
           val output = decoder.getOutputBuffer(outputIndex)!!.order(ByteOrder.nativeOrder())
           output.position(info.offset)
           output.limit(info.offset + info.size)
+          val maxSamples = maxInputFrames(rate) * channels
           if (encoding == AudioFormat.ENCODING_PCM_FLOAT) {
             val floats = output.asFloatBuffer()
+            if (samples.size + floats.remaining() > maxSamples) return null
             while (floats.hasRemaining()) samples.add(floats.get())
           } else {
             val shorts = output.asShortBuffer()
+            if (samples.size + shorts.remaining() > maxSamples) return null
             while (shorts.hasRemaining()) samples.add(shorts.get() / 32768f)
           }
           decoder.releaseOutputBuffer(outputIndex, false)
@@ -253,7 +296,8 @@ class SpatialSoundPlayer(private val context: Context) {
   /** A growing list of floats, without boxing each sample. */
   private class FloatList {
     private var values = FloatArray(4096)
-    private var size = 0
+    var size = 0
+      private set
 
     fun add(value: Float) {
       if (size == values.size) values = values.copyOf(size * 2)
@@ -270,6 +314,32 @@ class SpatialSoundPlayer(private val context: Context) {
     private const val TOGETHER_MS = 50L
     private const val DECODE_TIMEOUT_US = 10_000L
     private const val MAX_DECODE_STEPS = 2_000
+
+    /** The longest sound played, in seconds. Sounds come from themes, so from anyone. */
+    const val MAX_SECONDS = 10
+
+    /** The lowest and highest sample rates of a sound, in Hz. */
+    const val MIN_SAMPLE_RATE = 8_000
+    const val MAX_SAMPLE_RATE = 192_000
+
+    /** The most channels a sound may have. */
+    const val MAX_CHANNELS = 8
+
+    /** The most decoded samples kept at once, about 8 MB. */
+    private const val MAX_CACHED_SAMPLES = 2_000_000L
+
+    /**
+     * Whether a sound at [rate] Hz with [channels] channels can be played. A header can claim
+     * anything, and resampling from a rate far below 44.1 kHz would need far more memory than the
+     * file holds.
+     */
+    @JvmStatic
+    fun isSupportedFormat(rate: Int, channels: Int): Boolean =
+      rate in MIN_SAMPLE_RATE..MAX_SAMPLE_RATE && channels in 1..MAX_CHANNELS
+
+    /** The most frames a sound at [rate] Hz may have. */
+    @JvmStatic
+    fun maxInputFrames(rate: Int): Int = MAX_SECONDS * rate
 
     /** Mixes interleaved samples with [channels] channels down to one. */
     @JvmStatic
@@ -322,7 +392,8 @@ class SpatialSoundPlayer(private val context: Context) {
             rate = buffer.getInt(body + 4)
           }
           "data" -> {
-            if (channels <= 0 || rate <= 0) return null
+            if (!isSupportedFormat(rate, channels)) return null
+            if (size / 2 / channels > maxInputFrames(rate)) return null
             val interleaved = FloatArray(size / 2) { buffer.getShort(body + 2 * it) / 32768f }
             return resample(toMono(interleaved, channels), rate, Hrtf.SAMPLE_RATE)
           }

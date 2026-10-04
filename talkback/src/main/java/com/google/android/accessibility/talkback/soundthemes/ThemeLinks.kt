@@ -18,6 +18,7 @@ package com.google.android.accessibility.talkback.soundthemes
 
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URISyntaxException
@@ -79,6 +80,26 @@ object ThemeLinks {
     return Download(uri.toASCIIString(), name)
   }
 
+  /**
+   * Copies [input] into [file], up to 60 MB, the most a theme can be. Throws if there is more, so
+   * that a stream that never ends cannot fill the storage.
+   */
+  @JvmStatic
+  @Throws(IOException::class)
+  fun copyLimited(input: InputStream, file: File) {
+    file.outputStream().use { output ->
+      val buffer = ByteArray(64 * 1024)
+      var total = 0L
+      while (true) {
+        val count = input.read(buffer)
+        if (count < 0) break
+        total += count
+        if (total > MAX_BYTES) throw IOException("larger than 60 MB")
+        output.write(buffer, 0, count)
+      }
+    }
+  }
+
   /** Downloads [url] into [file], following redirects as long as they stay on https. */
   @JvmStatic
   @Throws(IOException::class)
@@ -99,19 +120,7 @@ object ThemeLinks {
         }
         if (code != HttpURLConnection.HTTP_OK) throw IOException("HTTP $code")
         if (connection.contentLengthLong > MAX_BYTES) throw IOException("larger than 60 MB")
-        connection.inputStream.use { input ->
-          file.outputStream().use { output ->
-            val buffer = ByteArray(64 * 1024)
-            var total = 0L
-            while (true) {
-              val count = input.read(buffer)
-              if (count < 0) break
-              total += count
-              if (total > MAX_BYTES) throw IOException("larger than 60 MB")
-              output.write(buffer, 0, count)
-            }
-          }
-        }
+        connection.inputStream.use { copyLimited(it, file) }
         return
       } finally {
         connection.disconnect()

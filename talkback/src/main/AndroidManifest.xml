@@ -279,6 +279,13 @@
             </intent-filter>
         </activity>
 
+        <!-- Downloads a sound theme from a link typed into Backtalk. Not exported, so that only
+             Backtalk can start a download this way. -->
+        <activity-alias
+            android:name="com.google.android.accessibility.talkback.soundthemes.SoundThemeLinkInstall"
+            android:targetActivity="com.google.android.accessibility.talkback.soundthemes.SoundThemeInstallActivity"
+            android:exported="false" />
+
         <!-- Custom Label Manager - Summary Activity -->
         <activity
             android:name="com.google.android.accessibility.talkback.labeling.LabelManagerSummaryActivity"

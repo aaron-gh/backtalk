@@ -16,6 +16,7 @@
 
 package com.google.android.accessibility.talkback.soundthemes
 
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -141,20 +142,29 @@ class SoundThemeInstallActivity : AppCompatActivity() {
   }
 
   private fun sourceOf(intent: Intent): Source? {
-    intent.getStringExtra(EXTRA_LINK)?.let {
-      return Source.FromLink(it)
+    // A link to download is only taken from Backtalk itself, through the activity alias that other
+    // apps cannot start, so that no app can make Backtalk download without the user sharing a link.
+    if (intent.component?.className == LINK_ALIAS) {
+      return intent.getStringExtra(EXTRA_LINK)?.let { Source.FromLink(it) }
     }
     return when (intent.action) {
-      Intent.ACTION_VIEW -> intent.data?.let { Source.FromFile(it) }
+      Intent.ACTION_VIEW -> fileSource(intent.data)
       Intent.ACTION_SEND ->
         IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)?.let {
-          Source.FromFile(it)
+          fileSource(it)
         } ?: ThemeLinks.findLink(intent.getStringExtra(Intent.EXTRA_TEXT))?.let {
           Source.FromLink(it)
         }
       else -> null
     }
   }
+
+  /**
+   * A file to read, if it is a content URI. Another app could name a file:// path that only
+   * Backtalk may read, and Backtalk would read it with its own permissions.
+   */
+  private fun fileSource(uri: Uri?): Source? =
+    uri?.takeIf { it.scheme == ContentResolver.SCHEME_CONTENT }?.let { Source.FromFile(it) }
 
   /** Copies or downloads the theme file into [file], and returns a name for the theme. */
   @Throws(IOException::class)
@@ -171,7 +181,7 @@ class SoundThemeInstallActivity : AppCompatActivity() {
         val input =
           context.contentResolver.openInputStream(source.uri)
             ?: throw IOException("cannot open ${source.uri}")
-        input.use { from -> file.outputStream().use { from.copyTo(it) } }
+        input.use { ThemeLinks.copyLimited(it, file) }
         displayName(context, source.uri)?.substringBeforeLast('.') ?: "Sound theme"
       }
     }
@@ -189,6 +199,10 @@ class SoundThemeInstallActivity : AppCompatActivity() {
     private const val TAG = "SoundThemeInstall"
     private const val EXTRA_LINK = "sound_theme_link"
 
+    /** The activity alias, not exported, that starts a download of a link. */
+    private const val LINK_ALIAS =
+      "com.google.android.accessibility.talkback.soundthemes.SoundThemeLinkInstall"
+
     @JvmStatic
     fun fileIntent(context: Context, uri: Uri): Intent =
       Intent(context, SoundThemeInstallActivity::class.java)
@@ -198,6 +212,6 @@ class SoundThemeInstallActivity : AppCompatActivity() {
 
     @JvmStatic
     fun linkIntent(context: Context, link: String): Intent =
-      Intent(context, SoundThemeInstallActivity::class.java).putExtra(EXTRA_LINK, link)
+      Intent().setClassName(context, LINK_ALIAS).putExtra(EXTRA_LINK, link)
   }
 }
