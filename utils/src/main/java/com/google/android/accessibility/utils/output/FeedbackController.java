@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -154,6 +155,10 @@ public class FeedbackController {
 
   private final Set<HapticFeedbackListener> mHapticFeedbackListeners = new HashSet<>();
 
+  /** Starts and stops vibrations in order, off the main thread. */
+  private static final Executor VIBRATION_EXECUTOR =
+      Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "BacktalkVibration"));
+
   private final @NonNull HashMap<Integer, Long> resIdToLastPlayUptimeMillisec = new HashMap<>();
 
   /** How sounds with a position on the screen are played, one of the {@code SPATIAL_} values. */
@@ -265,7 +270,9 @@ public class FeedbackController {
       listener.onHapticFeedbackStarting(nanoTime);
     }
 
-    mVibrator.vibrate(effect);
+    // Starting a vibration waits for the system, so it is done off the main thread, where it would
+    // hold up the speech for the same gesture or focus change.
+    VIBRATION_EXECUTOR.execute(() -> mVibrator.vibrate(effect));
 
     return true;
   }
@@ -574,7 +581,7 @@ public class FeedbackController {
   /** Interrupts all ongoing feedback. */
   public void interrupt() {
     // TODO: Stop all sounds.
-    mVibrator.cancel();
+    VIBRATION_EXECUTOR.execute(mVibrator::cancel);
   }
 
   /**
@@ -595,7 +602,7 @@ public class FeedbackController {
       }
       mAudioDeviceCallback = null;
     }
-    mVibrator.cancel();
+    VIBRATION_EXECUTOR.execute(mVibrator::cancel);
     mAuditoryEnabled = false;
     mHapticEnabled = false;
   }

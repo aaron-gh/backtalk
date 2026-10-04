@@ -20,12 +20,18 @@ import static com.google.android.accessibility.talkback.compositor.CompositorCon
 
 import android.app.Notification;
 import android.content.Context;
+import android.os.SystemClock;
 import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityWindowInfo;
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
+import com.google.android.accessibility.talkback.focusmanagement.record.FocusActionInfo;
 import com.google.android.accessibility.utils.AccessibilityEventUtils;
+import com.google.android.accessibility.utils.AccessibilityNodeInfoUtils;
+import com.google.android.accessibility.utils.AccessibilityWindowInfoUtils;
 import com.google.android.accessibility.utils.Performance.EventId;
 import com.google.android.accessibility.utils.Role;
+import com.google.android.accessibility.utils.WebInterfaceUtils;
 import com.google.android.accessibility.utils.input.TextEventInterpreter;
 import com.google.android.accessibility.utils.monitor.TouchMonitor;
 import com.google.android.accessibility.utils.monitor.VoiceActionDelegate;
@@ -53,6 +59,7 @@ public class EventFilter {
 
   private final @NonNull TouchMonitor touchMonitor;
   private AccessibilityNodeInfoCompat lastHoverEnteredNode = null;
+  private final EarlyFocusSpeech earlyFocusSpeech;
 
   // /////////////////////////////////////////////////////////////////////////////////
   // Construction
@@ -61,11 +68,13 @@ public class EventFilter {
       Context context,
       Compositor compositor,
       @NonNull TouchMonitor touchMonitor,
-      GlobalVariables globalVariables) {
+      GlobalVariables globalVariables,
+      EarlyFocusSpeech earlyFocusSpeech) {
     this.context = context;
     this.compositor = compositor;
     this.touchMonitor = touchMonitor;
     this.globalVariables = globalVariables;
+    this.earlyFocusSpeech = earlyFocusSpeech;
   }
 
   ///////////////////////////////////////////////////////////////////////////////////
@@ -81,8 +90,27 @@ public class EventFilter {
   }
 
   public void sendEvent(AccessibilityEvent event, @Nullable EventId eventId) {
-    // Update persistent state.
-    globalVariables.updateStateFromEvent(event);
+    EarlyFocusMatch earlyFocus = earlyFocusSpeech.consume(event);
+    if (earlyFocus == EarlyFocusMatch.SPOKEN) {
+      // Spoken as soon as the focus was set, so this event only goes to the interpreter, which
+      // passes it on for other uses, such as image captions.
+      lastHoverEnteredNode = null;
+      if (accessibilityFocusEventInterpreter != null) {
+        accessibilityFocusEventInterpreter.interpret(event);
+      }
+      return;
+    }
+    if (earlyFocus == EarlyFocusMatch.STALE) {
+      // Focus moved on, and was spoken, after this event was sent. Speaking it now would cut off
+      // the newer focus, and its node's captions and state no longer matter.
+      LogUtils.d(TAG, "Drop focus event older than the focus spoken early: %s", event);
+      return;
+    }
+
+    // Update persistent state, unless the focus spoken early already did, but failed to speak.
+    if (earlyFocus != EarlyFocusMatch.STATE_UPDATED) {
+      globalVariables.updateStateFromEvent(event);
+    }
 
     // Interpret event more specifically, and extract data from event.
     EventInterpretation eventInterpreted =
@@ -166,6 +194,137 @@ public class EventFilter {
     }
 
     compositor.handleEvent(event, eventId, eventInterpreted);
+  }
+
+  /**
+   * Told when Backtalk has set accessibility focus on {@code node}, before the app's focus event
+   * for it arrives. Speaks the focus at once if it can, see {@link #speakFocusEarly}; otherwise
+   * makes sure the app's event for it is spoken.
+   *
+   * @param actionTime when the focus action started, in {@link SystemClock#uptimeMillis()} time
+   * @param continuousReading whether continuous reading moved the focus. Its focus is not spoken
+   *     early: continuous reading moves on when the speech for a node ends, and gains little from
+   *     speaking sooner, so it keeps waiting for the app's event.
+   */
+  public void onAccessibilityFocusSet(
+      AccessibilityNodeInfoCompat node,
+      FocusActionInfo info,
+      @Nullable EventId eventId,
+      long actionTime,
+      boolean continuousReading) {
+    if (continuousReading || !speakFocusEarly(node, info, eventId, actionTime)) {
+      // A node spoken early before, whose event never came here, must not hide this focus.
+      earlyFocusSpeech.forget(node);
+    }
+  }
+
+  /**
+   * Speaks the accessibility focus that a swipe or other user navigation just set on {@code node},
+   * without waiting for the app's focus event, which takes a round trip to the app and every event
+   * listener before it would be spoken. The focus event, when it arrives, is then not spoken again.
+   *
+   * <p>Only focus that stays in the same window is spoken early, so that window changes are still
+   * announced from the event. Nodes whose descriptions need details only the event has, such as
+   * keyboard keys, sliders, pages and web content, wait for their event.
+   *
+   * @return whether its node is now remembered, so that the app's focus event for it is handled
+   *     by what was done here
+   */
+  private boolean speakFocusEarly(
+      AccessibilityNodeInfoCompat focusedNode,
+      FocusActionInfo info,
+      @Nullable EventId eventId,
+      long actionTime) {
+    if (!shouldSpeakFocusEarly(info)) {
+      return false;
+    }
+    // The node may come from the saved reading order, which keeps nodes for a while after their
+    // text or state changes, such as a progress label or a switch the app turned on. Read it again
+    // from the app, as its focus event would. If it is gone, leave it to the event.
+    @SuppressWarnings("deprecation") // obtain(): copy, so that the saved node is left as it was.
+    AccessibilityNodeInfoCompat node = AccessibilityNodeInfoCompat.obtain(focusedNode);
+    if (!node.refresh() || !shouldSpeakFocusEarly(node)) {
+      return false;
+    }
+    AccessibilityEvent event = focusEventFor(node);
+
+    AccessibilityFocusEventInterpretation focusInterpretation =
+        new AccessibilityFocusEventInterpretation(
+            AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED);
+    focusInterpretation.setForceFeedbackEvenIfAudioPlaybackActive(
+        info.forceFeedbackEvenIfAudioPlaybackActive());
+    focusInterpretation.setForceFeedbackEvenIfMicrophoneActive(
+        info.forceFeedbackEvenIfMicrophoneActive());
+    focusInterpretation.setForceFeedbackEvenIfSsbActive(info.forceFeedbackEvenIfSsbActive());
+    focusInterpretation.setIsNavigateByUser(true);
+    EventInterpretation eventInterpreted =
+        new EventInterpretation(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED);
+    eventInterpreted.setAccessibilityFocusInterpretation(focusInterpretation);
+    eventInterpreted.setReadOnly();
+
+    // The speech is composed from the state that follows focus, so it is updated first, and the
+    // app's event must then not update it a second time, whether or not the speech succeeds:
+    // moving the collection state twice would lose "list, N items" or "in table".
+    globalVariables.updateStateFromFocusedNode(node);
+    globalVariables.updateCollectionStateFromFocusedNode(node, event);
+    lastHoverEnteredNode = null;
+    try {
+      compositor.handleEvent(event, node, eventId, eventInterpreted);
+    } catch (RuntimeException e) {
+      // Something on the way to speech needed more than a Backtalk-made event has. Leave the
+      // focus to be spoken from the app's event rather than stop Backtalk.
+      LogUtils.e(TAG, "Cannot speak focus early: %s", e);
+      earlyFocusSpeech.addStateUpdated(node, actionTime);
+      return true;
+    }
+    earlyFocusSpeech.addSpoken(node, actionTime);
+    return true;
+  }
+
+  /** Whether focus set with {@code info} may be spoken early, before looking at its node. */
+  private boolean shouldSpeakFocusEarly(FocusActionInfo info) {
+    return info.sourceAction == FocusActionInfo.LOGICAL_NAVIGATION
+        && info.navigationAction != null
+        && !info.forceMuteFeedback
+        && !globalVariables.hasSkipFocusProcessing();
+  }
+
+  /** Whether focus on {@code node} may be spoken early. */
+  private boolean shouldSpeakFocusEarly(AccessibilityNodeInfoCompat node) {
+    if (node.getWindowId() != globalVariables.getCurrentWindowId()) {
+      return false;
+    }
+    int role = Role.getRole(node);
+    if (role == Role.ROLE_TEXT_ENTRY_KEY
+        || role == Role.ROLE_KEYBOARD_KEY
+        || role == Role.ROLE_SEEK_CONTROL
+        || role == Role.ROLE_PROGRESS_BAR
+        || AccessibilityNodeInfoUtils.isPage(node)
+        || WebInterfaceUtils.supportsWebActions(node)) {
+      return false;
+    }
+    AccessibilityWindowInfo window = AccessibilityNodeInfoUtils.getWindow(node.unwrap());
+    return AccessibilityWindowInfoUtils.getType(window)
+        != AccessibilityWindowInfo.TYPE_INPUT_METHOD;
+  }
+
+  /** Makes the focus event the app would send for {@code node}, without its source. */
+  @SuppressWarnings("deprecation") // AccessibilityEvent(int) needs Android 11.
+  private static AccessibilityEvent focusEventFor(AccessibilityNodeInfoCompat node) {
+    AccessibilityEvent event =
+        AccessibilityEvent.obtain(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED);
+    event.setEventTime(SystemClock.uptimeMillis());
+    event.setClassName(node.getClassName());
+    event.setPackageName(node.getPackageName());
+    event.setContentDescription(node.getContentDescription());
+    if (node.getText() != null) {
+      event.getText().add(node.getText());
+    }
+    event.setEnabled(node.isEnabled());
+    event.setChecked(node.isChecked());
+    event.setPassword(node.isPassword());
+    event.setScrollable(node.isScrollable());
+    return event;
   }
 
   /** Passes text-event-interpretation to compositor. */

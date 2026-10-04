@@ -146,6 +146,7 @@ import com.google.android.accessibility.talkback.braille.TalkBackForBrailleImeIm
 import com.google.android.accessibility.talkback.braille.TalkBackForBrailleImeImpl.TalkBackPrivateMethodProvider;
 import com.google.android.accessibility.talkback.compositor.Compositor;
 import com.google.android.accessibility.talkback.compositor.CompositorUtils;
+import com.google.android.accessibility.talkback.compositor.EarlyFocusSpeech;
 import com.google.android.accessibility.talkback.compositor.EventFilter;
 import com.google.android.accessibility.talkback.compositor.GlobalVariables;
 import com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DescriptionOrder;
@@ -617,6 +618,7 @@ public class TalkBackService extends AccessibilityServiceCompat
   private PassThroughModeActor passThroughModeActor;
   private SpeechRateAndPitchActor speechRateAndPitchActor;
   private CollectionState collectionState;
+  private EarlyFocusSpeech earlyFocusSpeech;
   private GlobalVariables globalVariables;
   private EventFilter eventFilter;
   private TextEventInterpreter textEventInterpreter;
@@ -1129,6 +1131,10 @@ public class TalkBackService extends AccessibilityServiceCompat
   public void clearQueues() {
     interruptAllFeedback(/* stopTtsSpeechCompletely= */ false);
     processorEventQueue.clearQueue();
+    if (earlyFocusSpeech != null) {
+      // A focus spoken early whose event is thrown away must not hide a later focus of its node.
+      earlyFocusSpeech.clear();
+    }
     if (windowEventInterpreter != null) {
       windowEventInterpreter.clearQueue();
     }
@@ -1825,6 +1831,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     gestureShortcutMapping = new GestureShortcutMapping(this);
 
     collectionState = new CollectionState();
+    earlyFocusSpeech = new EarlyFocusSpeech();
     globalVariables =
         new GlobalVariables(this, inputModeTracker, collectionState, gestureShortcutMapping);
 
@@ -2030,7 +2037,8 @@ public class TalkBackService extends AccessibilityServiceCompat
                 callStateMonitor,
                 touchMonitor,
                 speechStateMonitor,
-                collectionState),
+                collectionState,
+                earlyFocusSpeech),
             new Interpreters(
                 inputFocusInterpreter,
                 scrollEventInterpreter,
@@ -2280,7 +2288,17 @@ public class TalkBackService extends AccessibilityServiceCompat
 
     // Add event processors. These will process incoming AccessibilityEvents
     // in the order they are added.
-    eventFilter = new EventFilter(this, compositor, touchMonitor, globalVariables);
+    eventFilter =
+        new EventFilter(this, compositor, touchMonitor, globalVariables, earlyFocusSpeech);
+    focuser.setFocusSetListener(
+        (node, info, eventId, actionTime) ->
+            eventFilter.onAccessibilityFocusSet(
+                node,
+                info,
+                eventId,
+                actionTime,
+                /* continuousReading= */ fullScreenReadActor != null
+                    && fullScreenReadActor.isActive()));
     eventFilter.setVoiceActionDelegate(voiceActionMonitor);
     eventFilter.setAccessibilityFocusEventInterpreter(accessibilityFocusInterpreter);
     ActorStateProvider actorStateProvider =

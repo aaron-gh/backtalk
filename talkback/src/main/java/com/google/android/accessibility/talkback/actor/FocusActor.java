@@ -119,6 +119,10 @@ public class FocusActor implements UserInputEventListener {
     webActor.setPipeline(pipeline);
   }
 
+  public void setFocusSetListener(FocusManagerInternal.@Nullable FocusSetListener listener) {
+    focusManagerInternal.setFocusSetListener(listener);
+  }
+
   public void setMenuManager(ListMenuManager menuManager) {
     this.menuManager = menuManager;
   }

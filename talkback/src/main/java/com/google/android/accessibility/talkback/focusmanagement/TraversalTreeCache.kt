@@ -117,6 +117,13 @@ object TraversalTreeCache {
     return result
   }
 
+  /**
+   * Whether the saved order holds [node]. Nothing that could remove a node from the window has
+   * happened since the order was saved, so the node is still there.
+   */
+  @JvmStatic
+  fun holds(node: AccessibilityNodeInfoCompat): Boolean = strategy?.containsNode(node) == true
+
   /** Saves the order of [root], replacing any saved order. */
   @JvmStatic
   fun put(root: AccessibilityNodeInfoCompat, strategy: OrderedTraversalStrategy) {

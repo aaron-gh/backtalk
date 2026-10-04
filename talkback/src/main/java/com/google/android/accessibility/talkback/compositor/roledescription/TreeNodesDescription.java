@@ -32,6 +32,7 @@ import com.google.android.accessibility.talkback.compositor.AccessibilityNodeFee
 import com.google.android.accessibility.talkback.compositor.CompositorUtils;
 import com.google.android.accessibility.talkback.compositor.GlobalVariables;
 import com.google.android.accessibility.talkback.imagecaption.ImageContents;
+import com.google.android.accessibility.utils.AccessibilityEventUtils;
 import com.google.android.accessibility.utils.AccessibilityNodeInfoUtils;
 import com.google.android.accessibility.utils.Role;
 import com.google.android.accessibility.utils.StringBuilderUtils;
@@ -174,13 +175,11 @@ public class TreeNodesDescription {
    */
   private static boolean shouldAppendChildNode(
       Context context, AccessibilityEvent event, boolean shouldIterateChildren) {
-    if (!shouldIterateChildren) {
+    if (!shouldIterateChildren || event.getEventType() != TYPE_WINDOW_CONTENT_CHANGED) {
       return false;
     }
-    AccessibilityNodeInfoCompat srcNode = AccessibilityNodeInfoUtils.toCompat(event.getSource());
-    boolean sourceIsLiveRegion =
-        (srcNode != null) && (srcNode.getLiveRegion() != ACCESSIBILITY_LIVE_REGION_NONE);
-    return (event.getEventType() == TYPE_WINDOW_CONTENT_CHANGED && sourceIsLiveRegion);
+    AccessibilityNodeInfoCompat srcNode = AccessibilityEventUtils.sourceCompat(event);
+    return (srcNode != null) && (srcNode.getLiveRegion() != ACCESSIBILITY_LIVE_REGION_NONE);
   }
 
   /**
