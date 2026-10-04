@@ -370,9 +370,16 @@ public class FocusProcessorForLogicalNavigation {
         accessibilityFocusMonitor.getAccessibilityFocus(
             navigationAction.useInputFocusAsPivotIfEmpty, /* requireEditable= */ false);
 
-    // If we cannot find a pivot, or the pivot is not accessible, choose the root node if the
-    // active window.
-    if (pivot == null || !pivot.refresh()) {
+    // The focus monitor can return Android's cached copy of a node that was just removed, so check
+    // with the app that the pivot is still there. Skip that round trip when the saved reading order
+    // holds the pivot: nothing that could remove a node has happened since it was saved.
+    if (pivot != null && !TraversalTreeCache.holds(pivot) && !pivot.refresh()) {
+      pivot = null;
+    }
+
+    // If we cannot find a pivot, or the pivot is not accessible, choose the root node of the active
+    // window.
+    if (pivot == null) {
       // TODO: We might need to define our own "active window" in TalkBack side.
       pivot = AccessibilityServiceCompatUtils.getRootInActiveWindow(service);
     }
