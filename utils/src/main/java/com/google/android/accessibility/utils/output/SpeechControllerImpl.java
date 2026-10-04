@@ -1975,8 +1975,12 @@ public class SpeechControllerImpl implements SpeechController {
     }
 
     EventId eventId = feedbackItem.getEventId();
-    playEarconsFromFragment(fragment, eventId);
-    playHapticsFromFragment(fragment, eventId);
+    // The rest of a fragment, such as when paused speech resumes, played its earcons and haptics
+    // when it started, so they are not played again.
+    if (!iterator.nextIsContinuation()) {
+      playEarconsFromFragment(fragment, eventId);
+      playHapticsFromFragment(fragment, eventId);
+    }
 
     // Reuse the global instance of speech parameters.
     final HashMap<String, String> params = mSpeechParametersMap;
