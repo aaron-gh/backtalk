@@ -49,6 +49,8 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
   private val track: AudioTrack?
   private var thread: Thread? = null
   private var idleFrames = 0
+  // While held, speech streams keep what they have and keep receiving audio, but do not play.
+  private var held = false
 
   init {
     val audioManager = context.getSystemService(AudioManager::class.java)
@@ -244,7 +246,27 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
   /** Stops every speech stream, which each report that they were stopped. */
   fun stopStreams() {
     synchronized(lock) {
+      held = false
       while (streams.isNotEmpty()) streams.removeFirst().finish(completed = false)
+    }
+  }
+
+  /** The ID of the speech stream playing, or next to play, or null if there is none. */
+  fun headStreamId(): String? = synchronized(lock) { streams.peekFirst()?.id }
+
+  /**
+   * Holds speech where it is, mid-word if need be, so that [release] carries on from exactly there.
+   * The streams keep receiving the engine's audio meanwhile. Sounds still play.
+   */
+  fun hold() {
+    synchronized(lock) { held = true }
+  }
+
+  /** Carries on playing held speech. */
+  fun release() {
+    synchronized(lock) {
+      held = false
+      wake()
     }
   }
 
@@ -268,7 +290,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     while (true) {
       val output = track ?: return
       synchronized(lock) {
-        while (clips.isEmpty() && streams.isEmpty() && idleFrames >= idleLimit()) {
+        while (clips.isEmpty() && (streams.isEmpty() || held) && idleFrames >= idleLimit()) {
           if (output.playState == AudioTrack.PLAYSTATE_PLAYING) {
             output.pause()
             output.flush()
@@ -277,7 +299,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
         }
         buffer.fill(0f)
         mix(buffer)
-        if (clips.isEmpty() && streams.isEmpty()) idleFrames += burstFrames
+        if (clips.isEmpty() && (streams.isEmpty() || held)) idleFrames += burstFrames
       }
       if (output.playState != AudioTrack.PLAYSTATE_PLAYING) output.play()
       output.write(buffer, 0, buffer.size, AudioTrack.WRITE_BLOCKING)
@@ -307,7 +329,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
       }
       if (playing.position >= total) iterator.remove()
     }
-    val head = streams.peekFirst()
+    val head = if (held) null else streams.peekFirst()
     if (head != null && !head.mixInto(out, burstFrames)) streams.removeFirst()
     for (i in out.indices) out[i] = out[i].coerceIn(-1f, 1f)
   }

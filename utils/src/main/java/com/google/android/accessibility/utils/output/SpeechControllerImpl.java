@@ -1752,6 +1752,8 @@ public class SpeechControllerImpl implements SpeechController {
       currentFeedbackItem = null;
       requestPause = true;
       failoverTts.stopFromTalkBack();
+      // Low-latency speech held at the touch stays held, to carry on mid-word when resumed.
+      failoverTts.keepHeldSpeech();
     }
   }
 
