@@ -541,7 +541,9 @@ public class TouchInteractionMonitor
             // Do nothing. Touch exploration will fire on a delay.
             break;
           case 2:
-            if (gestureDetector.isTwoFingerPassthroughEnabled()) {
+            // Once both fingers have moved the same way, it is a scroll: pass it on at once,
+            // rather than waiting for the slower finger to move as far as the passthrough slop.
+            if (gestureDetector.isTwoFingerPassthroughEnabled() && !rotationTracker.isScroll()) {
               for (int index = 0; index < event.getPointerCount(); ++index) {
                 int id = event.getPointerId(index);
                 if (!receivedPointerTracker.isReceivedPointerDown(id)) {
@@ -641,6 +643,8 @@ public class TouchInteractionMonitor
     }
     if (state == STATE_TOUCH_INTERACTING) {
       waitFirstMotionEvent = true;
+    } else if (state == STATE_DRAGGING) {
+      service.onDragStarted();
     } else if (state == STATE_TOUCH_EXPLORING) {
       // Log isDefaultDisplay/gestureId/onGestureDetectedTime. The targetGestureTimeout is the
       // current time minus lastMotionEventTransmissionLatency

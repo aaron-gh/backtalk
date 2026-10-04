@@ -99,9 +99,14 @@ class TwoFingerRotationTracker(
   val isPossibleRotation: Boolean
     get() = state == State.TRACKING
 
+  /** Whether both fingers moved the same way, so the touch is a two-finger scroll. */
+  var isScroll = false
+    private set
+
   /** Forgets the current touch. */
   fun clear() {
     state = State.IDLE
+    isScroll = false
     firstId = INVALID_ID
     secondId = INVALID_ID
     rotatingFingersDown = false
@@ -205,6 +210,7 @@ class TwoFingerRotationTracker(
       // scroll, even when one finger started first and the line between them turned.
       debugLog("rejected as scroll, fingers moving the same way", arc, translation, radial)
       state = State.REJECTED
+      isScroll = true
       return
     }
     // With one finger nearly still, a turn looks the same as the start of a scroll whose other
@@ -224,6 +230,7 @@ class TwoFingerRotationTracker(
       // Both fingers moved the same way without turning: a scroll.
       debugLog("rejected as scroll", arc, translation, radial)
       state = State.REJECTED
+      isScroll = true
     } else if (radial > decisionDistancePx && radial > arc) {
       // The fingers moved apart or together more than they turned: a pinch.
       debugLog("rejected as pinch", arc, translation, radial)

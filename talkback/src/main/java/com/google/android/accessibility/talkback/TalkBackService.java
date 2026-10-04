@@ -603,6 +603,7 @@ public class TalkBackService extends AccessibilityServiceCompat
 
   /** Controller for audio and haptic feedback. */
   private FeedbackController feedbackController;
+  private ScrollTicks scrollTicks;
 
   /** Watches the proximity sensor, and silences feedback when triggered. */
   private ProximitySensorMonitor proximitySensorMonitor;
@@ -1883,6 +1884,8 @@ public class TalkBackService extends AccessibilityServiceCompat
     ScrollEventInterpreter scrollEventInterpreter =
         new ScrollEventInterpreter(
             audioPlaybackMonitor, touchMonitor, TalkbackFeatureSupport.supportMultipleAutoScroll());
+    scrollTicks = new ScrollTicks(feedbackController, getResources().getDisplayMetrics().density);
+    scrollEventInterpreter.addListener(scrollTicks);
     ManualScrollInterpreter manualScrollInterpreter = new ManualScrollInterpreter();
 
     // Constructor output-actor-state.
@@ -2924,6 +2927,13 @@ public class TalkBackService extends AccessibilityServiceCompat
       analytics.onTalkBackServiceStopped();
     }
     BrailleIme.shutdown();
+  }
+
+  /** Called on any thread when a two-finger drag is passed to the app. */
+  public void onDragStarted() {
+    if (scrollTicks != null) {
+      scrollTicks.onDragStarted();
+    }
   }
 
   /**
