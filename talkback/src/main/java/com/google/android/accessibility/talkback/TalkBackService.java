@@ -165,6 +165,7 @@ import com.google.android.accessibility.talkback.feedbackpolicy.ScreenFeedbackMa
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.talkback.flags.Flags;
 import com.google.android.accessibility.talkback.focusmanagement.AccessibilityFocusMonitor;
+import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForLogicalNavigation;
 import com.google.android.accessibility.talkback.focusmanagement.TraversalTreeCache;
 import com.google.android.accessibility.talkback.focusmanagement.interpreter.ScreenStateMonitor;
 import com.google.android.accessibility.talkback.focusmanagement.interpreter.TouchExplorationInterpreter;
@@ -3051,6 +3052,9 @@ public class TalkBackService extends AccessibilityServiceCompat
       enableAnimation(!reduceDelayPref);
     }
     WindowEventInterpreter.setReduceWindowDelay(reduceDelayPref);
+
+    FocusProcessorForLogicalNavigation.setWrapAround(
+        getBooleanPref(R.string.pref_wrap_around_key, R.bool.pref_wrap_around_default));
 
     // If performance statistics changing enabled setting... clear collected stats.
     boolean performanceEnabled =

@@ -2255,6 +2255,17 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <!-- Spoken when the lift to activate setting changes. [CHAR LIMIT=NONE]-->
     <string name="template_lift_to_activate_changed">Lift to activate: <xliff:g id="mode">%1$s</xliff:g></string>
 
+    <!-- Title of the setting that makes moving past the last item on the screen go to the first item, and past the first go to the last. [CHAR LIMIT=NONE]-->
+    <string name="title_pref_wrap_around">Wrap around</string>
+    <!-- Summary of the wrap around setting. [CHAR LIMIT=NONE]-->
+    <string name="summary_pref_wrap_around">Swiping past the last item goes to the first, and past the first goes to the last. When off, a sound plays at the end instead.</string>
+    <!-- Summary of the wrap around setting in the reading controls list. [CHAR LIMIT=NONE]-->
+    <string name="summary_support_wrap_around">Turn wrapping from the last item to the first on or off</string>
+    <!-- Spoken when wrap around is turned on. [CHAR LIMIT=NONE]-->
+    <string name="wrap_around_on">Wrap around on</string>
+    <!-- Spoken when wrap around is turned off. [CHAR LIMIT=NONE]-->
+    <string name="wrap_around_off">Wrap around off</string>
+
     <!-- Label for the preference specifying that the shake to read feature is disabled. -->
     <string name="value_shake_to_read_disabled">Disabled</string>
     <!-- Label for the preference specifying a very small amount of shake force is required to initiate the shake to read feature. -->

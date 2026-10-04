@@ -18,6 +18,11 @@
         android:summary="%s"
         android:title="@string/title_pref_lift_to_activate" />
     <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+        android:defaultValue="@bool/pref_wrap_around_default"
+        android:key="@string/pref_wrap_around_key"
+        android:summary="@string/summary_pref_wrap_around"
+        android:title="@string/title_pref_wrap_around" />
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
         android:defaultValue="@bool/pref_proximity_default"
         android:key="@string/pref_proximity_key"
         android:title="@string/title_pref_cover_proximity_sensor" />

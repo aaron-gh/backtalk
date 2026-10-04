@@ -207,6 +207,10 @@ public class SelectorController implements UserInputEventListener {
         R.string.pref_selector_change_lift_to_activate_key,
         R.string.selector_lift_to_activate_change,
         R.bool.pref_selector_lift_to_activate_default),
+    WRAP_AROUND(
+        R.string.pref_selector_wrap_around_key,
+        R.string.selector_wrap_around,
+        R.bool.pref_selector_wrap_around_default),
     ACTIONS(
         R.string.pref_selector_actions_key,
         R.string.selector_actions,
@@ -623,6 +627,7 @@ public class SelectorController implements UserInputEventListener {
           Setting.CHANGE_TOUCH_FOCUS_LATENCY,
           Setting.CHANGE_TYPING_FOCUS_LATENCY,
           Setting.CHANGE_LIFT_TO_ACTIVATE,
+          Setting.WRAP_AROUND,
           Setting.ADJUSTABLE_WIDGET,
           Setting.CONTROL_TELLING_TIME,
           Setting.SWITCH_TTS_ENGINE);
@@ -935,6 +940,10 @@ public class SelectorController implements UserInputEventListener {
       }
       case CHANGE_LIFT_TO_ACTIVATE -> {
         actionDescription = context.getString(R.string.title_pref_lift_to_activate);
+        hint = getAdjustSelectedSettingGestures();
+      }
+      case WRAP_AROUND -> {
+        actionDescription = context.getString(R.string.title_pref_wrap_around);
         hint = getAdjustSelectedSettingGestures();
       }
       case CONTROL_TELLING_TIME -> {
@@ -1386,6 +1395,9 @@ public class SelectorController implements UserInputEventListener {
       case CHANGE_LIFT_TO_ACTIVATE -> {
         return true;
       }
+      case WRAP_AROUND -> {
+        return true;
+      }
       case ACTIONS -> {
         Optional<ContextualSetting> actions = findContextualSetting(ACTIONS);
         if (actions.isEmpty()) {
@@ -1710,6 +1722,10 @@ public class SelectorController implements UserInputEventListener {
       }
       case CHANGE_LIFT_TO_ACTIVATE -> {
         changeLiftToActivate(eventId, isNext);
+        return;
+      }
+      case WRAP_AROUND -> {
+        switchWrapAroundOnOrOff(eventId);
         return;
       }
       case CONTROL_TELLING_TIME -> {
@@ -2326,6 +2342,23 @@ public class SelectorController implements UserInputEventListener {
     lastChangeAccessibilityEventId = eventId;
     volumeMonitor.removeVolumeChangedListener(a11yVolumeChangedListener);
     volumeMonitor.addVolumeChangedListener(a11yVolumeChangedListener);
+  }
+
+  private void switchWrapAroundOnOrOff(EventId eventId) {
+    boolean switchedValue =
+        !SharedPreferencesUtils.getBooleanPref(
+            prefs,
+            context.getResources(),
+            R.string.pref_wrap_around_key,
+            R.bool.pref_wrap_around_default);
+    SharedPreferencesUtils.putBooleanPref(
+        prefs, context.getResources(), R.string.pref_wrap_around_key, switchedValue);
+    announceSetting(
+        eventId,
+        context.getString(switchedValue ? R.string.wrap_around_on : R.string.wrap_around_off),
+        getSelectSettingGestures());
+    showQuickMenuActionOverlay(
+        eventId, context.getString(switchedValue ? R.string.value_on : R.string.value_off));
   }
 
   private void switchTellingTimeOnOrOff(EventId eventId) {
