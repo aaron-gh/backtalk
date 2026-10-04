@@ -232,7 +232,7 @@ public class BrailleInputView extends View
     this.inputPlane.setTableTopMode(tabletopMode);
     this.tabletopMode = tabletopMode;
     if (tabletopMode) {
-      decideTabletopPortSideIfNeeded();
+      decideTabletopPortSideIfNeeded(/* fromScreenAway= */ false);
       updateTurnedAround();
     }
     setBackgroundColor(getResources().getColor(R.color.input_plane_background));
@@ -311,7 +311,7 @@ public class BrailleInputView extends View
       inputPlane.setTableTopMode(enabled);
       tabletopMode = enabled;
       if (enabled) {
-        decideTabletopPortSideIfNeeded();
+        decideTabletopPortSideIfNeeded(/* fromScreenAway= */ true);
         updateTurnedAround();
       }
       invalidate();
@@ -476,8 +476,10 @@ public class BrailleInputView extends View
   /**
    * Decides the tabletop side again only when something new shows it: see {@link
    * DotsOrientation#shouldDecideTabletopAgain}.
+   *
+   * @param fromScreenAway whether the keyboard was in screen-away mode before it was laid flat
    */
-  private void decideTabletopPortSideIfNeeded() {
+  private void decideTabletopPortSideIfNeeded(boolean fromScreenAway) {
     if (!DotsOrientation.shouldDecideTabletopAgain(
         tabletopSideDecidedAtMs,
         /* typedInScreenAway= */ screenAwayPortOnRight != null,
@@ -492,9 +494,18 @@ public class BrailleInputView extends View
               isPortrait(),
               displayRotation());
     } else {
-      // Laying a tablet flat keeps the rotation it was last held up with, as auto-rotate does.
+      // Laying a tablet flat keeps the rotation it was last held up with, as auto-rotate does,
+      // unless it was held from behind: see DotsOrientation#tabletTabletopRotation.
       int held = HeldOrientationTracker.getLastHeldRotation();
-      tabletopRotation = held >= 0 ? held : displayRotation();
+      if (held < 0) {
+        tabletopRotation = displayRotation();
+      } else if (Utils.isDeviceDefaultPortrait(getContext())) {
+        tabletopRotation =
+            DotsOrientation.tabletTabletopRotation(
+                held, HeldOrientationTracker.getLastHeld(), fromScreenAway);
+      } else {
+        tabletopRotation = held;
+      }
     }
     screenAwayPortOnRight = null;
     tabletopSideDecidedAtMs = SystemClock.uptimeMillis();
