@@ -1303,11 +1303,18 @@ public class FailoverTextToSpeech {
     }
   }
 
+  /** How many utterances in a row have ended without the engine giving them audio. */
+  private int noAudioInARow = 0;
+
+  /** How many utterances in a row without audio mean that the engine plays its own audio. */
+  private static final int NO_AUDIO_IN_A_ROW_LIMIT = 3;
+
   /** Reports the progress of low-latency speech as it plays, as the engine would. */
   private final LowLatencyAudio.StreamListener lowLatencyListener =
       new LowLatencyAudio.StreamListener() {
         @Override
         public void onStarted(String id) {
+          noAudioInARow = 0;
           utteranceProgressCallback.onStart(id);
         }
 
@@ -1354,10 +1361,15 @@ public class FailoverTextToSpeech {
 
         @Override
         public void onNoAudio(String id) {
-          // The engine plays its own audio rather than giving it to Backtalk, so it was heard
-          // already. Speak the usual way with this engine from now on.
+          // The engine may play its own audio rather than give it to Backtalk, so it was heard
+          // already. But an utterance with nothing to say, such as a pause, has no audio either, so
+          // only several in a row mean that the engine plays its own. Then speak the usual way
+          // with this engine from now on.
           lowLatencyRequests.remove(id);
-          stopUsingLowLatencyAudio("no audio");
+          noAudioInARow++;
+          if (noAudioInARow >= NO_AUDIO_IN_A_ROW_LIMIT) {
+            stopUsingLowLatencyAudio("no audio " + noAudioInARow + " times in a row");
+          }
           utteranceProgressCallback.onDone(id);
         }
       };
@@ -1441,7 +1453,9 @@ public class FailoverTextToSpeech {
     if (ttsEngine != null) {
       enginesWithoutFileAudio.add(ttsEngine);
     }
-    LogUtils.w(TAG, "Low-latency playback off for %s: %s", ttsEngine, reason);
+    // Logged at error level, so that it shows at the default log level: speech slows down from
+    // here on, and the reason is needed to tell why.
+    LogUtils.e(TAG, "Low-latency playback off for %s: %s", ttsEngine, reason);
   }
 
   /** Says a low-latency utterance that failed again the usual way, and stops using low latency. */
