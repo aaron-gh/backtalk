@@ -33,9 +33,15 @@ import kotlin.math.min
 import kotlin.math.pow
 
 /**
- * Plays the scroll sound and a light tick once for each item that scrolls past while the user
- * scrolls a list, so a slow drag ticks slowly and a fast one quickly, and the movement can be heard
- * and felt as it happens. The sound's pitch rises from the top of the list to the bottom.
+ * Plays a light tick for each item that scrolls past while the user scrolls a list, so a slow drag
+ * ticks slowly and a fast one quickly, and the movement can be felt as it happens. The scroll sound
+ * plays with the ticks, its pitch rising from the top of the list to the bottom.
+ *
+ * Both are rate limited so a fling cannot flood the output: the scroll sound is about 0.84 s long
+ * and SoundPool plays at most 10 streams, stopping the oldest (which may be a focus or window
+ * earcon) to start another. So the sound plays at most once per scroll event and at most every
+ * 250 ms, as other scrolls do, which keeps at most four scroll sounds playing at once. The ticks
+ * follow the items but stay at least 40-50 ms apart.
  *
  * A tick is also felt as soon as a two-finger drag is passed to the app, before the app reports
  * that it scrolled.
@@ -46,12 +52,16 @@ class ScrollTicks(private val feedbackController: FeedbackController, density: F
   private val counter = ScrollTickCounter(ITEM_DP * density)
   private val handler = Handler(Looper.getMainLooper())
   private var dragStartTime = -1L
+  private val soundLimiter = FeedbackRateLimiter(MIN_SOUND_INTERVAL_MS)
+  private val hapticLimiter = FeedbackRateLimiter(MIN_HAPTIC_INTERVAL_MS)
 
   /** Called on any thread when a two-finger drag is passed to the app. */
   fun onDragStarted() {
     handler.post {
       dragStartTime = SystemClock.uptimeMillis()
-      feedbackController.playHaptic(R.array.scroll_item_pattern, /* eventId= */ null)
+      if (hapticLimiter.tryAcquire(dragStartTime)) {
+        feedbackController.playHaptic(R.array.scroll_item_pattern, /* eventId= */ null)
+      }
     }
   }
 
@@ -80,6 +90,9 @@ class ScrollTicks(private val feedbackController: FeedbackController, density: F
         now,
         event.windowId,
         event.className,
+        // Tells apart two lists of the same class in one window, such as the panes of a two-pane
+        // layout. AccessibilityNodeInfo equality compares the window and the view.
+        event.source,
         if (event.itemCount > 0) event.fromIndex else UNKNOWN,
         event.scrollX,
         event.scrollY,
@@ -94,18 +107,25 @@ class ScrollTicks(private val feedbackController: FeedbackController, density: F
     // The drag already ticked when it started.
     val feltAlready = dragStartTime >= 0 && now - dragStartTime < DRAG_TICK_COVER_MS
     dragStartTime = -1L
-    // Spread the ticks over the time until the next scroll event.
+    // The sound plays once for the event, not once per item.
+    if (soundLimiter.tryAcquire(now)) {
+      feedbackController.playAuditoryWithoutHaptic(R.raw.scroll_tone, rate, rate, eventId)
+    }
+    // Spread the ticks over the time until the next scroll event, no closer than
+    // MIN_TICK_SPACING_MS, so a fling ticks at most twice per event.
     handler.removeCallbacksAndMessages(null)
-    val spacing = EVENT_INTERVAL_MS / ticks
-    for (i in 0 until ticks) {
-      val vibrate = i > 0 || !feltAlready
-      handler.postDelayed({ tick(rate, vibrate, eventId) }, i * spacing)
+    val count = min(ticks, (EVENT_INTERVAL_MS / MIN_TICK_SPACING_MS).toInt())
+    val spacing = EVENT_INTERVAL_MS / count
+    for (i in 0 until count) {
+      if (i == 0 && feltAlready) {
+        continue
+      }
+      handler.postDelayed({ vibrate(eventId) }, i * spacing)
     }
   }
 
-  private fun tick(rate: Float, vibrate: Boolean, eventId: EventId?) {
-    feedbackController.playAuditoryWithoutHaptic(R.raw.scroll_tone, rate, rate, eventId)
-    if (vibrate) {
+  private fun vibrate(eventId: EventId?) {
+    if (hapticLimiter.tryAcquire(SystemClock.uptimeMillis())) {
       feedbackController.playHaptic(R.array.scroll_item_pattern, eventId)
     }
   }
@@ -118,6 +138,27 @@ class ScrollTicks(private val feedbackController: FeedbackController, density: F
     // How long after a drag starts its tick stands for the first scroll event's tick. Apps report
     // the first scroll about 100 ms after it starts.
     const val DRAG_TICK_COVER_MS = 300L
+    // The scroll sound plays at most this often, the same as for other scrolls (see Mappers).
+    const val MIN_SOUND_INTERVAL_MS = 250L
+    // The ticks of one scroll event are spread at least this far apart.
+    const val MIN_TICK_SPACING_MS = 50L
+    // No tick plays sooner than this after the last, whatever the events do. A little less than
+    // MIN_TICK_SPACING_MS, as the handler may run a tick late.
+    const val MIN_HAPTIC_INTERVAL_MS = 40L
+  }
+}
+
+/** Lets feedback through at most once every [minIntervalMs]. */
+class FeedbackRateLimiter(private val minIntervalMs: Long) {
+  private var lastTime = Long.MIN_VALUE
+
+  /** Returns whether feedback may play at [time], and if so, counts it as played. */
+  fun tryAcquire(time: Long): Boolean {
+    if (lastTime != Long.MIN_VALUE && time - lastTime < minIntervalMs) {
+      return false
+    }
+    lastTime = time
+    return true
   }
 }
 
@@ -126,6 +167,7 @@ class ScrollTickCounter(private val itemPx: Float) {
   private var lastTime = -1L
   private var lastWindowId = UNKNOWN
   private var lastClassName: CharSequence? = null
+  private var lastSource: Any? = null
   private var lastFromIndex = UNKNOWN
   private var lastScrollX = UNKNOWN
   private var lastScrollY = UNKNOWN
@@ -135,12 +177,14 @@ class ScrollTickCounter(private val itemPx: Float) {
   /**
    * Returns how many ticks to play for a scroll event: one for the first event of a scroll, then
    * one for each item scrolled past, at most [MAX_TICKS]. Pass [UNKNOWN] for values the event does
-   * not have.
+   * not have. [source] identifies the scrolled view by equality, such as the event's
+   * AccessibilityNodeInfo, or is null when unknown.
    */
   fun onScroll(
     time: Long,
     windowId: Int,
     className: CharSequence?,
+    source: Any?,
     fromIndex: Int,
     scrollX: Int,
     scrollY: Int,
@@ -151,13 +195,15 @@ class ScrollTickCounter(private val itemPx: Float) {
       lastTime >= 0 &&
         time - lastTime <= SCROLL_GAP_MS &&
         windowId == lastWindowId &&
-        className == lastClassName
+        className == lastClassName &&
+        source == lastSource
     val previousFromIndex = lastFromIndex
     val previousScrollX = lastScrollX
     val previousScrollY = lastScrollY
     lastTime = time
     lastWindowId = windowId
     lastClassName = className
+    lastSource = source
     lastFromIndex = fromIndex
     lastScrollX = scrollX
     lastScrollY = scrollY

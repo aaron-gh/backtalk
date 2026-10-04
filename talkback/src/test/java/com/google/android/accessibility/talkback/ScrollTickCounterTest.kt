@@ -19,16 +19,23 @@ package com.google.android.accessibility.talkback
 import com.google.android.accessibility.talkback.ScrollTickCounter.Companion.MAX_TICKS
 import com.google.android.accessibility.talkback.ScrollTickCounter.Companion.UNKNOWN
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ScrollTickCounterTest {
   private val counter = ScrollTickCounter(itemPx = 100f)
 
-  private fun scrollBy(time: Long, deltaY: Int, window: Int = 1, className: String = "List") =
-    counter.onScroll(time, window, className, UNKNOWN, 0, UNKNOWN, 0, deltaY)
+  private fun scrollBy(
+    time: Long,
+    deltaY: Int,
+    window: Int = 1,
+    className: String = "List",
+    source: Any? = "list",
+  ) = counter.onScroll(time, window, className, source, UNKNOWN, 0, UNKNOWN, 0, deltaY)
 
-  private fun scrollTo(time: Long, fromIndex: Int) =
-    counter.onScroll(time, 1, "List", fromIndex, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN)
+  private fun scrollTo(time: Long, fromIndex: Int, source: Any? = "list") =
+    counter.onScroll(time, 1, "List", source, fromIndex, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN)
 
   @Test
   fun theFirstEventOfAScrollTicksOnce() {
@@ -80,7 +87,26 @@ class ScrollTickCounterTest {
 
   @Test
   fun withoutDeltasTheScrollPositionIsUsed() {
-    counter.onScroll(0, 1, "List", UNKNOWN, 0, 0, UNKNOWN, UNKNOWN)
-    assertEquals(2, counter.onScroll(100, 1, "List", UNKNOWN, 0, 200, UNKNOWN, UNKNOWN))
+    counter.onScroll(0, 1, "List", null, UNKNOWN, 0, 0, UNKNOWN, UNKNOWN)
+    assertEquals(2, counter.onScroll(100, 1, "List", null, UNKNOWN, 0, 200, UNKNOWN, UNKNOWN))
+  }
+
+  @Test
+  fun anotherListOfTheSameClassInTheSameWindowStartsANewScroll() {
+    scrollTo(time = 0, fromIndex = 0, source = "left pane")
+    scrollTo(time = 100, fromIndex = 40, source = "left pane")
+    // Without telling the lists apart, this would count 38 items between them.
+    assertEquals(1, scrollTo(time = 200, fromIndex = 2, source = "right pane"))
+    assertEquals(1, scrollTo(time = 300, fromIndex = 3, source = "right pane"))
+  }
+
+  @Test
+  fun aRateLimiterLetsFeedbackThroughAtMostOncePerInterval() {
+    val limiter = FeedbackRateLimiter(minIntervalMs = 250)
+    assertTrue(limiter.tryAcquire(1000))
+    assertFalse(limiter.tryAcquire(1100))
+    assertFalse(limiter.tryAcquire(1249))
+    assertTrue(limiter.tryAcquire(1250))
+    assertFalse(limiter.tryAcquire(1400))
   }
 }
