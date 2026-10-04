@@ -25,6 +25,7 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.SystemClock
 import com.google.android.accessibility.utils.R
 import com.google.android.libraries.accessibility.utils.log.LogUtils
 import java.io.File
@@ -48,13 +49,16 @@ class SpatialSoundPlayer(private val context: Context) {
   private var hrtf: Hrtf? = null
   // Decoded sounds, by file path for custom sounds and by resource ID otherwise.
   private val sounds = HashMap<String, FloatArray>()
-  private var track: AudioTrack? = null
+  // The sounds playing, with when each was asked for.
+  private val tracks = ArrayList<Pair<AudioTrack, Long>>()
 
   /**
    * Plays [resId], or the file at [path] in its place, as if it came from [x] and [y], fractions of
    * the screen from its left and top edges, at [volume] from 0 to 1.
    */
   fun play(resId: Int, path: String?, x: Float, y: Float, volume: Float) {
+    // When it was asked for, since decoding a sound the first time delays its start.
+    val requested = SystemClock.uptimeMillis()
     handler.post {
       try {
         val key = path ?: "res:$resId"
@@ -62,7 +66,7 @@ class SpatialSoundPlayer(private val context: Context) {
         val hrtf = hrtf ?: loadHrtf().also { hrtf = it }
         val stereo =
           hrtf.render(mono, Hrtf.azimuthForScreen(x), Hrtf.elevationForScreen(y))
-        start(stereo, volume)
+        start(stereo, volume, requested)
       } catch (e: RuntimeException) {
         // A broken sound or a refused audio track must never take the screen reader down.
         LogUtils.e(TAG, "Could not play sound %d: %s", resId, e)
@@ -75,16 +79,18 @@ class SpatialSoundPlayer(private val context: Context) {
     handler.post { sounds.clear() }
   }
 
-  /** Stops the sound playing now, if any, and frees the thread. */
+  /** Stops the sounds playing now, if any, and frees the thread. */
   fun shutdown() {
     handler.post {
-      stopCurrent()
+      stopRequestedBefore(Long.MAX_VALUE)
       thread.quitSafely()
     }
   }
 
-  private fun start(stereo: FloatArray, volume: Float) {
-    stopCurrent()
+  private fun start(stereo: FloatArray, volume: Float, requested: Long) {
+    // Sounds of one moment, like a list sound and a control sound, play together. A sound from
+    // before stops.
+    stopRequestedBefore(requested - TOGETHER_MS)
     val frames = stereo.size / 2
     val newTrack =
       AudioTrack.Builder()
@@ -102,21 +108,25 @@ class SpatialSoundPlayer(private val context: Context) {
     newTrack.write(stereo, 0, stereo.size, AudioTrack.WRITE_BLOCKING)
     newTrack.setVolume(volume.coerceIn(0f, 1f))
     newTrack.play()
-    track = newTrack
-    // Free the track once it has finished, unless a newer sound has replaced it already.
+    tracks += newTrack to requested
+    // Free the track once it has finished, unless a newer sound has stopped it already.
     val millis = frames * 1000L / Hrtf.SAMPLE_RATE
-    handler.postDelayed({ if (track === newTrack) stopCurrent() }, millis + RELEASE_DELAY_MS)
+    handler.postDelayed({ stop(newTrack) }, millis + RELEASE_DELAY_MS)
   }
 
-  private fun stopCurrent() {
-    val current = track ?: return
-    track = null
+  /** Stops the sounds asked for before [time]. */
+  private fun stopRequestedBefore(time: Long) {
+    tracks.filter { (_, requested) -> requested < time }.forEach { (track, _) -> stop(track) }
+  }
+
+  private fun stop(track: AudioTrack) {
+    if (!tracks.removeAll { it.first === track }) return
     try {
-      current.stop()
+      track.stop()
     } catch (e: IllegalStateException) {
       // Already stopped.
     }
-    current.release()
+    track.release()
   }
 
   private fun loadHrtf(): Hrtf =
@@ -256,6 +266,8 @@ class SpatialSoundPlayer(private val context: Context) {
   companion object {
     private const val TAG = "SpatialSoundPlayer"
     private const val RELEASE_DELAY_MS = 200L
+    // Sounds asked for this close together are of one moment, and play together.
+    private const val TOGETHER_MS = 50L
     private const val DECODE_TIMEOUT_US = 10_000L
     private const val MAX_DECODE_STEPS = 2_000
 

@@ -124,24 +124,30 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
     boolean isDeviceScreenNoTouch = globalVariables.isDeviceScreenNoTouch();
 
     // With control sounds on, the focus and list sounds come from where the focus lands, and a
-    // control sound takes the place of the focus sound. A control sound that the theme only gives
-    // a vibration leaves the focus sound in place, and its vibration takes the place of the focus
-    // vibration. Only while a control sound is heard or felt is the kind of control left out of
-    // the speech.
+    // control sound takes the place of the focus sound. Moving into or out of a list plays the list
+    // sound and the control sound together, with the control's vibration. A control sound that the
+    // theme only gives a vibration leaves the focus or list sound in place, and its vibration takes
+    // the place of theirs. Only while a control sound is heard or felt is the kind of control left
+    // out of the speech.
     int earcon = earcon(srcNode, globalVariables);
     int haptic = haptic(srcNode);
     boolean earconVibrates = true;
     float[] earconPosition = null;
+    int secondEarcon = -1;
     boolean isFocusSound = earcon == R.raw.focus || earcon == R.raw.focus_actionable;
-    if (globalVariables.areControlSoundsOn()
-        && (isFocusSound || earcon == R.raw.chime_up || earcon == R.raw.chime_down)) {
+    boolean isListSound = earcon == R.raw.chime_up || earcon == R.raw.chime_down;
+    if (globalVariables.areControlSoundsOn() && (isFocusSound || isListSound)) {
       earconPosition = ControlSounds.screenPosition(srcNode, context);
     }
-    if (isFocusSound) {
+    if (isFocusSound || isListSound) {
       int controlSound = globalVariables.getControlSoundForFocus(srcNode);
       if (controlSound != 0) {
         if (globalVariables.isControlSoundHeard(controlSound)) {
-          earcon = controlSound;
+          if (isFocusSound) {
+            earcon = controlSound;
+          } else {
+            secondEarcon = controlSound;
+          }
         } else {
           haptic = controlSound;
           earconVibrates = false;
@@ -195,6 +201,7 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
             forceFeedbackEvenIfSsbActive(accessibilityFocusEventInterpretation, isInitialFocus))
         .setPreventDeviceSleep(true)
         .setEarcon(earcon)
+        .setSecondEarcon(secondEarcon)
         .setEarconX(earconPosition == null ? -1 : earconPosition[0])
         .setEarconY(earconPosition == null ? -1 : earconPosition[1])
         .setEarconVibrates(earconVibrates)

@@ -47,6 +47,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -481,8 +482,12 @@ public class Compositor {
       if (speakOptions == null) {
         speakOptions = SpeakOptions.create();
       }
-      Set<Integer> earcons = new HashSet<>();
+      // In order: the second earcon's vibration is the one felt.
+      Set<Integer> earcons = new LinkedHashSet<>();
       earcons.add(earcon);
+      if (eventFeedback.secondEarcon() != -1) {
+        earcons.add(eventFeedback.secondEarcon());
+      }
       speakOptions.setEarcons(earcons);
 
       Bundle nonSpeechParams = new Bundle();
