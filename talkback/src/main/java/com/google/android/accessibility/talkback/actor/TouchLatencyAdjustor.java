@@ -40,8 +40,9 @@ import com.google.android.libraries.accessibility.utils.log.LogUtils;
 public class TouchLatencyAdjustor {
   private static final String TAG = "TouchLatencyAdjustor";
   private static final int MAX_LATENCY = 300;
-  // Touch focus can go lower than typing focus, which double-tap typing needs time for.
-  private static final int MIN_TOUCH_LATENCY = 50;
+  // Touch focus can go lower than typing focus, which double-tap typing needs time for. The timer
+  // is 50 ms less than the setting, and with no timer at all every swipe and tap would explore.
+  private static final int MIN_TOUCH_LATENCY = 100;
   private static final int MIN_TYPING_LATENCY = 150;
   private final Context context;
   private final SharedPreferences prefs;
