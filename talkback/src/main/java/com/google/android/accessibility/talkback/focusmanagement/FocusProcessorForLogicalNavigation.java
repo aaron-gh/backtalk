@@ -103,6 +103,7 @@ import com.google.android.accessibility.utils.Role;
 import com.google.android.accessibility.utils.Role.RoleName;
 import com.google.android.accessibility.utils.ScrollableNodeInfo;
 import com.google.android.accessibility.utils.SettingsUtils;
+import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.WebInterfaceUtils;
 import com.google.android.accessibility.utils.WindowUtils;
 import com.google.android.accessibility.utils.input.CursorGranularity;
@@ -1285,7 +1286,7 @@ public class FocusProcessorForLogicalNavigation {
     }
 
     // Try to wrap around inside current window if reaching the edge.
-    if (reachEdge && navigationAction.shouldWrap && navigationResult.isEmpty()) {
+    if (reachEdge && navigationAction.shouldWrap && wrapsAround() && navigationResult.isEmpty()) {
       navigationResult =
           findTargetForWrapAround(rootNode, navigationAction, traversalStrategy, eventId);
       if (navigationResult.shouldSkipNavigation()) {
@@ -1744,8 +1745,8 @@ public class FocusProcessorForLogicalNavigation {
       return NavigationResult.create(NavigationResult.Type.EXCEPTION);
     }
 
-    // Skip one swipe if it's the last element in the last window.
-    if (!reachEdge
+    // Skip one swipe if it's the last element in the last window. With wrapping off, stop there.
+    if ((!reachEdge || !wrapsAround())
         && (!windowFilter.accept(currentWindow)
             || needPauseWhenTraverseAcrossWindow(
                 windowTraversal, isScreenRtl, currentWindow, searchDirection, windowFilter))) {
@@ -2041,7 +2042,7 @@ public class FocusProcessorForLogicalNavigation {
       // Although we already check last window before searching, but sometimes we may find out the
       // window is empty so it searches next window repeatly, in this case we should check last
       // window again to prevent traversing in loops.
-      if (!reachEdge
+      if ((!reachEdge || !wrapsAround())
           && needPauseWhenTraverseAcrossWindow(
               windowTraversal, isScreenRtl, targetWindow, direction, windowFilter)) {
         LogUtils.v(TAG, "Reach edge while searchTargetInNextOrPreviousWindow in:" + targetWindow);
@@ -3215,6 +3216,18 @@ public class FocusProcessorForLogicalNavigation {
   // TODO: Think about moving this into Compositor.
 
   /** Announces if there are no more elements while using native granularity. */
+  /**
+   * Whether moving past the first or last item carries on from the other end. When it doesn't,
+   * navigation stays at the edge and fails, which plays the "Action done or end reached" sound.
+   */
+  private boolean wrapsAround() {
+    return SharedPreferencesUtils.getBooleanPref(
+        SharedPreferencesUtils.getSharedPreferences(service),
+        service.getResources(),
+        R.string.pref_wrap_navigation_key,
+        R.bool.pref_wrap_navigation_default);
+  }
+
   private void announceNativeElement(int direction, @TargetType int targetType, EventId eventId) {
     boolean forward = (direction == TraversalStrategy.SEARCH_FOCUS_FORWARD);
     int resId = forward ? R.string.end_of_page : R.string.start_of_page;

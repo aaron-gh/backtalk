@@ -16,6 +16,11 @@
       android:defaultValue="@string/pref_gesture_set_value_default"
       android:entries="@array/pref_gesture_set_entries"
       android:entryValues="@array/pref_gesture_set_values" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+      android:defaultValue="@bool/pref_wrap_navigation_default"
+      android:key="@string/pref_wrap_navigation_key"
+      android:summary="@string/summary_pref_wrap_navigation"
+      android:title="@string/title_pref_wrap_navigation" />
   <!-- One finger gestures -->
   <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
       android:key="@string/pref_category_1finger_shortcuts_key"

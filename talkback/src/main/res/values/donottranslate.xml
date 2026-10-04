@@ -9,6 +9,7 @@
     <string name="pref_proximity_key">pref_proximity</string>
     <!-- Must match SpeakerphoneSettings.PREF_ENABLED. -->
     <string name="pref_speakerphone_away_from_ear_key">pref_speakerphone_away_from_ear</string>
+    <string name="pref_wrap_navigation_key">pref_wrap_navigation</string>
     <string name="pref_check_for_updates_key" translatable="false">pref_check_for_updates</string>
     <string name="pref_auto_update_check_key" translatable="false">pref_auto_update_check</string>
     <string name="pref_show_exit_watermark_key">pref_show_exit_watermark</string>
@@ -1335,6 +1336,7 @@
     <bool name="pref_a11y_hints_default">true</bool>
     <bool name="pref_speak_container_element_positions_default">true</bool>
     <bool name="pref_tell_time_default">true</bool>
+    <bool name="pref_wrap_navigation_default">true</bool>
     <bool name="pref_speak_roles_default">true</bool>
     <bool name="pref_speak_system_window_titles_default">true</bool>
     <bool name="pref_allow_frequent_content_change_announcement_default">true</bool>
