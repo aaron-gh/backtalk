@@ -39,6 +39,7 @@ import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_ICON_DETECTION_UNAVAILABLE;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_IMAGE_DESCRIPTION_UNAVAILABLE;
 import static com.google.android.accessibility.talkback.logging.EventLatencyLogger.EVENTS_TO_LOG_ATTRIBUTES;
+import static com.google.android.accessibility.talkback.permission.PermissionRequestActivity.PERMISSIONS;
 import static com.google.android.accessibility.talkback.speech.SpeechCacheController.DEFAULT_CACHE_SUPPORT_TTS_ENGINE;
 import static com.google.android.accessibility.talkback.speech.SpeechCacheController.DEFAULT_MAX_CACHED_WINDOWS_SIZE;
 import static com.google.android.accessibility.talkback.trainingcommon.PageConfig.PageId.PAGE_ID_FINISHED;
@@ -51,8 +52,10 @@ import static com.google.android.accessibility.utils.gestures.GestureAnalyticsEv
 import static com.google.android.accessibility.utils.gestures.GestureAnalyticsEvent.EVENT_TAP_TO_TOUCH_EXPLORE;
 import static com.google.android.accessibility.utils.gestures.GestureManifold.GESTURE_FAKED_SPLIT_TYPING;
 import static com.google.android.accessibility.utils.output.SpeechControllerImpl.CAPITAL_LETTERS_TYPE_SPEAK_CAP;
+import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toCollection;
 
+import android.Manifest.permission;
 import android.accessibilityservice.AccessibilityGestureEvent;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.accessibilityservice.FingerprintGestureController;
@@ -451,8 +454,26 @@ public class TalkBackService extends AccessibilityServiceCompat
       if (NotificationUtils.hasPostNotificationPermission(talkBackService)) {
         talkBackService.helper.flushPendingNotification();
       } else {
-        // Android ignores the notification permission request of an app that targets Android 12L
-        // or lower, as Backtalk does, so ask the user to allow notifications in settings.
+        // Post notification permission.
+        NotificationUtils.requestPostNotificationPermissionIfNeeded(
+            talkBackService,
+            new BroadcastReceiver() {
+              @Override
+              public void onReceive(Context context, Intent intent) {
+                String[] permissions = intent.getStringArrayExtra(PERMISSIONS);
+                boolean requestPostNotificationPermission =
+                    stream(permissions)
+                        .anyMatch(p -> TextUtils.equals(p, permission.POST_NOTIFICATIONS));
+                if (requestPostNotificationPermission) {
+                  context.unregisterReceiver(this);
+                  // Even if a user declines the notification permission and we still need to make
+                  // notification for some change in talkback upgrade, we will ask permission again.
+                  talkBackService.helper.flushPendingNotification();
+                }
+              }
+            });
+        // Android ignores that request while Backtalk targets Android 12L or lower, so then the
+        // user is asked to allow notifications in settings instead.
         talkBackService.askForNotificationsIfNeeded();
       }
       // Phone permission.

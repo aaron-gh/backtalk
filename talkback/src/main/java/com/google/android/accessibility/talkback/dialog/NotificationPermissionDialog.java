@@ -22,6 +22,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,7 +38,8 @@ import com.google.android.libraries.accessibility.utils.log.LogUtils;
  *
  * <p>Backtalk targets Android 11, and Android ignores the permission request of an app that
  * targets Android 12L or lower. So this dialog explains why notifications matter, and opens
- * Backtalk's notification settings, where the user turns them on.
+ * Backtalk's notification settings, where the user turns them on. Once Backtalk targets Android 13
+ * or later, TalkBack's own request at start-up gets Android's prompt, so this dialog isn't shown.
  */
 public class NotificationPermissionDialog extends BaseDialog {
   private static final String TAG = "NotificationPermissionDialog";
@@ -52,11 +54,12 @@ public class NotificationPermissionDialog extends BaseDialog {
   }
 
   /**
-   * Returns whether to ask: notifications need permission on this phone, Backtalk doesn't have it,
-   * and the user hasn't been asked before.
+   * Returns whether to ask: notifications need permission on this phone, Android ignores
+   * Backtalk's own request for it, Backtalk doesn't have it, and the user hasn't been asked before.
    */
   public static boolean shouldAsk(Context context, SharedPreferences prefs) {
     return FeatureSupport.postNotificationsPermission()
+        && context.getApplicationInfo().targetSdkVersion < Build.VERSION_CODES.TIRAMISU
         && !FormFactorUtils.isAndroidTv()
         && !NotificationUtils.hasPostNotificationPermission(context)
         && !prefs.getBoolean(PREF_ASKED, false);
