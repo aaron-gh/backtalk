@@ -32,4 +32,13 @@
     <string name="update_install_canceled">Update canceled</string>
     <!-- Toast shown with the settings screen where the user allows Backtalk to install apps. [CHAR LIMIT=NONE] -->
     <string name="update_allow_install">Allow Backtalk to install apps, then try the update again</string>
+
+    <!-- Title of the dialog that asks the user to allow Backtalk's notifications. [CHAR LIMIT=NONE] -->
+    <string name="notification_permission_dialog_title">Allow notifications</string>
+    <!-- Message of the dialog that asks the user to allow Backtalk's notifications. [CHAR LIMIT=NONE] -->
+    <string name="notification_permission_dialog_message">Backtalk can\'t show notifications, so you won\'t hear when an update is available. To allow them, open settings and turn on notifications for Backtalk.</string>
+    <!-- Button in the notifications dialog that opens Backtalk's notification settings. [CHAR LIMIT=30] -->
+    <string name="notification_permission_dialog_open_settings">Open settings</string>
+    <!-- Button in the notifications dialog that closes it. [CHAR LIMIT=20] -->
+    <string name="notification_permission_dialog_not_now">Not now</string>
 </resources>
