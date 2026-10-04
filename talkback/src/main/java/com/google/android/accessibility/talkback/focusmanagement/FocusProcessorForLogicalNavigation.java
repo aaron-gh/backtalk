@@ -3253,7 +3253,6 @@ public class FocusProcessorForLogicalNavigation {
   // Methods to make announcement.
   // TODO: Think about moving this into Compositor.
 
-  /** Announces if there are no more elements while using native granularity. */
   /**
    * Whether moving past the first or last item carries on from the other end. When it doesn't,
    * navigation stays at the edge and fails, which plays the "Action done or end reached" sound.
@@ -3266,6 +3265,7 @@ public class FocusProcessorForLogicalNavigation {
         R.bool.pref_wrap_navigation_default);
   }
 
+  /** Announces if there are no more elements while using native granularity. */
   private void announceNativeElement(int direction, @TargetType int targetType, EventId eventId) {
     boolean forward = (direction == TraversalStrategy.SEARCH_FOCUS_FORWARD);
     int resId = forward ? R.string.end_of_page : R.string.start_of_page;

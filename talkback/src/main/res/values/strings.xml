@@ -54,9 +54,9 @@
       Description: Distinguishes the system settings from TalkBack's own speech settings. [CHAR LIMIT=NONE]
     -->
     <string name="title_pref_system_tts_settings">System text-to-speech settings</string>
-    <!-- Title for the "switch TTS engine" reading control selector item. [CHAR_LIMIT=NONE]-->
+    <!-- Title for the "switch TTS engine" reading control selector item. [CHAR LIMIT=NONE] -->
     <string name="title_selector_switch_tts_engine">Speech engine</string>
-    <!-- Summary for the "switch TTS engine" reading control selector item. [CHAR_LIMIT=NONE]-->
+    <!-- Summary for the "switch TTS engine" reading control selector item. [CHAR LIMIT=NONE] -->
     <string name="summary_selector_switch_tts_engine">Switch between installed speech engines</string>
     <!--
       Source: Summary shown under the TTS engine preference when no engine is selected (use system default).
@@ -214,25 +214,25 @@
     -->
     <string name="value_device_unlocked">Device unlocked.</string>
 
-    <!-- Settings for what Backtalk says when the screen turns off or on and when the phone is unlocked. [CHAR_LIMIT=NONE]-->
+    <!-- Settings for what Backtalk says when the screen turns off or on and when the phone is unlocked. [CHAR LIMIT=NONE] -->
     <string name="title_pref_screen_announcements">Screen on and off</string>
-    <!-- [CHAR_LIMIT=NONE]-->
+    <!-- [CHAR LIMIT=NONE] -->
     <string name="summary_pref_screen_announcements">Choose what Backtalk says when the screen turns off or on, and when the phone is unlocked</string>
-    <!-- Heading for the settings used when the screen turns off. [CHAR_LIMIT=NONE]-->
+    <!-- Heading for the settings used when the screen turns off. [CHAR LIMIT=NONE] -->
     <string name="title_screen_announcements_screen_off">When the screen turns off</string>
-    <!-- Heading for the settings used when the screen turns on. [CHAR_LIMIT=NONE]-->
+    <!-- Heading for the settings used when the screen turns on. [CHAR LIMIT=NONE] -->
     <string name="title_screen_announcements_screen_on">When the screen turns on</string>
-    <!-- Heading for the settings used when the phone is unlocked. [CHAR_LIMIT=NONE]-->
+    <!-- Heading for the settings used when the phone is unlocked. [CHAR LIMIT=NONE] -->
     <string name="title_screen_announcements_unlock">When the phone is unlocked</string>
-    <!-- Switch to say "Screen off" when the screen turns off. [CHAR_LIMIT=NONE]-->
+    <!-- Switch to say "Screen off" when the screen turns off. [CHAR LIMIT=NONE] -->
     <string name="title_pref_say_screen_off">Say \"Screen off\"</string>
-    <!-- Switch to say "Device unlocked" when the phone is unlocked. [CHAR_LIMIT=NONE]-->
+    <!-- Switch to say "Device unlocked" when the phone is unlocked. [CHAR LIMIT=NONE] -->
     <string name="title_pref_say_device_unlocked">Say \"Device unlocked\"</string>
-    <!-- Switch to say the time when the screen turns on. [CHAR_LIMIT=NONE]-->
+    <!-- Switch to say the time when the screen turns on. [CHAR LIMIT=NONE] -->
     <string name="title_pref_announce_time">Time</string>
-    <!-- Switch to say the ringer mode. [CHAR_LIMIT=NONE]-->
+    <!-- Switch to say the ringer mode. [CHAR LIMIT=NONE] -->
     <string name="title_pref_announce_ringer_mode">Ringer mode</string>
-    <!-- [CHAR_LIMIT=NONE]-->
+    <!-- [CHAR LIMIT=NONE] -->
     <string name="summary_pref_announce_ringer_mode">Say when the ringer is set to vibrate or silent</string>
     <!-- PREFERENCES -->
     <!--
@@ -272,11 +272,11 @@
       Description: The user can check or not check this. [CHAR LIMIT=120]
     -->
     <string name="title_pref_cover_proximity_sensor">Cover proximity sensor to stop speech</string>
-    <!-- Title of the setting that moves calls to the speaker when the phone is away from the ear. [CHAR_LIMIT=NONE]-->
+    <!-- Title of the setting that moves calls to the speaker when the phone is away from the ear. [CHAR LIMIT=NONE] -->
     <string name="title_pref_speakerphone_away_from_ear">Speaker when away from your ear</string>
-    <!-- Summary of that setting. [CHAR_LIMIT=NONE]-->
+    <!-- Summary of that setting. [CHAR LIMIT=NONE] -->
     <string name="summary_pref_speakerphone_away_from_ear">During a call, switches to the speaker when you take the phone away from your ear, and back to the earpiece when you hold it up again.</string>
-    <!-- Summary of that setting when Backtalk does not have the permission. %1$s is the adb command that grants it. [CHAR_LIMIT=NONE]-->
+    <!-- Summary of that setting when Backtalk does not have the permission. %1$s is the adb command that grants it. [CHAR LIMIT=NONE] -->
     <string name="summary_pref_speakerphone_needs_permission">Needs a permission that Android does not give to screen readers. To grant it, run this command with adb or Shizuku, then come back to this screen: %1$s</string>
 
     <!--
@@ -370,28 +370,28 @@
      -->
     <string name="summary_speak_container_element_positions">Say when you enter or leave lists, grids, and other containers</string>
 
-    <!-- Title of dialog to confirm the Focus delay reading control items being added. [CHAR_LIMIT=NONE]-->
+    <!-- Title of dialog to confirm the Focus delay reading control items being added. [CHAR LIMIT=NONE] -->
     <string name="confirm_focus_delay_reading_control_added_dialog_title">Focus delay added to reading control</string>
-    <!-- Message of dialog to confirm the Focus delay reading control items being added. [CHAR_LIMIT=NONE]-->
+    <!-- Message of dialog to confirm the Focus delay reading control items being added. [CHAR LIMIT=NONE] -->
     <string name="confirm_focus_delay_reading_control_added_dialog_message">Swipe with 3 fingers to use reading control and change the focus delay at any time</string>
 
-    <!-- Title of dialog to confirm the typing focus delay reduction which enables the Lift-to-type to do the CLICK. [CHAR_LIMIT=NONE]-->
+    <!-- Title of dialog to confirm the typing focus delay reduction which enables the Lift-to-type to do the CLICK. [CHAR LIMIT=NONE] -->
     <string name="confirm_the_typing_focus_delay_reduction_dialog_title">Switch to lift-to-type?</string>
-    <!-- Description what the side effect would be when focus delay decreased, and TalkBack would enable the Lift-to-type. [CHAR_LIMIT=NONE]-->
+    <!-- Description what the side effect would be when focus delay decreased, and TalkBack would enable the Lift-to-type. [CHAR LIMIT=NONE] -->
     <string name="message_of_typing_focus_delay_reduction_confirm_dialog">When typing focus delay is set below 0.3 seconds, double-tap to type will be very difficult to perform. Choose \"Switch\" to automatically switch to lift to type.\n\nTo use lift-to-type, hold your finger to select any key, then lift for typing.\n\nYou can customize this in Backtalk settings.</string>
-    <!-- Title of dialog to confirm the typing focus delay reading control items being added. [CHAR_LIMIT=NONE]-->
+    <!-- Title of dialog to confirm the typing focus delay reading control items being added. [CHAR LIMIT=NONE] -->
     <string name="confirm_typing_focus_delay_reading_control_added_dialog_title">Typing focus delay added to reading control</string>
-    <!-- Message of dialog to confirm the Focus delay reading control items being added. [CHAR_LIMIT=NONE]-->
+    <!-- Message of dialog to confirm the Focus delay reading control items being added. [CHAR LIMIT=NONE] -->
     <string name="confirm_typing_focus_delay_reading_control_added_dialog_message">If you have issues with double-tap while typing, swipe with 3 fingers to use reading control and change to a longer typing focus delay</string>
-    <!-- A warning message to tell the situation user cannot change typing focus delay. [CHAR_LIMIT=NONE]-->
+    <!-- A warning message to tell the situation user cannot change typing focus delay. [CHAR LIMIT=NONE] -->
     <string name="gestures_announce_typing_focus_wont_change">Typing focus delay is not functioning without Lift-to-type.</string>
 
     <!-- Latency setting by reading control added positive button. Click the button to acknowledge the action. [CHAR LIMIT=40] -->
     <string name="confirm_latency_reduction_reading_control_added_dialog_positive_button">Got it</string>
 
-    <!-- Reset latency reduction settings. [CHAR_LIMIT=NONE]-->
+    <!-- Reset latency reduction settings. [CHAR LIMIT=NONE] -->
     <string name="reset_letency_reduction_settings_dialog_title">Reset delay settings?</string>
-    <!-- Description what the reset latency reduction settings will do. [CHAR_LIMIT=NONE]-->
+    <!-- Description what the reset latency reduction settings will do. [CHAR LIMIT=NONE] -->
     <string name="message_reset_letency_reduction_settings_confirm_dialog">This will reset all delay settings to default</string>
     <string name="reset_button_in_reset_letency_reduction_settings_confirm_dialog">Reset</string>
     <!-- Announce reset the latency reduction settings -->
@@ -406,7 +406,7 @@
   <string name="Reset_gesture_settings_dialog_title">Reset gestures?</string>
   <!-- Reset keymap [CHAR LIMIT=90] -->
   <string name="Reset_gesture_settings_set_dialog_title">Reset gestures of current set?</string>
-  <!-- Description what the reset gesture will do. [CHAR_LIMIT=NONE]-->
+  <!-- Description what the reset gesture will do. [CHAR LIMIT=NONE] -->
   <string name="message_reset_gesture_settings_confirm_dialog">This will reset all gestures to their default actions.\n\nYou will lose any changes that you have made.</string>
 
   <string name="reset_button_in_reset_gesture_settings_confirm_dialog">Reset</string>
@@ -485,7 +485,7 @@
     <string name="title_pref_category_others">Others</string>
     <!-- Category for tutorial & help. [CHAR LIMIT=40] -->
     <string name="title_pref_category_tutorial_and_help">Tutorial &#38; help</string>
-    <!-- Category summary for reduce latency. [CHAR_LIMIT=NONE]-->
+    <!-- Category summary for reduce latency. [CHAR LIMIT=NONE] -->
     <string name="title_pref_category_reduce_latency_summary">These settings make Backtalk respond faster after you touch the screen</string>
     <!-- Label for the reset latency settings. [CHAR LIMIT=NONE]-->
     <string name="reset_latency_settings_title">Reset all delay settings</string>
@@ -533,7 +533,7 @@
     Description: Explains how quick menu is opened. [CHAR LIMIT=NONE]
     -->
     <string name="pref_category_selector_menu_summary">Turn 2 fingers like a dial, or swipe left or right with 3 fingers, to choose a reading control. Then swipe up or down to change it.</string>
-    <!-- Summary of the reading controls setting when the rotor is not available. [CHAR_LIMIT=NONE]-->
+    <!-- Summary of the reading controls setting when the rotor is not available. [CHAR LIMIT=NONE] -->
     <string name="pref_category_selector_menu_summary_no_rotor">Swipe left or right with 3 fingers to choose a reading control. Then swipe up or down to change it.</string>
     <!--
     Source: Summary subtext for quick menu setting in XR.
@@ -558,7 +558,7 @@
     <string name="title_pref_gup">Contact Google Disability support</string>
     <!-- The preference subtitle of GUP support [CHAR_LIMIT=NONE]-->
     <string name="subtitle_pref_gup">Get help using Backtalk or report issues</string>
-    <!-- The label of a settings item that displays legal information about the licenses used in this app. [CHAR_LIMIT=NONE]-->
+    <!-- The label of a settings item that displays legal information about the licenses used in this app. [CHAR LIMIT=NONE] -->
     <string name="pref_item_licenses">Open Source Licenses</string>
     <!-- Label for the button to show tutorial [CHAR LIMIT=40] -->
     <string name="title_pref_tutorial">Tutorial</string>
@@ -1197,7 +1197,7 @@
       Description: This preference reduces window title announcement delay.
     -->
     <string name="pref_reduce_window_delay_title">Turn off animations</string>
-    <!-- Summary of the setting that turns off animations so that Backtalk reads new screens faster. [CHAR_LIMIT=NONE]-->
+    <!-- Summary of the setting that turns off animations so that Backtalk reads new screens faster. [CHAR LIMIT=NONE] -->
     <string name="pref_reduce_window_delay_summary">Backtalk reads new screens faster when animations are off. This turns off animations for the whole phone.</string>
 
     <!--
@@ -2205,7 +2205,7 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <!-- Preference label for volume 25% of the accessibility-stream volume. [CHAR_LIMIT=NONE] -->
     <string name="value_volume_25_percent" formatted="false">25% of speech volume</string>
 
-    <!-- Label for typing mode user preference in which double-tap is needed to input any IME key. [CHAR_LIMIT=NONE]-->
+    <!-- Label for typing mode user preference in which double-tap is needed to input any IME key. [CHAR LIMIT=NONE] -->
     <string name="value_type_confirmation_double_tap">Hold finger to select any key, then double-tap</string>
     <!-- Label for typing mode user preference in which lift-to-type applies, but only to "letter keys". The phrase "letter key" is mean to distinguishes keys such as A, B, or C, from non-letter keys, such as ENTER or NEXT_KEYBOARD. [CHAR LIMIT=NONE]-->
     <string name="value_type_confirmation_lift_to_type">Hold finger to select letter key, then lift. Double-tap for other keys.</string>
@@ -2421,21 +2421,21 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <!-- Message for the dialog shown when a user attempts to enable performance statistics. -->
     <string name="dialog_message_enable_performance_stats">Are you sure you want to turn on performance statistics?\n\nPerformance statistics may consume more memory and power.</string>
 
-    <!-- Title for the dialog shown when a user attempts to extend the log level for debugging.  [CHAR_LIMIT=NONE]-->
+    <!-- Title for the dialog shown when a user attempts to extend the log level for debugging.  [CHAR LIMIT=NONE] -->
     <string name="dialog_title_extend_log_level">Enable verbose logging?</string>
     <!-- Message for the dialog shown when a user attempts to extend the log level for debugging. [CHAR LIMIT=NONE]  -->
     <string name="dialog_message_extend_log_level">Verbose logging can aid in debugging but may cause personal information to appear in the system log buffer.\n\n  Do you want to enable verbose logging?</string>
     <!-- Text label for the positive button which enables verbose log. [CHAR LIMIT=NONE]  -->
     <string name="dialog_ok_buggon_extend_log_level">Yes, enable verbose logging </string>
 
-    <!-- Title for dialog shown when a user starts to turn on diagnosis-mode for debugging. [CHAR_LIMIT=NONE]-->
+    <!-- Title for dialog shown when a user starts to turn on diagnosis-mode for debugging. [CHAR LIMIT=NONE] -->
     <string name="dialog_title_diagnosis_mode">Enable diagnosis mode?</string>
     <!-- Message for dialog shown when a user starts to turn on diagnosis-mode for debugging. [CHAR LIMIT=NONE]  -->
     <string name="dialog_message_diagnosis_mode">Diagnosis mode helps debugging.  Diagnosis mode overrides gesture tap with 4 fingers, to capture screen contents to system logs.  Screen contents may include personal information. \n\n Do you want to enable diagnosis mode?</string>
 
-  <!-- Title for requesting phone permission in TalkBack. [CHAR_LIMIT=NONE]-->
+  <!-- Title for requesting phone permission in TalkBack. [CHAR LIMIT=NONE] -->
     <string name="title_request_phone_permission">Allow phone access?</string>
-    <!-- Message for requesting phone permission in TalkBack. It tells the reason for the users. [CHAR_LIMIT=NONE]-->
+    <!-- Message for requesting phone permission in TalkBack. It tells the reason for the users. [CHAR LIMIT=NONE] -->
     <string name="message_request_phone_permission">This helps Backtalk reduce announcements when you\'re on a call</string>
     <!-- Label for continue button. [CHAR_LIMIT=30] -->
     <string name="continue_button">Continue</string>
@@ -2453,9 +2453,9 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <!-- Spoken description when the user navigates forwards with screen search granularity and there is no more items. -->
     <string name="search_end_of_page">No next result on this page</string>
 
-    <!-- Announce that selected web granularity is not supported on the current view.  [CHAR_LIMIT=NONE]-->
+    <!-- Announce that selected web granularity is not supported on the current view.  [CHAR LIMIT=NONE] -->
     <string name="web_granularity_not_supported"><xliff:g name="granularity" example="heading">%1$s</xliff:g> only supported on web pages</string>
-    <!-- Announce that selected native granularity is not supported on the current view.  [CHAR_LIMIT=NONE]-->
+    <!-- Announce that selected native granularity is not supported on the current view.  [CHAR LIMIT=NONE] -->
     <string name="native_granularity_not_supported"><xliff:g name="granularity" example="heading">%1$s</xliff:g> only supported on native pages</string>
 
     <!--Spoken description of a container. [CHAR_LIMIT=NONE] -->
@@ -2504,7 +2504,7 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <string name="display_name_checkbox">checkbox</string>
     <!--Spoken description of a visited link -->
     <string name="display_name_visited_link">visited link</string>
-    <!--Spoken description of a unvisited link  [CHAR_LIMIT=NONE]-->
+    <!--Spoken description of a unvisited link  [CHAR LIMIT=NONE] -->
     <string name="display_name_unvisited_link">unvisited link</string>
     <!--Spoken description of a radio [CHAR_LIMIT=NONE] -->
     <string name="display_name_radio">radio button</string>
