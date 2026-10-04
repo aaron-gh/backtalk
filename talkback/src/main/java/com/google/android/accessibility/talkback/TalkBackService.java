@@ -149,6 +149,7 @@ import com.google.android.accessibility.talkback.compositor.CompositorUtils;
 import com.google.android.accessibility.talkback.compositor.EarlyFocusSpeech;
 import com.google.android.accessibility.talkback.compositor.EventFilter;
 import com.google.android.accessibility.talkback.compositor.GlobalVariables;
+import com.google.android.accessibility.talkback.compositor.PreparedFocusSpeech;
 import com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DescriptionOrder;
 import com.google.android.accessibility.talkback.contextmenu.ListMenuManager;
 import com.google.android.accessibility.talkback.controller.TelevisionNavigationController;
@@ -1048,6 +1049,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     EventId eventId = perf.onEventReceived(event);
     int eventType = event.getEventType();
     TraversalTreeCache.onAccessibilityEvent(event);
+    PreparedFocusSpeech.onAccessibilityEvent(event);
     if (directTouchController != null) {
       directTouchController.onAccessibilityEvent(event);
     }
@@ -2295,6 +2297,12 @@ public class TalkBackService extends AccessibilityServiceCompat
                 actionTime,
                 /* continuousReading= */ fullScreenReadActor != null
                     && fullScreenReadActor.isActive()));
+    eventFilter.setTargetPredictor(directionNavigationActor::predictTarget);
+    eventFilter.setFingerDownSupplier(
+        () ->
+            FeatureSupport.supportGestureDetection()
+                ? TouchInteractionMonitor.isFingerDown()
+                : touchMonitor.isUserTouchingScreen());
     eventFilter.setVoiceActionDelegate(voiceActionMonitor);
     eventFilter.setAccessibilityFocusEventInterpreter(accessibilityFocusInterpreter);
     ActorStateProvider actorStateProvider =
@@ -3730,6 +3738,9 @@ public class TalkBackService extends AccessibilityServiceCompat
   private final OnSharedPreferenceChangeListener sharedPreferenceChangeListener =
       (prefs, key) -> {
         LogUtils.d(TAG, "A shared preference changed: %s", key);
+        // The prepared announcements may have been worked out with the setting as it was, such as
+        // a verbosity setting changed from the reading controls.
+        PreparedFocusSpeech.clear();
         // Skip reloadPreferences to avoid the additional of Talkback re-configuration for some
         // settings changes.
         if (getString(R.string.pref_previous_global_window_animation_scale_key).equals(key)

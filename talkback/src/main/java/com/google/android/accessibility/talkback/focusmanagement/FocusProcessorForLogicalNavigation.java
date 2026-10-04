@@ -1135,6 +1135,44 @@ public class FocusProcessorForLogicalNavigation {
    *
    * @return {@code true} if any accessibility action is successfully performed.
    */
+  /**
+   * Returns the node that a plain swipe in {@code searchDirection} from {@code pivot} would most
+   * likely focus, without scrolling, focusing or changing anything, or null if there is none on
+   * screen in the same window, or if there is no saved traversal order to search. It finds the
+   * nodes through the same saved order and node checks as a swipe, so that a swipe that follows
+   * finds them already fetched from the app.
+   */
+  public @Nullable AccessibilityNodeInfoCompat predictTarget(
+      @NonNull AccessibilityNodeInfoCompat pivot, @SearchDirection int searchDirection) {
+    if (!TraversalStrategyUtils.isLogicalDirection(searchDirection)
+        || WebInterfaceUtils.supportsWebActions(pivot)) {
+      return null;
+    }
+    AccessibilityNodeInfoCompat rootNode = AccessibilityNodeInfoUtils.getRoot(pivot);
+    if (rootNode == null) {
+      return null;
+    }
+    // Only with the saved reading order: building one takes from about 10 ms to, in a big app, a
+    // few hundred, on the main thread, where a swipe that starts meanwhile would wait for it. A
+    // swipe saves the order it builds, so the next prediction has one.
+    TraversalStrategy traversalStrategy = TraversalTreeCache.get(rootNode, pivot);
+    if (traversalStrategy == null) {
+      return null;
+    }
+    Filter<AccessibilityNodeInfoCompat> nodeFilter =
+        NavigationTarget.createNodeFilter(
+            NavigationTarget.TARGET_DEFAULT, traversalStrategy.getSpeakingNodesCache());
+    AccessibilityNodeInfoCompat target =
+        TraversalStrategyUtils.searchFocus(traversalStrategy, pivot, searchDirection, nodeFilter);
+    if (target == null
+        || target.getWindowId() != pivot.getWindowId()
+        || !target.isVisibleToUser()
+        || WebInterfaceUtils.supportsWebActions(target)) {
+      return null;
+    }
+    return target;
+  }
+
   private boolean navigateToDefaultOrMacroGranularityTarget(
       @NonNull AccessibilityNodeInfoCompat pivot,
       boolean ignoreDescendantsOfPivot,

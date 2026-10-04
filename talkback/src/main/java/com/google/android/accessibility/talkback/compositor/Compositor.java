@@ -375,6 +375,8 @@ public class Compositor {
   /** Sets the user preferred locale changed using language switcher. */
   public void setUserPreferredLanguage(Locale locale) {
     globalVariables.setUserPreferredLocale(locale);
+    // The prepared announcements were worked out in the language used before.
+    PreparedFocusSpeech.clear();
   }
 
   /////////////////////////////////////////////////////////////////////////////////
@@ -456,15 +458,34 @@ public class Compositor {
     handleEvent(eventType, eventId, options);
   }
 
-  /** Handles an event made inside Backtalk for {@code sourceNode}, which the event cannot hold. */
+  /**
+   * Handles an event made inside Backtalk for {@code sourceNode}, which the event cannot hold. If
+   * {@code preparedFeedback} is not null, it is the feedback that {@link #getFeedback} returned for
+   * the same event earlier, and is used instead of working it out again.
+   */
   public void handleEvent(
       AccessibilityEvent event,
       AccessibilityNodeInfoCompat sourceNode,
       @Nullable EventId eventId,
+      EventInterpretation eventInterpreted,
+      @Nullable EventFeedback preparedFeedback) {
+    HandleEventOptions options =
+        new HandleEventOptions().object(event).interpretation(eventInterpreted).source(sourceNode);
+    options.preparedFeedback = preparedFeedback;
+    handleEvent(eventInterpreted.getEvent(), eventId, options);
+  }
+
+  /**
+   * Returns the feedback for an event made inside Backtalk for {@code sourceNode}, without giving
+   * it, so that it can be given later by {@link #handleEvent}.
+   */
+  public EventFeedback getFeedback(
+      AccessibilityEvent event,
+      AccessibilityNodeInfoCompat sourceNode,
       EventInterpretation eventInterpreted) {
     HandleEventOptions options =
         new HandleEventOptions().object(event).interpretation(eventInterpreted).source(sourceNode);
-    handleEvent(eventInterpreted.getEvent(), eventId, options);
+    return getEventFeedback(eventInterpreted.getEvent(), options);
   }
 
   private void handleEvent(int event, @Nullable EventId eventId, HandleEventOptions options) {
@@ -483,7 +504,10 @@ public class Compositor {
     }
     @Nullable UtteranceCompleteRunnable runnable = options.onCompleteRunnable;
 
-    EventFeedback eventFeedback = getEventFeedback(event, options);
+    EventFeedback eventFeedback =
+        (options.preparedFeedback != null)
+            ? options.preparedFeedback
+            : getEventFeedback(event, options);
 
     // Compose earcons.
     SpeakOptions speakOptions = null;
@@ -635,6 +659,7 @@ public class Compositor {
     public @Nullable EventInterpretation eventInterpretation;
     public @Nullable AccessibilityNodeInfoCompat sourceNode;
     public @Nullable UtteranceCompleteRunnable onCompleteRunnable;
+    public @Nullable EventFeedback preparedFeedback;
 
     @CanIgnoreReturnValue
     public HandleEventOptions object(AccessibilityEvent eventObjArg) {

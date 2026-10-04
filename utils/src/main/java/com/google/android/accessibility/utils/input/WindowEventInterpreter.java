@@ -298,6 +298,12 @@ public class WindowEventInterpreter implements WindowsDelegate, DisplayStateChan
   // Member data
 
   private final AccessibilityService service;
+
+  // The windows on every display, from windowsOnAllDisplays(), and when they were fetched.
+  private @Nullable SparseArray<List<AccessibilityWindowInfo>> cachedWindowsOnAllDisplays;
+  private long cachedWindowsTime;
+  // How long the windows are kept, in case a change came without a windows event.
+  private static final long WINDOWS_CACHE_MAX_AGE_MS = 2_000;
   private final boolean isSplitScreenModeAvailable;
   private final HashMap<Integer, Window> windowIdToData = new HashMap<>();
   // Caches the window roles from last window transition for comparison.
@@ -398,13 +404,41 @@ public class WindowEventInterpreter implements WindowsDelegate, DisplayStateChan
       return null;
     }
 
-    List<AccessibilityWindowInfo> windows = getAllWindows(service);
-    for (AccessibilityWindowInfo window : windows) {
-      if (window.getId() == windowId) {
-        return AccessibilityWindowInfoUtils.getTitle(window);
+    long fetchedBefore = cachedWindowsTime;
+    @Nullable AccessibilityWindowInfo window = findWindow(windowsOnAllDisplays(), windowId);
+    if (window == null && cachedWindowsTime == fetchedBefore) {
+      // The window may have appeared since the windows were fetched, before its windows event.
+      cachedWindowsOnAllDisplays = null;
+      window = findWindow(windowsOnAllDisplays(), windowId);
+    }
+    return (window == null) ? null : AccessibilityWindowInfoUtils.getTitle(window);
+  }
+
+  private static @Nullable AccessibilityWindowInfo findWindow(
+      SparseArray<List<AccessibilityWindowInfo>> windowsOnAllDisplays, int windowId) {
+    for (int i = 0; i < windowsOnAllDisplays.size(); i++) {
+      for (AccessibilityWindowInfo window : windowsOnAllDisplays.valueAt(i)) {
+        if (window.getId() == windowId) {
+          return window;
+        }
       }
     }
     return null;
+  }
+
+  /**
+   * Returns the windows on every display, kept until the windows change. Asking the system for them
+   * each time held up the announcement of every swipe, which looks up the window's title and
+   * whether the screen is split.
+   */
+  private SparseArray<List<AccessibilityWindowInfo>> windowsOnAllDisplays() {
+    long now = SystemClock.uptimeMillis();
+    if (cachedWindowsOnAllDisplays == null
+        || now - cachedWindowsTime > WINDOWS_CACHE_MAX_AGE_MS) {
+      cachedWindowsOnAllDisplays = AccessibilityServiceCompatUtils.getWindowsOnAllDisplays(service);
+      cachedWindowsTime = now;
+    }
+    return cachedWindowsOnAllDisplays;
   }
 
   public boolean isSplitScreenModeAvailable() {
@@ -417,8 +451,7 @@ public class WindowEventInterpreter implements WindowsDelegate, DisplayStateChan
       return false;
     }
 
-    List<AccessibilityWindowInfo> windows =
-        AccessibilityServiceCompatUtils.getWindowsOnAllDisplays(service).get(displayId);
+    List<AccessibilityWindowInfo> windows = windowsOnAllDisplays().get(displayId);
     if (windows == null) {
       return false;
     }
@@ -525,6 +558,10 @@ public class WindowEventInterpreter implements WindowsDelegate, DisplayStateChan
 
   @TargetApi(Build.VERSION_CODES.P)
   public void interpret(AccessibilityEvent event, @Nullable EventId eventId, boolean allowEvent) {
+    if (event.getEventType() == AccessibilityEvent.TYPE_WINDOWS_CHANGED
+        || event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+      cachedWindowsOnAllDisplays = null;
+    }
 
     if (Boolean.FALSE.equals(defaultDisplayOn)) {
       final int displayId = AccessibilityEventUtils.getDisplayId(event);

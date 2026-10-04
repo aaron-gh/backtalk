@@ -36,6 +36,7 @@ import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.compositor.parsetree.ParseTree;
 import com.google.android.accessibility.talkback.compositor.parsetree.ParseTree.VariableDelegate;
 import com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DescriptionOrder;
+import com.google.android.accessibility.talkback.compositor.rule.EventTypeViewAccessibilityFocusedFeedbackRule;
 import com.google.android.accessibility.talkback.compositor.rule.InputTextFeedbackRules;
 import com.google.android.accessibility.talkback.compositor.rule.MagnificationStateChangedFeedbackRule;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
@@ -363,6 +364,48 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
 
     mLastWindowId = mCurrentWindowId;
     mCurrentWindowId = node.getWindowId();
+  }
+
+  /** The state that follows accessibility focus, from {@link #saveFocusState()}. */
+  public static final class SavedFocusState {
+    private final boolean isLastFocusInScrollableNode;
+    private final boolean isCurrentFocusInScrollableNode;
+    private final boolean isFocusPage;
+    private final int lastWindowId;
+    private final int currentWindowId;
+    private final CollectionState.SavedState collection;
+    // The title of the container that focus is in, which the focus announcement both reads, to say
+    // when focus moves into or out of a container, and changes.
+    private final CharSequence containerTitle;
+
+    private SavedFocusState(GlobalVariables variables) {
+      isLastFocusInScrollableNode = variables.isLastFocusInScrollableNode;
+      isCurrentFocusInScrollableNode = variables.isCurrentFocusInScrollableNode;
+      isFocusPage = variables.isFocusPage;
+      lastWindowId = variables.mLastWindowId;
+      currentWindowId = variables.mCurrentWindowId;
+      collection = variables.collectionState.save();
+      containerTitle = EventTypeViewAccessibilityFocusedFeedbackRule.currentContainerTitle;
+    }
+  }
+
+  /**
+   * Returns the state that follows accessibility focus, including the collection state, so that
+   * {@link #restoreFocusState} can put it back after working out what focusing a node would say.
+   */
+  public SavedFocusState saveFocusState() {
+    return new SavedFocusState(this);
+  }
+
+  /** Puts back the state from {@link #saveFocusState()}. */
+  public void restoreFocusState(SavedFocusState saved) {
+    isLastFocusInScrollableNode = saved.isLastFocusInScrollableNode;
+    isCurrentFocusInScrollableNode = saved.isCurrentFocusInScrollableNode;
+    isFocusPage = saved.isFocusPage;
+    mLastWindowId = saved.lastWindowId;
+    mCurrentWindowId = saved.currentWindowId;
+    collectionState.restore(saved.collection);
+    EventTypeViewAccessibilityFocusedFeedbackRule.currentContainerTitle = saved.containerTitle;
   }
 
   /**
