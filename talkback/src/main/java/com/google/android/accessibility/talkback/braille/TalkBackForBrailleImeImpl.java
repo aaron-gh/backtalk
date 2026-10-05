@@ -8,6 +8,7 @@ import static com.google.android.accessibility.talkback.selector.SelectorControl
 import static com.google.android.accessibility.talkback.selector.SelectorController.Setting.GRANULARITY_PARAGRAPHS;
 import static com.google.android.accessibility.talkback.selector.SelectorController.Setting.GRANULARITY_TYPO;
 import static com.google.android.accessibility.talkback.selector.SelectorController.Setting.GRANULARITY_WORDS;
+import static com.google.android.accessibility.talkback.selector.SelectorController.Setting.TABLET_HELD_UP_FACES_AWAY;
 import static com.google.android.accessibility.utils.Performance.EVENT_ID_UNTRACKED;
 import static com.google.android.accessibility.utils.input.TextEventFilter.PREF_ECHO_CHARACTERS;
 import static com.google.android.accessibility.utils.input.TextEventFilter.PREF_ECHO_CHARACTERS_AND_WORDS;
@@ -71,9 +72,19 @@ public class TalkBackForBrailleImeImpl implements TalkBackForBrailleIme {
   @VisibleForTesting
   static final Setting[] VALID_NON_CURSOR_GRANULARITIES = new Setting[] {GRANULARITY_TYPO};
 
+  /**
+   * Braille keyboard settings that can be reading controls while the keyboard is open. Like typo
+   * correction, they don't move the cursor: the keyboard's gestures for moving it change them.
+   */
+  @VisibleForTesting
+  static final Setting[] VALID_KEYBOARD_SETTINGS = new Setting[] {TABLET_HELD_UP_FACES_AWAY};
+
   @VisibleForTesting
   static final Set<Setting> VALID_GRANULARITIES =
-      Arrays.stream(ArrayUtils.concat(VALID_CURSOR_GRANULARITIES, VALID_NON_CURSOR_GRANULARITIES))
+      Arrays.stream(
+              ArrayUtils.concat(
+                  ArrayUtils.concat(VALID_CURSOR_GRANULARITIES, VALID_NON_CURSOR_GRANULARITIES),
+                  VALID_KEYBOARD_SETTINGS))
           .collect(toImmutableSet());
 
   /** Provides functionality of private methods. */
@@ -318,7 +329,8 @@ public class TalkBackForBrailleImeImpl implements TalkBackForBrailleIme {
         validCursorGranularity++;
       }
     }
-    for (Setting setting : VALID_NON_CURSOR_GRANULARITIES) {
+    for (Setting setting :
+        ArrayUtils.concat(VALID_NON_CURSOR_GRANULARITIES, VALID_KEYBOARD_SETTINGS)) {
       if (selectorController.isSettingAvailable(setting)) {
         validNonCursorGranularity++;
       }
