@@ -115,6 +115,18 @@ class RadialMenuController(
     }
   }
 
+  /** Moves the focus with fingers that were already down when the menu opened. */
+  fun followHeldTouch(x: Float, y: Float, lifted: Boolean) {
+    view?.followHeldTouch(x, y, lifted)
+  }
+
+  /**
+   * Whether a window titled [title] is the menu's own. The menu appearing changes the windows too,
+   * and that should not close it.
+   */
+  fun isOwnWindow(title: CharSequence?): Boolean =
+    title?.toString() == service.getString(R.string.title_pref_radial_menu)
+
   /** Closes the menu as if the user had lifted in the middle of it. */
   fun cancel() {
     if (!isShowing) {
