@@ -236,6 +236,10 @@ public class FailoverTextToSpeech {
   public static final String PREF_SPEAK_IN_PHRASES_KEY = "pref_speak_in_phrases";
   private static final boolean SPEAK_IN_PHRASES_DEFAULT = false;
   private volatile boolean speakInPhrases = SPEAK_IN_PHRASES_DEFAULT;
+  public static final String PREF_SWITCH_LANGUAGES_KEY = "pref_switch_languages";
+  public static final String PREF_SWITCH_DIALECTS_KEY = "pref_switch_dialects";
+  private static final boolean SWITCH_LANGUAGES_DEFAULT = true;
+  private static final boolean SWITCH_DIALECTS_DEFAULT = true;
   private @Nullable String preferredTtsEngine;
 
   private final OnSharedPreferenceChangeListener preferenceChangeListener =
@@ -247,6 +251,9 @@ public class FailoverTextToSpeech {
           applyAudioAttributes();
         } else if (PREF_SPEAK_IN_PHRASES_KEY.equals(key)) {
           speakInPhrases = sharedPrefs.getBoolean(key, SPEAK_IN_PHRASES_DEFAULT);
+        } else if (PREF_SWITCH_LANGUAGES_KEY.equals(key)
+            || PREF_SWITCH_DIALECTS_KEY.equals(key)) {
+          readLanguageSwitches(sharedPrefs);
         }
       };
 
@@ -333,6 +340,7 @@ public class FailoverTextToSpeech {
     SharedPreferences prefs = SharedPreferencesUtils.getSharedPreferences(context);
     preferredTtsEngine = readPreferredEngine(prefs);
     speakInPhrases = prefs.getBoolean(PREF_SPEAK_IN_PHRASES_KEY, SPEAK_IN_PHRASES_DEFAULT);
+    readLanguageSwitches(prefs);
     prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
 
     // Updating the default engine reloads the list of installed engines and
@@ -728,6 +736,7 @@ public class FailoverTextToSpeech {
 
     requestRate = effectiveRate;
     synchronized (ttsLock) {
+      locale = localeToSpeak(locale);
       String utteranceId = params.get(Engine.KEY_PARAM_UTTERANCE_ID);
       boolean isLocaleAttached = locale != null;
       Locale previousLocale = getUsedLocale();
@@ -854,6 +863,26 @@ public class FailoverTextToSpeech {
     }
 
     return speakWithCacheOrTts(utteranceId, text, queueMode, locale, bundle);
+  }
+
+  private static void readLanguageSwitches(SharedPreferences prefs) {
+    LanguageSwitch.setSwitches(
+        prefs.getBoolean(PREF_SWITCH_LANGUAGES_KEY, SWITCH_LANGUAGES_DEFAULT),
+        prefs.getBoolean(PREF_SWITCH_DIALECTS_KEY, SWITCH_DIALECTS_DEFAULT));
+  }
+
+  /** Returns the language to speak text marked as {@code locale} in, by the language switches. */
+  private static @Nullable Locale localeToSpeak(@Nullable Locale locale) {
+    Locale toSpeak = LanguageSwitch.localeToSpeak(locale);
+    if (!Objects.equals(toSpeak, locale)) {
+      LogUtils.v(TAG, "Speaking text marked as %s in %s", locale, toSpeak);
+    }
+    return toSpeak;
+  }
+
+  /** Tells LanguageSwitch the language attemptRestorePreferredLocale speaks unmarked text in. */
+  private void updateVoiceLanguage() {
+    LanguageSwitch.setVoiceLanguage(mDefaultLocale != null ? mDefaultLocale : mSystemLocale);
   }
 
   private Locale getUsedLocale() {
@@ -1207,7 +1236,7 @@ public class FailoverTextToSpeech {
         return;
       }
       if (spans.length == 1) {
-        locale = spans[0].getLocale();
+        locale = localeToSpeak(spans[0].getLocale());
       }
     }
     if (locale == null) {
@@ -1607,6 +1636,7 @@ public class FailoverTextToSpeech {
   private void updateDefaultLocale() {
     final String defaultLocale = TextToSpeechUtils.getDefaultLocaleForEngine(resolver, ttsEngine);
     mDefaultLocale = !TextUtils.isEmpty(defaultLocale) ? forLanguageTag(defaultLocale) : null;
+    updateVoiceLanguage();
 
     // The default locale changed, which may mean we can restore the user's
     // preferred locale.
@@ -1621,6 +1651,7 @@ public class FailoverTextToSpeech {
     }
 
     mSystemLocale = newLocale;
+    updateVoiceLanguage();
 
     // The system locale changed, which may mean we need to override the
     // current TTS locale.
