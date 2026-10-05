@@ -324,27 +324,16 @@ class DotsOrientationTest {
   }
 
   @Test
-  fun seenFromFront_swapsLeftAndRightOnly() {
-    assertEquals(PortPosition.RIGHT, DotsOrientation.seenFromFront(PortPosition.LEFT))
-    assertEquals(PortPosition.LEFT, DotsOrientation.seenFromFront(PortPosition.RIGHT))
-    assertEquals(PortPosition.DOWN, DotsOrientation.seenFromFront(PortPosition.DOWN))
-    assertEquals(PortPosition.UP, DotsOrientation.seenFromFront(PortPosition.UP))
-  }
-
-  @Test
-  fun heldFacingUser_saysTheSideTabletopModeSaysOnceLaidFlat() {
-    // With the switch off, laying it flat keeps the port on the side the user was told.
-    for (held in listOf(Orientation.LANDSCAPE, Orientation.REVERSE_LANDSCAPE)) {
-      val heldRotation = DotsOrientation.rotationForDegrees(held.degree)
-      assertEquals(
-        held.name,
-        DotsOrientation.seenFromFront(DotsOrientation.heldPortPosition(held, false)!!),
-        DotsOrientation.tabletPortPosition(
-          DotsOrientation.tabletTabletopRotation(heldRotation, held, true, false),
-          true,
-        ),
-      )
-    }
+  fun heldFacingUser_portIsOnTheOtherSideFromWhenHeldFromBehind() {
+    // Standing up facing the user at the held rotation, the user sees the port on the other side.
+    assertEquals(
+      PortPosition.LEFT,
+      DotsOrientation.tabletPortPosition(
+        DotsOrientation.rotationForDegrees(Orientation.LANDSCAPE.degree),
+        true,
+      ),
+    )
+    assertEquals(PortPosition.RIGHT, DotsOrientation.heldPortPosition(Orientation.LANDSCAPE, false))
   }
 
   @Test

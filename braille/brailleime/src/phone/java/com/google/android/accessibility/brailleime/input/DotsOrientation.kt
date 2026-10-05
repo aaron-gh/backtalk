@@ -227,15 +227,6 @@ object DotsOrientation {
       !sidewaysFacesAway &&
       (heldFromBehind == PortPosition.LEFT || heldFromBehind == PortPosition.RIGHT)
 
-  /** Where the charging port is for someone facing the screen, from where it is seen from behind. */
-  @JvmStatic
-  fun seenFromFront(fromBehind: PortPosition): PortPosition =
-    when (fromBehind) {
-      PortPosition.LEFT -> PortPosition.RIGHT
-      PortPosition.RIGHT -> PortPosition.LEFT
-      else -> fromBehind
-    }
-
   /** A phone's orientation lock for the charging port on this side. */
   @JvmStatic
   fun phoneLock(portOnRight: Boolean): Int =

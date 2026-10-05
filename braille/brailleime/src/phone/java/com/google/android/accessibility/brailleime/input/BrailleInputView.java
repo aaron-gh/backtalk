@@ -515,6 +515,26 @@ public class BrailleInputView extends View
     callback.onTabletopPortSideDecided();
   }
 
+  /**
+   * On a tablet standing up facing the user, turns the tabletop dots to the rotation it is held up
+   * with now, as auto-rotate would. Returns whether they turned.
+   */
+  public boolean faceHeldRotation() {
+    int held = HeldOrientationTracker.getLastHeldRotation();
+    if (isPhone() || held < 0) {
+      return false;
+    }
+    boolean turned = held != tabletopRotation;
+    tabletopRotation = held;
+    tabletopSideDecidedAtMs = SystemClock.uptimeMillis();
+    callback.onTabletopPortSideDecided();
+    if (turned && tabletopMode) {
+      updateTurnedAround();
+      invalidate();
+    }
+    return turned;
+  }
+
   /** The screen rotation, which works before the view is attached to a window. */
   private int displayRotation() {
     return getDisplay() != null
