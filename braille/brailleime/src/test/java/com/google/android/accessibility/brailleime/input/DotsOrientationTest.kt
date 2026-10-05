@@ -249,11 +249,11 @@ class DotsOrientationTest {
     // Held screen-away with the port on the right, as on the Fold7 unfolded at rotation 270.
     assertEquals(
       rotation90,
-      DotsOrientation.tabletTabletopRotation(rotation270, Orientation.LANDSCAPE, true),
+      DotsOrientation.tabletTabletopRotation(rotation270, Orientation.LANDSCAPE, true, true),
     )
     assertEquals(
       rotation270,
-      DotsOrientation.tabletTabletopRotation(rotation90, Orientation.REVERSE_LANDSCAPE, true),
+      DotsOrientation.tabletTabletopRotation(rotation90, Orientation.REVERSE_LANDSCAPE, true, true),
     )
   }
 
@@ -266,7 +266,7 @@ class DotsOrientationTest {
         held.name,
         DotsOrientation.heldPortPosition(held, false),
         DotsOrientation.tabletPortPosition(
-          DotsOrientation.tabletTabletopRotation(heldRotation, held, true),
+          DotsOrientation.tabletTabletopRotation(heldRotation, held, true, true),
           true,
         ),
       )
@@ -277,11 +277,11 @@ class DotsOrientationTest {
   fun tabletTabletopRotation_heldWithThePortDownOrUp_facesTheUserAsAutoRotateDoes() {
     assertEquals(
       rotation0,
-      DotsOrientation.tabletTabletopRotation(rotation0, Orientation.PORTRAIT, true),
+      DotsOrientation.tabletTabletopRotation(rotation0, Orientation.PORTRAIT, true, true),
     )
     assertEquals(
       rotation180,
-      DotsOrientation.tabletTabletopRotation(rotation180, Orientation.REVERSE_PORTRAIT, true),
+      DotsOrientation.tabletTabletopRotation(rotation180, Orientation.REVERSE_PORTRAIT, true, true),
     )
   }
 
@@ -289,8 +289,87 @@ class DotsOrientationTest {
   fun tabletTabletopRotation_notFromScreenAway_facesTheUserAsAutoRotateDoes() {
     assertEquals(
       rotation270,
-      DotsOrientation.tabletTabletopRotation(rotation270, Orientation.LANDSCAPE, false),
+      DotsOrientation.tabletTabletopRotation(rotation270, Orientation.LANDSCAPE, false, true),
     )
+  }
+
+  @Test
+  fun tabletTabletopRotation_heldUpFacesAwayOff_facesTheUserAsAutoRotateDoes() {
+    // Stood on a stand facing the user, then laid flat.
+    assertEquals(
+      rotation270,
+      DotsOrientation.tabletTabletopRotation(rotation270, Orientation.LANDSCAPE, true, false),
+    )
+    assertEquals(
+      rotation90,
+      DotsOrientation.tabletTabletopRotation(
+        rotation90,
+        Orientation.REVERSE_LANDSCAPE,
+        true,
+        false,
+      ),
+    )
+  }
+
+  @Test
+  fun tabletTabletopRotation_heldUpFacesAwayOff_portraitFacesTheUserAsAutoRotateDoes() {
+    assertEquals(
+      rotation0,
+      DotsOrientation.tabletTabletopRotation(rotation0, Orientation.PORTRAIT, true, false),
+    )
+    assertEquals(
+      rotation180,
+      DotsOrientation.tabletTabletopRotation(rotation180, Orientation.REVERSE_PORTRAIT, true, false),
+    )
+  }
+
+  @Test
+  fun heldFacingUser_aTabletHeldAnyWayRoundWithTheSwitchOff() {
+    for (held in
+      listOf(
+        Orientation.PORTRAIT,
+        Orientation.LANDSCAPE,
+        Orientation.REVERSE_PORTRAIT,
+        Orientation.REVERSE_LANDSCAPE,
+      )) {
+      assertTrue(held.name, DotsOrientation.heldFacingUser(held, false, false))
+      assertFalse(held.name, DotsOrientation.heldFacingUser(held, false, true))
+      assertFalse(held.name, DotsOrientation.heldFacingUser(held, true, false))
+    }
+    assertFalse(DotsOrientation.heldFacingUser(Orientation.UNKNOWN, false, false))
+  }
+
+  @Test
+  fun uprightPortPosition_theEdgeTowardTheUserPointsDown() {
+    assertEquals(PortPosition.DOWN, DotsOrientation.uprightPortPosition(PortPosition.NEAR))
+    assertEquals(PortPosition.UP, DotsOrientation.uprightPortPosition(PortPosition.FAR))
+    assertEquals(PortPosition.LEFT, DotsOrientation.uprightPortPosition(PortPosition.LEFT))
+    assertEquals(PortPosition.RIGHT, DotsOrientation.uprightPortPosition(PortPosition.RIGHT))
+  }
+
+  @Test
+  fun facingUser_portraitSaysThePortPointingDownOrUp() {
+    assertEquals(
+      PortPosition.DOWN,
+      DotsOrientation.uprightPortPosition(DotsOrientation.tabletPortPosition(rotation0, true)),
+    )
+    assertEquals(
+      PortPosition.UP,
+      DotsOrientation.uprightPortPosition(DotsOrientation.tabletPortPosition(rotation180, true)),
+    )
+  }
+
+  @Test
+  fun heldFacingUser_portIsOnTheOtherSideFromWhenHeldFromBehind() {
+    // Standing up facing the user at the held rotation, the user sees the port on the other side.
+    assertEquals(
+      PortPosition.LEFT,
+      DotsOrientation.tabletPortPosition(
+        DotsOrientation.rotationForDegrees(Orientation.LANDSCAPE.degree),
+        true,
+      ),
+    )
+    assertEquals(PortPosition.RIGHT, DotsOrientation.heldPortPosition(Orientation.LANDSCAPE, false))
   }
 
   @Test

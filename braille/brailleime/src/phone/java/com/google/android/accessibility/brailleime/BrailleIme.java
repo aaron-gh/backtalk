@@ -210,6 +210,9 @@ public class BrailleIme extends InputMethodService {
   private Thread.UncaughtExceptionHandler originalDefaultUncaughtExceptionHandler;
   private OrientationMonitor.Callback orientationCallbackDelegate;
 
+  /** The "Tablet held up faces away" setting, kept here as it is read for every reading. */
+  private boolean tabletHeldUpFacesAway = true;
+
   /** How the device was held when the user last heard where the charging port is. */
   private OrientationMonitor.Orientation knownPortSide = OrientationMonitor.Orientation.UNKNOWN;
 
@@ -220,6 +223,9 @@ public class BrailleIme extends InputMethodService {
   private final Handler screenAwayAnnouncementHandler = new Handler(Looper.getMainLooper());
 
   private boolean screenAwayAnnouncementPending;
+
+  /** Whether the keyboard was last told the device stands up facing the user. */
+  private boolean wasUprightFacingUser;
 
   /**
    * Whether the pending screen-away announcement is the first since the keyboard opened, so it
@@ -334,6 +340,7 @@ public class BrailleIme extends InputMethodService {
     OrientationMonitor.init(this);
     flatTurnDetector = new FlatTurnDetector(this, this::onTurnedFlat);
     layoutOrientator = new LayoutOrientator(this, layoutOrientatorCallback);
+    tabletHeldUpFacesAway = BrailleUserPreferences.readTabletHeldUpFacesAway(this);
 
     if (talkBackForBrailleIme != null) {
       talkBackForBrailleIme.setBrailleImeForTalkBack(brailleImeForTalkBack);
@@ -475,7 +482,14 @@ public class BrailleIme extends InputMethodService {
     // A tablet says where the charging port is once how it is held settles, as its dots turn then.
     HeldOrientationTracker.setLastHeldListener(
         () -> {
-          if (!BrailleUtils.isPhoneSizedDevice(getResources())) {
+          if (BrailleUtils.isPhoneSizedDevice(getResources())) {
+            return;
+          }
+          if (layoutOrientator.isUprightFacingUser()) {
+            followHeldWhileFacingUser();
+          } else if (!(layoutOrientatorCallback.useSensorsToDetectLayout()
+              && layoutOrientatorCallback.uprightFacesUser())) {
+            // Held so it faces the user, the next reading switches the layout and says so instead.
             announcePortSideIfTurned(HeldOrientationTracker.getLastHeld());
           }
         });
@@ -953,10 +967,30 @@ public class BrailleIme extends InputMethodService {
         }
 
         @Override
+        public boolean uprightFacesUser() {
+          // Checked first, so that with the setting on nothing more is done for each reading.
+          return !tabletHeldUpFacesAway
+              && DotsOrientation.heldFacingUser(
+                  HeldOrientationTracker.getLastHeld(),
+                  BrailleUtils.isPhoneSizedDevice(getResources()),
+                  tabletHeldUpFacesAway);
+        }
+
+        @Override
         public void onDetectionChanged(boolean isTabletop, boolean isFirstChangedEvent) {
           cancelScreenAwayAnnouncement();
+          boolean facing = layoutOrientator.isUprightFacingUser();
+          boolean laidDownFromFacing =
+              isTabletop && !facing && wasUprightFacingUser && !isFirstChangedEvent;
+          wasUprightFacingUser = facing;
           // Switch first, so that tabletop mode decides which side the charging port is on.
           keyboardView.setTableMode(isTabletop);
+          if (facing) {
+            keyboardView.faceHeldRotation();
+          } else if (laidDownFromFacing) {
+            // Tipping it flat is not a turn on the table.
+            flatTurnDetector.reset();
+          }
           if (!isTabletop
               && !keyboardView.inTwoStepCalibration()
               && !isOrientationLocked()
@@ -971,7 +1005,9 @@ public class BrailleIme extends InputMethodService {
             return;
           }
           String layout =
-              isTabletop ? getTabletopAnnouncement() : getScreenAwayAnnouncement();
+              facing
+                  ? getFacingAnnouncement()
+                  : isTabletop ? getTabletopAnnouncement() : getScreenAwayAnnouncement();
           String calibrationTips = "";
           if (keyboardView.inTwoStepCalibration()) {
             if (!isFirstChangedEvent) {
@@ -1223,6 +1259,46 @@ public class BrailleIme extends InputMethodService {
     return DotsOrientation.heldPortPosition(orientation, phone);
   }
 
+  /** Says the screen is toward the user, and where the charging port is when that is known. */
+  private String getFacingAnnouncement() {
+    PortPosition position = getUprightPortPosition();
+    return getString(
+        position == null
+            ? R.string.screen_toward_announcement
+            : switch (position) {
+              case LEFT -> R.string.screen_toward_port_left_announcement;
+              case RIGHT -> R.string.screen_toward_port_right_announcement;
+              case DOWN -> R.string.screen_toward_port_down_announcement;
+              case UP -> R.string.screen_toward_port_up_announcement;
+              case NEAR, FAR -> R.string.screen_toward_announcement;
+            });
+  }
+
+  /** Where the charging port is on a tablet standing up facing the user, or null if not known. */
+  @Nullable
+  private PortPosition getUprightPortPosition() {
+    PortPosition tabletop = keyboardView.getTabletopPortPosition();
+    return tabletop == null ? null : DotsOrientation.uprightPortPosition(tabletop);
+  }
+
+  /**
+   * A tablet standing up facing the user was turned, so its dots follow, and it says where the
+   * charging port is now unless the dots are locked.
+   */
+  private void followHeldWhileFacingUser() {
+    if (keyboardView == null
+        || !keyboardView.isInputViewCreated()
+        || !keyboardView.faceHeldRotation()
+        || isOrientationLocked()) {
+      return;
+    }
+    PortPosition position = getUprightPortPosition();
+    if (position != null) {
+      BrailleCommonTalkBackSpeaker.getInstance()
+          .speak(getPortAnnouncement(position), TalkBackSpeaker.AnnounceType.INTERRUPT);
+    }
+  }
+
   /** Says tabletop mode, and where the charging port is when that is known. */
   private String getTabletopAnnouncement() {
     PortPosition position = keyboardView.getTabletopPortPosition();
@@ -1259,6 +1335,10 @@ public class BrailleIme extends InputMethodService {
    */
   private void onTurnedFlat(int quarters) {
     if (keyboardView == null || !keyboardView.isInputViewCreated()) {
+      return;
+    }
+    if (layoutOrientator.isUprightFacingUser()) {
+      // Standing up, the dots follow how it is held instead.
       return;
     }
     PortPosition position = keyboardView.turnTabletop(quarters);
@@ -1701,6 +1781,9 @@ public class BrailleIme extends InputMethodService {
               keyboardView.refreshInputView();
             }
             refreshEditBufferAndBrailleDisplay();
+          } else if (key.equals(getString(R.string.pref_brailleime_tablet_held_up_faces_away))) {
+            tabletHeldUpFacesAway =
+                BrailleUserPreferences.readTabletHeldUpFacesAway(BrailleIme.this);
           } else if (key.equals(getString(R.string.pref_braille_contracted_mode))) {
             boolean contractedMode = BrailleUserPreferences.readContractedMode(BrailleIme.this);
             if (BrailleUserPreferences.readCurrentActiveInputCodeAndCorrect(BrailleIme.this)

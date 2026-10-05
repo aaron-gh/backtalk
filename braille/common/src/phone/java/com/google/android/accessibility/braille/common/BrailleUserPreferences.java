@@ -73,6 +73,7 @@ public class BrailleUserPreferences {
   private static final boolean ACCUMULATE_MODE_DEFAULT = true;
   private static final boolean REVERSE_DOTS_MODE_DEFAULT = false;
   private static final boolean FLIP_DOTS_VERTICALLY_DEFAULT = false;
+  private static final boolean TABLET_HELD_UP_FACES_AWAY_DEFAULT = true;
   private static final boolean TYPING_SOUNDS_DEFAULT = false;
   private static final int KEYBOARD_ECHO_DEFAULT = PREF_ECHO_CHARACTERS_AND_WORDS;
   private static final boolean LAUNCH_TUTORIAL_DEFAULT = true;
@@ -337,6 +338,26 @@ public class BrailleUserPreferences {
         .edit()
         .putBoolean(
             context.getString(R.string.pref_brailleime_flip_dots_vertically), flipDotsVertically)
+        .apply();
+  }
+
+  /**
+   * Reads whether a tablet held up is taken to face away from the user, as in screen-away mode.
+   * When off, it is taken to face the user and uses the tabletop layout.
+   */
+  public static boolean readTabletHeldUpFacesAway(Context context) {
+    return getSharedPreferences(context, BRAILLE_SHARED_PREFS_FILENAME)
+        .getBoolean(
+            context.getString(R.string.pref_brailleime_tablet_held_up_faces_away),
+            TABLET_HELD_UP_FACES_AWAY_DEFAULT);
+  }
+
+  /** Writes whether a tablet held up is taken to face away from the user. */
+  public static void writeTabletHeldUpFacesAway(Context context, boolean facesAway) {
+    getSharedPreferences(context, BRAILLE_SHARED_PREFS_FILENAME)
+        .edit()
+        .putBoolean(
+            context.getString(R.string.pref_brailleime_tablet_held_up_faces_away), facesAway)
         .apply();
   }
 
