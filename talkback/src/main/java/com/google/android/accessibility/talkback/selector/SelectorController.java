@@ -2005,6 +2005,14 @@ public class SelectorController implements UserInputEventListener {
 
   /** Changes to the previous or next installed language. */
   private void changeLanguage(EventId eventId, boolean isNext) {
+    // The reading control is hidden while a voice profile is in use, but it stays selected if the
+    // profile was chosen in settings.
+    if (VoiceProfiles.isProfileActive()) {
+      String displayText = context.getString(R.string.spoken_language_unavailable_with_profile);
+      announceSetting(eventId, displayText, getSelectSettingGestures());
+      showQuickMenuActionOverlay(eventId, displayText);
+      return;
+    }
     pipeline.returnFeedback(eventId, Feedback.language(isNext ? NEXT_LANGUAGE : PREVIOUS_LANGUAGE));
     announceSetting(
         eventId,
