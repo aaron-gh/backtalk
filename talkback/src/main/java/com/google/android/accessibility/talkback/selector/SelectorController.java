@@ -100,6 +100,7 @@ import com.google.android.accessibility.talkback.monitor.VolumeMonitor;
 import com.google.android.accessibility.talkback.monitor.VolumeMonitor.VolumeChangedListener;
 import com.google.android.accessibility.talkback.preference.base.FocusDelayPrefFragment;
 import com.google.android.accessibility.talkback.preference.base.TypingFocusDelayPrefFragment;
+import com.google.android.accessibility.talkback.preference.base.VoiceProfilesFragment;
 import com.google.android.accessibility.talkback.selector.SelectorController.Setting.DescriptionAndHint;
 import com.google.android.accessibility.talkback.utils.VerbosityPreferences;
 import com.google.android.accessibility.utils.FeatureSupport;
@@ -110,10 +111,10 @@ import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.WebInterfaceUtils;
 import com.google.android.accessibility.utils.input.CursorGranularity;
 import com.google.android.accessibility.utils.monitor.CollectionState;
-import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.accessibility.utils.output.FeedbackItem;
 import com.google.android.accessibility.utils.output.SpeechController;
 import com.google.android.accessibility.utils.output.SpeechController.SpeakOptions;
+import com.google.android.accessibility.utils.output.VoiceProfiles;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
@@ -363,10 +364,10 @@ public class SelectorController implements UserInputEventListener {
         R.string.pref_selector_text_formatting_inline_key,
         R.string.title_switch_text_formatting,
         R.bool.pref_selector_text_formatting_inline_default),
-    SWITCH_TTS_ENGINE(
-        R.string.pref_selector_switch_tts_engine_key,
-        R.string.selector_switch_tts_engine,
-        R.bool.pref_selector_switch_tts_engine_default);
+    SWITCH_VOICE_PROFILE(
+        R.string.pref_selector_voice_profile_key,
+        R.string.selector_voice_profile,
+        R.bool.pref_selector_voice_profile_default);
 
     /** The preference key of the filter in the selector settings page. */
     final int prefKeyResId;
@@ -630,7 +631,7 @@ public class SelectorController implements UserInputEventListener {
           Setting.WRAP_AROUND,
           Setting.ADJUSTABLE_WIDGET,
           Setting.CONTROL_TELLING_TIME,
-          Setting.SWITCH_TTS_ENGINE);
+          Setting.SWITCH_VOICE_PROFILE);
 
   /** Lists all {@link Setting} that should be hidden for users. */
   private final ImmutableList<Setting> hiddenSettings;
@@ -950,8 +951,8 @@ public class SelectorController implements UserInputEventListener {
         actionDescription = context.getString(R.string.title_control_speak_time);
         hint = getAdjustSelectedSettingGestures();
       }
-      case SWITCH_TTS_ENGINE -> {
-        actionDescription = context.getString(R.string.title_selector_switch_tts_engine);
+      case SWITCH_VOICE_PROFILE -> {
+        actionDescription = context.getString(R.string.title_selector_voice_profile);
         hint = getAdjustSelectedSettingGestures();
       }
       case ACTIONS -> {
@@ -1732,8 +1733,8 @@ public class SelectorController implements UserInputEventListener {
         switchTellingTimeOnOrOff(eventId);
         return;
       }
-      case SWITCH_TTS_ENGINE -> {
-        changeTtsEngine(eventId, isNext);
+      case SWITCH_VOICE_PROFILE -> {
+        changeVoiceProfile(eventId, isNext);
         return;
       }
       case GRANULARITY -> {
@@ -1955,32 +1956,30 @@ public class SelectorController implements UserInputEventListener {
     showQuickMenuActionOverlay(eventId, displayText);
   }
 
-  private void changeTtsEngine(EventId eventId, boolean isNext) {
-    List<String> engines =
-        FailoverTextToSpeech.getInstalledTtsEngines(context.getPackageManager());
-    if (engines.size() <= 1) {
-      announceSetting(
-          eventId,
-          context.getString(R.string.title_selector_switch_tts_engine),
-          getSelectSettingGestures());
-      return;
-    }
+  /** Changes to the previous or next voice profile, with Backtalk's default first. */
+  private void changeVoiceProfile(EventId eventId, boolean isNext) {
+    List<String> ids = new ArrayList<>();
+    ids.add("");
+    ids.addAll(VoiceProfiles.ids(prefs));
+    int currentIndex = ids.indexOf(VoiceProfiles.activeId(prefs));
+    String nextId = ids.get(Math.floorMod(currentIndex + (isNext ? 1 : -1), ids.size()));
+    prefs.edit().putString(VoiceProfiles.PREF_ACTIVE, nextId).apply();
 
-    int currentIndex = engines.indexOf(FailoverTextToSpeech.getSelectedEngine(context));
-    int nextIndex =
-        (currentIndex < 0)
-            ? (isNext ? 0 : engines.size() - 1)
-            : Math.floorMod(currentIndex + (isNext ? 1 : -1), engines.size());
-    String nextEngine = engines.get(nextIndex);
-    prefs.edit().putString(context.getString(R.string.pref_tts_engine_key), nextEngine).apply();
-
-    String displayText = FailoverTextToSpeech.getEngineDisplayName(context, nextEngine);
+    String displayText = VoiceProfilesFragment.nameOf(context, prefs, nextId);
     announceSetting(eventId, displayText, getSelectSettingGestures());
     showQuickMenuActionOverlay(eventId, displayText);
   }
 
   /** Changes to the previous or next installed language. */
   private void changeLanguage(EventId eventId, boolean isNext) {
+    // The reading control is hidden while a voice profile is in use, but it stays selected if the
+    // profile was chosen in settings.
+    if (VoiceProfiles.isProfileActive()) {
+      String displayText = context.getString(R.string.spoken_language_unavailable_with_profile);
+      announceSetting(eventId, displayText, getSelectSettingGestures());
+      showQuickMenuActionOverlay(eventId, displayText);
+      return;
+    }
     pipeline.returnFeedback(eventId, Feedback.language(isNext ? NEXT_LANGUAGE : PREVIOUS_LANGUAGE));
     announceSetting(
         eventId,

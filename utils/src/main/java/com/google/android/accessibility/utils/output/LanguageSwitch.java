@@ -29,7 +29,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * Decides whether speech follows the language an app marks text as. Switching to another
  * language, such as German for a British English voice, and switching to another country's form
- * of the voice's own language, such as US English, are turned off separately.
+ * of the voice's own language, such as US English, are turned off separately. A voice profile
+ * speaks everything in its own voice, so speech never switches while one is in use.
  */
 public final class LanguageSwitch {
 
@@ -65,6 +66,9 @@ public final class LanguageSwitch {
 
   /** Returns the language to speak text marked as {@code marked} in, by the switches. */
   static @Nullable Locale localeToSpeak(@Nullable Locale marked) {
+    if (VoiceProfiles.isProfileActive()) {
+      return null;
+    }
     Locale chosen = chosenLanguage;
     return localeToSpeak(
         marked, chosen, chosen != null ? chosen : voiceLanguage, switchLanguages, switchDialects);
@@ -96,16 +100,25 @@ public final class LanguageSwitch {
    * Returns {@code text} marked with the languages speech will use. Text is split into separate
    * utterances wherever its language marks change, and each split adds a pause, so a change that
    * the switches turn off must not leave a mark behind. Returns {@code text} itself when both
-   * switches are on or it has no language marks, otherwise a copy with its other spans kept.
+   * switches are on or it has no language marks, otherwise a copy with its other spans kept. With a
+   * voice profile in use, the copy has no language marks at all.
    */
   static Spannable markSpokenLanguages(Spannable text) {
-    if (switchLanguages && switchDialects) {
+    boolean profile = VoiceProfiles.isProfileActive();
+    if (switchLanguages && switchDialects && !profile) {
       return text;
     }
     int length = text.length();
     LocaleSpan[] marks = text.getSpans(0, length, LocaleSpan.class);
     if (marks.length == 0) {
       return text;
+    }
+    if (profile) {
+      Spannable unmarked = new SpannableString(text);
+      for (LocaleSpan mark : marks) {
+        unmarked.removeSpan(mark);
+      }
+      return unmarked;
     }
     List<Run> marked = new ArrayList<>();
     for (int start = 0, end; start < length; start = end) {
