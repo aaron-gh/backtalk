@@ -224,6 +224,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
               if (!name.isEmpty()) {
                 prefs.edit().putString(VoiceProfiles.key(id, VoiceProfiles.NAME), name).apply();
                 namePref.setSummary(name);
+                requireActivity().setTitle(name);
               }
             })
         .setNegativeButton(android.R.string.cancel, null)

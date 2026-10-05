@@ -63,6 +63,12 @@
     <string name="title_pref_voice_profiles">Voice profiles</string>
     <!-- Name of the voice profile that uses the text-to-speech settings. It can't be removed. [CHAR LIMIT=NONE] -->
     <string name="voice_profile_default">Backtalk default</string>
+    <!--
+      Summary under Voice profiles in the text-to-speech settings, naming the voice profile in use.
+      Shown only while one is, as the other text-to-speech settings then don't change how it sounds.
+      [CHAR LIMIT=NONE]
+    -->
+    <string name="voice_profile_in_use">In use: <xliff:g id="name" example="Reading">%1$s</xliff:g></string>
     <!-- Title for the setting that chooses the voice profile in use. [CHAR LIMIT=NONE] -->
     <string name="title_pref_voice_profile_in_use">Voice profile in use</string>
     <!-- Title for the button that adds a voice profile. [CHAR LIMIT=NONE] -->
