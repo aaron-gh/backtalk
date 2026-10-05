@@ -21,6 +21,8 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
+import android.os.Handler
+import android.os.Looper
 import android.os.Process
 import android.os.SystemClock
 import com.google.android.libraries.accessibility.utils.log.LogUtils
@@ -48,6 +50,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
   val sampleRate: Int
 
   private val burstFrames: Int
+  private val mainHandler = Handler(Looper.getMainLooper())
   private val lock = java.lang.Object()
   private val clips = ArrayList<PlayingClip>()
   private val streams = ArrayDeque<SpeechStream>()
@@ -64,10 +67,17 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
   @Volatile private var lastWrite = 0L
   // Set by the watchdog when the track has taken no audio for WRITE_STUCK_MS.
   @Volatile private var remakeTrack = false
+  // Whether the track has the fast path, and its underrun count when its buffer was last sized.
+  @Volatile private var fastPath = false
+  @Volatile private var underruns = 0
   // The watchdog's checks, scheduled only while the audio thread runs.
   private var watchdog: ScheduledFuture<*>? = null
   private var thread: Thread? = null
   private var idleFrames = 0
+  // Whether the track has audio queued since it last paused. Without the fast path, it pauses as
+  // soon as its audio has been heard, after silentFrames of silence.
+  private var primed = false
+  private var silentFrames = 0
   // While held, speech streams keep what they have and keep receiving audio, but do not play.
   private var held = false
   // Whether this hold has filled up already, so it is reported once.
@@ -281,6 +291,13 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     /** Frames written and not yet played. */
     internal fun pendingFrames(): Long = framesWritten - framesPlayed
 
+    /** Whether the engine finished making the audio. */
+    internal val isEnded: Boolean
+      get() = ended
+
+    /** How long since the engine last gave this stream anything, at [now]. */
+    internal fun quietFor(now: Long): Long = now - lastActivity
+
     /** Mixes this stream's next frames into [out], and returns whether it has more to play. */
     internal fun mixInto(out: FloatArray, frames: Int): Boolean {
       var written = 0
@@ -429,6 +446,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
       } else {
         // The audio thread releases the track as it ends.
         interrupt(track)
+        lock.notifyAll()
       }
     }
   }
@@ -436,6 +454,8 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
   /** Starts the audio thread and its watchdog if they are not running. Called with [lock] held. */
   private fun wake() {
     idleFrames = 0
+    // A thread waiting for speech carries on with it.
+    lock.notifyAll()
     if (thread != null || released || broken) return
     lastWrite = SystemClock.uptimeMillis()
     remakeTrack = false
@@ -497,6 +517,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
         track = null
       } else {
         interrupt(track)
+        lock.notifyAll()
       }
     }
   }
@@ -514,15 +535,41 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
           return
         }
         output = current
-        buffer.fill(0f)
-        mix(buffer)
+        if (!fastPath) {
+          // Silence queued without the fast path would delay the next sound by the whole buffer, so
+          // silence plays only until the audio before it has been heard. Then the track pauses.
+          val audible = hasAudio()
+          if (primed && !audible && silentFrames >= output.bufferSizeInFrames) pauseAndFlush(output)
+          if (!primed && !readyToStart(output)) {
+            if (idle) {
+              end(current)
+              return
+            }
+            // Speech waiting for the engine. The thread stays, so the watchdog can drop a stall.
+            lastWrite = SystemClock.uptimeMillis()
+            lock.wait(REST_MS)
+            continue
+          }
+          buffer.fill(0f)
+          mix(buffer)
+          // A stream that ended with nothing left finishes without starting the track.
+          if (!primed && !audible) continue
+          silentFrames = if (audible) 0 else silentFrames + burstFrames
+        } else {
+          buffer.fill(0f)
+          mix(buffer)
+        }
+        primed = true
         if (idle) idleFrames += burstFrames
       }
       if (!remakeTrack && play(output) && write(output, buffer)) continue
       if (released || broken) continue
       // Android stopped taking audio on this track, such as after its output changed. Make a new
       // one, or play the usual way from now on.
-      synchronized(lock) { track = null }
+      synchronized(lock) {
+        track = null
+        primed = false
+      }
       output.release()
       val fresh = createTrack()
       synchronized(lock) {
@@ -543,17 +590,46 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     watchdog = null
     if (released || broken) {
       track = null
+      primed = false
       output?.release()
       return
     }
+    if (output != null) pauseAndFlush(output)
+  }
+
+  /** Pauses the track and drops what it has queued. Called with [lock] held. */
+  private fun pauseAndFlush(output: AudioTrack) {
+    primed = false
     try {
-      if (output?.playState == AudioTrack.PLAYSTATE_PLAYING) {
+      if (output.playState == AudioTrack.PLAYSTATE_PLAYING) {
         output.pause()
         output.flush()
       }
     } catch (e: IllegalStateException) {
       // Released already.
     }
+  }
+
+  /** Whether the next burst has any sound or speech in it. Called with [lock] held. */
+  private fun hasAudio(): Boolean {
+    if (clips.isNotEmpty()) return true
+    val head = if (held) null else streams.peekFirst()
+    return head != null && head.pendingFrames() > 0
+  }
+
+  /**
+   * Whether there is enough to start the paused track on without the fast path, which waits for a
+   * full buffer before it plays: a sound, which is all there at once, or speech that fills the
+   * buffer, has ended, or has stopped coming for REST_MS. Called with [lock] held.
+   */
+  private fun readyToStart(output: AudioTrack): Boolean {
+    if (clips.isNotEmpty()) return true
+    if (held) return false
+    val head = streams.peekFirst() ?: return false
+    val pending = head.pendingFrames()
+    return head.isEnded ||
+      pending >= output.bufferSizeInFrames ||
+      (pending > 0 && head.quietFor(SystemClock.uptimeMillis()) >= REST_MS)
   }
 
   private fun play(output: AudioTrack): Boolean =
@@ -578,6 +654,11 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
       }
     if (count != buffer.size) return false
     lastWrite = SystemClock.uptimeMillis()
+    try {
+      keepUp(output)
+    } catch (e: IllegalStateException) {
+      return false
+    }
     return true
   }
 
@@ -631,26 +712,64 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
         .setBufferSizeInBytes(minBytes)
         .build()
         .also {
-          // Two bursts queued at most, so new sound waits no longer than that.
-          it.setBufferSizeInFrames(burstFrames * QUEUED_BURSTS)
-          LogUtils.d(
-            TAG,
-            "Track at %d Hz, %d frames, low latency=%b",
-            sampleRate,
-            it.bufferSizeInFrames,
-            it.performanceMode == AudioTrack.PERFORMANCE_MODE_LOW_LATENCY,
-          )
+          fitBuffer(it)
+          // Moving to another output, such as Bluetooth, can lose or gain the fast path.
+          it.addOnRoutingChangedListener({ routed -> fitBuffer(routed as AudioTrack) }, mainHandler)
         }
     } catch (e: RuntimeException) {
       LogUtils.e(TAG, "Cannot create a low-latency track: %s", e)
       null
     }
 
+  /**
+   * Queues two bursts at most on the fast path, so new sound waits no longer than that. Other
+   * outputs, such as Bluetooth, mix a much larger period at a time, so the buffer starts at
+   * SLOW_BUFFER_MS there and grows in [keepUp] until the mixer stops running short.
+   */
+  private fun fitBuffer(output: AudioTrack) {
+    try {
+      val fast = output.performanceMode == AudioTrack.PERFORMANCE_MODE_LOW_LATENCY
+      output.setBufferSizeInFrames(
+        if (fast) burstFrames * QUEUED_BURSTS else sampleRate * SLOW_BUFFER_MS / 1000
+      )
+      underruns = output.underrunCount
+      fastPath = fast
+      LogUtils.d(
+        TAG,
+        "Track at %d Hz, %d frames, low latency=%b",
+        sampleRate,
+        output.bufferSizeInFrames,
+        fast,
+      )
+    } catch (e: IllegalStateException) {
+      // Released already.
+    }
+  }
+
+  /**
+   * Doubles the buffer after the mixer ran short, which otherwise crackles and slows audio down.
+   * A full buffer delays new sound by its length, so it grows only as far as it has to.
+   */
+  private fun keepUp(output: AudioTrack) {
+    if (fastPath) return
+    val count = output.underrunCount
+    if (count <= underruns) return
+    underruns = count
+    val size = output.bufferSizeInFrames
+    if (size >= output.bufferCapacityInFrames) return
+    output.setBufferSizeInFrames(minOf(size * 2, output.bufferCapacityInFrames))
+    LogUtils.d(TAG, "Track ran short, now %d frames", output.bufferSizeInFrames)
+  }
+
   companion object {
     private const val TAG = "LowLatencyAudio"
     private const val DEFAULT_RATE = 48_000
     private const val DEFAULT_BURST = 192
     private const val QUEUED_BURSTS = 2
+    // Two periods of a typical mixer without the fast path.
+    private const val SLOW_BUFFER_MS = 40
+    // How long the audio thread waits for the engine's speech at a time, well within WRITE_STUCK_MS.
+    private const val REST_MS = 100L
     private const val IDLE_MS = 2_000
     // How long the callback thread is kept with nothing to do.
     private const val THREAD_KEEP_ALIVE_MS = 5_000L
