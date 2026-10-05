@@ -23,7 +23,7 @@ android {
         versionCode = backtalkVersionCodeBase + gitCommitCount
         versionName = talkbackVersionName + "-" + BUILD_TIMESTAMP
         minSdk = 26
-        targetSdk = 30
+        targetSdk = 36
         testInstrumentationRunner = 'android.test.InstrumentationTestRunner'
         multiDexEnabled = true
     }
