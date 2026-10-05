@@ -186,6 +186,26 @@ public final class VoiceProfiles {
     return id;
   }
 
+  /**
+   * Saves the order of the profiles. IDs that aren't profiles are left out, and profiles missing
+   * from {@code order} keep their place after the others.
+   */
+  public static void setOrder(SharedPreferences prefs, List<String> order) {
+    List<String> ids = ids(prefs);
+    List<String> ordered = new ArrayList<>();
+    for (String id : order) {
+      if (ids.contains(id) && !ordered.contains(id)) {
+        ordered.add(id);
+      }
+    }
+    for (String id : ids) {
+      if (!ordered.contains(id)) {
+        ordered.add(id);
+      }
+    }
+    prefs.edit().putString(PREF_IDS, String.join(",", ordered)).apply();
+  }
+
   /** Removes profile {@code id}, going back to Backtalk's default if it is in use. */
   public static void delete(SharedPreferences prefs, String id) {
     List<String> ids = ids(prefs);

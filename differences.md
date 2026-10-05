@@ -110,7 +110,9 @@ In TalkBack, **Text-to-speech** opens Android's system speech settings. Backtalk
 
 A voice profile is a set of speech settings that you can switch to at once: a speech engine, language, voice, volume, rate and pitch, and **Send long text a sentence at a time**. For example, one profile can read books in a slower voice while **Backtalk default** stays fast. To add one, go to **Text-to-speech** > **Voice profiles** and choose **Add voice profile**. When you choose a language, the voice list shows only the engine's voices in that language.
 
-To switch profiles, swipe up or down with the **Voice profile** reading control, or choose **Voice profile in use** on the **Voice profiles** screen. The **Voice profile** reading control replaces TalkBack's **Speech engine** reading control. It isn't in the reading controls by default. To add it, go to **Reading controls**.
+The reading control goes through the profiles in the order of the **Voice profiles** screen, after **Backtalk default**. To change the order, hold a profile and drag it, or use the **Move up** and **Move down** actions. Backtalk says which profile it moved above or below. Profiles also have **Rename** and **Delete** actions, which a long press shows too.
+
+To switch profiles, swipe up or down with the **Voice profile** reading control, or choose **Voice profile in use** on the **Voice profiles** screen. The **Voice profile** reading control replaces the **Speech engine** reading control. It isn't in the reading controls by default. To add it, go to **Reading controls**.
 
 **Backtalk default** is always there, and uses the rest of the text-to-speech settings. While a profile is in use, changing the speech rate or pitch with gestures or the reading controls changes that profile only. The profile speaks everything in its own voice: Backtalk doesn't switch language or dialect, and the **Spoken language** reading control and menu item are hidden.
 
