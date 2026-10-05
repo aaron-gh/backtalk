@@ -261,14 +261,14 @@ public class BrailleImePreferencesActivity extends PreferencesActivity {
       }
 
       {
-        // Tablet held sideways faces away preference.
-        SwitchPreferenceCompat tabletSidewaysFacesAwayPref =
-            findPreference(getString(R.string.pref_brailleime_tablet_sideways_faces_away));
-        tabletSidewaysFacesAwayPref.setChecked(
-            BrailleUserPreferences.readTabletSidewaysFacesAway(getContext()));
-        tabletSidewaysFacesAwayPref.setOnPreferenceClickListener(
+        // Tablet held up faces away preference.
+        SwitchPreferenceCompat tabletHeldUpFacesAwayPref =
+            findPreference(getString(R.string.pref_brailleime_tablet_held_up_faces_away));
+        tabletHeldUpFacesAwayPref.setChecked(
+            BrailleUserPreferences.readTabletHeldUpFacesAway(getContext()));
+        tabletHeldUpFacesAwayPref.setOnPreferenceClickListener(
             preference -> {
-              BrailleUserPreferences.writeTabletSidewaysFacesAway(
+              BrailleUserPreferences.writeTabletHeldUpFacesAway(
                   getContext(), ((SwitchPreferenceCompat) preference).isChecked());
               return true;
             });

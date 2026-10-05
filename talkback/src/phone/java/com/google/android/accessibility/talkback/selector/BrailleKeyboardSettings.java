@@ -24,10 +24,10 @@ final class BrailleKeyboardSettings {
 
   private BrailleKeyboardSettings() {}
 
-  /** Turns "Tablet held sideways faces away" on or off, and returns its new value. */
-  static boolean toggleTabletSidewaysFacesAway(Context context) {
-    boolean facesAway = !BrailleUserPreferences.readTabletSidewaysFacesAway(context);
-    BrailleUserPreferences.writeTabletSidewaysFacesAway(context, facesAway);
+  /** Turns "Tablet held up faces away" on or off, and returns its new value. */
+  static boolean toggleTabletHeldUpFacesAway(Context context) {
+    boolean facesAway = !BrailleUserPreferences.readTabletHeldUpFacesAway(context);
+    BrailleUserPreferences.writeTabletHeldUpFacesAway(context, facesAway);
     return facesAway;
   }
 }

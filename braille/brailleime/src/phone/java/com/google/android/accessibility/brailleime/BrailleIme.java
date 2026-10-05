@@ -210,8 +210,8 @@ public class BrailleIme extends InputMethodService {
   private Thread.UncaughtExceptionHandler originalDefaultUncaughtExceptionHandler;
   private OrientationMonitor.Callback orientationCallbackDelegate;
 
-  /** The "Tablet held sideways faces away" setting, kept here as it is read for every reading. */
-  private boolean tabletSidewaysFacesAway = true;
+  /** The "Tablet held up faces away" setting, kept here as it is read for every reading. */
+  private boolean tabletHeldUpFacesAway = true;
 
   /** How the device was held when the user last heard where the charging port is. */
   private OrientationMonitor.Orientation knownPortSide = OrientationMonitor.Orientation.UNKNOWN;
@@ -340,7 +340,7 @@ public class BrailleIme extends InputMethodService {
     OrientationMonitor.init(this);
     flatTurnDetector = new FlatTurnDetector(this, this::onTurnedFlat);
     layoutOrientator = new LayoutOrientator(this, layoutOrientatorCallback);
-    tabletSidewaysFacesAway = BrailleUserPreferences.readTabletSidewaysFacesAway(this);
+    tabletHeldUpFacesAway = BrailleUserPreferences.readTabletHeldUpFacesAway(this);
 
     if (talkBackForBrailleIme != null) {
       talkBackForBrailleIme.setBrailleImeForTalkBack(brailleImeForTalkBack);
@@ -968,13 +968,12 @@ public class BrailleIme extends InputMethodService {
 
         @Override
         public boolean uprightFacesUser() {
-          if (tabletSidewaysFacesAway) {
-            return false;
-          }
-          OrientationMonitor.Orientation held = HeldOrientationTracker.getLastHeld();
-          return (held == OrientationMonitor.Orientation.LANDSCAPE
-                  || held == OrientationMonitor.Orientation.REVERSE_LANDSCAPE)
-              && heldFacingUser(heldPortPosition(held));
+          // Checked first, so that with the setting on nothing more is done for each reading.
+          return !tabletHeldUpFacesAway
+              && DotsOrientation.heldFacingUser(
+                  HeldOrientationTracker.getLastHeld(),
+                  BrailleUtils.isPhoneSizedDevice(getResources()),
+                  tabletHeldUpFacesAway);
         }
 
         @Override
@@ -1260,24 +1259,26 @@ public class BrailleIme extends InputMethodService {
     return DotsOrientation.heldPortPosition(orientation, phone);
   }
 
-  /**
-   * Whether a device held with the port here, seen from behind, is taken to face the user: see
-   * {@link DotsOrientation#heldFacingUser}.
-   */
-  private boolean heldFacingUser(@Nullable PortPosition fromBehind) {
-    return DotsOrientation.heldFacingUser(
-        fromBehind, BrailleUtils.isPhoneSizedDevice(getResources()), tabletSidewaysFacesAway);
-  }
-
   /** Says the screen is toward the user, and where the charging port is when that is known. */
   private String getFacingAnnouncement() {
-    PortPosition position = keyboardView.getTabletopPortPosition();
+    PortPosition position = getUprightPortPosition();
     return getString(
-        position == PortPosition.LEFT
-            ? R.string.screen_toward_port_left_announcement
-            : position == PortPosition.RIGHT
-                ? R.string.screen_toward_port_right_announcement
-                : R.string.screen_toward_announcement);
+        position == null
+            ? R.string.screen_toward_announcement
+            : switch (position) {
+              case LEFT -> R.string.screen_toward_port_left_announcement;
+              case RIGHT -> R.string.screen_toward_port_right_announcement;
+              case DOWN -> R.string.screen_toward_port_down_announcement;
+              case UP -> R.string.screen_toward_port_up_announcement;
+              case NEAR, FAR -> R.string.screen_toward_announcement;
+            });
+  }
+
+  /** Where the charging port is on a tablet standing up facing the user, or null if not known. */
+  @Nullable
+  private PortPosition getUprightPortPosition() {
+    PortPosition tabletop = keyboardView.getTabletopPortPosition();
+    return tabletop == null ? null : DotsOrientation.uprightPortPosition(tabletop);
   }
 
   /**
@@ -1291,7 +1292,7 @@ public class BrailleIme extends InputMethodService {
         || isOrientationLocked()) {
       return;
     }
-    PortPosition position = keyboardView.getTabletopPortPosition();
+    PortPosition position = getUprightPortPosition();
     if (position != null) {
       BrailleCommonTalkBackSpeaker.getInstance()
           .speak(getPortAnnouncement(position), TalkBackSpeaker.AnnounceType.INTERRUPT);
@@ -1780,9 +1781,9 @@ public class BrailleIme extends InputMethodService {
               keyboardView.refreshInputView();
             }
             refreshEditBufferAndBrailleDisplay();
-          } else if (key.equals(getString(R.string.pref_brailleime_tablet_sideways_faces_away))) {
-            tabletSidewaysFacesAway =
-                BrailleUserPreferences.readTabletSidewaysFacesAway(BrailleIme.this);
+          } else if (key.equals(getString(R.string.pref_brailleime_tablet_held_up_faces_away))) {
+            tabletHeldUpFacesAway =
+                BrailleUserPreferences.readTabletHeldUpFacesAway(BrailleIme.this);
           } else if (key.equals(getString(R.string.pref_braille_contracted_mode))) {
             boolean contractedMode = BrailleUserPreferences.readContractedMode(BrailleIme.this);
             if (BrailleUserPreferences.readCurrentActiveInputCodeAndCorrect(BrailleIme.this)
