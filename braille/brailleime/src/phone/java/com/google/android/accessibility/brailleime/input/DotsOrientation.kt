@@ -193,39 +193,45 @@ object DotsOrientation {
    * with the charging port to the left or right was held from behind, and tipping it flat keeps the
    * port on the same side of the user, so the user is at the opposite edge. Held with the port down
    * or up, the user most likely opened the keyboard facing the screen in portrait. When
-   * [sidewaysFacesAway] is off, a tablet held sideways is taken to face the user too, as when it
-   * stood on a stand. Only call it for a tablet whose port is at the bottom of the screen in its
-   * natural orientation.
+   * [heldUpFacesAway] is off, a tablet held up is always taken to face the user, as when it stood on
+   * a stand. Only call it for a tablet whose port is at the bottom of the screen in its natural
+   * orientation.
    */
   @JvmStatic
   fun tabletTabletopRotation(
     heldRotation: Int,
     held: Orientation,
     fromScreenAway: Boolean,
-    sidewaysFacesAway: Boolean,
+    heldUpFacesAway: Boolean,
   ): Int {
     val port = heldPortPosition(held, phone = false)
     val heldFromBehind =
-      sidewaysFacesAway &&
+      heldUpFacesAway &&
         fromScreenAway &&
         (port == PortPosition.LEFT || port == PortPosition.RIGHT)
     return if (heldFromBehind) turnRotation(heldRotation, 2) else heldRotation
   }
 
   /**
-   * Whether a device held up like this is taken to face the user rather than be held from behind:
-   * a tablet held sideways when [sidewaysFacesAway] is off. [heldFromBehind] is where the port is
-   * seen from behind the screen, as [heldPortPosition] says.
+   * Whether a device held up like this is taken to face the user rather than face away: a tablet
+   * held up any way round when [heldUpFacesAway] is off. Then it uses the tabletop layout, as the
+   * user types on the front of the screen with the thumbs holding the edge nearest the floor.
    */
   @JvmStatic
-  fun heldFacingUser(
-    heldFromBehind: PortPosition?,
-    phone: Boolean,
-    sidewaysFacesAway: Boolean,
-  ): Boolean =
-    !phone &&
-      !sidewaysFacesAway &&
-      (heldFromBehind == PortPosition.LEFT || heldFromBehind == PortPosition.RIGHT)
+  fun heldFacingUser(held: Orientation, phone: Boolean, heldUpFacesAway: Boolean): Boolean =
+    !phone && !heldUpFacesAway && held != Orientation.UNKNOWN
+
+  /**
+   * Where the charging port is on a tablet standing up facing the user, from where it would be with
+   * the tablet lying flat at the same rotation: the edge toward the user is the one pointing down.
+   */
+  @JvmStatic
+  fun uprightPortPosition(tabletop: PortPosition): PortPosition =
+    when (tabletop) {
+      PortPosition.NEAR -> PortPosition.DOWN
+      PortPosition.FAR -> PortPosition.UP
+      else -> tabletop
+    }
 
   /** A phone's orientation lock for the charging port on this side. */
   @JvmStatic

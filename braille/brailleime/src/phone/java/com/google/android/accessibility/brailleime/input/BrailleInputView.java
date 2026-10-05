@@ -505,7 +505,7 @@ public class BrailleInputView extends View
                 held,
                 HeldOrientationTracker.getLastHeld(),
                 fromScreenAway,
-                BrailleUserPreferences.readTabletSidewaysFacesAway(getContext()));
+                BrailleUserPreferences.readTabletHeldUpFacesAway(getContext()));
       } else {
         tabletopRotation = held;
       }

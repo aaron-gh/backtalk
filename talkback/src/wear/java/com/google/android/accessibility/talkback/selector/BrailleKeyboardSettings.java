@@ -24,7 +24,7 @@ final class BrailleKeyboardSettings {
   private BrailleKeyboardSettings() {}
 
   /** Never reached, as the reading control is hidden on watches. Returns the default. */
-  static boolean toggleTabletSidewaysFacesAway(Context context) {
+  static boolean toggleTabletHeldUpFacesAway(Context context) {
     return true;
   }
 }
