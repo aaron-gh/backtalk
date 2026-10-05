@@ -1041,6 +1041,19 @@ public class FailoverTextToSpeech {
       synchronized (ttsLock) {
         cachedTtsLocale = null;
         mLastUtteranceLocale = null;
+        if (profile == null) {
+          // Backtalk default sets only a language, which can fail, so start from the engine's own
+          // voice rather than keep the profile's.
+          try {
+            Voice engineDefault = tts.getDefaultVoice();
+            if (engineDefault != null) {
+              tts.setVoice(engineDefault);
+            }
+          } catch (RuntimeException e) {
+            // The engine may have stopped.
+            LogUtils.e(TAG, "Failed to reset the voice: %s", e.toString());
+          }
+        }
       }
       localeInUse = ensureSupportedLocale();
     }
