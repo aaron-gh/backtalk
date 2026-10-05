@@ -1006,6 +1006,9 @@ public class FailoverTextToSpeech {
     LanguageSwitch.setVoiceLanguage(mDefaultLocale != null ? mDefaultLocale : mSystemLocale);
   }
 
+  /** The current engine's voices, for {@link #findVoice}, or null until they're needed. */
+  private @Nullable Set<Voice> engineVoices;
+
   /** Whether long text is sent a sentence at a time, by the voice profile in use if any. */
   private boolean speaksInPhrases() {
     VoiceProfile profile = VoiceProfiles.active();
@@ -1084,20 +1087,39 @@ public class FailoverTextToSpeech {
     return null;
   }
 
-  /** Returns the current engine's voice called {@code name}, or null if it has none. */
+  /**
+   * Returns the current engine's voice called {@code name}, or null if it has none. The engine's
+   * voices are kept from the last time they were needed, as listing them is slow, and listed again
+   * only if the voice isn't there, as it may have been installed since. Call with {@link #ttsLock}.
+   */
   private @Nullable Voice findVoice(String name) {
     if (name.isEmpty()) {
       return null;
     }
-    Set<Voice> voices = tts.getVoices();
+    boolean listed = false;
+    if (engineVoices == null) {
+      engineVoices = tts.getVoices();
+      listed = true;
+    }
+    Voice voice = findVoice(engineVoices, name);
+    if (voice == null && !listed) {
+      engineVoices = tts.getVoices();
+      voice = findVoice(engineVoices, name);
+    }
+    if (voice == null) {
+      LogUtils.w(TAG, "Voice %s is not installed", name);
+    }
+    return voice;
+  }
+
+  private static @Nullable Voice findVoice(@Nullable Set<Voice> voices, String name) {
     if (voices != null) {
       for (Voice voice : voices) {
-        if (name.equals(voice.getName())) {
+        if (voice != null && name.equals(voice.getName())) {
           return voice;
         }
       }
     }
-    LogUtils.w(TAG, "Voice %s is not installed", name);
     return null;
   }
 
@@ -2013,6 +2035,7 @@ public class FailoverTextToSpeech {
 
     synchronized (ttsLock) {
       cachedTtsLocale = null;
+      engineVoices = null;
     }
 
     if (status != TextToSpeech.SUCCESS) {

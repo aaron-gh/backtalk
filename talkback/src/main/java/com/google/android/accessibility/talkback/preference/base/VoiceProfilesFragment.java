@@ -21,6 +21,7 @@ import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.view.HapticFeedbackConstants;
@@ -56,14 +57,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * The voice profiles: the one in use, then Backtalk default and each profile in the order the
  * reading control goes through them, then a way to add one. A profile opens its settings when
  * tapped. It can be moved, renamed and deleted with actions from a screen reader, or renamed and
- * deleted from the menu that a long press shows. Holding a profile and dragging it moves it. Nothing
- * moves above Backtalk default, which uses the text-to-speech settings.
+ * deleted from the menu that a long press shows. Holding a profile and dragging it moves it.
+ * Nothing moves above Backtalk default, which uses the text-to-speech settings.
  */
 public class VoiceProfilesFragment extends TalkbackBaseFragment {
 
   private SharedPreferences prefs;
   private AccessibilitySuiteListPreference inUse;
-  private final ProfilesAdapter profiles = new ProfilesAdapter();
+  private ProfilesAdapter profiles = new ProfilesAdapter();
 
   @Override
   public CharSequence getTitle() {
@@ -93,10 +94,14 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
 
   /**
    * The profile rows aren't preferences: the preference list redraws itself a moment after any
-   * change, which would end a drag part way through.
+   * change, which would end a drag part way through. Each list gets its own row adapter, since an
+   * adapter keeps every list it was joined to, and the list is made again each time this screen
+   * comes back from a profile's settings.
    */
   @Override
   protected RecyclerView.Adapter onCreateAdapter(PreferenceScreen preferenceScreen) {
+    profiles = new ProfilesAdapter();
+    profiles.reload();
     return new ConcatAdapter(super.onCreateAdapter(preferenceScreen), profiles);
   }
 
@@ -188,6 +193,8 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
     EditText field = new EditText(context);
     field.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
     field.setSingleLine(true);
+    field.setFilters(
+        new InputFilter[] {new InputFilter.LengthFilter(VoiceProfiles.MAX_NAME_LENGTH)});
     field.setText(name);
     field.selectAll();
     new AlertDialog.Builder(context)
@@ -205,7 +212,8 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
   private void add(String name) {
     Context context = requireContext();
     String engine = FailoverTextToSpeech.getSelectedEngine(context);
-    List<String> installed = FailoverTextToSpeech.getInstalledTtsEngines(context.getPackageManager());
+    List<String> installed =
+        FailoverTextToSpeech.getInstalledTtsEngines(context.getPackageManager());
     if ((engine == null || !installed.contains(engine)) && !installed.isEmpty()) {
       engine = installed.get(0);
     }
@@ -241,7 +249,8 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
               VoiceProfiles.delete(prefs, id);
               profiles.remove(id);
               updateInUse();
-              getListView().announceForAccessibility(getString(R.string.voice_profile_deleted, name));
+              getListView()
+                  .announceForAccessibility(getString(R.string.voice_profile_deleted, name));
             })
         .setNegativeButton(android.R.string.cancel, null)
         .show();
@@ -356,7 +365,8 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
       Context context = parent.getContext();
       int layout = new AccessibilitySuitePreference(context).getLayoutResource();
       RowHolder holder =
-          new RowHolder(LayoutInflater.from(context).inflate(layout, parent, /* attachToRoot= */ false));
+          new RowHolder(
+              LayoutInflater.from(context).inflate(layout, parent, /* attachToRoot= */ false));
       holder.itemView.setOnClickListener(
           view -> {
             int position = holder.getBindingAdapterPosition();
@@ -485,7 +495,9 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
     @Override
     public int getMovementFlags(
         @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder holder) {
-      return isProfile(holder) ? makeMovementFlags(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) : 0;
+      return isProfile(holder)
+          ? makeMovementFlags(ItemTouchHelper.UP | ItemTouchHelper.DOWN, /* swipeFlags= */ 0)
+          : 0;
     }
 
     @Override

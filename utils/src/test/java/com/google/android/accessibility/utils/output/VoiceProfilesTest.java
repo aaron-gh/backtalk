@@ -94,6 +94,31 @@ public class VoiceProfilesTest {
   }
 
   @Test
+  public void damagedSettingsGiveDefaultsInsteadOfCrashing() {
+    String id = create("Reading", "e");
+    prefs.values.put(VoiceProfiles.key(id, VoiceProfiles.NAME), Boolean.TRUE);
+    prefs.values.put(VoiceProfiles.key(id, VoiceProfiles.PHRASES), "yes");
+    prefs.values.put(VoiceProfiles.key(id, VoiceProfiles.RATE), "NaN");
+    prefs.values.put(VoiceProfiles.key(id, VoiceProfiles.PITCH), "0");
+    prefs.values.put(VoiceProfiles.key(id, VoiceProfiles.VOLUME), "5000");
+    prefs.values.put(VoiceProfiles.PREF_ACTIVE, 7);
+
+    VoiceProfile profile = VoiceProfiles.read(prefs, id);
+    assertEquals("", profile.name());
+    assertFalse(profile.phrases());
+    assertEquals(1f, profile.rate(), 0f);
+    assertEquals(0.2f, profile.pitch(), 0f);
+    assertEquals(100, profile.volume());
+    assertEquals("", VoiceProfiles.activeId(prefs));
+  }
+
+  @Test
+  public void longNamesAreCut() {
+    String id = create("x".repeat(500), "e");
+    assertEquals(VoiceProfiles.MAX_NAME_LENGTH, VoiceProfiles.read(prefs, id).name().length());
+  }
+
+  @Test
   public void aMissingProfileInUseMeansTheDefault() {
     prefs.edit().putString(VoiceProfiles.PREF_ACTIVE, "7").apply();
     assertEquals("", VoiceProfiles.activeId(prefs));
