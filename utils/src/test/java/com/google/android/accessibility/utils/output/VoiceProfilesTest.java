@@ -113,6 +113,16 @@ public class VoiceProfilesTest {
   }
 
   @Test
+  public void blankNamesAreNeverSaved() {
+    String id = create("Reading", "e");
+    assertFalse(VoiceProfiles.rename(prefs, id, ""));
+    assertFalse(VoiceProfiles.rename(prefs, id, "   "));
+    assertEquals("Reading", VoiceProfiles.read(prefs, id).name());
+    assertTrue(VoiceProfiles.rename(prefs, id, "  Books "));
+    assertEquals("Books", VoiceProfiles.read(prefs, id).name());
+  }
+
+  @Test
   public void longNamesAreCut() {
     String id = create("x".repeat(500), "e");
     assertEquals(VoiceProfiles.MAX_NAME_LENGTH, VoiceProfiles.read(prefs, id).name().length());

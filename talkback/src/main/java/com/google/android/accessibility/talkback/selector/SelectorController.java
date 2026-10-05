@@ -101,6 +101,7 @@ import com.google.android.accessibility.talkback.monitor.VolumeMonitor;
 import com.google.android.accessibility.talkback.monitor.VolumeMonitor.VolumeChangedListener;
 import com.google.android.accessibility.talkback.preference.base.FocusDelayPrefFragment;
 import com.google.android.accessibility.talkback.preference.base.TypingFocusDelayPrefFragment;
+import com.google.android.accessibility.talkback.preference.base.VoiceProfilesFragment;
 import com.google.android.accessibility.talkback.selector.SelectorController.Setting.DescriptionAndHint;
 import com.google.android.accessibility.talkback.utils.VerbosityPreferences;
 import com.google.android.accessibility.utils.FeatureSupport;
@@ -1998,11 +1999,7 @@ public class SelectorController implements UserInputEventListener {
     String displayText =
         nextId.isEmpty()
             ? context.getString(R.string.voice_profile_default)
-            : VoiceProfiles.read(prefs, nextId).name();
-    if (displayText.isEmpty()) {
-      // Names can't be cleared, but a damaged setting must not leave the switch silent.
-      displayText = context.getString(R.string.title_selector_voice_profile);
-    }
+            : VoiceProfilesFragment.nameOf(context, VoiceProfiles.read(prefs, nextId));
     announceSetting(eventId, displayText, getSelectSettingGestures());
     showQuickMenuActionOverlay(eventId, displayText);
   }

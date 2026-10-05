@@ -168,8 +168,8 @@ public final class VoiceProfiles {
   }
 
   /**
-   * Adds a profile called {@code name}, speaking with {@code engine} and otherwise like Backtalk's
-   * default, and returns its ID.
+   * Adds a profile called {@code name}, which must not be blank, speaking with {@code engine} and
+   * otherwise like Backtalk's default, and returns its ID.
    */
   public static String create(
       SharedPreferences prefs,
@@ -220,6 +220,23 @@ public final class VoiceProfiles {
       }
     }
     prefs.edit().putString(PREF_IDS, String.join(",", ordered)).apply();
+  }
+
+  /**
+   * Renames profile {@code id}, unless {@code name} is blank: every profile has a name.
+   *
+   * @return whether the profile was renamed
+   */
+  public static boolean rename(SharedPreferences prefs, String id, String name) {
+    String trimmed = name.trim();
+    if (trimmed.isEmpty()) {
+      return false;
+    }
+    if (trimmed.length() > MAX_NAME_LENGTH) {
+      trimmed = trimmed.substring(0, MAX_NAME_LENGTH);
+    }
+    prefs.edit().putString(key(id, NAME), trimmed).apply();
+    return true;
   }
 
   /** Removes profile {@code id}, going back to Backtalk's default if it is in use. */
