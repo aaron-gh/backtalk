@@ -136,7 +136,7 @@ public class VoiceProfilesTest {
     assertEquals("Profile 4", names.get(otherBlank));
     assertEquals("Profile 5", VoiceProfiles.unusedName(prefs, number -> "Profile " + number));
 
-    VoiceProfiles.nameBlankProfiles(prefs, number -> "Profile " + number);
+    // Saved as soon as they were found.
     assertEquals("Profile 2", VoiceProfiles.read(prefs, blank).name());
     assertEquals("Profile 4", VoiceProfiles.read(prefs, otherBlank).name());
   }

@@ -116,8 +116,6 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
   @Override
   public void onResume() {
     super.onResume();
-    // Saved so that the name shown now stays the same when other profiles are renamed.
-    VoiceProfiles.nameBlankProfiles(prefs, numberedName(requireContext()));
     // A profile may have been renamed, removed or switched to meanwhile.
     profiles.reload();
     updateInUse();
@@ -157,7 +155,7 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
   }
 
   /** Gives "Voice profile 1", "Voice profile 2" and so on. */
-  private static IntFunction<String> numberedName(Context context) {
+  public static IntFunction<String> numberedName(Context context) {
     return number -> context.getString(R.string.voice_profile_new_name, number);
   }
 
