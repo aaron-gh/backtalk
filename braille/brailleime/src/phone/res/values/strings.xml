@@ -14,6 +14,16 @@
   <string name="screen_away_port_right_announcement">Screen-away mode, charging port on the right</string>
   <!-- Audial announcement that plays when switching to screen-away mode with the phone held so the charging port is on the user's left. [CHAR_LIMIT=200] -->
   <string name="screen_away_port_left_announcement">Screen-away mode, charging port on the left</string>
+  <!-- Audial announcement that plays when a tablet or unfolded phone is held up and taken to face the user, so it uses the tabletop layout facing them. [CHAR_LIMIT=200] -->
+  <string name="screen_toward_announcement">Screen toward you</string>
+  <!-- Audial announcement that plays when a tablet or unfolded phone is held up and taken to face the user, with the charging port on the user's left. [CHAR_LIMIT=200] -->
+  <string name="screen_toward_port_left_announcement">Screen toward you, charging port on the left</string>
+  <!-- Audial announcement that plays when a tablet or unfolded phone is held up and taken to face the user, with the charging port on the user's right. [CHAR_LIMIT=200] -->
+  <string name="screen_toward_port_right_announcement">Screen toward you, charging port on the right</string>
+  <!-- Audial announcement that plays when a tablet or unfolded phone is held up and taken to face the user, with the charging port pointing down. [CHAR_LIMIT=200] -->
+  <string name="screen_toward_port_down_announcement">Screen toward you, charging port pointing down</string>
+  <!-- Audial announcement that plays when a tablet or unfolded phone is held up and taken to face the user, with the charging port pointing up. [CHAR_LIMIT=200] -->
+  <string name="screen_toward_port_up_announcement">Screen toward you, charging port pointing up</string>
   <!-- Audial announcement that plays when the user turns the phone around in screen-away mode, so the charging port is now on their right. [CHAR_LIMIT=200] -->
   <string name="port_right_announcement">Charging port on the right</string>
   <!-- Audial announcement that plays when the user turns the phone around in screen-away mode, so the charging port is now on their left. [CHAR_LIMIT=200] -->
@@ -144,6 +154,11 @@
   <string name="title_pref_flip_dots_vertically">Swap top and bottom dots</string>
   <!-- Summary of the option that swaps the top and bottom dots. [CHAR_LIMIT=100]-->
   <string name="summary_pref_flip_dots_vertically">Dot 1 trades places with dot 3, and dot 4 with dot 6</string>
+
+  <!-- Title of the option that takes a tablet or unfolded phone held up to be held with the screen facing away from the user. When off, it is taken to face the user and uses the tabletop layout. [CHAR_LIMIT=60]-->
+  <string name="title_pref_tablet_held_up_faces_away">Tablet held up faces away</string>
+  <!-- Summary of the option that takes a tablet held up to be held with the screen facing away. [CHAR_LIMIT=100]-->
+  <string name="summary_pref_tablet_held_up_faces_away">When off, a tablet or unfolded phone held up uses the tabletop layout, facing you</string>
 
   <!-- Title of the option that plays keyboard sounds while typing braille. [CHAR_LIMIT=60]-->
   <string name="title_pref_typing_sounds">Typing sounds</string>
