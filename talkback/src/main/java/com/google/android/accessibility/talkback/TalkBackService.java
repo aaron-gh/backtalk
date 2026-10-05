@@ -293,6 +293,8 @@ import com.google.android.accessibility.utils.output.SpeechControllerImpl.Capita
 import com.google.android.accessibility.utils.output.TextFormattingUtils;
 import com.google.android.accessibility.utils.output.ThemeSounds;
 import com.google.android.accessibility.utils.output.ThemeVibrations;
+import com.google.android.accessibility.utils.output.VoiceProfiles;
+import com.google.android.accessibility.utils.output.VoiceProfiles.VoiceProfile;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import com.google.android.libraries.accessibility.utils.servicecompat.AccessibilityServiceCompat;
 import com.google.common.collect.ImmutableList;
@@ -847,15 +849,18 @@ public class TalkBackService extends AccessibilityServiceCompat
         (volumeMonitor == null) ? -1 : volumeMonitor.getCachedAccessibilityMaxVolume());
   }
 
-  /** The user's speech volume, from 0 to 1. */
+  /** The user's speech volume, from 0 to 1, from the voice profile in use if any. */
   private float userSpeechVolume() {
+    @Nullable VoiceProfile voiceProfile = VoiceProfiles.readActive(prefs);
     int speechVolume =
         Math.max(
-            SharedPreferencesUtils.getIntFromStringPref(
-                prefs,
-                getResources(),
-                R.string.pref_speech_volume_key,
-                R.string.pref_speech_volume_default),
+            (voiceProfile != null)
+                ? voiceProfile.volume()
+                : SharedPreferencesUtils.getIntFromStringPref(
+                    prefs,
+                    getResources(),
+                    R.string.pref_speech_volume_key,
+                    R.string.pref_speech_volume_default),
             getResources().getInteger(R.integer.pref_speech_volume_min));
     return speechVolume / 100.0f;
   }
@@ -3270,12 +3275,17 @@ public class TalkBackService extends AccessibilityServiceCompat
                 res.getString(R.string.pref_capital_letters_default)));
     speechController.setCapLetterFeedback(capLetterFeedback);
     globalVariables.setGlobalSayCapital(capLetterFeedback == CAPITAL_LETTERS_TYPE_SPEAK_CAP);
+    @Nullable VoiceProfile voiceProfile = VoiceProfiles.readActive(prefs);
     pipeline.setSpeechPitch(
-        SharedPreferencesUtils.getFloatFromStringPref(
-            prefs, res, R.string.pref_speech_pitch_key, R.string.pref_speech_pitch_default));
+        (voiceProfile != null)
+            ? voiceProfile.pitch()
+            : SharedPreferencesUtils.getFloatFromStringPref(
+                prefs, res, R.string.pref_speech_pitch_key, R.string.pref_speech_pitch_default));
     float speechRate =
-        SharedPreferencesUtils.getFloatFromStringPref(
-            prefs, res, R.string.pref_speech_rate_key, R.string.pref_speech_rate_default);
+        (voiceProfile != null)
+            ? voiceProfile.rate()
+            : SharedPreferencesUtils.getFloatFromStringPref(
+                prefs, res, R.string.pref_speech_rate_key, R.string.pref_speech_rate_default);
     pipeline.setSpeechRate(speechRate);
     int onScreenKeyboardPref = VerbosityPreferences.readOnScreenKeyboardEcho(prefs, getResources());
     textEventInterpreter.setOnScreenKeyboardEcho(onScreenKeyboardPref);
