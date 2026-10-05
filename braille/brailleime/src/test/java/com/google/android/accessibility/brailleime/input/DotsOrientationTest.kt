@@ -249,11 +249,11 @@ class DotsOrientationTest {
     // Held screen-away with the port on the right, as on the Fold7 unfolded at rotation 270.
     assertEquals(
       rotation90,
-      DotsOrientation.tabletTabletopRotation(rotation270, Orientation.LANDSCAPE, true),
+      DotsOrientation.tabletTabletopRotation(rotation270, Orientation.LANDSCAPE, true, true),
     )
     assertEquals(
       rotation270,
-      DotsOrientation.tabletTabletopRotation(rotation90, Orientation.REVERSE_LANDSCAPE, true),
+      DotsOrientation.tabletTabletopRotation(rotation90, Orientation.REVERSE_LANDSCAPE, true, true),
     )
   }
 
@@ -266,7 +266,7 @@ class DotsOrientationTest {
         held.name,
         DotsOrientation.heldPortPosition(held, false),
         DotsOrientation.tabletPortPosition(
-          DotsOrientation.tabletTabletopRotation(heldRotation, held, true),
+          DotsOrientation.tabletTabletopRotation(heldRotation, held, true, true),
           true,
         ),
       )
@@ -277,11 +277,11 @@ class DotsOrientationTest {
   fun tabletTabletopRotation_heldWithThePortDownOrUp_facesTheUserAsAutoRotateDoes() {
     assertEquals(
       rotation0,
-      DotsOrientation.tabletTabletopRotation(rotation0, Orientation.PORTRAIT, true),
+      DotsOrientation.tabletTabletopRotation(rotation0, Orientation.PORTRAIT, true, true),
     )
     assertEquals(
       rotation180,
-      DotsOrientation.tabletTabletopRotation(rotation180, Orientation.REVERSE_PORTRAIT, true),
+      DotsOrientation.tabletTabletopRotation(rotation180, Orientation.REVERSE_PORTRAIT, true, true),
     )
   }
 
@@ -289,7 +289,25 @@ class DotsOrientationTest {
   fun tabletTabletopRotation_notFromScreenAway_facesTheUserAsAutoRotateDoes() {
     assertEquals(
       rotation270,
-      DotsOrientation.tabletTabletopRotation(rotation270, Orientation.LANDSCAPE, false),
+      DotsOrientation.tabletTabletopRotation(rotation270, Orientation.LANDSCAPE, false, true),
+    )
+  }
+
+  @Test
+  fun tabletTabletopRotation_sidewaysFacesAwayOff_facesTheUserAsAutoRotateDoes() {
+    // Stood on a stand facing the user, then laid flat.
+    assertEquals(
+      rotation270,
+      DotsOrientation.tabletTabletopRotation(rotation270, Orientation.LANDSCAPE, true, false),
+    )
+    assertEquals(
+      rotation90,
+      DotsOrientation.tabletTabletopRotation(
+        rotation90,
+        Orientation.REVERSE_LANDSCAPE,
+        true,
+        false,
+      ),
     )
   }
 
