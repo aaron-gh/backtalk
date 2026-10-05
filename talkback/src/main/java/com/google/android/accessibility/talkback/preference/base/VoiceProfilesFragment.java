@@ -47,6 +47,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference;
 import com.google.android.accessibility.material.preference.AccessibilitySuitePreference;
 import com.google.android.accessibility.talkback.R;
+import com.google.android.accessibility.utils.FormFactorUtils;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.accessibility.utils.output.VoiceProfiles;
@@ -62,12 +63,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * tapped. It can be moved, renamed and deleted with actions from a screen reader, or renamed and
  * deleted from the menu that a long press shows. Holding a profile and dragging it moves it.
  * Nothing moves above Backtalk default, which uses the text-to-speech settings.
+ *
+ * <p>Watches draw settings rows with Compose, so there the rows are ordinary preferences, without
+ * dragging or actions, and a profile moves up and down from its own settings.
  */
 public class VoiceProfilesFragment extends TalkbackBaseFragment {
 
   private SharedPreferences prefs;
   private AccessibilitySuiteListPreference inUse;
   private ProfilesAdapter profiles = new ProfilesAdapter();
+  private final boolean wear = FormFactorUtils.isAndroidWear();
 
   @Override
   public CharSequence getTitle() {
@@ -103,6 +108,9 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
    */
   @Override
   protected RecyclerView.Adapter onCreateAdapter(PreferenceScreen preferenceScreen) {
+    if (wear) {
+      return super.onCreateAdapter(preferenceScreen);
+    }
     profiles = new ProfilesAdapter();
     profiles.reload();
     return new ConcatAdapter(super.onCreateAdapter(preferenceScreen), profiles);
@@ -111,15 +119,71 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
   @Override
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    new ItemTouchHelper(new DragCallback()).attachToRecyclerView(getListView());
+    if (!wear) {
+      new ItemTouchHelper(new DragCallback()).attachToRecyclerView(getListView());
+    }
   }
 
   @Override
   public void onResume() {
     super.onResume();
     // A profile may have been renamed, removed or switched to meanwhile.
-    profiles.reload();
+    reloadRows();
     updateInUse();
+  }
+
+  private void reloadRows() {
+    if (wear) {
+      addWatchRows();
+    } else {
+      profiles.reload();
+    }
+  }
+
+  /** Lists Backtalk default, the profiles and the add row as preferences, on a watch. */
+  private void addWatchRows() {
+    Context context = requireContext();
+    PreferenceScreen screen = getPreferenceScreen();
+    for (int i = screen.getPreferenceCount() - 1; i >= 0; i--) {
+      Preference preference = screen.getPreference(i);
+      if (preference != inUse) {
+        screen.removePreference(preference);
+      }
+    }
+    // Backtalk default's settings are the text-to-speech settings this screen came from.
+    screen.addPreference(
+        watchRow(
+            context,
+            getString(R.string.voice_profile_default),
+            null,
+            () -> requireActivity().getOnBackPressedDispatcher().onBackPressed()));
+    for (String id : VoiceProfiles.ids(prefs)) {
+      screen.addPreference(
+          watchRow(
+              context,
+              nameOf(id),
+              FailoverTextToSpeech.getEngineDisplayName(
+                  context, VoiceProfiles.read(prefs, id).engine()),
+              () -> open(id)));
+    }
+    screen.addPreference(
+        watchRow(
+            context, getString(R.string.title_pref_add_voice_profile), null, this::askForNewName));
+  }
+
+  private static Preference watchRow(
+      Context context, CharSequence title, @Nullable CharSequence summary, Runnable onClick) {
+    Preference row = new AccessibilitySuitePreference(context);
+    row.setTitle(title);
+    row.setSummary(summary);
+    row.setPersistent(false);
+    row.setIconSpaceReserved(false);
+    row.setOnPreferenceClickListener(
+        preference -> {
+          onClick.run();
+          return true;
+        });
+    return row;
   }
 
   /** Lists Backtalk default and the profiles, in order, as the profiles to choose from. */
@@ -197,7 +261,7 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
         nameOf(id),
         name -> {
           if (VoiceProfiles.rename(prefs, id, name, getString(R.string.voice_profile_default))) {
-            profiles.reload();
+            reloadRows();
             updateInUse();
           }
         });
@@ -296,7 +360,7 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
             prefs.getBoolean(
                 getString(R.string.pref_speak_in_phrases_key),
                 getResources().getBoolean(R.bool.pref_speak_in_phrases_default)));
-    profiles.reload();
+    reloadRows();
     updateInUse();
     open(id);
   }
@@ -309,7 +373,11 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
             R.string.voice_profile_delete,
             (dialog, which) -> {
               VoiceProfiles.delete(prefs, id);
-              profiles.remove(id);
+              if (wear) {
+                addWatchRows();
+              } else {
+                profiles.remove(id);
+              }
               updateInUse();
               getListView()
                   .announceForAccessibility(getString(R.string.voice_profile_deleted, name));
@@ -627,7 +695,7 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
         moved = false;
         profiles.saveOrder();
         profiles.updateActions();
-      } else if (row.isProfile()) {
+      } else if (row.isProfile() && isAdded()) {
         showMenu(row.itemView, row.id);
       }
     }
