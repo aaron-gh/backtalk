@@ -338,6 +338,10 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
         Set<Voice> engineVoices = tts.getVoices();
         if (engineVoices != null) {
           for (Voice voice : engineVoices) {
+            // An engine may leave out a voice's language, which every list here needs.
+            if (voice.getName() == null || voice.getLocale() == null) {
+              continue;
+            }
             Set<String> features = voice.getFeatures();
             if (features == null
                 || !features.contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED)) {

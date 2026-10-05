@@ -32,7 +32,9 @@ import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.accessibility.utils.output.VoiceProfiles;
 import com.google.android.accessibility.utils.output.VoiceProfiles.VoiceProfile;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -112,18 +114,32 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
     add.setIconSpaceReserved(false);
     add.setOnPreferenceClickListener(
         preference -> {
-          askForName(ids.size() + 1);
+          askForName(unusedName(ids));
           return true;
         });
     screen.addPreference(add);
   }
 
-  private void askForName(int number) {
+  /** Returns the first of "Voice profile 1", "Voice profile 2" and so on that no profile has. */
+  private String unusedName(List<String> ids) {
+    Set<String> names = new HashSet<>();
+    for (String id : ids) {
+      names.add(VoiceProfiles.read(prefs, id).name());
+    }
+    for (int number = 1; ; number++) {
+      String name = getString(R.string.voice_profile_new_name, number);
+      if (!names.contains(name)) {
+        return name;
+      }
+    }
+  }
+
+  private void askForName(String suggestedName) {
     Context context = requireContext();
     EditText field = new EditText(context);
     field.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
     field.setSingleLine(true);
-    field.setText(getString(R.string.voice_profile_new_name, number));
+    field.setText(suggestedName);
     field.selectAll();
     AlertDialog.Builder builder =
         new AlertDialog.Builder(context)
@@ -133,7 +149,7 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
                 android.R.string.ok,
                 (dialog, which) -> {
                   String name = field.getText().toString().trim();
-                  add(name.isEmpty() ? getString(R.string.voice_profile_new_name, number) : name);
+                  add(name.isEmpty() ? suggestedName : name);
                 })
             .setNegativeButton(android.R.string.cancel, null);
     builder.show();
