@@ -212,6 +212,30 @@ object DotsOrientation {
     return if (heldFromBehind) turnRotation(heldRotation, 2) else heldRotation
   }
 
+  /**
+   * Whether a device held up like this is taken to face the user rather than be held from behind:
+   * a tablet held sideways when [sidewaysFacesAway] is off. [heldFromBehind] is where the port is
+   * seen from behind the screen, as [heldPortPosition] says.
+   */
+  @JvmStatic
+  fun heldFacingUser(
+    heldFromBehind: PortPosition?,
+    phone: Boolean,
+    sidewaysFacesAway: Boolean,
+  ): Boolean =
+    !phone &&
+      !sidewaysFacesAway &&
+      (heldFromBehind == PortPosition.LEFT || heldFromBehind == PortPosition.RIGHT)
+
+  /** Where the charging port is for someone facing the screen, from where it is seen from behind. */
+  @JvmStatic
+  fun seenFromFront(fromBehind: PortPosition): PortPosition =
+    when (fromBehind) {
+      PortPosition.LEFT -> PortPosition.RIGHT
+      PortPosition.RIGHT -> PortPosition.LEFT
+      else -> fromBehind
+    }
+
   /** A phone's orientation lock for the charging port on this side. */
   @JvmStatic
   fun phoneLock(portOnRight: Boolean): Int =

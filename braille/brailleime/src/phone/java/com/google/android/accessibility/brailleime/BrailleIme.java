@@ -1185,7 +1185,11 @@ public class BrailleIme extends InputMethodService {
         }
       };
 
-  /** Says screen-away mode, and where the charging port is when that is known. */
+  /**
+   * Says screen-away mode, and where the charging port is when that is known. A tablet held
+   * sideways says the screen is toward the user instead when it is taken to face them: see {@link
+   * DotsOrientation#heldFacingUser}.
+   */
   private String getScreenAwayAnnouncement() {
     PortPosition position;
     if (isOrientationLocked()) {
@@ -1195,6 +1199,12 @@ public class BrailleIme extends InputMethodService {
       position = heldPortPosition(orientation);
       if (position != null) {
         knownPortSide = orientation;
+      }
+      if (heldFacingUser(position)) {
+        return getString(
+            DotsOrientation.seenFromFront(position) == PortPosition.LEFT
+                ? R.string.screen_toward_port_left_announcement
+                : R.string.screen_toward_port_right_announcement);
       }
     }
     return getString(
@@ -1221,6 +1231,14 @@ public class BrailleIme extends InputMethodService {
       return null;
     }
     return DotsOrientation.heldPortPosition(orientation, phone);
+  }
+
+  /** Whether a device held with the port here, seen from behind, is taken to face the user. */
+  private boolean heldFacingUser(@Nullable PortPosition fromBehind) {
+    return DotsOrientation.heldFacingUser(
+        fromBehind,
+        BrailleUtils.isPhoneSizedDevice(getResources()),
+        BrailleUserPreferences.readTabletSidewaysFacesAway(this));
   }
 
   /** Says tabletop mode, and where the charging port is when that is known. */
@@ -1356,10 +1374,12 @@ public class BrailleIme extends InputMethodService {
     boolean turned = knownPortSide != OrientationMonitor.Orientation.UNKNOWN;
     knownPortSide = orientation;
     if (turned) {
+      PortPosition position = heldPortPosition(orientation);
+      if (heldFacingUser(position)) {
+        position = DotsOrientation.seenFromFront(position);
+      }
       BrailleCommonTalkBackSpeaker.getInstance()
-          .speak(
-              getPortAnnouncement(heldPortPosition(orientation)),
-              TalkBackSpeaker.AnnounceType.INTERRUPT);
+          .speak(getPortAnnouncement(position), TalkBackSpeaker.AnnounceType.INTERRUPT);
     }
   }
 

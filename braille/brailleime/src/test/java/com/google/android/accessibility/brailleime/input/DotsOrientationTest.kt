@@ -312,6 +312,42 @@ class DotsOrientationTest {
   }
 
   @Test
+  fun heldFacingUser_onlyATabletHeldSidewaysWithTheSwitchOff() {
+    for (port in listOf(PortPosition.LEFT, PortPosition.RIGHT)) {
+      assertTrue(DotsOrientation.heldFacingUser(port, false, false))
+      assertFalse(DotsOrientation.heldFacingUser(port, false, true))
+      assertFalse(DotsOrientation.heldFacingUser(port, true, false))
+    }
+    for (port in listOf(PortPosition.DOWN, PortPosition.UP, null)) {
+      assertFalse(DotsOrientation.heldFacingUser(port, false, false))
+    }
+  }
+
+  @Test
+  fun seenFromFront_swapsLeftAndRightOnly() {
+    assertEquals(PortPosition.RIGHT, DotsOrientation.seenFromFront(PortPosition.LEFT))
+    assertEquals(PortPosition.LEFT, DotsOrientation.seenFromFront(PortPosition.RIGHT))
+    assertEquals(PortPosition.DOWN, DotsOrientation.seenFromFront(PortPosition.DOWN))
+    assertEquals(PortPosition.UP, DotsOrientation.seenFromFront(PortPosition.UP))
+  }
+
+  @Test
+  fun heldFacingUser_saysTheSideTabletopModeSaysOnceLaidFlat() {
+    // With the switch off, laying it flat keeps the port on the side the user was told.
+    for (held in listOf(Orientation.LANDSCAPE, Orientation.REVERSE_LANDSCAPE)) {
+      val heldRotation = DotsOrientation.rotationForDegrees(held.degree)
+      assertEquals(
+        held.name,
+        DotsOrientation.seenFromFront(DotsOrientation.heldPortPosition(held, false)!!),
+        DotsOrientation.tabletPortPosition(
+          DotsOrientation.tabletTabletopRotation(heldRotation, held, true, false),
+          true,
+        ),
+      )
+    }
+  }
+
+  @Test
   fun phoneLock_roundTrips() {
     assertTrue(DotsOrientation.phoneLockPortOnRight(DotsOrientation.phoneLock(true)))
     assertFalse(DotsOrientation.phoneLockPortOnRight(DotsOrientation.phoneLock(false)))
