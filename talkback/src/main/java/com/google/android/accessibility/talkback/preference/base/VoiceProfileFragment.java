@@ -210,10 +210,12 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
     Context context = requireContext();
     VoiceProfilesFragment.askForName(
         context,
+        prefs,
         R.string.title_pref_voice_profile_name,
+        id,
         VoiceProfilesFragment.nameOf(context, prefs, id),
         name -> {
-          if (VoiceProfiles.rename(prefs, id, name)) {
+          if (VoiceProfiles.rename(prefs, id, name, getString(R.string.voice_profile_default))) {
             String saved = profile().name();
             namePref.setSummary(saved);
             requireActivity().setTitle(saved);

@@ -52,6 +52,7 @@ import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.accessibility.utils.output.VoiceProfiles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.IntFunction;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -144,18 +145,27 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
 
   /**
    * Returns the name of profile {@code id}, or Backtalk default's for an empty ID. A profile left
-   * with a blank name by a damaged setting gets a numbered name no other profile has.
+   * with a blank name or another's name by a damaged setting is given a numbered name of its own.
    */
   public static String nameOf(Context context, SharedPreferences prefs, String id) {
     if (id.isEmpty()) {
       return context.getString(R.string.voice_profile_default);
     }
-    String name = VoiceProfiles.names(prefs, numberedName(context)).get(id);
+    String name = names(context, prefs).get(id);
     return (name == null) ? "" : name;
   }
 
+  /**
+   * Returns each profile's name by ID, first giving a name of its own to any profile a damaged
+   * setting left without one. See {@link VoiceProfiles#names}.
+   */
+  public static Map<String, String> names(Context context, SharedPreferences prefs) {
+    return VoiceProfiles.names(
+        prefs, context.getString(R.string.voice_profile_default), numberedName(context));
+  }
+
   /** Gives "Voice profile 1", "Voice profile 2" and so on. */
-  public static IntFunction<String> numberedName(Context context) {
+  private static IntFunction<String> numberedName(Context context) {
     return number -> context.getString(R.string.voice_profile_new_name, number);
   }
 
@@ -167,36 +177,50 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
   }
 
   private void askForNewName() {
+    Context context = requireContext();
     askForName(
-        requireContext(),
+        context,
+        prefs,
         R.string.title_pref_add_voice_profile,
-        VoiceProfiles.unusedName(prefs, numberedName(requireContext())),
+        /* id= */ "",
+        VoiceProfiles.unusedName(
+            prefs, getString(R.string.voice_profile_default), numberedName(context)),
         this::add);
   }
 
   private void askForRename(String id) {
     askForName(
         requireContext(),
+        prefs,
         R.string.voice_profile_rename,
+        id,
         nameOf(id),
         name -> {
-          if (VoiceProfiles.rename(prefs, id, name)) {
+          if (VoiceProfiles.rename(prefs, id, name, getString(R.string.voice_profile_default))) {
             profiles.reload();
             updateInUse();
           }
         });
   }
 
-  /** Receives a name from {@link #askForName}, never blank. */
+  /** Receives a name from {@link #askForName}, never blank and never another profile's. */
   interface NameListener {
     void onName(String name);
   }
 
   /**
-   * Asks for a profile's name, starting with {@code name}. OK can't be pressed while the name is
-   * blank, as every profile needs one.
+   * Asks for the name of profile {@code id}, or of a new profile if {@code id} is empty, starting
+   * with {@code name}. OK can't be pressed while the name is blank or another profile's, and the
+   * field says when it is another profile's, since every profile needs a name of its own.
    */
-  static void askForName(Context context, int titleResId, String name, NameListener listener) {
+  static void askForName(
+      Context context,
+      SharedPreferences prefs,
+      int titleResId,
+      String id,
+      String name,
+      NameListener listener) {
+    String defaultName = context.getString(R.string.voice_profile_default);
     EditText field = new EditText(context);
     field.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
     field.setSingleLine(true);
@@ -212,14 +236,24 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
                 android.R.string.ok,
                 (shown, which) -> {
                   String entered = field.getText().toString().trim();
-                  if (!entered.isEmpty()) {
+                  if (!entered.isEmpty()
+                      && !VoiceProfiles.isNameTaken(prefs, id, entered, defaultName)) {
                     listener.onName(entered);
                   }
                 })
             .setNegativeButton(android.R.string.cancel, null)
             .show();
     Button ok = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-    ok.setEnabled(!name.trim().isEmpty());
+    Runnable check =
+        () -> {
+          String entered = field.getText().toString().trim();
+          boolean taken =
+              !entered.isEmpty() && VoiceProfiles.isNameTaken(prefs, id, entered, defaultName);
+          ok.setEnabled(!entered.isEmpty() && !taken);
+          field.setError(
+              taken ? context.getString(R.string.voice_profile_name_taken, entered) : null);
+        };
+    check.run();
     field.addTextChangedListener(
         new TextWatcher() {
           @Override
@@ -230,7 +264,7 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
 
           @Override
           public void afterTextChanged(Editable text) {
-            ok.setEnabled(!text.toString().trim().isEmpty());
+            check.run();
           }
         });
     field.requestFocus();
