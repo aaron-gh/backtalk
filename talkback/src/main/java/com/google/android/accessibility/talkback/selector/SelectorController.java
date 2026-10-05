@@ -51,6 +51,7 @@ import static com.google.android.accessibility.talkback.selector.SelectorControl
 import static com.google.android.accessibility.talkback.selector.SelectorController.Setting.GRANULARITY_SEARCH;
 import static com.google.android.accessibility.talkback.selector.SelectorController.Setting.GRANULARITY_TYPO;
 import static com.google.android.accessibility.talkback.selector.SelectorController.Setting.GRANULARITY_WINDOWS;
+import static com.google.android.accessibility.talkback.selector.SelectorController.Setting.TABLET_SIDEWAYS_FACES_AWAY;
 import static com.google.android.accessibility.utils.Performance.EVENT_ID_UNTRACKED;
 import static com.google.android.accessibility.utils.monitor.InputModeTracker.INPUT_MODE_TOUCH;
 import static com.google.android.accessibility.utils.traversal.TraversalStrategy.SEARCH_FOCUS_BACKWARD;
@@ -211,6 +212,10 @@ public class SelectorController implements UserInputEventListener {
         R.string.pref_selector_wrap_around_key,
         R.string.selector_wrap_around,
         R.bool.pref_selector_wrap_around_default),
+    TABLET_SIDEWAYS_FACES_AWAY(
+        R.string.pref_selector_tablet_sideways_faces_away_key,
+        R.string.selector_tablet_sideways_faces_away,
+        R.bool.pref_selector_tablet_sideways_faces_away_default),
     ACTIONS(
         R.string.pref_selector_actions_key,
         R.string.selector_actions,
@@ -628,6 +633,7 @@ public class SelectorController implements UserInputEventListener {
           Setting.CHANGE_TYPING_FOCUS_LATENCY,
           Setting.CHANGE_LIFT_TO_ACTIVATE,
           Setting.WRAP_AROUND,
+          Setting.TABLET_SIDEWAYS_FACES_AWAY,
           Setting.ADJUSTABLE_WIDGET,
           Setting.CONTROL_TELLING_TIME,
           Setting.SWITCH_TTS_ENGINE);
@@ -709,6 +715,7 @@ public class SelectorController implements UserInputEventListener {
     ImmutableList.Builder<Setting> hiddenSettingsBuilder = ImmutableList.builder();
     if (FormFactorUtils.isAndroidWear()) {
       hiddenSettingsBuilder.add(GRANULARITY_TYPO);
+      hiddenSettingsBuilder.add(TABLET_SIDEWAYS_FACES_AWAY);
     } else if (!FeatureSupport.doesServiceHandleDoubleTap()) {
       hiddenSettingsBuilder.add(ACTIONS);
     }
@@ -944,6 +951,10 @@ public class SelectorController implements UserInputEventListener {
       }
       case WRAP_AROUND -> {
         actionDescription = context.getString(R.string.title_pref_wrap_around);
+        hint = getAdjustSelectedSettingGestures();
+      }
+      case TABLET_SIDEWAYS_FACES_AWAY -> {
+        actionDescription = context.getString(R.string.title_selector_tablet_sideways_faces_away);
         hint = getAdjustSelectedSettingGestures();
       }
       case CONTROL_TELLING_TIME -> {
@@ -1398,6 +1409,9 @@ public class SelectorController implements UserInputEventListener {
       case WRAP_AROUND -> {
         return true;
       }
+      case TABLET_SIDEWAYS_FACES_AWAY -> {
+        return true;
+      }
       case ACTIONS -> {
         Optional<ContextualSetting> actions = findContextualSetting(ACTIONS);
         if (actions.isEmpty()) {
@@ -1726,6 +1740,10 @@ public class SelectorController implements UserInputEventListener {
       }
       case WRAP_AROUND -> {
         switchWrapAroundOnOrOff(eventId);
+        return;
+      }
+      case TABLET_SIDEWAYS_FACES_AWAY -> {
+        switchTabletSidewaysFacesAwayOnOrOff(eventId);
         return;
       }
       case CONTROL_TELLING_TIME -> {
@@ -2356,6 +2374,20 @@ public class SelectorController implements UserInputEventListener {
     announceSetting(
         eventId,
         context.getString(switchedValue ? R.string.wrap_around_on : R.string.wrap_around_off),
+        getSelectSettingGestures());
+    showQuickMenuActionOverlay(
+        eventId, context.getString(switchedValue ? R.string.value_on : R.string.value_off));
+  }
+
+  /** Turns the braille keyboard's "Tablet held sideways faces away" setting on or off. */
+  private void switchTabletSidewaysFacesAwayOnOrOff(EventId eventId) {
+    boolean switchedValue = BrailleKeyboardSettings.toggleTabletSidewaysFacesAway(context);
+    announceSetting(
+        eventId,
+        context.getString(
+            switchedValue
+                ? R.string.tablet_sideways_faces_away_on
+                : R.string.tablet_sideways_faces_away_off),
         getSelectSettingGestures());
     showQuickMenuActionOverlay(
         eventId, context.getString(switchedValue ? R.string.value_on : R.string.value_off));
