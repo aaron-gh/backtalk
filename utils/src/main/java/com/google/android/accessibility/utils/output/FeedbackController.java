@@ -22,12 +22,17 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.Resources.NotFoundException;
 import android.media.AudioAttributes;
+import android.media.AudioDeviceCallback;
+import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.os.Build;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
+import android.text.TextUtils;
 import android.os.Vibrator;
 import android.util.SparseArray;
+import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
 import com.google.android.accessibility.utils.BuildVersionUtils;
 import com.google.android.accessibility.utils.Performance.EventId;
@@ -62,6 +67,24 @@ public class FeedbackController {
 
   public static final long NO_SEPARATION = 0;
 
+  /** Positioned sounds are panned between the left and right speakers. */
+  public static final int SPATIAL_STEREO = 0;
+
+  /** Positioned sounds are played in 3D, for headphones. */
+  public static final int SPATIAL_3D = 1;
+
+  /** Positioned sounds are played in 3D when headphones are connected, and panned otherwise. */
+  public static final int SPATIAL_3D_WITH_HEADPHONES = 2;
+
+  /**
+   * How Backtalk's sounds play: as speech, so that they follow the audio output device chosen for
+   * speech.
+   */
+  public static final AudioAttributes FEEDBACK_ATTRIBUTES =
+      new AudioAttributes.Builder()
+          .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
+          .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+          .build();
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Member data
@@ -80,6 +103,21 @@ public class FeedbackController {
 
   /** Map from the resource IDs of loaded sounds to SoundPool sound IDs. */
   private final SparseIntArray mSoundIds = new SparseIntArray();
+
+  /** The file each sound in {@link #mSoundIds} was loaded from, if it was a custom sound. */
+  private final SparseArray<String> mLoadedPaths = new SparseArray<>();
+
+  /** Whether each sound played so far has a sound resource of its own. */
+  private final SparseBooleanArray mHasOwnSound = new SparseBooleanArray();
+
+  /** Sound files the user chose to play in place of the app's own, by sound resource name. */
+  private Map<String, String> mCustomSoundPaths = Collections.emptyMap();
+
+  /**
+   * Vibration patterns that play in place of the usual ones, by the resource names of the sounds
+   * they go with. An empty pattern plays no vibration.
+   */
+  private Map<String, int[]> mThemeVibrations = Collections.emptyMap();
 
   private final HapticPatternParser parser;
 
@@ -106,11 +144,28 @@ public class FeedbackController {
 
   private final Set<HapticFeedbackListener> mHapticFeedbackListeners = new HashSet<>();
 
-  /** Starts and stops vibrations in order, off the main thread. */
-  private static final Executor VIBRATION_EXECUTOR =
+  /** Starts and stops vibrations in order, off the main thread. Theme vibrations use it too. */
+  static final Executor VIBRATION_EXECUTOR =
       Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "BacktalkVibration"));
 
   private final @NonNull HashMap<Integer, Long> resIdToLastPlayUptimeMillisec = new HashMap<>();
+
+  /** How sounds with a position on the screen are played, one of the {@code SPATIAL_} values. */
+  private int mSpatialMode = SPATIAL_3D_WITH_HEADPHONES;
+
+  /** Created the first time a sound is played in 3D. */
+  private @Nullable SpatialSoundPlayer mSpatialSoundPlayer;
+
+  /** Follows headphones connecting, from the first time it matters. */
+  private @Nullable AudioDeviceCallback mAudioDeviceCallback;
+
+  private volatile boolean mHeadphonesConnected;
+
+  /** When {@link #mHeadphonesConnected} was worked out, or 0 to work it out again. */
+  private volatile long mHeadphonesCheckedAt;
+
+  /** How long whether sounds go to headphones is kept before asking again. */
+  private static final long HEADPHONES_CHECK_MS = 1000;
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Construction
@@ -150,12 +205,17 @@ public class FeedbackController {
    * sound can be felt as well as heard.
    */
   private void playSoundHaptic(int soundResId, @Nullable EventId eventId) {
-    if (!mHapticEnabled || mSoundHaptics.isEmpty()) {
+    if (!mHapticEnabled || (mSoundHaptics.isEmpty() && mThemeVibrations.isEmpty())) {
       return;
     }
     @Nullable String name = resourceName(soundResId);
     @Nullable Integer patternResId = name == null ? null : mSoundHaptics.get(name);
-    if (patternResId != null) {
+    int @Nullable [] themePattern = name == null ? null : mThemeVibrations.get(name);
+    if (themePattern != null) {
+      // Even an empty pattern, of a vibration that is off, keeps the event's own vibration quiet.
+      vibratePattern(themePattern, eventId);
+      mSoundHapticCover.soundVibrated(eventId, SystemClock.uptimeMillis());
+    } else if (patternResId != null) {
       // Even if the user turned this vibration off, the event's own vibration stays quiet.
       vibrate(patternResId, eventId);
       mSoundHapticCover.soundVibrated(eventId, SystemClock.uptimeMillis());
@@ -163,6 +223,13 @@ public class FeedbackController {
   }
 
   private boolean vibrate(int resId, @Nullable EventId eventId) {
+    // A sound's vibration from the theme, played on its own, such as for a control with a
+    // vibration and no sound in the theme.
+    @Nullable String name = mThemeVibrations.isEmpty() ? null : resourceName(resId);
+    int @Nullable [] themePattern = name == null ? null : mThemeVibrations.get(name);
+    if (themePattern != null) {
+      return vibratePattern(themePattern, eventId);
+    }
     if (!mHapticEnabled || resId == 0 || isMuted(mMutedHapticNames, resId)) {
       return false;
     }
@@ -176,7 +243,22 @@ public class FeedbackController {
       return false;
     }
 
-    VibrationEffect effect = parser.parse(patternArray);
+    return vibratePattern(patternArray, eventId);
+  }
+
+  /** Plays a vibration pattern in the format {@link HapticPatternParser} reads. */
+  private boolean vibratePattern(int[] patternArray, @Nullable EventId eventId) {
+    if (!mHapticEnabled || patternArray.length == 0) {
+      return false;
+    }
+    final VibrationEffect effect;
+    try {
+      effect = parser.parse(patternArray);
+    } catch (RuntimeException e) {
+      // A theme's pattern that the device refuses.
+      LogUtils.e(TAG, "Cannot play vibration pattern: %s", e);
+      return false;
+    }
 
     long nanoTime = System.nanoTime();
     for (HapticFeedbackListener listener : mHapticFeedbackListeners) {
@@ -295,26 +377,212 @@ public class FeedbackController {
       float volume,
       boolean ignoreVolumeAdjustment,
       @Nullable EventId eventId) {
-    if (!mAuditoryEnabled || resId == 0 || isMuted(mMutedAuditoryNames, resId)) {
+    if (!mAuditoryEnabled
+        || resId == 0
+        || isMuted(mMutedAuditoryNames, resId)
+        || !hasSound(resId)) {
       return;
     }
     LogUtils.v(TAG, "playAuditory() resId=%d eventId=%s", resId, eventId);
 
     final float adjustedVolume = ignoreVolumeAdjustment ? volume : volume * mVolumeAdjustment;
+    playFromPool(resId, rate, adjustedVolume, adjustedVolume);
+  }
+
+  /**
+   * Plays a sound as if it came from a place on the screen, in 3D or panned between the speakers
+   * according to {@link #setSpatialMode}. In 3D mode the sound is played in 3D on the phone's
+   * speaker too.
+   *
+   * @param x The place from the left edge of the screen, from 0 to 1, or negative for no place.
+   * @param y The place from the top edge of the screen, from 0 to 1, or negative for no place.
+   */
+  public void playAuditory(
+      int resId, float rate, float volume, float x, float y, @Nullable EventId eventId) {
+    if (x < 0 || y < 0) {
+      playAuditory(resId, rate, volume, eventId);
+      return;
+    }
+    if (resId != 0) {
+      playSoundHaptic(resId, eventId);
+    }
+    playPlacedSound(resId, rate, volume, x, y, eventId);
+  }
+
+  /** Plays a sound from a place on the screen, like {@link #playAuditory}, without its vibration. */
+  public void playAuditoryWithoutHaptic(
+      int resId, float rate, float volume, float x, float y, @Nullable EventId eventId) {
+    if (x < 0 || y < 0) {
+      playAuditoryWithoutHaptic(resId, rate, volume, eventId);
+      return;
+    }
+    playPlacedSound(resId, rate, volume, x, y, eventId);
+  }
+
+  private void playPlacedSound(
+      int resId, float rate, float volume, float x, float y, @Nullable EventId eventId) {
+    if (!mAuditoryEnabled
+        || resId == 0
+        || isMuted(mMutedAuditoryNames, resId)
+        || !hasSound(resId)) {
+      return;
+    }
+    LogUtils.v(TAG, "playAuditory() resId=%d x=%.2f y=%.2f eventId=%s", resId, x, y, eventId);
+
+    float adjustedVolume = volume * mVolumeAdjustment;
+    if (shouldPlayIn3d()) {
+      if (mSpatialSoundPlayer == null) {
+        mSpatialSoundPlayer = new SpatialSoundPlayer(mContext);
+      }
+      mSpatialSoundPlayer.play(resId, customSoundPath(resId), x, y, adjustedVolume);
+    } else {
+      // Full volume in the middle, fading out of the far speaker towards either edge.
+      float pan = Math.max(-1f, Math.min(1f, (x - 0.5f) * 2));
+      playFromPool(
+          resId,
+          rate,
+          adjustedVolume * Math.min(1f, 1 - pan),
+          adjustedVolume * Math.min(1f, 1 + pan));
+    }
+  }
+
+  private void playFromPool(int resId, float rate, float leftVolume, float rightVolume) {
+    @Nullable String path = customSoundPath(resId);
     int soundId = mSoundIds.get(resId);
+    if (soundId != 0 && !TextUtils.equals(path, mLoadedPaths.get(resId))) {
+      // The user chose another sound since this one was loaded.
+      mSoundPool.unload(soundId);
+      mSoundIds.delete(resId);
+      soundId = 0;
+    }
 
     if (soundId != 0) {
-      new EarconsPlayTask(mSoundPool, soundId, adjustedVolume, rate).execute();
+      new EarconsPlayTask(mSoundPool, soundId, leftVolume, rightVolume, rate).execute();
     } else {
       // The sound could not be played from the cache. Start loading the sound into the
       // SoundPool for future use, and use a listener to play the sound ASAP.
       mSoundPool.setOnLoadCompleteListener(
           (soundPool, sampleId, status) -> {
             if (mAuditoryEnabled && sampleId != 0) {
-              new EarconsPlayTask(mSoundPool, sampleId, adjustedVolume, rate).execute();
+              new EarconsPlayTask(mSoundPool, sampleId, leftVolume, rightVolume, rate).execute();
             }
           });
-      mSoundIds.put(resId, mSoundPool.load(mContext, resId, 1));
+      mSoundIds.put(
+          resId, path != null ? mSoundPool.load(path, 1) : mSoundPool.load(mContext, resId, 1));
+      mLoadedPaths.put(resId, path);
+    }
+  }
+
+  /**
+   * Returns whether {@code resId} has a sound to play: a sound of its own, or one the user chose. A
+   * control sound with only a vibration in the theme has neither.
+   */
+  private boolean hasSound(int resId) {
+    if (customSoundPath(resId) != null) {
+      return true;
+    }
+    int index = mHasOwnSound.indexOfKey(resId);
+    if (index >= 0) {
+      return mHasOwnSound.valueAt(index);
+    }
+    boolean hasOwn;
+    try {
+      hasOwn = "raw".equals(mResources.getResourceTypeName(resId));
+    } catch (NotFoundException e) {
+      hasOwn = false;
+    }
+    mHasOwnSound.put(resId, hasOwn);
+    return hasOwn;
+  }
+
+  /** Returns the file the user chose to play in place of {@code resId}, or null for its own. */
+  private @Nullable String customSoundPath(int resId) {
+    if (mCustomSoundPaths.isEmpty()) {
+      return null;
+    }
+    @Nullable String name = resourceName(resId);
+    return name == null ? null : mCustomSoundPaths.get(name);
+  }
+
+  private boolean shouldPlayIn3d() {
+    switch (mSpatialMode) {
+      case SPATIAL_3D:
+        return true;
+      case SPATIAL_3D_WITH_HEADPHONES:
+        return isHeadphoneOutput();
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Returns whether Backtalk's sounds go to headphones: a Bluetooth headset or headphones, wired or
+   * USB headphones, or hearing aids. On Android 13 and later it asks where audio with Backtalk's
+   * attributes goes, so that sounds stay flat on the phone speaker, and on a Bluetooth speaker or
+   * car that is connected but not playing them. Before that, it can only tell what is connected.
+   */
+  private boolean isHeadphoneOutput() {
+    AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+    if (audioManager == null) {
+      return false;
+    }
+    if (mAudioDeviceCallback == null) {
+      mAudioDeviceCallback =
+          new AudioDeviceCallback() {
+            @Override
+            public void onAudioDevicesAdded(AudioDeviceInfo[] addedDevices) {
+              mHeadphonesCheckedAt = 0;
+            }
+
+            @Override
+            public void onAudioDevicesRemoved(AudioDeviceInfo[] removedDevices) {
+              mHeadphonesCheckedAt = 0;
+            }
+          };
+      audioManager.registerAudioDeviceCallback(mAudioDeviceCallback, null);
+    }
+    // Asking goes to the audio service, so the answer is kept for a moment, and until a device
+    // comes or goes.
+    long now = SystemClock.uptimeMillis();
+    if (mHeadphonesCheckedAt == 0 || now - mHeadphonesCheckedAt > HEADPHONES_CHECK_MS) {
+      mHeadphonesConnected = headphonesPlaySounds(audioManager);
+      mHeadphonesCheckedAt = now;
+    }
+    return mHeadphonesConnected;
+  }
+
+  private static boolean headphonesPlaySounds(AudioManager audioManager) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      for (AudioDeviceInfo device :
+          audioManager.getAudioDevicesForAttributes(FEEDBACK_ATTRIBUTES)) {
+        if (isHeadphone(device)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    for (AudioDeviceInfo device : audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
+      if (isHeadphone(device)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean isHeadphone(AudioDeviceInfo device) {
+    switch (device.getType()) {
+      case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
+      case AudioDeviceInfo.TYPE_WIRED_HEADSET:
+      case AudioDeviceInfo.TYPE_USB_HEADSET:
+      case AudioDeviceInfo.TYPE_HEARING_AID:
+      // A2DP is also used by Bluetooth speakers and cars, which can't be told apart from
+      // headphones, so it counts. Bluetooth LE says when a device is a speaker, and SCO carries
+      // calls.
+      case AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
+      case AudioDeviceInfo.TYPE_BLE_HEADSET:
+        return true;
+      default:
+        return false;
     }
   }
 
@@ -331,6 +599,17 @@ public class FeedbackController {
   public void shutdown() {
     mHapticFeedbackListeners.clear();
     mSoundPool.release();
+    if (mSpatialSoundPlayer != null) {
+      mSpatialSoundPlayer.shutdown();
+      mSpatialSoundPlayer = null;
+    }
+    if (mAudioDeviceCallback != null) {
+      AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+      if (audioManager != null) {
+        audioManager.unregisterAudioDeviceCallback(mAudioDeviceCallback);
+      }
+      mAudioDeviceCallback = null;
+    }
     VIBRATION_EXECUTOR.execute(mVibrator::cancel);
     mAuditoryEnabled = false;
     mHapticEnabled = false;
@@ -415,6 +694,39 @@ public class FeedbackController {
   }
 
   /**
+   * Sets the sound files to play in place of the app's own sounds, by the resource names of the
+   * sounds they replace. Sounds not in the map play as usual.
+   */
+  public void setCustomSounds(Map<String, String> pathsByResourceName) {
+    if (mCustomSoundPaths.equals(pathsByResourceName)) {
+      return;
+    }
+    mCustomSoundPaths = new HashMap<>(pathsByResourceName);
+    if (mSpatialSoundPlayer != null) {
+      mSpatialSoundPlayer.forgetSounds();
+    }
+  }
+
+  /**
+   * Sets the vibrations to play with sounds in place of the usual ones, by the resource names of
+   * the sounds, in the format {@link HapticPatternParser} reads. An empty pattern plays none, so
+   * a vibration the user turned off is passed as an empty pattern.
+   */
+  public void setThemeVibrations(Map<String, int[]> patternsBySoundName) {
+    mThemeVibrations = new HashMap<>(patternsBySoundName);
+  }
+
+  /**
+   * Sets how sounds with a place on the screen are played.
+   *
+   * @param mode {@link #SPATIAL_STEREO}, {@link #SPATIAL_3D} or {@link
+   *     #SPATIAL_3D_WITH_HEADPHONES}.
+   */
+  public void setSpatialMode(int mode) {
+    mSpatialMode = mode;
+  }
+
+  /**
    * Provides vibration and sound feedback to acknowledge the completion of an action (e.g. item
    * selection in Switch Access, gesture completion in TalkBack, etc.).
    */
@@ -425,12 +737,10 @@ public class FeedbackController {
   }
 
   private static SoundPool createSoundPool() {
-    AudioAttributes aa =
-        new AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-            .build();
-    return new SoundPool.Builder().setMaxStreams(MAX_STREAMS).setAudioAttributes(aa).build();
+    return new SoundPool.Builder()
+        .setMaxStreams(MAX_STREAMS)
+        .setAudioAttributes(FEEDBACK_ATTRIBUTES)
+        .build();
   }
 
   /**
