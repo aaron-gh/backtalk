@@ -19,6 +19,9 @@ package com.google.android.accessibility.utils.output;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import com.google.android.accessibility.utils.output.LanguageSwitch.Run;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import org.junit.Test;
 
@@ -67,5 +70,24 @@ public class LanguageSwitchTest {
     Locale australian = Locale.forLanguageTag("en-AU");
     assertEquals(us, LanguageSwitch.localeToSpeak(australian, us, us, true, false));
     assertEquals(us, LanguageSwitch.localeToSpeak(GERMAN, us, us, false, true));
+  }
+
+  @Test
+  public void runsSpokenInTheVoicesOwnLanguageLeaveNoMarks() {
+    // British text, unmarked text and US text, with dialects off: all are spoken in the voice's
+    // own language, so no marks are left to split the text at.
+    List<Run> runs =
+        Arrays.asList(new Run(0, 5, null), new Run(5, 12, null), new Run(12, 19, null));
+    assertEquals(List.of(), LanguageSwitch.spokenRuns(runs));
+  }
+
+  @Test
+  public void neighbouringRunsInOneLanguageJoin() {
+    Locale us = Locale.US;
+    List<Run> runs =
+        Arrays.asList(
+            new Run(0, 4, us), new Run(4, 9, us), new Run(9, 15, null), new Run(15, 20, GERMAN));
+    assertEquals(
+        List.of(new Run(0, 9, us), new Run(15, 20, GERMAN)), LanguageSwitch.spokenRuns(runs));
   }
 }

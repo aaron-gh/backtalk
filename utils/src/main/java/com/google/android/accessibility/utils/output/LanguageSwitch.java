@@ -16,7 +16,14 @@
 
 package com.google.android.accessibility.utils.output;
 
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.LocaleSpan;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -24,9 +31,44 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * language, such as German for a British English voice, and switching to another country's form
  * of the voice's own language, such as US English, are turned off separately.
  */
-final class LanguageSwitch {
+public final class LanguageSwitch {
+
+  /** A stretch of text, from {@code start} to {@code end}, in one language or none. */
+  record Run(int start, int end, @Nullable Locale locale) {}
+
+  private static volatile boolean switchLanguages = true;
+  private static volatile boolean switchDialects = true;
+
+  /** The language chosen from the language menu, or null to use the speech engine's own. */
+  private static volatile @Nullable Locale chosenLanguage;
+
+  /** The language unmarked text is spoken in. */
+  private static volatile Locale voiceLanguage = Locale.getDefault();
 
   private LanguageSwitch() {}
+
+  /** Sets whether speech switches to other languages, and to other forms of its own language. */
+  static void setSwitches(boolean languages, boolean dialects) {
+    switchLanguages = languages;
+    switchDialects = dialects;
+  }
+
+  /** Sets the language chosen from the language menu, or null when it is reset. */
+  public static void setChosenLanguage(@Nullable Locale language) {
+    chosenLanguage = language;
+  }
+
+  /** Sets the language the speech engine speaks unmarked text in. */
+  static void setVoiceLanguage(Locale language) {
+    voiceLanguage = language;
+  }
+
+  /** Returns the language to speak text marked as {@code marked} in, by the switches. */
+  static @Nullable Locale localeToSpeak(@Nullable Locale marked) {
+    Locale chosen = chosenLanguage;
+    return localeToSpeak(
+        marked, chosen, chosen != null ? chosen : voiceLanguage, switchLanguages, switchDialects);
+  }
 
   /**
    * Returns the language to speak text marked as {@code marked} in.
@@ -48,5 +90,57 @@ final class LanguageSwitch {
     }
     boolean sameLanguage = marked.getLanguage().equals(own.getLanguage());
     return (sameLanguage ? switchDialects : switchLanguages) ? marked : chosen;
+  }
+
+  /**
+   * Returns {@code text} marked with the languages speech will use. Text is split into separate
+   * utterances wherever its language marks change, and each split adds a pause, so a change that
+   * the switches turn off must not leave a mark behind. Returns {@code text} itself when both
+   * switches are on or it has no language marks, otherwise a copy with its other spans kept.
+   */
+  static Spannable markSpokenLanguages(Spannable text) {
+    if (switchLanguages && switchDialects) {
+      return text;
+    }
+    int length = text.length();
+    LocaleSpan[] marks = text.getSpans(0, length, LocaleSpan.class);
+    if (marks.length == 0) {
+      return text;
+    }
+    List<Run> marked = new ArrayList<>();
+    for (int start = 0, end; start < length; start = end) {
+      end = text.nextSpanTransition(start, length, LocaleSpan.class);
+      // The first mark is the one the text splitter has always used where marks overlap.
+      LocaleSpan[] here = text.getSpans(start, end, LocaleSpan.class);
+      marked.add(new Run(start, end, here.length == 0 ? null : localeToSpeak(here[0].getLocale())));
+    }
+    Spannable spoken = new SpannableString(text);
+    for (LocaleSpan mark : marks) {
+      spoken.removeSpan(mark);
+    }
+    for (Run run : spokenRuns(marked)) {
+      spoken.setSpan(
+          new LocaleSpan(run.locale()), run.start(), run.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+    return spoken;
+  }
+
+  /**
+   * Joins neighbouring runs in the same language, and leaves out the runs in no language, which
+   * are spoken in the voice's own.
+   */
+  static List<Run> spokenRuns(List<Run> runs) {
+    List<Run> joined = new ArrayList<>();
+    for (Run run : runs) {
+      Run last = joined.isEmpty() ? null : joined.get(joined.size() - 1);
+      boolean sameLanguage = last != null && Objects.equals(last.locale(), run.locale());
+      if (sameLanguage && last.end() == run.start()) {
+        joined.set(joined.size() - 1, new Run(last.start(), run.end(), run.locale()));
+      } else {
+        joined.add(run);
+      }
+    }
+    joined.removeIf(run -> run.locale() == null);
+    return joined;
   }
 }

@@ -432,7 +432,11 @@ public class FeedbackProcessingUtils {
       if (TextUtils.isEmpty(fragmentText) || !(fragmentText instanceof Spannable)) {
         continue;
       }
-      Spannable spannable = (Spannable) fragmentText;
+      Spannable spannable = LanguageSwitch.markSpokenLanguages((Spannable) fragmentText);
+      if (spannable != fragmentText) {
+        fragmentText = spannable;
+        fragment.setText(spannable);
+      }
 
       int len = spannable.length();
       int next;

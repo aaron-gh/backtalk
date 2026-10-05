@@ -34,9 +34,9 @@ import com.google.android.accessibility.talkback.imagecaption.ImageContents;
 import com.google.android.accessibility.utils.AccessibilityEventUtils;
 import com.google.android.accessibility.utils.Performance.EventId;
 import com.google.android.accessibility.utils.input.TextEventInterpretation;
-import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.accessibility.utils.output.FailoverTextToSpeech.SpeechParam;
 import com.google.android.accessibility.utils.output.FeedbackItem;
+import com.google.android.accessibility.utils.output.LanguageSwitch;
 import com.google.android.accessibility.utils.output.SpeechCacheManager.LoadSpeechResultNotifier;
 import com.google.android.accessibility.utils.output.SpeechCleanupUtils;
 import com.google.android.accessibility.utils.output.SpeechController;
@@ -377,7 +377,7 @@ public class Compositor {
   /** Sets the user preferred locale changed using language switcher. */
   public void setUserPreferredLanguage(Locale locale) {
     globalVariables.setUserPreferredLocale(locale);
-    FailoverTextToSpeech.setChosenLanguage(locale);
+    LanguageSwitch.setChosenLanguage(locale);
     // The prepared announcements were worked out in the language used before.
     PreparedFocusSpeech.clear();
   }
