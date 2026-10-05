@@ -14,6 +14,10 @@
   <string name="screen_away_port_right_announcement">Screen-away mode, charging port on the right</string>
   <!-- Audial announcement that plays when switching to screen-away mode with the phone held so the charging port is on the user's left. [CHAR_LIMIT=200] -->
   <string name="screen_away_port_left_announcement">Screen-away mode, charging port on the left</string>
+  <!-- Audial announcement that plays when a tablet or unfolded phone is held up sideways and taken to face the user, with the charging port on the user's left. [CHAR_LIMIT=200] -->
+  <string name="screen_toward_port_left_announcement">Screen toward you, charging port on the left</string>
+  <!-- Audial announcement that plays when a tablet or unfolded phone is held up sideways and taken to face the user, with the charging port on the user's right. [CHAR_LIMIT=200] -->
+  <string name="screen_toward_port_right_announcement">Screen toward you, charging port on the right</string>
   <!-- Audial announcement that plays when the user turns the phone around in screen-away mode, so the charging port is now on their right. [CHAR_LIMIT=200] -->
   <string name="port_right_announcement">Charging port on the right</string>
   <!-- Audial announcement that plays when the user turns the phone around in screen-away mode, so the charging port is now on their left. [CHAR_LIMIT=200] -->
