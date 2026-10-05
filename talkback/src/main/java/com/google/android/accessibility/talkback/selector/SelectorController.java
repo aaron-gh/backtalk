@@ -1765,7 +1765,7 @@ public class SelectorController implements UserInputEventListener {
         return;
       }
       case SWITCH_VOICE_PROFILE -> {
-        changeVoiceProfile(eventId, isNext);
+        changeVoiceProfile(eventId, isNext, getSelectSettingGestures());
         return;
       }
       case GRANULARITY -> {
@@ -1987,17 +1987,27 @@ public class SelectorController implements UserInputEventListener {
     showQuickMenuActionOverlay(eventId, displayText);
   }
 
+  /**
+   * Changes to the previous or next voice profile from a gesture or keyboard shortcut, with
+   * Backtalk's default first.
+   */
+  public void changeVoiceProfile(EventId eventId, boolean isNext) {
+    if (VoiceProfiles.ids(prefs).isEmpty()) {
+      String displayText = context.getString(R.string.no_voice_profiles);
+      announceSetting(eventId, displayText, /* hint= */ null);
+      showQuickMenuActionOverlay(eventId, displayText);
+      return;
+    }
+    changeVoiceProfile(eventId, isNext, /* hint= */ null);
+  }
+
   /** Changes to the previous or next voice profile, with Backtalk's default first. */
-  private void changeVoiceProfile(EventId eventId, boolean isNext) {
-    List<String> ids = new ArrayList<>();
-    ids.add("");
-    ids.addAll(VoiceProfiles.ids(prefs));
-    int currentIndex = ids.indexOf(VoiceProfiles.activeId(prefs));
-    String nextId = ids.get(Math.floorMod(currentIndex + (isNext ? 1 : -1), ids.size()));
+  private void changeVoiceProfile(EventId eventId, boolean isNext, @Nullable String hint) {
+    String nextId = VoiceProfiles.adjacentId(prefs, isNext);
     prefs.edit().putString(VoiceProfiles.PREF_ACTIVE, nextId).apply();
 
     String displayText = VoiceProfilesFragment.nameOf(context, prefs, nextId);
-    announceSetting(eventId, displayText, getSelectSettingGestures());
+    announceSetting(eventId, displayText, hint);
     showQuickMenuActionOverlay(eventId, displayText);
   }
 

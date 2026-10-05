@@ -89,6 +89,20 @@ public class VoiceProfilesTest {
   }
 
   @Test
+  public void adjacentProfilesWrapAroundThroughTheDefault() {
+    assertEquals("", VoiceProfiles.adjacentId(prefs, /* isNext= */ true));
+
+    String one = create("One", "e");
+    String two = create("Two", "e");
+    assertEquals(one, VoiceProfiles.adjacentId(prefs, /* isNext= */ true));
+    assertEquals(two, VoiceProfiles.adjacentId(prefs, /* isNext= */ false));
+
+    prefs.edit().putString(VoiceProfiles.PREF_ACTIVE, two).apply();
+    assertEquals("", VoiceProfiles.adjacentId(prefs, /* isNext= */ true));
+    assertEquals(one, VoiceProfiles.adjacentId(prefs, /* isNext= */ false));
+  }
+
+  @Test
   public void orderKeepsEveryProfileOnce() {
     String one = create("One", "e");
     String two = create("Two", "e");

@@ -74,6 +74,19 @@
       voice profile is in use, as a profile always speaks in its own voice. [CHAR LIMIT=NONE]
     -->
     <string name="spoken_language_unavailable_with_profile">Spoken language unavailable while using a voice profile</string>
+    <!--
+      Item in the menu of voice profiles for the profile in use, opened from the Backtalk menu, a
+      gesture or a keyboard shortcut. [CHAR LIMIT=NONE]
+    -->
+    <string name="voice_profile_menu_item_in_use"><xliff:g id="name" example="Reading">%1$s</xliff:g>, in use</string>
+    <!-- Said when a shortcut that changes voice profile is used before any profile is added. [CHAR LIMIT=NONE] -->
+    <string name="no_voice_profiles">No voice profiles</string>
+    <!-- Gesture and keyboard shortcut action that opens a menu to choose the voice profile in use. [CHAR LIMIT=NONE] -->
+    <string name="shortcut_voice_profiles">Choose voice profile</string>
+    <!-- Gesture and keyboard shortcut action that changes to the previous voice profile. [CHAR LIMIT=NONE] -->
+    <string name="shortcut_previous_voice_profile">Previous voice profile</string>
+    <!-- Gesture and keyboard shortcut action that changes to the next voice profile. [CHAR LIMIT=NONE] -->
+    <string name="shortcut_next_voice_profile">Next voice profile</string>
     <!-- Title for the setting that chooses the voice profile in use. [CHAR LIMIT=NONE] -->
     <string name="title_pref_voice_profile_in_use">Voice profile in use</string>
     <!-- Title for the button that adds a voice profile. [CHAR LIMIT=NONE] -->
