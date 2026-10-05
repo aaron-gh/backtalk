@@ -1043,6 +1043,9 @@
         <item>@string/shortcut_pause_or_resume_feedback</item>
         <item>@string/shortcut_toggle_voice_feedback</item>
         <item>@string/shortcut_show_language_options</item>
+        <item>@string/shortcut_voice_profiles</item>
+        <item>@string/shortcut_previous_voice_profile</item>
+        <item>@string/shortcut_next_voice_profile</item>
     </string-array>
 
     <!-- Shortcut preference value of reading control -->
@@ -1054,6 +1057,9 @@
         <item>@string/shortcut_value_pause_or_resume_feedback</item>
         <item>@string/shortcut_value_toggle_voice_feedback</item>
         <item>@string/shortcut_value_show_language_options</item>
+        <item>@string/shortcut_value_voice_profiles</item>
+        <item>@string/shortcut_value_previous_voice_profile</item>
+        <item>@string/shortcut_value_next_voice_profile</item>
     </string-array>
 
     <!-- Shortcut preference of menu control -->
@@ -1926,4 +1932,16 @@
   </string-array>
   <item type="id" name="pause_backtalk" />
   <item type="id" name="notification_backtalk_paused" />
+
+  <!-- Voice profile menu and shortcuts. -->
+  <string name="keycombo_shortcut_other_voice_profiles">keycombo_shortcut_other_voice_profiles</string>
+  <string name="keycombo_shortcut_global_previous_voice_profile">keycombo_shortcut_global_previous_voice_profile</string>
+  <string name="keycombo_shortcut_global_next_voice_profile">keycombo_shortcut_global_next_voice_profile</string>
+  <string name="shortcut_value_voice_profiles" translatable="false">VOICE_PROFILES</string>
+  <string name="shortcut_value_previous_voice_profile" translatable="false">PREVIOUS_VOICE_PROFILE</string>
+  <string name="shortcut_value_next_voice_profile" translatable="false">NEXT_VOICE_PROFILE</string>
+  <string name="pref_show_context_menu_voice_profile_setting_key" translatable="false">pref_voice_profile_menu_setting_key</string>
+  <bool name="pref_show_context_menu_voice_profile_default">false</bool>
+  <item type="id" name="group_voice_profile" />
+  <item type="id" name="voice_profile_menu" />
 </resources>

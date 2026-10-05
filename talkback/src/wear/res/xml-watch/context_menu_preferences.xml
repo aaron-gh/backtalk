@@ -135,6 +135,12 @@
             android:summary="@string/summary_language"
             app:splitSummary="true" />
         <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
+            android:defaultValue="@bool/pref_show_context_menu_voice_profile_default"
+            android:key="@string/pref_show_context_menu_voice_profile_setting_key"
+            android:order="15"
+            android:title="@string/title_selector_voice_profile"
+            app:singleLineTitle="false"/>
+        <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
             android:defaultValue="@bool/pref_show_context_menu_emoji_default"
             android:key="@string/pref_show_context_menu_emoji_setting_key"
             android:order="15"

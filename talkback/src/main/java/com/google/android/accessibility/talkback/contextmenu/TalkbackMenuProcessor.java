@@ -78,6 +78,7 @@ public class TalkbackMenuProcessor {
   public static final int ORDER_TEXT_FORMATTING = 13;
   private static final int ORDER_LANGUAGES = 14;
   private static final int ORDER_EMOJI = 15;
+  private static final int ORDER_VOICE_PROFILES = 15;
   private static final int ORDER_SHOW_HIDE_SCREEN = 20;
   private static final int ORDER_PAUSE_BACKTALK = 21;
   private static final int ORDER_SYSTEM_ACTIONS = 24;
@@ -158,6 +159,8 @@ public class TalkbackMenuProcessor {
     addTellingTimeActionMenu(menu, prefs);
     // Language
     addLanguageMenuIfValid(menu);
+    // Voice profile
+    addVoiceProfileMenuIfValid(menu);
     addEmojiMenuIfValid(menu);
     // System Action
     addWindowActionMenu(menu);
@@ -434,6 +437,27 @@ public class TalkbackMenuProcessor {
             service.getString(R.string.spoken_language));
     if (!LanguageMenuProcessor.prepareLanguageSubMenu(service, pipeline, actorState, subMenu)) {
       menu.removeItem(R.id.language_menu);
+    }
+  }
+
+  private void addVoiceProfileMenuIfValid(ContextMenu menu) {
+    menu.removeItem(R.id.voice_profile_menu);
+
+    if (!showMenuItem(
+        R.string.pref_show_context_menu_voice_profile_setting_key,
+        R.bool.pref_show_context_menu_voice_profile_default)) {
+      return;
+    }
+
+    ListSubMenu subMenu =
+        menu.addSubMenu(
+            /* groupId= */ 0,
+            /* itemId= */ R.id.voice_profile_menu,
+            ORDER_VOICE_PROFILES,
+            service.getString(R.string.title_selector_voice_profile));
+    // Shown only once there is a profile to choose besides Backtalk default.
+    if (!VoiceProfileMenuProcessor.prepareVoiceProfileSubMenu(service, pipeline, subMenu)) {
+      menu.removeItem(R.id.voice_profile_menu);
     }
   }
 
