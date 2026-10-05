@@ -97,6 +97,8 @@ internal class RadialMenuView(context: Context, private val listener: Listener) 
 
   /** The middle of the circle, which is the middle of the screen. */
   private val center = PointF()
+  /** Where fingers that were already down when the menu opened started following it. */
+  private val heldTouchStart = PointF()
   /** Whether a finger is on the screen. */
   private var tracking = false
   private var focusedIndex = NO_ITEM
@@ -160,6 +162,31 @@ internal class RadialMenuView(context: Context, private val listener: Listener) 
     return true
   }
 
+  /**
+   * Follows fingers that were already down when the menu opened, which do not reach the menu as
+   * touches. Where they were counts as the middle, since they were not put down to choose an item,
+   * so they must slide out from there. Lifting before reaching an item leaves the menu open, so that
+   * it can be touched again.
+   */
+  fun followHeldTouch(x: Float, y: Float, lifted: Boolean) {
+    if (!tracking) {
+      if (lifted) {
+        return
+      }
+      heldTouchStart.set(x, y)
+      onEnter()
+    }
+    val menuX = center.x + x - heldTouchStart.x
+    val menuY = center.y + y - heldTouchStart.y
+    if (!lifted) {
+      onMove(menuX, menuY)
+    } else if (focusedIndex == NO_ITEM && itemAt(menuX, menuY) == NO_ITEM) {
+      tracking = false
+    } else {
+      onUp(menuX, menuY)
+    }
+  }
+
   private fun onEnter() {
     tracking = true
     listener.onTouchStarted()
@@ -192,9 +219,15 @@ internal class RadialMenuView(context: Context, private val listener: Listener) 
     listener.onItemFocused(index)
   }
 
-  /** Returns the item in the direction of ([x], [y]), or [NO_ITEM] in the middle of the circle. */
+  /**
+   * Returns the item in the direction of ([x], [y]), or [NO_ITEM] in the middle of the circle. Once
+   * an item is focused, the middle shrinks, so that a finger drifting back a little as it lifts does
+   * not cancel.
+   */
   private fun itemAt(x: Float, y: Float): Int {
-    if (items.isEmpty() || distSq(center, x, y) <= innerRadius * innerRadius) {
+    val middleRadius =
+      if (focusedIndex == NO_ITEM) innerRadius else innerRadius * KEEP_ITEM_MIDDLE_FRACTION
+    if (items.isEmpty() || distSq(center, x, y) <= middleRadius * middleRadius) {
       return NO_ITEM
     }
     val wedgeArc = 360.0 / items.size
@@ -334,6 +367,9 @@ internal class RadialMenuView(context: Context, private val listener: Listener) 
     private const val INNER_RADIUS_DP = 48f
     private const val OUTER_RADIUS_DP = 56f
     private const val EXTREME_RADIUS_DP = 160f
+
+    /** How much of the middle still cancels once an item is focused. */
+    private const val KEEP_ITEM_MIDDLE_FRACTION = 0.6f
 
     private const val ELLIPSIS = "…"
 

@@ -178,6 +178,10 @@ public class TalkBackPreferenceFilter {
     // Basic settings.
     NEW_FEATURE(R.string.pref_new_feature_in_talkback_entry_point_key, HIDDEN_ON_TV | HIDDEN_ON_XR),
     PROXIMITY(R.string.pref_proximity_key, HIDDEN_ON_TV | HIDE_NO_PROXIMITY_SENSOR | HIDDEN_ON_XR),
+    // A watch is not held to the ear for calls.
+    SPEAKERPHONE_AWAY_FROM_EAR(R.string.pref_speakerphone_away_from_ear_key, HIDDEN_ON_WATCH),
+    // Pausing is turned off on watches, so there is nothing to resume.
+    RESUME_BACKTALK(R.string.pref_resume_backtalk_key, HIDDEN_ON_WATCH),
     SPEECH_VOLUME(R.string.pref_speech_volume_key, HIDE_HAS_VOLUME_KEY),
     BRAILLE_KEYBOARD(
         R.string.pref_brailleime_key,

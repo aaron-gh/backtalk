@@ -108,13 +108,6 @@
 
   </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
 
-  <!-- Limit frequent content change -->
-  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
-      android:defaultValue="@bool/pref_allow_frequent_content_change_announcement_default"
-      android:key="@string/pref_allow_frequent_content_change_announcement_key"
-      android:title="@string/pref_allow_frequent_content_change_announcement_title"
-      android:summary="@string/summary_pref_allow_frequent_content_change_announcement"
-      app:splitSummary="true" />
   <!-- Formatting -->
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
       android:defaultValue="@bool/pref_formatting_inline_default"
@@ -126,11 +119,23 @@
       android:dependency="@string/pref_formatting_inline_key"
       android:title="@string/title_text_formatting_verbosity_options"
       android:fragment="com.google.android.accessibility.talkback.preference.base.TextFormattingDetailFragment" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
+      android:key="pref_screen_announcements"
+      android:summary="@string/summary_pref_screen_announcements"
+      android:title="@string/title_pref_screen_announcements"
+      android:fragment="com.google.android.accessibility.talkback.preference.base.ScreenAnnouncementsFragment" />
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
       android:defaultValue="@bool/pref_speak_notifications_default"
       android:key="@string/pref_speak_notifications_key"
       android:summary="@string/summary_pref_speak_notifications"
       android:title="@string/title_pref_speak_notifications" />
+  <!-- Limit frequent content change -->
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+      android:defaultValue="@bool/pref_allow_frequent_content_change_announcement_default"
+      android:key="@string/pref_allow_frequent_content_change_announcement_key"
+      android:title="@string/pref_allow_frequent_content_change_announcement_title"
+      android:summary="@string/summary_pref_allow_frequent_content_change_announcement"
+      app:splitSummary="true" />
   <!-- Speak element IDs - Non-preset detailed settings -->
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
       android:defaultValue="@bool/pref_speak_element_ids_default"

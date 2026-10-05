@@ -67,6 +67,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import com.google.android.accessibility.talkback.PrimesController.TimerAction;
+import com.google.android.accessibility.talkback.contextmenu.ListMenuManager;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForTapAndTouchExploration;
 import com.google.android.accessibility.talkback.gesture.TwoFingerRotationTracker;
@@ -154,6 +155,12 @@ public class TouchInteractionMonitor
   private Thread executorThread;
   private final GestureManifold gestureDetector;
   private boolean gestureStarted = false;
+  // Whether a gesture was performed while fingers were still down, such as a double tap and hold,
+  // so that the rest of the touch follows the circle menu instead of being a gesture. The offset
+  // keeps the followed point from jumping when one of the fingers lifts.
+  private boolean followingHeldTouch = false;
+  private float heldTouchOffsetX;
+  private float heldTouchOffsetY;
 
   // Whether a finger is on the screen, from the raw touch, for any thread. Unlike the touch
   // interaction, it ends as soon as the last finger lifts, not after gesture detection gives up.
@@ -497,6 +504,10 @@ public class TouchInteractionMonitor
       }
     } else {
       LogUtils.e(LOG_TAG, "Event is null.");
+      return;
+    }
+    if (followingHeldTouch) {
+      followHeldTouch(event);
       return;
     }
     if (event.getActionMasked() == ACTION_POINTER_DOWN) {
@@ -1052,6 +1063,57 @@ public class TouchInteractionMonitor
         });
     clear();
     clearGestureDetectorOnNextDown = true;
+    if (fingerDown) {
+      followingHeldTouch = true;
+      heldTouchOffsetX = 0;
+      heldTouchOffsetY = 0;
+    }
+  }
+
+  /**
+   * Passes the rest of a touch that performed a gesture before lifting to the circle menu, which
+   * the gesture may have opened, so that the user can slide straight to an item. The menu follows
+   * the middle of the fingers that are down.
+   */
+  private void followHeldTouch(MotionEvent event) {
+    int action = event.getActionMasked();
+    if (action == MotionEvent.ACTION_CANCEL) {
+      followingHeldTouch = false;
+      return;
+    }
+    boolean lifted = action == MotionEvent.ACTION_UP;
+    if (lifted) {
+      followingHeldTouch = false;
+    }
+    if (action == MotionEvent.ACTION_POINTER_UP) {
+      // Carry on from where the middle was, rather than jumping to the fingers still down.
+      int liftingIndex = event.getActionIndex();
+      heldTouchOffsetX += middle(event, -1, true) - middle(event, liftingIndex, true);
+      heldTouchOffsetY += middle(event, -1, false) - middle(event, liftingIndex, false);
+    }
+    int skipIndex = action == MotionEvent.ACTION_POINTER_UP ? event.getActionIndex() : -1;
+    float x = middle(event, skipIndex, true) + heldTouchOffsetX;
+    float y = middle(event, skipIndex, false) + heldTouchOffsetY;
+    mainHandler.post(
+        () -> {
+          ListMenuManager menuManager = service.getMenuManager();
+          if (menuManager != null) {
+            menuManager.followHeldTouch(x, y, lifted);
+          }
+        });
+  }
+
+  /** Returns the middle of the pointers of {@code event} on one axis, without {@code skipIndex}. */
+  private static float middle(MotionEvent event, int skipIndex, boolean alongX) {
+    float sum = 0;
+    int count = 0;
+    for (int index = 0; index < event.getPointerCount(); index++) {
+      if (index != skipIndex) {
+        sum += alongX ? event.getX(index) : event.getY(index);
+        count++;
+      }
+    }
+    return count == 0 ? 0 : sum / count;
   }
 
   /**
