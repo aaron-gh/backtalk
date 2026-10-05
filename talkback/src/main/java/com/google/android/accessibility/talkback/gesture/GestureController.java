@@ -61,6 +61,7 @@ import static com.google.android.accessibility.talkback.actor.TalkBackUIActor.Ty
 import static com.google.android.accessibility.talkback.contextmenu.ListMenuManager.MenuId.CONTEXT;
 import static com.google.android.accessibility.talkback.contextmenu.ListMenuManager.MenuId.CUSTOM_ACTION;
 import static com.google.android.accessibility.talkback.contextmenu.ListMenuManager.MenuId.LANGUAGE;
+import static com.google.android.accessibility.talkback.contextmenu.ListMenuManager.MenuId.VOICE_PROFILE;
 import static com.google.android.accessibility.talkback.trainingcommon.PageConfig.ANNOUNCE_REAL_ACTION;
 import static com.google.android.accessibility.talkback.trainingcommon.PageConfig.UNKNOWN_ANNOUNCEMENT;
 import static com.google.android.accessibility.utils.Performance.EVENT_ID_UNTRACKED;
@@ -398,6 +399,12 @@ public class GestureController {
       result = menuManager.showMenu(CUSTOM_ACTION, eventId);
     } else if (action.equals(service.getString(R.string.shortcut_value_show_language_options))) {
       result = menuManager.showMenu(LANGUAGE, eventId);
+    } else if (action.equals(service.getString(R.string.shortcut_value_voice_profiles))) {
+      result = menuManager.showMenu(VOICE_PROFILE, eventId, R.string.no_voice_profiles);
+    } else if (action.equals(service.getString(R.string.shortcut_value_previous_voice_profile))) {
+      selectorController.changeVoiceProfile(eventId, /* isNext= */ false);
+    } else if (action.equals(service.getString(R.string.shortcut_value_next_voice_profile))) {
+      selectorController.changeVoiceProfile(eventId, /* isNext= */ true);
     } else if (action.equals(service.getString(R.string.shortcut_value_previous_granularity))) {
       result = pipeline.returnFeedback(eventId, Feedback.focusDirection(PREVIOUS_GRANULARITY));
     } else if (action.equals(service.getString(R.string.shortcut_value_next_granularity))) {

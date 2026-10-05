@@ -146,6 +146,18 @@ public final class VoiceProfiles {
     return ids(prefs).contains(id) ? id : "";
   }
 
+  /**
+   * Returns the ID of the profile before or after the one in use, with Backtalk's default (empty)
+   * first, wrapping around at either end.
+   */
+  public static String adjacentId(SharedPreferences prefs, boolean isNext) {
+    List<String> ids = new ArrayList<>();
+    ids.add("");
+    ids.addAll(ids(prefs));
+    int currentIndex = ids.indexOf(activeId(prefs));
+    return ids.get(Math.floorMod(currentIndex + (isNext ? 1 : -1), ids.size()));
+  }
+
   /** Returns the profile in use, or null for Backtalk's default. */
   public static @Nullable VoiceProfile readActive(SharedPreferences prefs) {
     String id = activeId(prefs);
