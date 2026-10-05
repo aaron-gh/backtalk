@@ -230,7 +230,8 @@ public final class VoiceProfiles {
   /**
    * Returns each profile's name by ID, in order. Names can't be saved blank, but a damaged setting
    * can leave one blank. Such a profile gets the first numbered name, such as "Voice profile 2",
-   * that no other profile has, as a new profile would, so no two profiles share a name.
+   * that no other profile has, as a new profile would, and the name is saved at once, so it stays
+   * the same from then on.
    *
    * @param numberedName gives the numbered name for a number
    */
@@ -249,10 +250,15 @@ public final class VoiceProfiles {
         taken.add(name);
       }
     }
-    for (String id : blank) {
-      String name = unusedName(taken, numberedName);
-      names.put(id, name);
-      taken.add(name);
+    if (!blank.isEmpty()) {
+      SharedPreferences.Editor editor = prefs.edit();
+      for (String id : blank) {
+        String name = unusedName(taken, numberedName);
+        names.put(id, name);
+        taken.add(name);
+        editor.putString(key(id, NAME), name);
+      }
+      editor.apply();
     }
     return names;
   }
@@ -267,16 +273,6 @@ public final class VoiceProfiles {
       String name = numberedName.apply(number);
       if (!taken.contains(name)) {
         return name;
-      }
-    }
-  }
-
-  /** Saves the names {@link #names} gives profiles whose names are blank. */
-  public static void nameBlankProfiles(SharedPreferences prefs, IntFunction<String> numberedName) {
-    Map<String, String> names = names(prefs, numberedName);
-    for (String id : names.keySet()) {
-      if (read(prefs, id).name().trim().isEmpty()) {
-        rename(prefs, id, names.get(id));
       }
     }
   }
