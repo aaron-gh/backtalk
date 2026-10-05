@@ -183,11 +183,11 @@ public class TextToSpeechSettingsFragment extends TalkbackBaseFragment {
     }
   }
 
-  private static int toPercent(float multiplier) {
+  static int toPercent(float multiplier) {
     return Math.round(multiplier * 100);
   }
 
-  private static String fromPercent(int percent) {
+  static String fromPercent(int percent) {
     return Float.toString(percent / 100f);
   }
 }

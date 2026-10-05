@@ -6,6 +6,11 @@
       android:key="@string/pref_tts_engine_key"
       android:title="@string/title_pref_tts_engine" />
   <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
+      android:fragment="com.google.android.accessibility.talkback.preference.base.VoiceProfilesFragment"
+      android:key="@string/pref_voice_profiles_screen_key"
+      android:persistent="false"
+      android:title="@string/title_pref_voice_profiles" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
       android:key="@string/pref_system_tts_settings_key"
       android:title="@string/title_pref_system_tts_settings"
       android:summary="@string/summary_tts_settings" />

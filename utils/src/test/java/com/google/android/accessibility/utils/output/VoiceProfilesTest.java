@@ -1,0 +1,234 @@
+/*
+ * Copyright 2026 Backtalk contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package com.google.android.accessibility.utils.output;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import android.content.SharedPreferences;
+import com.google.android.accessibility.utils.output.VoiceProfiles.VoiceProfile;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import org.junit.After;
+import org.junit.Test;
+
+public class VoiceProfilesTest {
+  private final FakePrefs prefs = new FakePrefs();
+
+  @After
+  public void noProfileInUse() {
+    VoiceProfiles.setActive(null);
+  }
+
+  @Test
+  public void defaultIsInUseWithNoProfiles() {
+    assertTrue(VoiceProfiles.ids(prefs).isEmpty());
+    assertEquals("", VoiceProfiles.activeId(prefs));
+    assertNull(VoiceProfiles.readActive(prefs));
+  }
+
+  @Test
+  public void createdProfilesKeepTheirSettingsAndOrder() {
+    String first = create("Reading", "com.example.eloquence");
+    String second = create("Fast", "com.google.android.tts");
+    assertEquals(Arrays.asList(first, second), VoiceProfiles.ids(prefs));
+
+    VoiceProfile profile = VoiceProfiles.read(prefs, second);
+    assertEquals("Fast", profile.name());
+    assertEquals("com.google.android.tts", profile.engine());
+    assertEquals("", profile.language());
+    assertEquals("", profile.voice());
+    assertEquals(80, profile.volume());
+    assertEquals(1.5f, profile.rate(), 0f);
+    assertEquals(0.9f, profile.pitch(), 0f);
+    assertTrue(profile.phrases());
+  }
+
+  @Test
+  public void newIdsAreNeverReused() {
+    String first = create("One", "e");
+    String second = create("Two", "e");
+    VoiceProfiles.delete(prefs, second);
+    String third = create("Three", "e");
+    assertFalse(third.equals(second) || third.equals(first));
+  }
+
+  @Test
+  public void deletingTheProfileInUseGoesBackToTheDefault() {
+    String id = create("Reading", "e");
+    prefs.edit().putString(VoiceProfiles.PREF_ACTIVE, id).apply();
+    assertEquals(id, VoiceProfiles.readActive(prefs).id());
+
+    VoiceProfiles.delete(prefs, id);
+    assertTrue(VoiceProfiles.ids(prefs).isEmpty());
+    assertNull(VoiceProfiles.readActive(prefs));
+    assertNull(prefs.values.get(VoiceProfiles.key(id, VoiceProfiles.NAME)));
+  }
+
+  @Test
+  public void aMissingProfileInUseMeansTheDefault() {
+    prefs.edit().putString(VoiceProfiles.PREF_ACTIVE, "7").apply();
+    assertEquals("", VoiceProfiles.activeId(prefs));
+  }
+
+  @Test
+  public void allProfileSettingsAreProfileKeys() {
+    assertTrue(VoiceProfiles.isProfileKey(VoiceProfiles.PREF_ACTIVE));
+    assertTrue(VoiceProfiles.isProfileKey(VoiceProfiles.PREF_IDS));
+    assertTrue(VoiceProfiles.isProfileKey(VoiceProfiles.key("1", VoiceProfiles.RATE)));
+    assertFalse(VoiceProfiles.isProfileKey("pref_tts_engine"));
+    assertFalse(VoiceProfiles.isProfileKey(null));
+  }
+
+  @Test
+  public void aProfileInUseNeverSwitchesLanguage() {
+    LanguageSwitch.setSwitches(true, true);
+    assertEquals(Locale.GERMANY, LanguageSwitch.localeToSpeak(Locale.GERMANY));
+    VoiceProfiles.setActive(VoiceProfiles.read(prefs, create("Reading", "e")));
+    assertNull(LanguageSwitch.localeToSpeak(Locale.GERMANY));
+    LanguageSwitch.setChosenLanguage(Locale.FRANCE);
+    assertNull(LanguageSwitch.localeToSpeak(null));
+    LanguageSwitch.setChosenLanguage(null);
+  }
+
+  @Test
+  public void sameVoiceComparesEngineLanguageAndVoice() {
+    VoiceProfile profile = new VoiceProfile("1", "A", "e", "en-GB", "v", 100, 1f, 1f, false);
+    assertTrue(profile.sameVoiceAs(new VoiceProfile("2", "B", "e", "en-GB", "v", 50, 2f, 2f, true)));
+    assertFalse(profile.sameVoiceAs(new VoiceProfile("1", "A", "e", "en-GB", "w", 100, 1f, 1f, false)));
+    assertFalse(profile.sameVoiceAs(null));
+  }
+
+  private String create(String name, String engine) {
+    return VoiceProfiles.create(prefs, name, engine, "80", "1.5", "0.9", true);
+  }
+
+  /** Settings in memory, saved at once. */
+  private static final class FakePrefs implements SharedPreferences {
+    final Map<String, Object> values = new HashMap<>();
+
+    @Override
+    public Map<String, ?> getAll() {
+      return values;
+    }
+
+    @Override
+    public String getString(String key, String defValue) {
+      Object value = values.get(key);
+      return value == null ? defValue : (String) value;
+    }
+
+    @Override
+    public Set<String> getStringSet(String key, Set<String> defValues) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getInt(String key, int defValue) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long getLong(String key, long defValue) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public float getFloat(String key, float defValue) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean getBoolean(String key, boolean defValue) {
+      Object value = values.get(key);
+      return value == null ? defValue : (Boolean) value;
+    }
+
+    @Override
+    public boolean contains(String key) {
+      return values.containsKey(key);
+    }
+
+    @Override
+    public Editor edit() {
+      return new Editor() {
+        @Override
+        public Editor putString(String key, String value) {
+          values.put(key, value);
+          return this;
+        }
+
+        @Override
+        public Editor putStringSet(String key, Set<String> value) {
+          throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Editor putInt(String key, int value) {
+          throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Editor putLong(String key, long value) {
+          throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Editor putFloat(String key, float value) {
+          throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Editor putBoolean(String key, boolean value) {
+          values.put(key, value);
+          return this;
+        }
+
+        @Override
+        public Editor remove(String key) {
+          values.remove(key);
+          return this;
+        }
+
+        @Override
+        public Editor clear() {
+          values.clear();
+          return this;
+        }
+
+        @Override
+        public boolean commit() {
+          return true;
+        }
+
+        @Override
+        public void apply() {}
+      };
+    }
+
+    @Override
+    public void registerOnSharedPreferenceChangeListener(OnSharedPreferenceChangeListener l) {}
+
+    @Override
+    public void unregisterOnSharedPreferenceChangeListener(OnSharedPreferenceChangeListener l) {}
+  }
+}

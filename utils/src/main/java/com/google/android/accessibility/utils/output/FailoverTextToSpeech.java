@@ -74,6 +74,7 @@ import com.google.android.accessibility.utils.compat.speech.tts.TextToSpeechComp
 import com.google.android.accessibility.utils.output.SpeechCacheManager.LoadSpeechResultNotifier;
 import com.google.android.accessibility.utils.output.SpeechCachePlayer.PlaybackStateListener;
 import com.google.android.accessibility.utils.output.SpeechCachePlayer.SpeechInfo;
+import com.google.android.accessibility.utils.output.VoiceProfiles.VoiceProfile;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import com.google.auto.value.AutoValue;
 import java.io.File;
@@ -366,6 +367,8 @@ public class FailoverTextToSpeech {
         } else if (PREF_SWITCH_LANGUAGES_KEY.equals(key)
             || PREF_SWITCH_DIALECTS_KEY.equals(key)) {
           readLanguageSwitches(sharedPrefs);
+        } else if (VoiceProfiles.isProfileKey(key)) {
+          readVoiceProfile(sharedPrefs);
         }
       };
 
@@ -454,6 +457,7 @@ public class FailoverTextToSpeech {
     speakInPhrases = prefs.getBoolean(PREF_SPEAK_IN_PHRASES_KEY, SPEAK_IN_PHRASES_DEFAULT);
     lowLatencyAudio = prefs.getBoolean(PREF_LOW_LATENCY_AUDIO_KEY, lowLatencyAudioDefault(context));
     readLanguageSwitches(prefs);
+    VoiceProfiles.setActive(VoiceProfiles.readActive(prefs));
     prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
 
     // Updating the default engine reloads the list of installed engines and
@@ -867,6 +871,7 @@ public class FailoverTextToSpeech {
       Locale previousLocale = getUsedLocale();
       boolean changeLocale = false;
       int queueMode = flushGlobalTtsQueue ? SPEECH_FLUSH_ALL : QUEUE_ADD;
+      SpeechCacheManager speechCacheManager = usableSpeechCache();
       if (isLocaleAttached
           && speechCacheManager != null
           && speechCacheManager.hasCache(
@@ -1010,6 +1015,101 @@ public class FailoverTextToSpeech {
     LanguageSwitch.setVoiceLanguage(mDefaultLocale != null ? mDefaultLocale : mSystemLocale);
   }
 
+  /** Whether long text is sent a sentence at a time, by the voice profile in use if any. */
+  private boolean speaksInPhrases() {
+    VoiceProfile profile = VoiceProfiles.active();
+    return profile != null ? profile.phrases() : speakInPhrases;
+  }
+
+  /**
+   * Returns the speech cache, or null if there is none or a voice profile is in use. The cache keeps
+   * speech by language, not by voice, so it could play speech made in another voice.
+   */
+  private @Nullable SpeechCacheManager usableSpeechCache() {
+    return VoiceProfiles.isProfileActive() ? null : speechCacheManager;
+  }
+
+  /**
+   * Reads the voice profile in use, and moves to its engine and voice if they changed. Changes to
+   * its volume, rate and pitch are applied by the speech controller.
+   */
+  private void readVoiceProfile(SharedPreferences prefs) {
+    VoiceProfile previous = VoiceProfiles.active();
+    VoiceProfile profile = VoiceProfiles.readActive(prefs);
+    VoiceProfiles.setActive(profile);
+    if (profile == null ? previous == null : profile.sameVoiceAs(previous)) {
+      return;
+    }
+    LogUtils.i(TAG, "Voice profile: %s", profile == null ? "default" : profile.name());
+    // A new engine sets its voice once it starts.
+    updateDefaultEngine();
+    if (tts != null && tempTts == null) {
+      synchronized (ttsLock) {
+        cachedTtsLocale = null;
+        mLastUtteranceLocale = null;
+      }
+      localeInUse = ensureSupportedLocale();
+    }
+  }
+
+  /**
+   * Sets the voice of a voice profile: its own voice, else its language's default voice, else the
+   * engine's default voice.
+   *
+   * @return the voice's language, or null if no voice could be set
+   */
+  private @Nullable Locale attemptSetProfileVoice(VoiceProfile profile) {
+    if (tts == null) {
+      return null;
+    }
+    synchronized (ttsLock) {
+      mLastUtteranceLocale = null;
+      cachedTtsLocale = null;
+      try {
+        Voice voice = findVoice(profile.voice());
+        if (voice == null && !profile.language().isEmpty()) {
+          Locale language = Locale.forLanguageTag(profile.language());
+          if (!isNotAvailableStatus(tts.setLanguage(language))) {
+            LogUtils.i(TAG, "Voice profile speaks in %s", language);
+            cachedTtsLocale = language;
+            return language;
+          }
+          LogUtils.w(TAG, "Voice profile language %s is not available", language);
+        }
+        if (voice == null) {
+          voice = tts.getDefaultVoice();
+        }
+        if (voice != null && tts.setVoice(voice) == TextToSpeech.SUCCESS) {
+          LogUtils.i(TAG, "Voice profile speaks with %s", voice.getName());
+          cachedTtsLocale = voice.getLocale();
+          return cachedTtsLocale;
+        }
+      } catch (RuntimeException e) {
+        // The engine may have stopped.
+        LogUtils.e(TAG, "Failed to set the voice profile's voice: %s", e.toString());
+      }
+    }
+    LogUtils.e(TAG, "No voice for voice profile %s", profile.name());
+    return null;
+  }
+
+  /** Returns the current engine's voice called {@code name}, or null if it has none. */
+  private @Nullable Voice findVoice(String name) {
+    if (name.isEmpty()) {
+      return null;
+    }
+    Set<Voice> voices = tts.getVoices();
+    if (voices != null) {
+      for (Voice voice : voices) {
+        if (name.equals(voice.getName())) {
+          return voice;
+        }
+      }
+    }
+    LogUtils.w(TAG, "Voice %s is not installed", name);
+    return null;
+  }
+
   private Locale getUsedLocale() {
     synchronized (ttsLock) {
       return cachedTtsLocale;
@@ -1076,6 +1176,7 @@ public class FailoverTextToSpeech {
     if (utteranceId != null) {
       utteranceTexts.put(utteranceId, text);
     }
+    SpeechCacheManager speechCacheManager = usableSpeechCache();
     if (speechCacheManager == null) {
       return speakInChunks(text, queueMode, bundle, utteranceId, locale);
     }
@@ -1154,7 +1255,7 @@ public class FailoverTextToSpeech {
   private int speakInChunks(
       CharSequence text, int queueMode, Bundle bundle, String utteranceId, Locale locale) {
     List<Integer> starts =
-        utteranceId == null || !speakInPhrases
+        utteranceId == null || !speaksInPhrases()
             ? Collections.singletonList(0)
             : SpeechChunker.chunkStarts(text, locale == null ? Locale.getDefault() : locale);
     if (starts.size() <= 1) {
@@ -1989,6 +2090,10 @@ public class FailoverTextToSpeech {
     if (speechCacheManager == null) {
       return;
     }
+    if (usableSpeechCache() == null) {
+      resultNotifier.onFinished(null, false);
+      return;
+    }
     Locale locale = null;
     if (text instanceof Spannable spannable) {
       TtsSpan[] ttsSpans = spannable.getSpans(0, text.length(), TtsSpan.class);
@@ -2106,8 +2211,10 @@ public class FailoverTextToSpeech {
   }
 
   private @Nullable String getTargetEngine() {
-    return (preferredTtsEngine != null && installedTtsEngines.contains(preferredTtsEngine))
-        ? preferredTtsEngine
+    VoiceProfile profile = VoiceProfiles.active();
+    String preferred = profile != null ? profile.engine() : preferredTtsEngine;
+    return (preferred != null && installedTtsEngines.contains(preferred))
+        ? preferred
         : defaultTtsEngine;
   }
 
@@ -2201,6 +2308,10 @@ public class FailoverTextToSpeech {
    * or the default TTS locale changes.
    */
   private @Nullable Locale ensureSupportedLocale() {
+    VoiceProfile profile = VoiceProfiles.active();
+    if (profile != null) {
+      return attemptSetProfileVoice(profile);
+    }
     if (needsFallbackLocale()) {
       return attemptSetFallbackLanguage();
     } else {
