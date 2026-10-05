@@ -90,6 +90,16 @@
     -->
     <string name="summary_pref_speak_in_phrases">For speech engines that are slow to stop, such as Gryphon, so swiping away stops long text at once. Many engines pause longer between sentences sent separately, so leave this off if yours stops quickly.</string>
     <!--
+      Source: Title for the "switch languages" toggle.
+      Description: When on, text that an app marks as another language is spoken in that language. [CHAR LIMIT=NONE]
+    -->
+    <string name="title_pref_switch_languages">Switch language automatically</string>
+    <!--
+      Source: Title for the "switch dialects" toggle.
+      Description: When on, text marked as another country's form of the voice's language is spoken with that country's voice. [CHAR LIMIT=NONE]
+    -->
+    <string name="title_pref_switch_dialects">Switch dialect automatically</string>
+    <!--
       Source: Title for the menu item that opens the dialog with TTS  languages installed by the user.
       Description: This is presented to the user. [CHAR LIMIT=NONE]
     -->
