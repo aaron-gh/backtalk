@@ -22,9 +22,6 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
-import android.text.InputFilter;
-import android.text.InputType;
-import android.widget.EditText;
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
@@ -87,9 +84,10 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
   public CharSequence getTitle() {
     Bundle args = getArguments();
     String profileId = (args == null) ? "" : args.getString(ARG_PROFILE_ID, "");
-    return VoiceProfiles.read(
-            SharedPreferencesUtils.getSharedPreferences(requireContext()), profileId)
-        .name();
+    Context context = requireContext();
+    return VoiceProfilesFragment.nameOf(
+        context,
+        VoiceProfiles.read(SharedPreferencesUtils.getSharedPreferences(context), profileId));
   }
 
   @Override
@@ -198,7 +196,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
   private void addName(Context context, PreferenceScreen screen) {
     Preference name = new AccessibilitySuitePreference(context);
     name.setTitle(R.string.title_pref_voice_profile_name);
-    name.setSummary(profile().name());
+    name.setSummary(VoiceProfilesFragment.nameOf(context, profile()));
     name.setPersistent(false);
     name.setIconSpaceReserved(false);
     name.setOnPreferenceClickListener(
@@ -211,29 +209,17 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
 
   private void askForName(Preference namePref) {
     Context context = requireContext();
-    EditText field = new EditText(context);
-    field.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-    field.setSingleLine(true);
-    field.setFilters(
-        new InputFilter[] {new InputFilter.LengthFilter(VoiceProfiles.MAX_NAME_LENGTH)});
-    field.setText(profile().name());
-    field.selectAll();
-    new AlertDialog.Builder(context)
-        .setTitle(R.string.title_pref_voice_profile_name)
-        .setView(VoiceProfilesFragment.padded(context, field))
-        .setPositiveButton(
-            android.R.string.ok,
-            (dialog, which) -> {
-              String name = field.getText().toString().trim();
-              if (!name.isEmpty()) {
-                prefs.edit().putString(VoiceProfiles.key(id, VoiceProfiles.NAME), name).apply();
-                namePref.setSummary(name);
-                requireActivity().setTitle(name);
-              }
-            })
-        .setNegativeButton(android.R.string.cancel, null)
-        .show();
-    field.requestFocus();
+    VoiceProfilesFragment.askForName(
+        context,
+        R.string.title_pref_voice_profile_name,
+        VoiceProfilesFragment.nameOf(context, profile()),
+        name -> {
+          if (VoiceProfiles.rename(prefs, id, name)) {
+            String saved = profile().name();
+            namePref.setSummary(saved);
+            requireActivity().setTitle(saved);
+          }
+        });
   }
 
   private void addEngine(Context context, PreferenceScreen screen) {
@@ -452,7 +438,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
   }
 
   private void confirmDelete() {
-    String name = profile().name();
+    String name = VoiceProfilesFragment.nameOf(requireContext(), profile());
     new AlertDialog.Builder(requireContext())
         .setMessage(getString(R.string.voice_profile_delete_confirm, name))
         .setPositiveButton(

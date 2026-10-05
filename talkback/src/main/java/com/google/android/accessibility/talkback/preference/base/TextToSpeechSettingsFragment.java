@@ -136,7 +136,11 @@ public class TextToSpeechSettingsFragment extends TalkbackBaseFragment {
     }
     VoiceProfile profile = VoiceProfiles.readActive(prefs);
     preference.setSummary(
-        (profile == null) ? null : getString(R.string.voice_profile_in_use, profile.name()));
+        (profile == null)
+            ? null
+            : getString(
+                R.string.voice_profile_in_use,
+                VoiceProfilesFragment.nameOf(requireContext(), profile)));
   }
 
   private void setUpSystemTtsSettingsPreference() {
