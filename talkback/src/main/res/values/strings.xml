@@ -2293,6 +2293,15 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <!-- Spoken when wrap around is turned off. [CHAR LIMIT=NONE]-->
     <string name="wrap_around_off">Wrap around off</string>
 
+    <!-- Title of the reading control for the braille keyboard setting that takes a tablet or unfolded phone held up to be held with the screen facing away from the user. When off, it is taken to face the user and uses the tabletop layout. [CHAR LIMIT=NONE]-->
+    <string name="title_selector_tablet_held_up_faces_away">Tablet held up faces away</string>
+    <!-- Summary of the tablet held up faces away setting in the reading controls list. [CHAR LIMIT=NONE]-->
+    <string name="summary_support_tablet_held_up_faces_away">For the braille keyboard on a tablet or unfolded phone</string>
+    <!-- Spoken when the tablet held up faces away setting is turned on. [CHAR LIMIT=NONE]-->
+    <string name="tablet_held_up_faces_away_on">Tablet held up faces away on</string>
+    <!-- Spoken when the tablet held up faces away setting is turned off. [CHAR LIMIT=NONE]-->
+    <string name="tablet_held_up_faces_away_off">Tablet held up faces away off</string>
+
     <!-- Label for the preference specifying that the shake to read feature is disabled. -->
     <string name="value_shake_to_read_disabled">Disabled</string>
     <!-- Label for the preference specifying a very small amount of shake force is required to initiate the shake to read feature. -->
