@@ -193,8 +193,8 @@ object DotsOrientation {
    * with the charging port to the left or right was held from behind, and tipping it flat keeps the
    * port on the same side of the user, so the user is at the opposite edge. Held with the port down
    * or up, the user most likely opened the keyboard facing the screen in portrait. When
-   * [heldUpFacesAway] is off, a tablet held up is always taken to face the user, as when it stood on
-   * a stand. Only call it for a tablet whose port is at the bottom of the screen in its natural
+   * [heldUpFacesAway] is off, a tablet held up is always taken to face the user, as when it stood
+   * on a stand. Only call it for a tablet whose port is at the bottom of the screen in its natural
    * orientation.
    */
   @JvmStatic
