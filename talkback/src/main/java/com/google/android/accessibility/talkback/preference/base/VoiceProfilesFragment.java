@@ -18,32 +18,52 @@ package com.google.android.accessibility.talkback.preference.base;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.TypedArray;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.TextUtils;
+import android.view.HapticFeedbackConstants;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.PopupMenu;
+import androidx.core.view.ViewCompat;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceScreen;
+import androidx.recyclerview.widget.ConcatAdapter;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference;
 import com.google.android.accessibility.material.preference.AccessibilitySuitePreference;
 import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.accessibility.utils.output.VoiceProfiles;
-import com.google.android.accessibility.utils.output.VoiceProfiles.VoiceProfile;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * The voice profiles: the one in use, a row for each that opens its settings, and a way to add one.
- * Backtalk's default is always there, and uses the text-to-speech settings.
+ * The voice profiles: the one in use, then Backtalk default and each profile in the order the
+ * reading control goes through them, then a way to add one. A profile opens its settings when
+ * tapped. It can be moved, renamed and deleted with actions from a screen reader, or renamed and
+ * deleted from the menu that a long press shows. Holding a profile and dragging it moves it. Nothing
+ * moves above Backtalk default, which uses the text-to-speech settings.
  */
 public class VoiceProfilesFragment extends TalkbackBaseFragment {
 
   private SharedPreferences prefs;
+  private AccessibilitySuiteListPreference inUse;
+  private final ProfilesAdapter profiles = new ProfilesAdapter();
 
   @Override
   public CharSequence getTitle() {
@@ -58,22 +78,45 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
     // be saved to a second settings file, which the service moves over the real one when it
     // starts, losing every other setting.
     getPreferenceManager().setStorageDeviceProtected();
-    setPreferenceScreen(getPreferenceManager().createPreferenceScreen(context));
+    PreferenceScreen screen = getPreferenceManager().createPreferenceScreen(context);
+    inUse = new AccessibilitySuiteListPreference(context);
+    inUse.setKey(VoiceProfiles.PREF_ACTIVE);
+    inUse.setTitle(R.string.title_pref_voice_profile_in_use);
+    inUse.setDialogTitle(R.string.title_pref_voice_profile_in_use);
+    inUse.setDefaultValue("");
+    inUse.setSummary("%s");
+    inUse.setIconSpaceReserved(false);
+    screen.addPreference(inUse);
+    setPreferenceScreen(screen);
+    updateInUse();
+  }
+
+  /**
+   * The profile rows aren't preferences: the preference list redraws itself a moment after any
+   * change, which would end a drag part way through.
+   */
+  @Override
+  protected RecyclerView.Adapter onCreateAdapter(PreferenceScreen preferenceScreen) {
+    return new ConcatAdapter(super.onCreateAdapter(preferenceScreen), profiles);
+  }
+
+  @Override
+  public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    super.onViewCreated(view, savedInstanceState);
+    new ItemTouchHelper(new DragCallback()).attachToRecyclerView(getListView());
   }
 
   @Override
   public void onResume() {
     super.onResume();
     // A profile may have been renamed, removed or switched to meanwhile.
-    rebuild();
+    profiles.reload();
+    updateInUse();
   }
 
-  private void rebuild() {
-    Context context = requireContext();
-    PreferenceScreen screen = getPreferenceScreen();
-    screen.removeAll();
+  /** Lists Backtalk default and the profiles, in order, as the profiles to choose from. */
+  private void updateInUse() {
     List<String> ids = VoiceProfiles.ids(prefs);
-
     CharSequence[] entries = new CharSequence[ids.size() + 1];
     CharSequence[] values = new CharSequence[ids.size() + 1];
     entries[0] = getString(R.string.voice_profile_default);
@@ -82,42 +125,23 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
       entries[i + 1] = VoiceProfiles.read(prefs, ids.get(i)).name();
       values[i + 1] = ids.get(i);
     }
-    AccessibilitySuiteListPreference inUse = new AccessibilitySuiteListPreference(context);
-    inUse.setKey(VoiceProfiles.PREF_ACTIVE);
-    inUse.setTitle(R.string.title_pref_voice_profile_in_use);
-    inUse.setDialogTitle(R.string.title_pref_voice_profile_in_use);
     inUse.setEntries(entries);
     inUse.setEntryValues(values);
-    inUse.setDefaultValue("");
-    inUse.setSummary("%s");
-    inUse.setIconSpaceReserved(false);
-    screen.addPreference(inUse);
     // A removed profile's ID may still be saved as the one in use.
     inUse.setValue(VoiceProfiles.activeId(prefs));
+  }
 
-    for (String id : ids) {
-      VoiceProfile profile = VoiceProfiles.read(prefs, id);
-      Preference row = new AccessibilitySuitePreference(context);
-      row.setKey(rowKey(id));
-      row.setTitle(profile.name());
-      row.setSummary(FailoverTextToSpeech.getEngineDisplayName(context, profile.engine()));
-      row.setFragment(VoiceProfileFragment.class.getName());
-      row.getExtras().putString(VoiceProfileFragment.ARG_PROFILE_ID, id);
-      row.setPersistent(false);
-      row.setIconSpaceReserved(false);
-      screen.addPreference(row);
-    }
+  private String nameOf(String id) {
+    return id.isEmpty()
+        ? getString(R.string.voice_profile_default)
+        : VoiceProfiles.read(prefs, id).name();
+  }
 
-    Preference add = new AccessibilitySuitePreference(context);
-    add.setTitle(R.string.title_pref_add_voice_profile);
-    add.setPersistent(false);
-    add.setIconSpaceReserved(false);
-    add.setOnPreferenceClickListener(
-        preference -> {
-          askForName(unusedName(ids));
-          return true;
-        });
-    screen.addPreference(add);
+  private void open(String id) {
+    Preference preference = new Preference(requireContext());
+    preference.setFragment(VoiceProfileFragment.class.getName());
+    preference.getExtras().putString(VoiceProfileFragment.ARG_PROFILE_ID, id);
+    onPreferenceTreeClick(preference);
   }
 
   /** Returns the first of "Voice profile 1", "Voice profile 2" and so on that no profile has. */
@@ -134,25 +158,46 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
     }
   }
 
-  private void askForName(String suggestedName) {
+  private void askForNewName() {
+    String suggestedName = unusedName(VoiceProfiles.ids(prefs));
+    askForName(
+        R.string.title_pref_add_voice_profile,
+        suggestedName,
+        name -> add(name.isEmpty() ? suggestedName : name));
+  }
+
+  private void askForRename(String id) {
+    askForName(
+        R.string.voice_profile_rename,
+        nameOf(id),
+        name -> {
+          if (!name.isEmpty()) {
+            prefs.edit().putString(VoiceProfiles.key(id, VoiceProfiles.NAME), name).apply();
+            profiles.reload();
+            updateInUse();
+          }
+        });
+  }
+
+  private interface NameListener {
+    void onName(String name);
+  }
+
+  private void askForName(int titleResId, String name, NameListener listener) {
     Context context = requireContext();
     EditText field = new EditText(context);
     field.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
     field.setSingleLine(true);
-    field.setText(suggestedName);
+    field.setText(name);
     field.selectAll();
-    AlertDialog.Builder builder =
-        new AlertDialog.Builder(context)
-            .setTitle(R.string.title_pref_add_voice_profile)
-            .setView(padded(context, field))
-            .setPositiveButton(
-                android.R.string.ok,
-                (dialog, which) -> {
-                  String name = field.getText().toString().trim();
-                  add(name.isEmpty() ? suggestedName : name);
-                })
-            .setNegativeButton(android.R.string.cancel, null);
-    builder.show();
+    new AlertDialog.Builder(context)
+        .setTitle(titleResId)
+        .setView(padded(context, field))
+        .setPositiveButton(
+            android.R.string.ok,
+            (dialog, which) -> listener.onName(field.getText().toString().trim()))
+        .setNegativeButton(android.R.string.cancel, null)
+        .show();
     field.requestFocus();
   }
 
@@ -181,15 +226,42 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
             prefs.getBoolean(
                 getString(R.string.pref_speak_in_phrases_key),
                 getResources().getBoolean(R.bool.pref_speak_in_phrases_default)));
-    rebuild();
-    @Nullable Preference row = findPreference(rowKey(id));
-    if (row != null) {
-      onPreferenceTreeClick(row);
-    }
+    profiles.reload();
+    updateInUse();
+    open(id);
   }
 
-  private static String rowKey(String id) {
-    return "voice_profile_row_" + id;
+  private void confirmDelete(String id) {
+    String name = nameOf(id);
+    new AlertDialog.Builder(requireContext())
+        .setMessage(getString(R.string.voice_profile_delete_confirm, name))
+        .setPositiveButton(
+            R.string.voice_profile_delete,
+            (dialog, which) -> {
+              VoiceProfiles.delete(prefs, id);
+              profiles.remove(id);
+              updateInUse();
+              getListView().announceForAccessibility(getString(R.string.voice_profile_deleted, name));
+            })
+        .setNegativeButton(android.R.string.cancel, null)
+        .show();
+  }
+
+  /** The menu a long press shows, for those who don't use a screen reader's actions. */
+  private void showMenu(View anchor, String id) {
+    PopupMenu menu = new PopupMenu(requireContext(), anchor);
+    menu.getMenu().add(Menu.NONE, R.string.voice_profile_rename, 0, R.string.voice_profile_rename);
+    menu.getMenu().add(Menu.NONE, R.string.voice_profile_delete, 1, R.string.voice_profile_delete);
+    menu.setOnMenuItemClickListener(
+        item -> {
+          if (item.getItemId() == R.string.voice_profile_rename) {
+            askForRename(id);
+          } else {
+            confirmDelete(id);
+          }
+          return true;
+        });
+    menu.show();
   }
 
   /** Lines a dialog's text field up with its title. */
@@ -199,5 +271,291 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
     container.setPadding(padding, 0, padding, 0);
     container.addView(field);
     return container;
+  }
+
+  /** A row that looks like any other setting. */
+  private static final class RowHolder extends RecyclerView.ViewHolder {
+    final TextView title;
+    final TextView summary;
+    final List<Integer> actionIds = new ArrayList<>();
+    @Nullable String id;
+    @Nullable Drawable background;
+
+    RowHolder(View itemView) {
+      super(itemView);
+      title = itemView.findViewById(android.R.id.title);
+      summary = itemView.findViewById(android.R.id.summary);
+      hide(itemView.findViewById(androidx.preference.R.id.icon_frame));
+      hide(itemView.findViewById(android.R.id.icon_frame));
+      hide(itemView.findViewById(android.R.id.widget_frame));
+    }
+
+    private static void hide(@Nullable View view) {
+      if (view != null) {
+        view.setVisibility(View.GONE);
+      }
+    }
+
+    /** Whether this row is a profile, rather than Backtalk default or the add row. */
+    boolean isProfile() {
+      return id != null && !id.isEmpty();
+    }
+  }
+
+  /** Backtalk default, then the profiles, then the add row. */
+  private final class ProfilesAdapter extends RecyclerView.Adapter<RowHolder> {
+    /** Backtalk default's ID, which is empty, then the profiles' IDs. */
+    private final List<String> rows = new ArrayList<>();
+
+    void reload() {
+      rows.clear();
+      if (prefs != null) {
+        rows.add("");
+        rows.addAll(VoiceProfiles.ids(prefs));
+      }
+      notifyDataSetChanged();
+    }
+
+    void remove(String id) {
+      int position = rows.indexOf(id);
+      if (position >= 0) {
+        rows.remove(position);
+        notifyItemRemoved(position);
+        updateActions();
+      }
+    }
+
+    /** Moves the profile at {@code from} to {@code to}, and says where it went. */
+    void move(int from, int to, View announcer) {
+      String id = rows.remove(from);
+      rows.add(to, id);
+      notifyItemMoved(from, to);
+      String neighbour = (to < from) ? rows.get(to + 1) : rows.get(to - 1);
+      announcer.announceForAccessibility(
+          getString(
+              (to < from) ? R.string.voice_profile_moved_above : R.string.voice_profile_moved_below,
+              nameOf(neighbour)));
+    }
+
+    void saveOrder() {
+      VoiceProfiles.setOrder(prefs, rows.subList(1, rows.size()));
+      updateInUse();
+    }
+
+    boolean isProfileRow(int position) {
+      return position > 0 && position < rows.size();
+    }
+
+    @Override
+    public int getItemCount() {
+      return rows.isEmpty() ? 0 : rows.size() + 1;
+    }
+
+    @Override
+    public RowHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+      Context context = parent.getContext();
+      int layout = new AccessibilitySuitePreference(context).getLayoutResource();
+      RowHolder holder =
+          new RowHolder(LayoutInflater.from(context).inflate(layout, parent, /* attachToRoot= */ false));
+      holder.itemView.setOnClickListener(
+          view -> {
+            int position = holder.getBindingAdapterPosition();
+            if (position == RecyclerView.NO_POSITION) {
+              return;
+            }
+            if (position == rows.size()) {
+              askForNewName();
+            } else if (position == 0) {
+              // Backtalk default's settings are the text-to-speech settings this screen came from.
+              requireActivity().getOnBackPressedDispatcher().onBackPressed();
+            } else {
+              open(rows.get(position));
+            }
+          });
+      return holder;
+    }
+
+    @Override
+    public void onBindViewHolder(RowHolder holder, int position) {
+      holder.id = (position < rows.size()) ? rows.get(position) : null;
+      CharSequence summary = null;
+      if (holder.id == null) {
+        holder.title.setText(R.string.title_pref_add_voice_profile);
+      } else if (holder.id.isEmpty()) {
+        holder.title.setText(R.string.voice_profile_default);
+      } else {
+        String engine = VoiceProfiles.read(prefs, holder.id).engine();
+        holder.title.setText(nameOf(holder.id));
+        summary = FailoverTextToSpeech.getEngineDisplayName(holder.itemView.getContext(), engine);
+      }
+      if (holder.summary != null) {
+        holder.summary.setText(summary);
+        holder.summary.setVisibility(TextUtils.isEmpty(summary) ? View.GONE : View.VISIBLE);
+      }
+      bindActions(holder, position);
+    }
+
+    /** Gives a profile's row its actions, which depend on its {@code position} in the list. */
+    void bindActions(RowHolder holder, int position) {
+      View view = holder.itemView;
+      for (int actionId : holder.actionIds) {
+        ViewCompat.removeAccessibilityAction(view, actionId);
+      }
+      holder.actionIds.clear();
+      if (!holder.isProfile() || position == RecyclerView.NO_POSITION) {
+        return;
+      }
+      // Nothing moves above Backtalk default.
+      if (position > 1) {
+        holder.actionIds.add(
+            ViewCompat.addAccessibilityAction(
+                view,
+                getString(R.string.voice_profile_move_up),
+                (host, arguments) -> moveByAction(holder, -1)));
+      }
+      if (position < rows.size() - 1) {
+        holder.actionIds.add(
+            ViewCompat.addAccessibilityAction(
+                view,
+                getString(R.string.voice_profile_move_down),
+                (host, arguments) -> moveByAction(holder, 1)));
+      }
+      holder.actionIds.add(
+          ViewCompat.addAccessibilityAction(
+              view,
+              getString(R.string.voice_profile_rename),
+              (host, arguments) -> {
+                if (holder.isProfile()) {
+                  askForRename(holder.id);
+                }
+                return true;
+              }));
+      holder.actionIds.add(
+          ViewCompat.addAccessibilityAction(
+              view,
+              getString(R.string.voice_profile_delete),
+              (host, arguments) -> {
+                if (holder.isProfile()) {
+                  confirmDelete(holder.id);
+                }
+                return true;
+              }));
+    }
+
+    private boolean moveByAction(RowHolder holder, int step) {
+      int from = holder.getBindingAdapterPosition();
+      int to = from + step;
+      if (!isProfileRow(from) || !isProfileRow(to)) {
+        return false;
+      }
+      move(from, to, holder.itemView);
+      saveOrder();
+      updateActions();
+      return true;
+    }
+
+    /** Updates the actions of the rows on screen after the order changes. */
+    void updateActions() {
+      RecyclerView list = getListView();
+      if (list == null) {
+        return;
+      }
+      for (int i = 0; i < list.getChildCount(); i++) {
+        RecyclerView.ViewHolder holder = list.getChildViewHolder(list.getChildAt(i));
+        if (holder instanceof RowHolder row && holder.getBindingAdapter() == this) {
+          bindActions(row, row.getBindingAdapterPosition());
+        }
+      }
+    }
+  }
+
+  /**
+   * Moves a profile when it is held and dragged. Holding one and letting go without moving it shows
+   * its menu instead.
+   */
+  private final class DragCallback extends ItemTouchHelper.Callback {
+    private boolean moved;
+
+    private boolean isProfile(RecyclerView.ViewHolder holder) {
+      return holder instanceof RowHolder row
+          && holder.getBindingAdapter() == profiles
+          && row.isProfile();
+    }
+
+    @Override
+    public int getMovementFlags(
+        @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder holder) {
+      return isProfile(holder) ? makeMovementFlags(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) : 0;
+    }
+
+    @Override
+    public boolean isLongPressDragEnabled() {
+      return true;
+    }
+
+    @Override
+    public boolean isItemViewSwipeEnabled() {
+      return false;
+    }
+
+    @Override
+    public boolean canDropOver(
+        @NonNull RecyclerView recyclerView,
+        @NonNull RecyclerView.ViewHolder current,
+        @NonNull RecyclerView.ViewHolder target) {
+      return isProfile(target);
+    }
+
+    @Override
+    public boolean onMove(
+        @NonNull RecyclerView recyclerView,
+        @NonNull RecyclerView.ViewHolder holder,
+        @NonNull RecyclerView.ViewHolder target) {
+      int from = holder.getBindingAdapterPosition();
+      int to = target.getBindingAdapterPosition();
+      if (!profiles.isProfileRow(from) || !profiles.isProfileRow(to) || from == to) {
+        return false;
+      }
+      profiles.move(from, to, recyclerView);
+      moved = true;
+      return true;
+    }
+
+    @Override
+    public void onSwiped(@NonNull RecyclerView.ViewHolder holder, int direction) {}
+
+    @Override
+    public void onSelectedChanged(RecyclerView.@Nullable ViewHolder holder, int actionState) {
+      super.onSelectedChanged(holder, actionState);
+      if (actionState == ItemTouchHelper.ACTION_STATE_DRAG && holder instanceof RowHolder row) {
+        moved = false;
+        View view = row.itemView;
+        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+        // The row is drawn over the others while it moves, so it needs a background of its own.
+        row.background = view.getBackground();
+        TypedArray colors =
+            view.getContext().obtainStyledAttributes(new int[] {android.R.attr.colorBackground});
+        view.setBackgroundColor(colors.getColor(0, 0));
+        colors.recycle();
+      }
+    }
+
+    @Override
+    public void clearView(
+        @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder holder) {
+      super.clearView(recyclerView, holder);
+      if (!(holder instanceof RowHolder row)) {
+        return;
+      }
+      row.itemView.setBackground(row.background);
+      row.background = null;
+      if (moved) {
+        moved = false;
+        profiles.saveOrder();
+        profiles.updateActions();
+      } else if (row.isProfile()) {
+        showMenu(row.itemView, row.id);
+      }
+    }
   }
 }
