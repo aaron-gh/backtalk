@@ -71,6 +71,9 @@ class SpatialSoundPlayer(private val context: Context) {
         val hrtf = hrtf ?: loadHrtf().also { hrtf = it }
         val stereo =
           hrtf.render(mono, Hrtf.azimuthForScreen(x), Hrtf.elevationForScreen(y))
+        // A sound held up behind a slow decode belongs to a moment that has passed, and playing
+        // it now would come in a burst with the others held up.
+        if (SystemClock.uptimeMillis() - requested > STALE_MS) return@post
         start(stereo, volume, requested)
       } catch (e: Throwable) {
         // A broken sound, a refused audio track or running out of memory must never take the
@@ -247,19 +250,30 @@ class SpatialSoundPlayer(private val context: Context) {
           val output = decoder.getOutputBuffer(outputIndex)!!.order(ByteOrder.nativeOrder())
           output.position(info.offset)
           output.limit(info.offset + info.size)
-          val maxSamples = maxInputFrames(rate) * channels
+          // Each buffer is mixed down to mono as it arrives, so a sound with many channels never
+          // needs memory for all of them at once.
           if (encoding == AudioFormat.ENCODING_PCM_FLOAT) {
             val floats = output.asFloatBuffer()
-            if (samples.size + floats.remaining() > maxSamples) return null
-            while (floats.hasRemaining()) samples.add(floats.get())
+            val frames = floats.remaining() / channels
+            if (samples.size + frames > maxInputFrames(rate)) return null
+            repeat(frames) {
+              var sum = 0f
+              repeat(channels) { sum += floats.get() }
+              samples.add(sum / channels)
+            }
           } else {
             val shorts = output.asShortBuffer()
-            if (samples.size + shorts.remaining() > maxSamples) return null
-            while (shorts.hasRemaining()) samples.add(shorts.get() / 32768f)
+            val frames = shorts.remaining() / channels
+            if (samples.size + frames > maxInputFrames(rate)) return null
+            repeat(frames) {
+              var sum = 0f
+              repeat(channels) { sum += shorts.get() / 32768f }
+              samples.add(sum / channels)
+            }
           }
           decoder.releaseOutputBuffer(outputIndex, false)
           if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
-            return resample(toMono(samples.toArray(), channels), rate, Hrtf.SAMPLE_RATE)
+            return resample(samples.toArray(), rate, Hrtf.SAMPLE_RATE)
           }
         }
       }
@@ -312,6 +326,8 @@ class SpatialSoundPlayer(private val context: Context) {
     private const val RELEASE_DELAY_MS = 200L
     // Sounds asked for this close together are of one moment, and play together.
     private const val TOGETHER_MS = 50L
+    // Sounds that could not start within this long after they were asked for are dropped.
+    private const val STALE_MS = 300L
     private const val DECODE_TIMEOUT_US = 10_000L
     private const val MAX_DECODE_STEPS = 2_000
 
@@ -340,17 +356,6 @@ class SpatialSoundPlayer(private val context: Context) {
     /** The most frames a sound at [rate] Hz may have. */
     @JvmStatic
     fun maxInputFrames(rate: Int): Int = MAX_SECONDS * rate
-
-    /** Mixes interleaved samples with [channels] channels down to one. */
-    @JvmStatic
-    fun toMono(interleaved: FloatArray, channels: Int): FloatArray {
-      if (channels <= 1) return interleaved
-      return FloatArray(interleaved.size / channels) { frame ->
-        var sum = 0f
-        for (c in 0 until channels) sum += interleaved[frame * channels + c]
-        sum / channels
-      }
-    }
 
     /** Changes the sample rate of [samples] from [from] to [to] by linear interpolation. */
     @JvmStatic
@@ -394,8 +399,16 @@ class SpatialSoundPlayer(private val context: Context) {
           "data" -> {
             if (!isSupportedFormat(rate, channels)) return null
             if (size / 2 / channels > maxInputFrames(rate)) return null
-            val interleaved = FloatArray(size / 2) { buffer.getShort(body + 2 * it) / 32768f }
-            return resample(toMono(interleaved, channels), rate, Hrtf.SAMPLE_RATE)
+            // Mixed down to mono as it is read, so many channels never need memory all at once.
+            val mono =
+              FloatArray(size / 2 / channels) { frame ->
+                var sum = 0f
+                for (c in 0 until channels) {
+                  sum += buffer.getShort(body + 2 * (frame * channels + c)) / 32768f
+                }
+                sum / channels
+              }
+            return resample(mono, rate, Hrtf.SAMPLE_RATE)
           }
         }
         // Chunks are padded to an even length.

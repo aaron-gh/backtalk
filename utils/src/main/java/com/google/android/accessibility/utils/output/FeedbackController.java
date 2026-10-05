@@ -144,8 +144,8 @@ public class FeedbackController {
 
   private final Set<HapticFeedbackListener> mHapticFeedbackListeners = new HashSet<>();
 
-  /** Starts and stops vibrations in order, off the main thread. */
-  private static final Executor VIBRATION_EXECUTOR =
+  /** Starts and stops vibrations in order, off the main thread. Theme vibrations use it too. */
+  static final Executor VIBRATION_EXECUTOR =
       Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "BacktalkVibration"));
 
   private final @NonNull HashMap<Integer, Long> resIdToLastPlayUptimeMillisec = new HashMap<>();

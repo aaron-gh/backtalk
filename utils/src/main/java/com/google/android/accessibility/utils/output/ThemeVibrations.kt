@@ -44,13 +44,18 @@ object ThemeVibrations {
   @JvmOverloads
   fun play(vibrator: Vibrator, name: String, attributes: AudioAttributes? = null): Boolean {
     val pattern = patterns[name] ?: return false
-    if (pattern.isEmpty() || !vibrator.hasVibrator()) return true
-    try {
-      val effect = HapticPatternParser(vibrator).parse(pattern)
-      @Suppress("DEPRECATION") // The attributes overload is the one that reaches API 26.
-      if (attributes != null) vibrator.vibrate(effect, attributes) else vibrator.vibrate(effect)
-    } catch (e: RuntimeException) {
-      // A theme's pattern that the device refuses plays nothing.
+    if (pattern.isEmpty()) return true
+    // Starting a vibration waits for the system, so it is done off the caller's thread, in order
+    // with Backtalk's other vibrations.
+    FeedbackController.VIBRATION_EXECUTOR.execute {
+      try {
+        if (!vibrator.hasVibrator()) return@execute
+        val effect = HapticPatternParser(vibrator).parse(pattern)
+        @Suppress("DEPRECATION") // The attributes overload is the one that reaches API 26.
+        if (attributes != null) vibrator.vibrate(effect, attributes) else vibrator.vibrate(effect)
+      } catch (e: RuntimeException) {
+        // A theme's pattern that the device refuses plays nothing.
+      }
     }
     return true
   }
