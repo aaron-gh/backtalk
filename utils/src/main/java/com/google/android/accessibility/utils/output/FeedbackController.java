@@ -41,11 +41,15 @@ import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -102,13 +106,24 @@ public class FeedbackController {
   /** Whether sounds play through {@link LowLatencyAudio}. */
   private volatile boolean mLowLatencyAudio;
 
+  /** The most decoded samples kept for {@link LowLatencyAudio}, about 8 MB. */
+  private static final long MAX_CLIP_SAMPLES = 2_000_000L;
+
+  /** The most sounds remembered for {@link LowLatencyAudio}, decoded or not. */
+  private static final int MAX_CLIPS = 256;
+
   /**
    * Sounds decoded for {@link LowLatencyAudio}, by resource or file, or null while being decoded or
-   * if they cannot be.
+   * if they cannot be, the least recently played first. Guarded by itself.
    */
-  private final Map<String, LowLatencyAudio.@Nullable Clip> mClips = new HashMap<>();
+  private final LinkedHashMap<String, LowLatencyAudio.@Nullable Clip> mClips =
+      new LinkedHashMap<>(16, 0.75f, /* accessOrder= */ true);
 
-  private final ExecutorService mDecoder = Executors.newSingleThreadExecutor();
+  /** The samples held by {@link #mClips}. Guarded by {@link #mClips}. */
+  private long mClipSamples;
+
+  /** Decodes sounds for {@link LowLatencyAudio}, on a thread that ends when it has nothing to do. */
+  private final ThreadPoolExecutor mDecoder = createDecoder();
 
   /** The vibration service used to play vibration patterns. */
   private final Vibrator mVibrator;
@@ -613,6 +628,10 @@ public class FeedbackController {
    */
   public void shutdown() {
     mHapticFeedbackListeners.clear();
+    mLowLatencyAudio = false;
+    mDecoder.shutdownNow();
+    clearClips();
+    LowLatencyAudio.shutdownAll();
     mSoundPool.release();
     if (mSpatialSoundPlayer != null) {
       mSpatialSoundPlayer.shutdown();
@@ -778,17 +797,8 @@ public class FeedbackController {
         if (!mClips.containsKey(key)) {
           // Null marks a sound being decoded, or one that cannot be.
           mClips.put(key, null);
-          mDecoder.execute(
-              () -> {
-                AudioDecoder.@Nullable Decoded decoded =
-                    path != null ? AudioDecoder.decode(path) : AudioDecoder.decode(mContext, resId);
-                if (decoded != null) {
-                  LowLatencyAudio.Clip prepared = player.prepare(decoded);
-                  synchronized (mClips) {
-                    mClips.put(key, prepared);
-                  }
-                }
-              });
+          trimClips(key);
+          mDecoder.execute(() -> decodeClip(player, key, resId, path));
         }
         return false;
       }
@@ -797,12 +807,84 @@ public class FeedbackController {
     return true;
   }
 
+  /** Decodes a sound for {@link #mClips}, on {@link #mDecoder}. */
+  private void decodeClip(LowLatencyAudio player, String key, int resId, @Nullable String path) {
+    LowLatencyAudio.@Nullable Clip prepared = null;
+    try {
+      AudioDecoder.@Nullable Decoded decoded =
+          path != null ? AudioDecoder.decode(path) : AudioDecoder.decode(mContext, resId);
+      if (decoded != null) {
+        prepared = player.prepare(decoded);
+      }
+    } catch (Throwable e) {
+      // A broken sound or running out of memory must never take the screen reader down, and an
+      // OutOfMemoryError is not an Exception. The sound stays marked as one that cannot be decoded.
+      LogUtils.e(TAG, "Cannot prepare sound %s: %s", key, e);
+    }
+    if (prepared == null) {
+      return;
+    }
+    synchronized (mClips) {
+      // Not if the sounds were dropped while it decoded.
+      if (mClips.containsKey(key)) {
+        mClips.put(key, prepared);
+        mClipSamples += prepared.getSize();
+        trimClips(key);
+      }
+    }
+  }
+
+  /**
+   * Forgets the least recently played sounds beyond the limits, but never {@code keep}. Called with
+   * {@link #mClips} held.
+   */
+  private void trimClips(String keep) {
+    Iterator<Map.Entry<String, LowLatencyAudio.@Nullable Clip>> oldest =
+        mClips.entrySet().iterator();
+    while ((mClipSamples > MAX_CLIP_SAMPLES || mClips.size() > MAX_CLIPS) && oldest.hasNext()) {
+      Map.Entry<String, LowLatencyAudio.@Nullable Clip> entry = oldest.next();
+      if (entry.getKey().equals(keep)) {
+        continue;
+      }
+      LowLatencyAudio.@Nullable Clip clip = entry.getValue();
+      if (clip != null) {
+        mClipSamples -= clip.getSize();
+      }
+      oldest.remove();
+    }
+  }
+
+  private void clearClips() {
+    synchronized (mClips) {
+      mClips.clear();
+      mClipSamples = 0;
+    }
+  }
+
+  private static ThreadPoolExecutor createDecoder() {
+    ThreadPoolExecutor decoder =
+        new ThreadPoolExecutor(
+            1,
+            1,
+            5,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(),
+            runnable -> new Thread(runnable, "BacktalkSoundDecoder"));
+    decoder.allowCoreThreadTimeOut(true);
+    return decoder;
+  }
+
   /**
    * Sets whether sounds play through the low-latency player, which reaches the speaker sooner than
-   * the usual way.
+   * the usual way. Turning it off frees the player and the decoded sounds.
    */
   public void setLowLatencyAudio(boolean enabled) {
+    boolean wasEnabled = mLowLatencyAudio;
     mLowLatencyAudio = enabled;
+    if (wasEnabled && !enabled) {
+      clearClips();
+      LowLatencyAudio.shutdownAll();
+    }
   }
 
   /**
