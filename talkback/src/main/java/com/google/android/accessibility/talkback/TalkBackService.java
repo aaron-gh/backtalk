@@ -2771,8 +2771,9 @@ public class TalkBackService extends AccessibilityServiceCompat
           .registerFingerprintGestureCallback(fingerprintGestureCallback, null);
     }
 
-    // Names a voice profile that a damaged setting left without one, before anything says it.
-    VoiceProfiles.names(prefs, VoiceProfilesFragment.numberedName(this));
+    // Gives a name of its own to any voice profile that a damaged setting left without one, before
+    // anything says it.
+    VoiceProfilesFragment.names(this, prefs);
     reloadPreferences();
 
     inputFocusInterpreter.initLastEditableFocusForGlobalVariables();

@@ -80,6 +80,11 @@
     <string name="title_pref_add_voice_profile">Add voice profile</string>
     <!-- Name given to a new voice profile, with a number to tell it apart. [CHAR LIMIT=NONE] -->
     <string name="voice_profile_new_name">Voice profile <xliff:g id="number" example="2">%1$d</xliff:g></string>
+    <!--
+      Error on the name field when the name entered is already another voice profile's, or Backtalk
+      default's. [CHAR LIMIT=NONE]
+    -->
+    <string name="voice_profile_name_taken">A voice profile is already called <xliff:g id="name" example="Reading">%1$s</xliff:g></string>
     <!-- Title for the setting with a voice profile's name. [CHAR LIMIT=NONE] -->
     <string name="title_pref_voice_profile_name">Name</string>
     <!-- Title for the setting with the language a voice profile speaks. [CHAR LIMIT=NONE] -->
