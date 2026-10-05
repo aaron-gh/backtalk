@@ -33,6 +33,7 @@ import com.google.android.accessibility.material.preference.AccessibilitySuitePr
 import com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference;
 import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.actor.SpeechRateAndPitchActor;
+import com.google.android.accessibility.utils.FormFactorUtils;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.accessibility.utils.output.VoiceProfiles;
@@ -71,6 +72,8 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
 
   private @Nullable ListPreference languagePref;
   private @Nullable ListPreference voicePref;
+  private @Nullable Preference moveUp;
+  private @Nullable Preference moveDown;
 
   // The rate and pitch also change from gestures and the reading controls.
   private final OnSharedPreferenceChangeListener prefsListener =
@@ -155,6 +158,13 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
     phrases.setIconSpaceReserved(false);
     screen.addPreference(phrases);
 
+    if (FormFactorUtils.isAndroidWear()) {
+      // Phones move profiles in the list, by dragging or with actions; watches move them here.
+      moveUp = addMove(context, screen, R.string.voice_profile_move_up, -1);
+      moveDown = addMove(context, screen, R.string.voice_profile_move_down, 1);
+      updateMoves();
+    }
+
     Preference delete = new AccessibilitySuitePreference(context);
     delete.setTitle(R.string.title_pref_delete_voice_profile);
     delete.setPersistent(false);
@@ -186,6 +196,51 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
   public void onDestroy() {
     super.onDestroy();
     shutDownTts();
+  }
+
+  private Preference addMove(Context context, PreferenceScreen screen, int titleResId, int step) {
+    Preference move = new AccessibilitySuitePreference(context);
+    move.setTitle(titleResId);
+    move.setPersistent(false);
+    move.setIconSpaceReserved(false);
+    move.setOnPreferenceClickListener(
+        preference -> {
+          move(step);
+          return true;
+        });
+    screen.addPreference(move);
+    return move;
+  }
+
+  /** Moves this profile {@code step} places down the list, and says where it went. */
+  private void move(int step) {
+    List<String> ids = VoiceProfiles.ids(prefs);
+    int from = ids.indexOf(id);
+    int to = from + step;
+    if (from < 0 || to < 0 || to >= ids.size()) {
+      return;
+    }
+    String neighbour = ids.get(to);
+    ids.remove(from);
+    ids.add(to, id);
+    VoiceProfiles.setOrder(prefs, ids);
+    updateMoves();
+    int movedResId =
+        (step < 0) ? R.string.voice_profile_moved_above : R.string.voice_profile_moved_below;
+    getListView()
+        .announceForAccessibility(
+            getString(movedResId, VoiceProfilesFragment.nameOf(requireContext(), prefs, neighbour)));
+  }
+
+  /** Nothing moves above Backtalk default or below the last profile. */
+  private void updateMoves() {
+    if (moveUp == null || moveDown == null) {
+      return;
+    }
+    List<String> ids = VoiceProfiles.ids(prefs);
+    int position = ids.indexOf(id);
+    moveUp.setEnabled(position > 0);
+    moveDown.setEnabled(position >= 0 && position < ids.size() - 1);
   }
 
   private VoiceProfile profile() {
