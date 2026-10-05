@@ -85,6 +85,15 @@ public class VoiceProfilesTest {
   }
 
   @Test
+  public void orderKeepsEveryProfileOnce() {
+    String one = create("One", "e");
+    String two = create("Two", "e");
+    String three = create("Three", "e");
+    VoiceProfiles.setOrder(prefs, Arrays.asList(three, "99", one, three));
+    assertEquals(Arrays.asList(three, one, two), VoiceProfiles.ids(prefs));
+  }
+
+  @Test
   public void aMissingProfileInUseMeansTheDefault() {
     prefs.edit().putString(VoiceProfiles.PREF_ACTIVE, "7").apply();
     assertEquals("", VoiceProfiles.activeId(prefs));
