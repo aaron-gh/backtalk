@@ -123,6 +123,25 @@ public class VoiceProfilesTest {
   }
 
   @Test
+  public void blankNamesGetNumberedNamesNoOtherProfileHas() {
+    String blank = create("Reading", "e");
+    create("Profile 1", "e");
+    String otherBlank = create("Fast", "e");
+    create("Profile 3", "e");
+    prefs.values.put(VoiceProfiles.key(blank, VoiceProfiles.NAME), "");
+    prefs.values.put(VoiceProfiles.key(otherBlank, VoiceProfiles.NAME), " ");
+
+    Map<String, String> names = VoiceProfiles.names(prefs, number -> "Profile " + number);
+    assertEquals("Profile 2", names.get(blank));
+    assertEquals("Profile 4", names.get(otherBlank));
+    assertEquals("Profile 5", VoiceProfiles.unusedName(prefs, number -> "Profile " + number));
+
+    VoiceProfiles.nameBlankProfiles(prefs, number -> "Profile " + number);
+    assertEquals("Profile 2", VoiceProfiles.read(prefs, blank).name());
+    assertEquals("Profile 4", VoiceProfiles.read(prefs, otherBlank).name());
+  }
+
+  @Test
   public void longNamesAreCut() {
     String id = create("x".repeat(500), "e");
     assertEquals(VoiceProfiles.MAX_NAME_LENGTH, VoiceProfiles.read(prefs, id).name().length());
@@ -157,8 +176,10 @@ public class VoiceProfilesTest {
   @Test
   public void sameVoiceComparesEngineLanguageAndVoice() {
     VoiceProfile profile = new VoiceProfile("1", "A", "e", "en-GB", "v", 100, 1f, 1f, false);
-    assertTrue(profile.sameVoiceAs(new VoiceProfile("2", "B", "e", "en-GB", "v", 50, 2f, 2f, true)));
-    assertFalse(profile.sameVoiceAs(new VoiceProfile("1", "A", "e", "en-GB", "w", 100, 1f, 1f, false)));
+    assertTrue(
+        profile.sameVoiceAs(new VoiceProfile("2", "B", "e", "en-GB", "v", 50, 2f, 2f, true)));
+    assertFalse(
+        profile.sameVoiceAs(new VoiceProfile("1", "A", "e", "en-GB", "w", 100, 1f, 1f, false)));
     assertFalse(profile.sameVoiceAs(null));
   }
 

@@ -50,11 +50,9 @@ import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.accessibility.utils.output.VoiceProfiles;
-import com.google.android.accessibility.utils.output.VoiceProfiles.VoiceProfile;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.function.IntFunction;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -118,6 +116,8 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
   @Override
   public void onResume() {
     super.onResume();
+    // Saved so that the name shown now stays the same when other profiles are renamed.
+    VoiceProfiles.nameBlankProfiles(prefs, numberedName(requireContext()));
     // A profile may have been renamed, removed or switched to meanwhile.
     profiles.reload();
     updateInUse();
@@ -141,26 +141,24 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
   }
 
   private String nameOf(String id) {
-    return id.isEmpty()
-        ? getString(R.string.voice_profile_default)
-        : nameOf(requireContext(), VoiceProfiles.read(prefs, id));
+    return nameOf(requireContext(), prefs, id);
   }
 
   /**
-   * Returns {@code profile}'s name. Names can't be blank, but if a damaged setting leaves one
-   * blank, the profile is called by its number instead, so it can still be told apart and heard.
+   * Returns the name of profile {@code id}, or Backtalk default's for an empty ID. A profile left
+   * with a blank name by a damaged setting gets a numbered name no other profile has.
    */
-  public static String nameOf(Context context, VoiceProfile profile) {
-    if (!profile.name().trim().isEmpty()) {
-      return profile.name();
+  public static String nameOf(Context context, SharedPreferences prefs, String id) {
+    if (id.isEmpty()) {
+      return context.getString(R.string.voice_profile_default);
     }
-    int number;
-    try {
-      number = Integer.parseInt(profile.id());
-    } catch (NumberFormatException e) {
-      number = 0;
-    }
-    return context.getString(R.string.voice_profile_new_name, number);
+    String name = VoiceProfiles.names(prefs, numberedName(context)).get(id);
+    return (name == null) ? "" : name;
+  }
+
+  /** Gives "Voice profile 1", "Voice profile 2" and so on. */
+  private static IntFunction<String> numberedName(Context context) {
+    return number -> context.getString(R.string.voice_profile_new_name, number);
   }
 
   private void open(String id) {
@@ -170,25 +168,11 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
     onPreferenceTreeClick(preference);
   }
 
-  /** Returns the first of "Voice profile 1", "Voice profile 2" and so on that no profile has. */
-  private String unusedName(List<String> ids) {
-    Set<String> names = new HashSet<>();
-    for (String id : ids) {
-      names.add(VoiceProfiles.read(prefs, id).name());
-    }
-    for (int number = 1; ; number++) {
-      String name = getString(R.string.voice_profile_new_name, number);
-      if (!names.contains(name)) {
-        return name;
-      }
-    }
-  }
-
   private void askForNewName() {
     askForName(
         requireContext(),
         R.string.title_pref_add_voice_profile,
-        unusedName(VoiceProfiles.ids(prefs)),
+        VoiceProfiles.unusedName(prefs, numberedName(requireContext())),
         this::add);
   }
 

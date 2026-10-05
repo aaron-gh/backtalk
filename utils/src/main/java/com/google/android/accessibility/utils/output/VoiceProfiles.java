@@ -18,7 +18,12 @@ package com.google.android.accessibility.utils.output;
 
 import android.content.SharedPreferences;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.IntFunction;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -220,6 +225,60 @@ public final class VoiceProfiles {
       }
     }
     prefs.edit().putString(PREF_IDS, String.join(",", ordered)).apply();
+  }
+
+  /**
+   * Returns each profile's name by ID, in order. Names can't be saved blank, but a damaged setting
+   * can leave one blank. Such a profile gets the first numbered name, such as "Voice profile 2",
+   * that no other profile has, as a new profile would, so no two profiles share a name.
+   *
+   * @param numberedName gives the numbered name for a number
+   */
+  public static Map<String, String> names(
+      SharedPreferences prefs, IntFunction<String> numberedName) {
+    Map<String, String> names = new LinkedHashMap<>();
+    Set<String> taken = new HashSet<>();
+    List<String> blank = new ArrayList<>();
+    for (String id : ids(prefs)) {
+      String name = read(prefs, id).name();
+      if (name.trim().isEmpty()) {
+        blank.add(id);
+        names.put(id, "");
+      } else {
+        names.put(id, name);
+        taken.add(name);
+      }
+    }
+    for (String id : blank) {
+      String name = unusedName(taken, numberedName);
+      names.put(id, name);
+      taken.add(name);
+    }
+    return names;
+  }
+
+  /** Returns the first numbered name, such as "Voice profile 1", that no profile has. */
+  public static String unusedName(SharedPreferences prefs, IntFunction<String> numberedName) {
+    return unusedName(new HashSet<>(names(prefs, numberedName).values()), numberedName);
+  }
+
+  private static String unusedName(Set<String> taken, IntFunction<String> numberedName) {
+    for (int number = 1; ; number++) {
+      String name = numberedName.apply(number);
+      if (!taken.contains(name)) {
+        return name;
+      }
+    }
+  }
+
+  /** Saves the names {@link #names} gives profiles whose names are blank. */
+  public static void nameBlankProfiles(SharedPreferences prefs, IntFunction<String> numberedName) {
+    Map<String, String> names = names(prefs, numberedName);
+    for (String id : names.keySet()) {
+      if (read(prefs, id).name().trim().isEmpty()) {
+        rename(prefs, id, names.get(id));
+      }
+    }
   }
 
   /**

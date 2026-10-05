@@ -86,8 +86,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
     String profileId = (args == null) ? "" : args.getString(ARG_PROFILE_ID, "");
     Context context = requireContext();
     return VoiceProfilesFragment.nameOf(
-        context,
-        VoiceProfiles.read(SharedPreferencesUtils.getSharedPreferences(context), profileId));
+        context, SharedPreferencesUtils.getSharedPreferences(context), profileId);
   }
 
   @Override
@@ -196,7 +195,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
   private void addName(Context context, PreferenceScreen screen) {
     Preference name = new AccessibilitySuitePreference(context);
     name.setTitle(R.string.title_pref_voice_profile_name);
-    name.setSummary(VoiceProfilesFragment.nameOf(context, profile()));
+    name.setSummary(VoiceProfilesFragment.nameOf(context, prefs, id));
     name.setPersistent(false);
     name.setIconSpaceReserved(false);
     name.setOnPreferenceClickListener(
@@ -212,7 +211,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
     VoiceProfilesFragment.askForName(
         context,
         R.string.title_pref_voice_profile_name,
-        VoiceProfilesFragment.nameOf(context, profile()),
+        VoiceProfilesFragment.nameOf(context, prefs, id),
         name -> {
           if (VoiceProfiles.rename(prefs, id, name)) {
             String saved = profile().name();
@@ -438,7 +437,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
   }
 
   private void confirmDelete() {
-    String name = VoiceProfilesFragment.nameOf(requireContext(), profile());
+    String name = VoiceProfilesFragment.nameOf(requireContext(), prefs, id);
     new AlertDialog.Builder(requireContext())
         .setMessage(getString(R.string.voice_profile_delete_confirm, name))
         .setPositiveButton(
