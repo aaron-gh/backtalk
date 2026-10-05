@@ -145,6 +145,11 @@
   <!-- Summary of the option that swaps the top and bottom dots. [CHAR_LIMIT=100]-->
   <string name="summary_pref_flip_dots_vertically">Dot 1 trades places with dot 3, and dot 4 with dot 6</string>
 
+  <!-- Title of the option that takes a tablet or unfolded phone held up sideways to be held with the screen facing away, so the dots face the other edge once it is laid flat. [CHAR_LIMIT=60]-->
+  <string name="title_pref_tablet_sideways_faces_away">Tablet held sideways faces away</string>
+  <!-- Summary of the option that takes a tablet held up sideways to be held with the screen facing away. [CHAR_LIMIT=100]-->
+  <string name="summary_pref_tablet_sideways_faces_away">Decides which edge you are at when a tablet or unfolded phone is laid flat</string>
+
   <!-- Title of the option that plays keyboard sounds while typing braille. [CHAR_LIMIT=60]-->
   <string name="title_pref_typing_sounds">Typing sounds</string>
   <!-- Summary of the option that plays keyboard sounds while typing braille. [CHAR_LIMIT=150]-->

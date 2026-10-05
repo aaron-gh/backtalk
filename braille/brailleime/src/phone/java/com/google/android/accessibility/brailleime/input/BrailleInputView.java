@@ -502,7 +502,10 @@ public class BrailleInputView extends View
       } else if (Utils.isDeviceDefaultPortrait(getContext())) {
         tabletopRotation =
             DotsOrientation.tabletTabletopRotation(
-                held, HeldOrientationTracker.getLastHeld(), fromScreenAway);
+                held,
+                HeldOrientationTracker.getLastHeld(),
+                fromScreenAway,
+                BrailleUserPreferences.readTabletSidewaysFacesAway(getContext()));
       } else {
         tabletopRotation = held;
       }
