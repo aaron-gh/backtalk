@@ -136,16 +136,6 @@ public class TalkBackPreferenceFragment extends TalkbackBaseFragment {
                 : R.string.title_pref_category_help_no_tutorial);
         preference.setFragment(TutorialAndHelpFragment.class.getName());
       }
-    } else if (FormFactorUtils.isAndroidWear()) {
-      Preference prefTutorial = findPreferenceByResId(R.string.pref_tutorial_key);
-      if (prefTutorial != null) {
-        prefTutorial.setIntent(TutorialInitiator.createTutorialIntent(getActivity()));
-      }
-      Preference prefHelp = findPreferenceByResId(R.string.pref_help_key);
-      if (prefHelp != null) {
-        // Only Wear has this preference in this fragment.
-        PreferenceActionHelper.assignWebIntentToPreference(this, prefHelp, WebPage.WEB_PAGE_HELP);
-      }
     } else {
       updateTutorialAndHelpPreferencesForPhoneOrTablet();
     }
