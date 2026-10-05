@@ -153,7 +153,6 @@ import com.google.android.accessibility.talkback.compositor.PreparedFocusSpeech;
 import com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DescriptionOrder;
 import com.google.android.accessibility.talkback.contextmenu.ListMenuManager;
 import com.google.android.accessibility.talkback.controller.TelevisionNavigationController;
-import com.google.android.accessibility.talkback.dialog.NotificationPermissionDialog;
 import com.google.android.accessibility.talkback.directtouch.DirectTouchController;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor.TalkBackListener;
@@ -273,7 +272,6 @@ import com.google.android.accessibility.utils.monitor.DisplayMonitor;
 import com.google.android.accessibility.utils.monitor.HeadphoneStateMonitor;
 import com.google.android.accessibility.utils.monitor.InputDeviceMonitor;
 import com.google.android.accessibility.utils.monitor.InputModeTracker;
-import com.google.android.accessibility.utils.monitor.ScreenMonitor;
 import com.google.android.accessibility.utils.monitor.SpeechStateMonitor;
 import com.google.android.accessibility.utils.monitor.TouchMonitor;
 import com.google.android.accessibility.utils.output.ActorStateProvider;
@@ -466,9 +464,6 @@ public class TalkBackService extends AccessibilityServiceCompat
                 }
               }
             });
-        // Android ignores that request while Backtalk targets Android 12L or lower, so then the
-        // user is asked to allow notifications in settings instead.
-        talkBackService.askForNotificationsIfNeeded();
       }
       // Phone permission.
       @Nullable CallStateMonitor callStateMonitor = talkBackService.callStateMonitor;
@@ -727,9 +722,6 @@ public class TalkBackService extends AccessibilityServiceCompat
 
   /** Keeps track of whether we need to run the locked-boot-completed callback when connected. */
   private boolean lockedBootCompletedPending;
-
-  /** Whether to ask for notifications once the phone is unlocked. */
-  private boolean notificationPermissionPending;
 
   private final InputModeTracker inputModeTracker = new InputModeTracker();
   private WindowEventInterpreter windowEventInterpreter;
@@ -1692,9 +1684,6 @@ public class TalkBackService extends AccessibilityServiceCompat
         // When the Tutorial is blocked, during the OOBE for instance, we should delay the
         // on-boarding to next TalkBack cycle.
         helper.flushPendingNotification();
-        // Stock TalkBack asks for notifications when the tutorial ends, which people who moved
-        // from TalkBack, or from Backtalk's old app ID, never see. So they are asked here, once.
-        askForNotificationsIfNeeded();
 
         // Show watermark again if onboarding is not confirmed finished by user.
         if (!OnboardingInitiator.showOnboardingIfNecessary(this)
@@ -2244,13 +2233,6 @@ public class TalkBackService extends AccessibilityServiceCompat
     }
 
     ringerModeAndScreenMonitor.addScreenChangedListener(proximitySensorMonitor);
-    ringerModeAndScreenMonitor.addDeviceUnlockedListener(
-        () -> {
-          if (notificationPermissionPending) {
-            notificationPermissionPending = false;
-            askForNotificationsIfNeeded();
-          }
-        });
     accessibilityEventProcessor.setRingerModeAndScreenMonitor(ringerModeAndScreenMonitor);
 
     headphoneStateMonitor = new HeadphoneStateMonitor(this);
@@ -3652,21 +3634,6 @@ public class TalkBackService extends AccessibilityServiceCompat
 
   private boolean isFirstTimeUser() {
     return prefs.getBoolean(PREF_FIRST_TIME_USER, true);
-  }
-
-  /**
-   * Asks the user once to allow notifications, if Backtalk can't show them. On the lock screen it
-   * waits until the phone is unlocked, since the dialog opens settings.
-   */
-  void askForNotificationsIfNeeded() {
-    if (prefs == null || !NotificationPermissionDialog.shouldAsk(this, prefs)) {
-      return;
-    }
-    if (ScreenMonitor.isDeviceLocked(this)) {
-      notificationPermissionPending = true;
-      return;
-    }
-    NotificationPermissionDialog.show(this, prefs);
   }
 
   void setTrainingFinished(boolean newValue) {
