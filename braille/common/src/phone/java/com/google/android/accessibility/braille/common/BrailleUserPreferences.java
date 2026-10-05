@@ -342,8 +342,8 @@ public class BrailleUserPreferences {
   }
 
   /**
-   * Reads whether a tablet held up is taken to face away from the user, as in screen-away mode. When
-   * off, it is taken to face the user and uses the tabletop layout.
+   * Reads whether a tablet held up is taken to face away from the user, as in screen-away mode.
+   * When off, it is taken to face the user and uses the tabletop layout.
    */
   public static boolean readTabletHeldUpFacesAway(Context context) {
     return getSharedPreferences(context, BRAILLE_SHARED_PREFS_FILENAME)

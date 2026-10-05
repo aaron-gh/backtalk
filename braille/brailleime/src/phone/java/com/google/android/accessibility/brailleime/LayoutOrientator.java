@@ -73,7 +73,7 @@ public class LayoutOrientator {
     uprightFacingUser = false;
   }
 
-  /** Whether the detected tabletop layout is for a device held up facing the user, not lying flat. */
+  /** Whether the tabletop layout detected is for a device held up facing the user, not flat. */
   public boolean isUprightFacingUser() {
     return uprightFacingUser;
   }
