@@ -1968,6 +1968,10 @@ public class SelectorController implements UserInputEventListener {
         nextId.isEmpty()
             ? context.getString(R.string.voice_profile_default)
             : VoiceProfiles.read(prefs, nextId).name();
+    if (displayText.isEmpty()) {
+      // Names can't be cleared, but a damaged setting must not leave the switch silent.
+      displayText = context.getString(R.string.title_selector_voice_profile);
+    }
     announceSetting(eventId, displayText, getSelectSettingGestures());
     showQuickMenuActionOverlay(eventId, displayText);
   }
