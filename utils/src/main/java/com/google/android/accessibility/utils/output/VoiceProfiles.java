@@ -57,6 +57,15 @@ public final class VoiceProfiles {
   public static final String DEFAULT_PITCH = "1.0";
   public static final String DEFAULT_VOLUME = "100";
 
+  /** The longest name a profile can have. */
+  public static final int MAX_NAME_LENGTH = 100;
+
+  // The ranges the settings screens and gestures allow, as in SpeechRateAndPitchActor.
+  private static final float MIN_RATE = 0.1f;
+  private static final float MAX_RATE = 6.0f;
+  private static final float MIN_PITCH = 0.2f;
+  private static final float MAX_PITCH = 2.0f;
+
   /**
    * A profile's settings.
    *
@@ -117,7 +126,7 @@ public final class VoiceProfiles {
   /** Returns the IDs of the profiles, in order. */
   public static List<String> ids(SharedPreferences prefs) {
     List<String> ids = new ArrayList<>();
-    for (String id : prefs.getString(PREF_IDS, "").split(",")) {
+    for (String id : getString(prefs, PREF_IDS, "").split(",")) {
       if (!id.isEmpty()) {
         ids.add(id);
       }
@@ -127,7 +136,7 @@ public final class VoiceProfiles {
 
   /** Returns the ID of the profile in use, or empty for Backtalk's default. */
   public static String activeId(SharedPreferences prefs) {
-    String id = prefs.getString(PREF_ACTIVE, "");
+    String id = getString(prefs, PREF_ACTIVE, "");
     return ids(prefs).contains(id) ? id : "";
   }
 
@@ -137,18 +146,25 @@ public final class VoiceProfiles {
     return id.isEmpty() ? null : read(prefs, id);
   }
 
-  /** Returns profile {@code id}. */
+  /**
+   * Returns profile {@code id}. The service reads profiles as it starts, so a damaged setting, such
+   * as one restored from a backup, gives its default value rather than stopping the screen reader,
+   * and speech settings are kept to the ranges that can be set.
+   */
   public static VoiceProfile read(SharedPreferences prefs, String id) {
+    String name = getString(prefs, key(id, NAME), "");
     return new VoiceProfile(
         id,
-        prefs.getString(key(id, NAME), ""),
-        prefs.getString(key(id, ENGINE), ""),
-        prefs.getString(key(id, LANGUAGE), ""),
-        prefs.getString(key(id, VOICE), ""),
-        parseInt(prefs.getString(key(id, VOLUME), DEFAULT_VOLUME), 100),
-        parseFloat(prefs.getString(key(id, RATE), DEFAULT_RATE), 1f),
-        parseFloat(prefs.getString(key(id, PITCH), DEFAULT_PITCH), 1f),
-        prefs.getBoolean(key(id, PHRASES), false));
+        name.length() > MAX_NAME_LENGTH ? name.substring(0, MAX_NAME_LENGTH) : name,
+        getString(prefs, key(id, ENGINE), ""),
+        getString(prefs, key(id, LANGUAGE), ""),
+        getString(prefs, key(id, VOICE), ""),
+        Math.max(
+            0, Math.min(100, parseInt(getString(prefs, key(id, VOLUME), DEFAULT_VOLUME), 100))),
+        clamp(parseFloat(getString(prefs, key(id, RATE), DEFAULT_RATE), 1f), MIN_RATE, MAX_RATE),
+        clamp(
+            parseFloat(getString(prefs, key(id, PITCH), DEFAULT_PITCH), 1f), MIN_PITCH, MAX_PITCH),
+        getBoolean(prefs, key(id, PHRASES), false));
   }
 
   /**
@@ -164,7 +180,7 @@ public final class VoiceProfiles {
       String pitch,
       boolean phrases) {
     List<String> ids = ids(prefs);
-    int next = Math.max(1, parseInt(prefs.getString(PREF_NEXT_ID, "1"), 1));
+    int next = Math.max(1, parseInt(getString(prefs, PREF_NEXT_ID, "1"), 1));
     for (String id : ids) {
       next = Math.max(next, parseInt(id, 0) + 1);
     }
@@ -211,13 +227,36 @@ public final class VoiceProfiles {
     List<String> ids = ids(prefs);
     ids.remove(id);
     SharedPreferences.Editor editor = prefs.edit();
-    for (String field : new String[] {NAME, ENGINE, LANGUAGE, VOICE, VOLUME, RATE, PITCH, PHRASES}) {
+    for (String field :
+        new String[] {NAME, ENGINE, LANGUAGE, VOICE, VOLUME, RATE, PITCH, PHRASES}) {
       editor.remove(key(id, field));
     }
-    if (id.equals(prefs.getString(PREF_ACTIVE, ""))) {
+    if (id.equals(getString(prefs, PREF_ACTIVE, ""))) {
       editor.putString(PREF_ACTIVE, "");
     }
     editor.putString(PREF_IDS, String.join(",", ids)).apply();
+  }
+
+  private static String getString(SharedPreferences prefs, String key, String fallback) {
+    try {
+      String value = prefs.getString(key, fallback);
+      return value == null ? fallback : value;
+    } catch (ClassCastException e) {
+      return fallback;
+    }
+  }
+
+  private static boolean getBoolean(SharedPreferences prefs, String key, boolean fallback) {
+    try {
+      return prefs.getBoolean(key, fallback);
+    } catch (ClassCastException e) {
+      return fallback;
+    }
+  }
+
+  /** Returns {@code value} within {@code min} and {@code max}, or 1 if it isn't a number. */
+  private static float clamp(float value, float min, float max) {
+    return Float.isNaN(value) ? 1f : Math.max(min, Math.min(max, value));
   }
 
   private static int parseInt(@Nullable String value, int fallback) {

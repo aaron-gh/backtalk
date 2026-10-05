@@ -22,6 +22,7 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
+import android.text.InputFilter;
 import android.text.InputType;
 import android.widget.EditText;
 import androidx.appcompat.app.AlertDialog;
@@ -110,7 +111,8 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
     addName(context, screen);
     addEngine(context, screen);
     languagePref =
-        addList(context, screen, VoiceProfiles.LANGUAGE, R.string.title_pref_voice_profile_language);
+        addList(
+            context, screen, VoiceProfiles.LANGUAGE, R.string.title_pref_voice_profile_language);
     languagePref.setOnPreferenceChangeListener(
         (preference, newValue) -> {
           String language = (String) newValue;
@@ -212,6 +214,8 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
     EditText field = new EditText(context);
     field.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
     field.setSingleLine(true);
+    field.setFilters(
+        new InputFilter[] {new InputFilter.LengthFilter(VoiceProfiles.MAX_NAME_LENGTH)});
     field.setText(profile().name());
     field.selectAll();
     new AlertDialog.Builder(context)
@@ -308,7 +312,8 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
   }
 
   private void setSeekBarValue(String field, int value) {
-    if (findPreference(VoiceProfiles.key(id, field) + "_seekbar") instanceof SeekBarPreference bar) {
+    Preference preference = findPreference(VoiceProfiles.key(id, field) + "_seekbar");
+    if (preference instanceof SeekBarPreference bar) {
       bar.setValue(value);
     }
   }
