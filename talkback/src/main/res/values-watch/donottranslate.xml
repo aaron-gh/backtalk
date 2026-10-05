@@ -2,12 +2,16 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools" tools:ignore="InconsistentArrays">
     <!-- Watches use the phone defaults, except where those would not work on a watch: screen
          search and voice commands are not offered, there are no volume keys or braille keyboard,
-         and three- and four-finger gestures do not fit. -->
+         and three- and four-finger gestures do not fit, as watch screens track only two fingers.
+         Two-finger swipes scroll the app, so the menu, repeating and muting are on gestures that a
+         watch has to spare. -->
     <string name="pref_shortcut_left_and_down_default">@string/shortcut_value_unassigned</string>
+    <string name="pref_shortcut_left_and_up_default">@string/shortcut_value_repeat_last_spoken_phrase</string>
     <string name="pref_shortcut_right_and_up_default">@string/shortcut_value_increase_volume</string>
     <string name="pref_shortcut_right_and_down_default">@string/shortcut_value_decrease_volume</string>
 
-    <string name="pref_shortcut_2finger_2tap_hold_default">@string/shortcut_value_media_control</string>
+    <string name="pref_shortcut_2finger_2tap_hold_default">@string/shortcut_value_talkback_breakout</string>
+    <string name="pref_shortcut_2finger_3tap_hold_default">@string/shortcut_value_toggle_voice_feedback</string>
     <string name="pref_shortcut_3finger_1tap_default">@string/shortcut_value_unsupported</string>
     <string name="pref_shortcut_3finger_2tap_default">@string/shortcut_value_unsupported</string>
     <string name="pref_shortcut_3finger_3tap_default">@string/shortcut_value_unsupported</string>
