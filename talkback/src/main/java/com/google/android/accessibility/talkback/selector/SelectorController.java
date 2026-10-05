@@ -1965,10 +1965,7 @@ public class SelectorController implements UserInputEventListener {
     String nextId = ids.get(Math.floorMod(currentIndex + (isNext ? 1 : -1), ids.size()));
     prefs.edit().putString(VoiceProfiles.PREF_ACTIVE, nextId).apply();
 
-    String displayText =
-        nextId.isEmpty()
-            ? context.getString(R.string.voice_profile_default)
-            : VoiceProfilesFragment.nameOf(context, VoiceProfiles.read(prefs, nextId));
+    String displayText = VoiceProfilesFragment.nameOf(context, prefs, nextId);
     announceSetting(eventId, displayText, getSelectSettingGestures());
     showQuickMenuActionOverlay(eventId, displayText);
   }
