@@ -28,10 +28,14 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.IntFunction;
 import org.junit.After;
 import org.junit.Test;
 
 public class VoiceProfilesTest {
+  private static final String DEFAULT = "Backtalk default";
+  private static final IntFunction<String> NUMBERED = number -> "Profile " + number;
+
   private final FakePrefs prefs = new FakePrefs();
 
   @After
@@ -115,10 +119,10 @@ public class VoiceProfilesTest {
   @Test
   public void blankNamesAreNeverSaved() {
     String id = create("Reading", "e");
-    assertFalse(VoiceProfiles.rename(prefs, id, ""));
-    assertFalse(VoiceProfiles.rename(prefs, id, "   "));
+    assertFalse(VoiceProfiles.rename(prefs, id, "", DEFAULT));
+    assertFalse(VoiceProfiles.rename(prefs, id, "   ", DEFAULT));
     assertEquals("Reading", VoiceProfiles.read(prefs, id).name());
-    assertTrue(VoiceProfiles.rename(prefs, id, "  Books "));
+    assertTrue(VoiceProfiles.rename(prefs, id, "  Books ", DEFAULT));
     assertEquals("Books", VoiceProfiles.read(prefs, id).name());
   }
 
@@ -131,14 +135,47 @@ public class VoiceProfilesTest {
     prefs.values.put(VoiceProfiles.key(blank, VoiceProfiles.NAME), "");
     prefs.values.put(VoiceProfiles.key(otherBlank, VoiceProfiles.NAME), " ");
 
-    Map<String, String> names = VoiceProfiles.names(prefs, number -> "Profile " + number);
+    Map<String, String> names = VoiceProfiles.names(prefs, DEFAULT, NUMBERED);
     assertEquals("Profile 2", names.get(blank));
     assertEquals("Profile 4", names.get(otherBlank));
-    assertEquals("Profile 5", VoiceProfiles.unusedName(prefs, number -> "Profile " + number));
+    assertEquals("Profile 5", VoiceProfiles.unusedName(prefs, DEFAULT, NUMBERED));
 
     // Saved as soon as they were found.
     assertEquals("Profile 2", VoiceProfiles.read(prefs, blank).name());
     assertEquals("Profile 4", VoiceProfiles.read(prefs, otherBlank).name());
+  }
+
+  @Test
+  public void namesTakenByAnotherProfileOrTheDefaultAreRefused() {
+    String reading = create("Reading", "e");
+    String fast = create("Fast", "e");
+    assertTrue(VoiceProfiles.isNameTaken(prefs, fast, " reading ", DEFAULT));
+    assertTrue(VoiceProfiles.isNameTaken(prefs, "", "READING", DEFAULT));
+    assertTrue(VoiceProfiles.isNameTaken(prefs, fast, "backtalk default", DEFAULT));
+    assertFalse(VoiceProfiles.isNameTaken(prefs, reading, "Reading", DEFAULT));
+    assertFalse(VoiceProfiles.isNameTaken(prefs, "", "Books", DEFAULT));
+
+    assertFalse(VoiceProfiles.rename(prefs, fast, "Reading", DEFAULT));
+    assertFalse(VoiceProfiles.rename(prefs, fast, "Backtalk Default", DEFAULT));
+    assertEquals("Fast", VoiceProfiles.read(prefs, fast).name());
+    assertTrue(VoiceProfiles.rename(prefs, reading, "READING", DEFAULT));
+    assertEquals("READING", VoiceProfiles.read(prefs, reading).name());
+  }
+
+  @Test
+  public void duplicateNamesGiveTheLowerProfileANameOfItsOwn() {
+    String first = create("Reading", "e");
+    String second = create("Fast", "e");
+    String third = create("Calm", "e");
+    prefs.values.put(VoiceProfiles.key(second, VoiceProfiles.NAME), "reading ");
+    prefs.values.put(VoiceProfiles.key(third, VoiceProfiles.NAME), DEFAULT);
+
+    Map<String, String> names = VoiceProfiles.names(prefs, DEFAULT, NUMBERED);
+    assertEquals("Reading", names.get(first));
+    assertEquals("Profile 1", names.get(second));
+    assertEquals("Profile 2", names.get(third));
+    assertEquals("Profile 1", VoiceProfiles.read(prefs, second).name());
+    assertEquals("Profile 2", VoiceProfiles.read(prefs, third).name());
   }
 
   @Test

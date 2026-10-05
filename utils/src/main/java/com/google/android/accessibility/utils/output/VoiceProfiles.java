@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.IntFunction;
@@ -173,8 +174,9 @@ public final class VoiceProfiles {
   }
 
   /**
-   * Adds a profile called {@code name}, which must not be blank, speaking with {@code engine} and
-   * otherwise like Backtalk's default, and returns its ID.
+   * Adds a profile called {@code name}, which must not be blank or another profile's (see {@link
+   * #isNameTaken}), speaking with {@code engine} and otherwise like Backtalk's default, and returns
+   * its ID.
    */
   public static String create(
       SharedPreferences prefs,
@@ -228,34 +230,38 @@ public final class VoiceProfiles {
   }
 
   /**
-   * Returns each profile's name by ID, in order. Names can't be saved blank, but a damaged setting
-   * can leave one blank. Such a profile gets the first numbered name, such as "Voice profile 2",
-   * that no other profile has, as a new profile would, and the name is saved at once, so it stays
-   * the same from then on.
+   * Returns each profile's name by ID, in order. Names can't be saved blank or the same as another
+   * profile's, but a damaged setting, such as one restored from a backup, can leave them so. A
+   * profile with a blank name, or the name of a profile above it or of Backtalk default, gets the
+   * first numbered name, such as "Voice profile 2", that no other profile has, as a new profile
+   * would. The name is saved at once, so it stays the same from then on.
    *
+   * @param defaultName Backtalk default's name, which no profile can have
    * @param numberedName gives the numbered name for a number
    */
   public static Map<String, String> names(
-      SharedPreferences prefs, IntFunction<String> numberedName) {
+      SharedPreferences prefs, String defaultName, IntFunction<String> numberedName) {
     Map<String, String> names = new LinkedHashMap<>();
     Set<String> taken = new HashSet<>();
-    List<String> blank = new ArrayList<>();
+    taken.add(nameKey(defaultName));
+    List<String> unnamed = new ArrayList<>();
     for (String id : ids(prefs)) {
       String name = read(prefs, id).name();
-      if (name.trim().isEmpty()) {
-        blank.add(id);
+      String nameKey = nameKey(name);
+      if (nameKey.isEmpty() || taken.contains(nameKey)) {
+        unnamed.add(id);
         names.put(id, "");
       } else {
         names.put(id, name);
-        taken.add(name);
+        taken.add(nameKey);
       }
     }
-    if (!blank.isEmpty()) {
+    if (!unnamed.isEmpty()) {
       SharedPreferences.Editor editor = prefs.edit();
-      for (String id : blank) {
+      for (String id : unnamed) {
         String name = unusedName(taken, numberedName);
         names.put(id, name);
-        taken.add(name);
+        taken.add(nameKey(name));
         editor.putString(key(id, NAME), name);
       }
       editor.apply();
@@ -264,31 +270,65 @@ public final class VoiceProfiles {
   }
 
   /** Returns the first numbered name, such as "Voice profile 1", that no profile has. */
-  public static String unusedName(SharedPreferences prefs, IntFunction<String> numberedName) {
-    return unusedName(new HashSet<>(names(prefs, numberedName).values()), numberedName);
+  public static String unusedName(
+      SharedPreferences prefs, String defaultName, IntFunction<String> numberedName) {
+    Set<String> taken = new HashSet<>();
+    taken.add(nameKey(defaultName));
+    for (String name : names(prefs, defaultName, numberedName).values()) {
+      taken.add(nameKey(name));
+    }
+    return unusedName(taken, numberedName);
   }
 
   private static String unusedName(Set<String> taken, IntFunction<String> numberedName) {
     for (int number = 1; ; number++) {
       String name = numberedName.apply(number);
-      if (!taken.contains(name)) {
+      if (!taken.contains(nameKey(name))) {
         return name;
       }
     }
   }
 
   /**
-   * Renames profile {@code id}, unless {@code name} is blank: every profile has a name.
+   * Whether a profile other than {@code id} is called {@code name}, or it is Backtalk default's
+   * name. Use an empty {@code id} for a new profile.
+   */
+  public static boolean isNameTaken(
+      SharedPreferences prefs, String id, String name, String defaultName) {
+    String nameKey = nameKey(name);
+    if (nameKey.equals(nameKey(defaultName))) {
+      return true;
+    }
+    for (String other : ids(prefs)) {
+      if (!other.equals(id) && nameKey(read(prefs, other).name()).equals(nameKey)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Names compare without case and spaces at either end, since names that differ only in those
+   * sound the same when spoken.
+   */
+  private static String nameKey(String name) {
+    return name.trim().toLowerCase(Locale.ROOT);
+  }
+
+  /**
+   * Renames profile {@code id}, unless {@code name} is blank or another profile's: every profile
+   * has a name of its own.
    *
    * @return whether the profile was renamed
    */
-  public static boolean rename(SharedPreferences prefs, String id, String name) {
+  public static boolean rename(
+      SharedPreferences prefs, String id, String name, String defaultName) {
     String trimmed = name.trim();
-    if (trimmed.isEmpty()) {
-      return false;
-    }
     if (trimmed.length() > MAX_NAME_LENGTH) {
       trimmed = trimmed.substring(0, MAX_NAME_LENGTH);
+    }
+    if (trimmed.isEmpty() || isNameTaken(prefs, id, trimmed, defaultName)) {
+      return false;
     }
     prefs.edit().putString(key(id, NAME), trimmed).apply();
     return true;
