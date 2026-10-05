@@ -245,6 +245,55 @@ class DotsOrientationTest {
   }
 
   @Test
+  fun tabletTabletopRotation_heldFromBehindWithThePortAtTheSide_facesTheOtherEdge() {
+    // Held screen-away with the port on the right, as on the Fold7 unfolded at rotation 270.
+    assertEquals(
+      rotation90,
+      DotsOrientation.tabletTabletopRotation(rotation270, Orientation.LANDSCAPE, true),
+    )
+    assertEquals(
+      rotation270,
+      DotsOrientation.tabletTabletopRotation(rotation90, Orientation.REVERSE_LANDSCAPE, true),
+    )
+  }
+
+  @Test
+  fun tabletTabletopRotation_keepsThePortOnTheSameSideOfTheUser() {
+    // Tipping a tablet flat keeps the port on the user's left or right.
+    for (held in listOf(Orientation.LANDSCAPE, Orientation.REVERSE_LANDSCAPE)) {
+      val heldRotation = DotsOrientation.rotationForDegrees(held.degree)
+      assertEquals(
+        held.name,
+        DotsOrientation.heldPortPosition(held, false),
+        DotsOrientation.tabletPortPosition(
+          DotsOrientation.tabletTabletopRotation(heldRotation, held, true),
+          true,
+        ),
+      )
+    }
+  }
+
+  @Test
+  fun tabletTabletopRotation_heldWithThePortDownOrUp_facesTheUserAsAutoRotateDoes() {
+    assertEquals(
+      rotation0,
+      DotsOrientation.tabletTabletopRotation(rotation0, Orientation.PORTRAIT, true),
+    )
+    assertEquals(
+      rotation180,
+      DotsOrientation.tabletTabletopRotation(rotation180, Orientation.REVERSE_PORTRAIT, true),
+    )
+  }
+
+  @Test
+  fun tabletTabletopRotation_notFromScreenAway_facesTheUserAsAutoRotateDoes() {
+    assertEquals(
+      rotation270,
+      DotsOrientation.tabletTabletopRotation(rotation270, Orientation.LANDSCAPE, false),
+    )
+  }
+
+  @Test
   fun phoneLock_roundTrips() {
     assertTrue(DotsOrientation.phoneLockPortOnRight(DotsOrientation.phoneLock(true)))
     assertFalse(DotsOrientation.phoneLockPortOnRight(DotsOrientation.phoneLock(false)))
