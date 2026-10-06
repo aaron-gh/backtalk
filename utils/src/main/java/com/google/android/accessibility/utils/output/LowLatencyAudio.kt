@@ -74,6 +74,11 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
   // Whether the track has the fast path, and its underrun count when its buffer was last sized.
   @Volatile private var fastPath = false
   @Volatile private var underruns = 0
+  // The fast path's buffer size, once it has had to grow, kept for new tracks and outputs.
+  @Volatile private var fastFrames = 0
+  // Set when the track starts, until its first write completes. Running short before that is only
+  // the track starting, not a buffer too small.
+  @Volatile private var starting = false
   // The watchdog's checks, scheduled only while the audio thread runs.
   private var watchdog: ScheduledFuture<*>? = null
   private var thread: Thread? = null
@@ -191,6 +196,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     private var framesWritten = 0L
     private var framesPlayed = 0L
     private var started = false
+    private var ranDry = false
     private var ended = false
     private var finished = false
     // When the engine last gave this stream anything, or it reached the front of the queue.
@@ -327,6 +333,11 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
           pending.removeFirst()
           headOffset = 0
         }
+      }
+      if (started && !ended && written < frames && !ranDry) {
+        // The engine has not kept up, so the speech has a gap.
+        ranDry = true
+        LogUtils.d(TAG, "Speech %s ran dry after %d frames", id, framesPlayed + written)
       }
       if (written > 0 && !started) {
         started = true
@@ -653,6 +664,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     try {
       if (output.playState != AudioTrack.PLAYSTATE_PLAYING) {
         output.play()
+        starting = true
         if (!fastPath) waking = true
       }
       true
@@ -743,15 +755,18 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     }
 
   /**
-   * Queues two bursts at most on the fast path, so new sound waits no longer than that. Other
-   * outputs, such as Bluetooth, mix a much larger period at a time, so the buffer starts at
-   * SLOW_BUFFER_MS there and grows in [keepUp] until the mixer stops running short.
+   * Queues two bursts on the fast path, so new sound waits no longer than that, or more if it ran
+   * short before. The burst Android reports can be smaller than the fast mixer's period, such as 144
+   * frames for a 192 frame period. Other outputs, such as Bluetooth without the fast path, mix a
+   * much larger period at a time, so the buffer starts at SLOW_BUFFER_MS there. Both grow in
+   * [keepUp] until the mixer stops running short.
    */
   private fun fitBuffer(output: AudioTrack) {
     try {
       val fast = output.performanceMode == AudioTrack.PERFORMANCE_MODE_LOW_LATENCY
       output.setBufferSizeInFrames(
-        if (fast) burstFrames * QUEUED_BURSTS else sampleRate * SLOW_BUFFER_MS / 1000
+        if (fast) maxOf(burstFrames * QUEUED_BURSTS, fastFrames)
+        else sampleRate * SLOW_BUFFER_MS / 1000
       )
       underruns = output.underrunCount
       fastPath = fast
@@ -768,17 +783,24 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
   }
 
   /**
-   * Doubles the buffer after the mixer ran short, which otherwise crackles and slows audio down.
-   * A full buffer delays new sound by its length, so it grows only as far as it has to.
+   * Grows the buffer after the mixer ran short, which otherwise pops, or crackles and slows audio
+   * down. A full buffer delays new sound by its length, so it grows only as far as it has to: a
+   * burst at a time on the fast path, and double without it.
    */
   private fun keepUp(output: AudioTrack) {
-    if (fastPath) return
     val count = output.underrunCount
+    if (starting) {
+      starting = false
+      underruns = count
+      return
+    }
     if (count <= underruns) return
     underruns = count
     val size = output.bufferSizeInFrames
     if (size >= output.bufferCapacityInFrames) return
-    output.setBufferSizeInFrames(minOf(size * 2, output.bufferCapacityInFrames))
+    val grown = if (fastPath) size + burstFrames else size * 2
+    output.setBufferSizeInFrames(minOf(grown, output.bufferCapacityInFrames))
+    if (fastPath) fastFrames = output.bufferSizeInFrames
     LogUtils.d(TAG, "Track ran short, now %d frames", output.bufferSizeInFrames)
   }
 
