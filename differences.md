@@ -168,7 +168,7 @@ Like VoiceOver, Backtalk can tell you what happened by touch alone. Every sound 
 
 Frequent actions are a single hit: a soft tap when focus lands on an item, a firm click on an item that you can activate, and a softer tap over an empty area. Others have a rhythm of their own. The end of a list, or a completed action, is two firm knocks. Entering a list is two light taps with the second one stronger, and leaving a list is two light taps with the second one weaker. A window change is three soft taps with the middle one strongest. When Backtalk scrolls a list, you feel three quick ticks. When the circle menu opens, you feel one tick for each item. The loading tone, which repeats while you wait for an image or screen description, has a short heartbeat that's firm enough to feel through a case.
 
-Progress bar tones, the sound for capital letters, and braille display and braille keyboard sounds don't vibrate, so braille vibrations still follow the braille keyboard's own setting. Phones that support rich haptics play the vibrations as composed effects. Phones without them play softer and shorter forms of the same patterns.
+Progress bar tones, the sound for capital letters, and braille display and braille keyboard sounds don't vibrate. The braille keyboard has vibrations of its own, which **Vibration feedback** turns on and off with the rest. Phones that support rich haptics play the vibrations as composed effects. Phones without them play softer and shorter forms of the same patterns.
 
 ### Ticks while you scroll with two fingers
 
@@ -176,7 +176,7 @@ TalkBack played its scroll sound and vibration at most every 250 ms while you sc
 
 ### Individual sounds and vibrations
 
-To turn off one sound or one vibration and keep the rest, go to **Sound and vibration** > **Individual sounds and vibrations**. There's a switch for each sound and each vibration, including the braille display and braille keyboard sounds and the screen-off sound. Turning off a sound keeps its vibration, and turning off a vibration keeps its sound. To hear or feel one, open the actions menu on its switch and choose **Preview**. **Sound feedback** and **Vibration feedback** still turn all of them off at once.
+To turn off one sound or one vibration and keep the rest, go to **Sound and vibration** > **Individual sounds and vibrations**. There's a switch for each sound and each vibration, including the braille display and braille keyboard sounds, the braille keyboard's vibrations, and the screen-off sound. Turning off a sound keeps its vibration, and turning off a vibration keeps its sound. To hear or feel one, open the actions menu on its switch and choose **Preview**. **Sound feedback** and **Vibration feedback** still turn all of them off at once.
 
 ### Sound themes
 

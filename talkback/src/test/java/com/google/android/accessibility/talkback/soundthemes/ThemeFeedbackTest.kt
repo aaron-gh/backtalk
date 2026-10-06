@@ -16,8 +16,11 @@
 
 package com.google.android.accessibility.talkback.soundthemes
 
+import com.google.android.accessibility.talkback.individualfeedback.IndividualFeedbackSettings
+import com.google.android.accessibility.talkback.individualfeedback.SoundVibrations
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ThemeFeedbackTest {
@@ -45,6 +48,36 @@ class ThemeFeedbackTest {
   @Test
   fun linksAreTurnedOffWithTheLinkVibration() {
     assertEquals(0, feedback.vibrationsPlaying(setOf("hyperlink_pattern")).getValue("control_link").size)
+  }
+
+  @Test
+  fun brailleKeyboardVibrationsTurnedOffPlayNothingWithoutATheme() {
+    val playing = feedback.vibrationsPlaying(setOf("braille_keyboard_space"))
+    assertEquals(0, playing.getValue("braille_keyboard_space").size)
+    assertEquals(null, playing["braille_keyboard_character"])
+  }
+
+  @Test
+  fun brailleKeyboardVibrationsTurnedOffPlayNothingWithATheme() {
+    val themed =
+      ThemeFeedback(emptyMap(), mapOf("braille_keyboard_space" to intArrayOf(0, 20)))
+    val playing = themed.vibrationsPlaying(setOf("braille_keyboard_space"))
+    assertEquals(0, playing.getValue("braille_keyboard_space").size)
+    assertArrayEquals(
+      intArrayOf(0, 20),
+      themed.vibrationsPlaying(emptySet())["braille_keyboard_space"],
+    )
+  }
+
+  @Test
+  fun everyBrailleKeyboardVibrationHasASwitch() {
+    assertEquals(
+      SoundVibrations.BRAILLE_KEYBOARD,
+      IndividualFeedbackSettings.BRAILLE_KEYBOARD_VIBRATIONS.map { it.key }.toSet(),
+    )
+    assertTrue(
+      SoundVibrations.BRAILLE_KEYBOARD.all { it in SoundVibrations.VIBRATION_ONLY.keys }
+    )
   }
 
   @Test

@@ -71,6 +71,12 @@ class IndividualFeedbackFragment : TalkbackBaseFragment() {
       val vibrations = category(context, R.string.individual_feedback_vibrations_category)
       screen.addPreference(vibrations)
       for (item in IndividualFeedbackSettings.VIBRATIONS) {
+        if (
+          !BrailleKeyboardVibrations.isAvailable() &&
+            item in IndividualFeedbackSettings.BRAILLE_KEYBOARD_VIBRATIONS
+        ) {
+          continue
+        }
         vibrations.addPreference(
           FeedbackSwitch(
             context,
@@ -143,6 +149,13 @@ class IndividualFeedbackFragment : TalkbackBaseFragment() {
     val themePattern =
       themeVibrations[switch]
         ?: themeVibrations.entries.firstOrNull { SoundVibrations.switchOf(it.key) == switch }?.value
+    if (themePattern == null && switch in SoundVibrations.BRAILLE_KEYBOARD) {
+      // The braille keyboard plays its own vibrations, which aren't pattern resources.
+      if (BrailleKeyboardVibrations.preview(context, switch)) {
+        previewVibrator = vibrator
+      }
+      return
+    }
     val pattern =
       themePattern
         ?: resourceId(context, switch, "array").takeIf { it != 0 }?.let {

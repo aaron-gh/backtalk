@@ -59,7 +59,7 @@ public class FeedbackManager {
 
   /**
    * Emits feedback with {@code Type}. Only the sound plays: braille vibrations are left to the
-   * braille keyboard, which has its own vibration setting.
+   * braille keyboard, which plays its own.
    */
   public void emitFeedback(Type type) {
     feedbackController.playAuditoryWithoutHaptic(type.resId, EVENT_ID_UNTRACKED);

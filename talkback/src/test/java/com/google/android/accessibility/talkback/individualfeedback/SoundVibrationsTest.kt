@@ -29,9 +29,12 @@ class SoundVibrationsTest {
   private val patterns: Map<String, Pattern> = loadPatterns()
   private val vibrationNames = IndividualFeedbackSettings.VIBRATIONS.flatMap { it.resourceNames }
 
-  // Switches of vibrations that only themes give, which Backtalk has no pattern for.
+  // Switches of vibrations that only themes give, which Backtalk has no pattern for, and of the
+  // braille keyboard's, which the keyboard defines itself.
   private val patternNames =
-    vibrationNames - (SoundVibrations.THEME_ONLY_SWITCHES.values - SoundVibrations.PATTERNS.values)
+    vibrationNames -
+      (SoundVibrations.THEME_ONLY_SWITCHES.values - SoundVibrations.PATTERNS.values) -
+      SoundVibrations.BRAILLE_KEYBOARD
 
   @Test
   fun everySoundHasAVibrationUnlessItShouldNot() {
@@ -121,8 +124,12 @@ class SoundVibrationsTest {
       SoundVibrations.switchOfPlayed("view_focused_or_selected_pattern"),
     )
     assertEquals("notification_pattern", SoundVibrations.switchOfPlayed("notification_pattern"))
-    // The braille keyboard and direct touch have settings of their own.
-    assertEquals(null, SoundVibrations.switchOfPlayed("braille_keyboard_character"))
+    // Each braille keyboard vibration has a switch of its own name.
+    assertEquals(
+      "braille_keyboard_character",
+      SoundVibrations.switchOfPlayed("braille_keyboard_character"),
+    )
+    // Direct touch has a setting of its own.
     assertEquals(null, SoundVibrations.switchOfPlayed("direct_touch_on"))
     SoundVibrations.PATTERNS.values.forEach {
       assertTrue("$it has no switch", SoundVibrations.switchOfPlayed(it) in vibrationNames)

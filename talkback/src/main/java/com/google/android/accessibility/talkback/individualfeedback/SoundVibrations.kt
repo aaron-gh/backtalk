@@ -25,10 +25,7 @@ import com.google.android.accessibility.talkback.controlsounds.ControlSounds
  * vibration_backtalk.xml.
  */
 object SoundVibrations {
-  /**
-   * Sounds that play without a vibration. The braille sounds leave vibration to the braille
-   * keyboard, which has its own setting.
-   */
+  /** Sounds that play without a vibration: the braille display's sounds. */
   val WITHOUT_VIBRATION: Set<String> =
     setOf(
       "display_connected",
@@ -71,6 +68,20 @@ object SoundVibrations {
       "direct_touch_off" to "direct_touch_off",
     )
 
+  /**
+   * The braille keyboard's vibrations, which it plays itself. Each plays under its own name, which
+   * is also the name of its switch.
+   */
+  val BRAILLE_KEYBOARD: Set<String> =
+    setOf(
+      "braille_keyboard_character",
+      "braille_keyboard_space",
+      "braille_keyboard_new_line",
+      "braille_keyboard_hold",
+      "braille_keyboard_gesture",
+      "braille_keyboard_nothing_to_delete",
+    )
+
   /** Patterns that play a sound's vibration without its sound: selection, by the sound's name. */
   private val ALSO_PLAYED_AS: Map<String, List<String>> =
     mapOf("focus_actionable" to listOf("view_focused_or_selected_pattern"))
@@ -106,13 +117,14 @@ object SoundVibrations {
 
   /**
    * The switch in Individual sounds and vibrations that turns off what plays under [name], or null
-   * if it has none, like the braille keyboard and direct touch, which have settings of their own.
+   * if it has none, like direct touch, which has a setting of its own.
    */
   @JvmStatic
   fun switchOfPlayed(name: String): String? =
     switchOf(name)
       ?: when (name) {
         in PATTERNS.values,
+        in BRAILLE_KEYBOARD,
         "notification_pattern" -> name
         "view_focused_or_selected_pattern" -> "view_actionable_pattern"
         else -> null
