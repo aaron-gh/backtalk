@@ -502,7 +502,10 @@ public class BrailleInputView extends View
       } else if (Utils.isDeviceDefaultPortrait(getContext())) {
         tabletopRotation =
             DotsOrientation.tabletTabletopRotation(
-                held, HeldOrientationTracker.getLastHeld(), fromScreenAway);
+                held,
+                HeldOrientationTracker.getLastHeld(),
+                fromScreenAway,
+                BrailleUserPreferences.readTabletHeldUpFacesAway(getContext()));
       } else {
         tabletopRotation = held;
       }
@@ -510,6 +513,26 @@ public class BrailleInputView extends View
     screenAwayPortOnRight = null;
     tabletopSideDecidedAtMs = SystemClock.uptimeMillis();
     callback.onTabletopPortSideDecided();
+  }
+
+  /**
+   * On a tablet standing up facing the user, turns the tabletop dots to the rotation it is held up
+   * with now, as auto-rotate would. Returns whether they turned.
+   */
+  public boolean faceHeldRotation() {
+    int held = HeldOrientationTracker.getLastHeldRotation();
+    if (isPhone() || held < 0) {
+      return false;
+    }
+    boolean turned = held != tabletopRotation;
+    tabletopRotation = held;
+    tabletopSideDecidedAtMs = SystemClock.uptimeMillis();
+    callback.onTabletopPortSideDecided();
+    if (turned && tabletopMode) {
+      updateTurnedAround();
+      invalidate();
+    }
+    return turned;
   }
 
   /** The screen rotation, which works before the view is attached to a window. */

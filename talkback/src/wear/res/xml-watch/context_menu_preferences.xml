@@ -2,6 +2,11 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:key="@string/pref_category_manage_context_menu_key">
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+        android:defaultValue="@bool/pref_radial_menu_default"
+        android:key="@string/pref_radial_menu_key"
+        android:summary="@string/summary_pref_radial_menu"
+        android:title="@string/title_pref_radial_menu" />
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
         android:key="@string/pref_show_context_menu_contextual_actions_category_key"
         android:title="@string/context_menu_category_contextual_actions">

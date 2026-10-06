@@ -48,6 +48,11 @@
         android:title="@string/title_pref_flip_dots_vertically" />
 
     <SwitchPreferenceCompat
+        android:key="@string/pref_brailleime_tablet_held_up_faces_away"
+        android:summary="@string/summary_pref_tablet_held_up_faces_away"
+        android:title="@string/title_pref_tablet_held_up_faces_away" />
+
+    <SwitchPreferenceCompat
         android:key="@string/pref_brailleime_typing_sounds"
         android:summary="@string/summary_pref_typing_sounds"
         android:title="@string/title_pref_typing_sounds" />

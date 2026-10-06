@@ -163,6 +163,9 @@ public class FeedbackController {
   /** Cache of resource names, so muting does not look one up on every sound. */
   private final SparseArray<String> mResourceNames = new SparseArray<>();
 
+  /** Cache of whether resources are vibration patterns rather than sounds, by resource ID. */
+  private final SparseBooleanArray mIsPattern = new SparseBooleanArray();
+
   /** The vibration pattern that plays with each sound, by the sound's resource entry name. */
   private Map<String, Integer> mSoundHaptics = Collections.emptyMap();
 
@@ -216,11 +219,16 @@ public class FeedbackController {
    * Plays the vibration pattern associated with the given resource ID, unless a sound for the same
    * event just played its own vibration, or would have if the user had not turned it off.
    *
-   * @param resId The vibration pattern's resource identifier.
+   * <p>Given a sound's resource ID, it plays that sound's vibration without the sound, such as for
+   * a control whose sound is off or that the theme gives only a vibration. That stands in for the
+   * sound's own vibration, which always plays, so it is never skipped: a swipe's focus is spoken
+   * under the swipe's event, whose gesture sound has just vibrated.
+   *
+   * @param resId The vibration pattern's resource identifier, or a sound's.
    * @return {@code true} if successful.
    */
   public boolean playHaptic(int resId, @Nullable EventId eventId) {
-    if (mSoundHapticCover.covers(eventId, SystemClock.uptimeMillis())) {
+    if (isPattern(resId) && mSoundHapticCover.covers(eventId, SystemClock.uptimeMillis())) {
       LogUtils.v(TAG, "playHaptic() resId=%d skipped, the sound vibrated", resId);
       return false;
     }
@@ -523,6 +531,22 @@ public class FeedbackController {
     }
     mHasOwnSound.put(resId, hasOwn);
     return hasOwn;
+  }
+
+  /** Returns whether {@code resId} is a vibration pattern, not a sound whose vibration plays. */
+  private boolean isPattern(int resId) {
+    int index = mIsPattern.indexOfKey(resId);
+    if (index >= 0) {
+      return mIsPattern.valueAt(index);
+    }
+    boolean isPattern;
+    try {
+      isPattern = "array".equals(mResources.getResourceTypeName(resId));
+    } catch (NotFoundException e) {
+      isPattern = true;
+    }
+    mIsPattern.put(resId, isPattern);
+    return isPattern;
   }
 
   /** Returns the file the user chose to play in place of {@code resId}, or null for its own. */
