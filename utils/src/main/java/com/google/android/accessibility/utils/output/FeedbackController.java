@@ -34,7 +34,6 @@ import android.os.Vibrator;
 import android.util.SparseArray;
 import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
-import com.google.android.accessibility.utils.BuildVersionUtils;
 import com.google.android.accessibility.utils.Performance.EventId;
 import com.google.android.accessibility.utils.R;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
@@ -61,12 +60,6 @@ public class FeedbackController {
 
   private static final String TAG = "FeedbackController";
 
-  /** Default stream for audio feedback. */
-  public static final int DEFAULT_STREAM =
-      BuildVersionUtils.isAtLeastO()
-          ? AudioManager.STREAM_ACCESSIBILITY
-          : AudioManager.STREAM_MUSIC;
-
   /** Maximum number of concurrent audio streams. */
   private static final int MAX_STREAMS = 10;
 
@@ -82,14 +75,11 @@ public class FeedbackController {
   public static final int SPATIAL_3D_WITH_HEADPHONES = 2;
 
   /**
-   * How Backtalk's sounds play: as speech, so that they follow the audio output device chosen for
-   * speech.
+   * How Backtalk's sounds play: as speech, so that they follow the audio output device and the
+   * volume chosen for speech. Set by {@link #setUseAccessibilityStream}.
    */
-  public static final AudioAttributes FEEDBACK_ATTRIBUTES =
-      new AudioAttributes.Builder()
-          .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
-          .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-          .build();
+  private static volatile AudioAttributes sFeedbackAttributes =
+      feedbackAttributes(/* useAccessibilityStream= */ true);
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Member data
@@ -101,7 +91,7 @@ public class FeedbackController {
   private final Resources mResources;
 
   /** The SoundPool instance for loading sounds and playing previously loaded sounds. */
-  private final SoundPool mSoundPool;
+  private SoundPool mSoundPool;
 
   /** Whether sounds play through {@link LowLatencyAudio}. */
   private volatile boolean mLowLatencyAudio;
@@ -608,7 +598,7 @@ public class FeedbackController {
   private static boolean headphonesPlaySounds(AudioManager audioManager) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
       for (AudioDeviceInfo device :
-          audioManager.getAudioDevicesForAttributes(FEEDBACK_ATTRIBUTES)) {
+          audioManager.getAudioDevicesForAttributes(sFeedbackAttributes)) {
         if (isHeadphone(device)) {
           return true;
         }
@@ -797,8 +787,42 @@ public class FeedbackController {
   private static SoundPool createSoundPool() {
     return new SoundPool.Builder()
         .setMaxStreams(MAX_STREAMS)
-        .setAudioAttributes(FEEDBACK_ATTRIBUTES)
+        .setAudioAttributes(sFeedbackAttributes)
         .build();
+  }
+
+  /** How Backtalk's sounds play, with the volume speech uses. */
+  public static AudioAttributes feedbackAttributes() {
+    return sFeedbackAttributes;
+  }
+
+  /** How sounds play with the accessibility volume, or else the media volume. */
+  public static AudioAttributes feedbackAttributes(boolean useAccessibilityStream) {
+    return new AudioAttributes.Builder()
+        .setUsage(
+            useAccessibilityStream
+                ? AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY
+                : AudioAttributes.USAGE_MEDIA)
+        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+        .build();
+  }
+
+  /**
+   * Sets whether sounds use the accessibility volume or the media volume, the same as speech. The
+   * sounds loaded so far are loaded again, with the new volume.
+   */
+  public void setUseAccessibilityStream(boolean useAccessibilityStream) {
+    AudioAttributes attributes = feedbackAttributes(useAccessibilityStream);
+    if (attributes.getUsage() == sFeedbackAttributes.getUsage()) {
+      return;
+    }
+    sFeedbackAttributes = attributes;
+    mSoundPool.release();
+    mSoundPool = createSoundPool();
+    mSoundIds.clear();
+    mLoadedPaths.clear();
+    // Whether sounds reach headphones is asked again, for the new kind of audio.
+    mHeadphonesCheckedAt = 0;
   }
 
   /**
@@ -808,7 +832,7 @@ public class FeedbackController {
    */
   private boolean playLowLatency(
       int resId, @Nullable String path, float rate, float leftVolume, float rightVolume) {
-    @Nullable LowLatencyAudio player = LowLatencyAudio.get(mContext, FEEDBACK_ATTRIBUTES);
+    @Nullable LowLatencyAudio player = LowLatencyAudio.get(mContext, sFeedbackAttributes);
     if (player == null) {
       return false;
     }
