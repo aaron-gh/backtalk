@@ -67,6 +67,10 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
   @Volatile private var lastWrite = 0L
   // Set by the watchdog when the track has taken no audio for WRITE_STUCK_MS.
   @Volatile private var remakeTrack = false
+  // Set when a paused track without the fast path starts, until its first write completes. An
+  // output such as Bluetooth can take a second or more to wake from standby, which is not a stuck
+  // track, so the watchdog gives it WAKE_STUCK_MS longer.
+  @Volatile private var waking = false
   // Whether the track has the fast path, and its underrun count when its buffer was last sized.
   @Volatile private var fastPath = false
   @Volatile private var underruns = 0
@@ -147,6 +151,12 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     fun onStalled(id: String)
 
     /**
+     * The player stopped working, such as when its track could not be made again, so the stream
+     * was dropped to play the usual way. Unlike [onStalled], the engine is not at fault.
+     */
+    fun onPlayerFailed(id: String)
+
+    /**
      * The engine's audio has been digital silence for [SILENT_MS], as if it applied the zero volume
      * Backtalk gives it itself, so the stream plays nothing.
      */
@@ -200,7 +210,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
         ) {
           // An engine can claim any format. One Backtalk cannot play is said the usual way.
           LogUtils.w(TAG, "Speech %s has unsupported format %d Hz %d ch %d", id, rate, channels, encoding)
-          if (streams.remove(this)) abandon()
+          if (streams.remove(this)) abandon(playerFailed = false)
           return
         }
         inChannels = channels
@@ -233,7 +243,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
           // The engine makes speech as fast as it plays, so this much waiting means the track or
           // the engine is not behaving. Say it the usual way rather than keep it all.
           LogUtils.e(TAG, "Speech %s has too much audio waiting", id)
-          if (streams.remove(this)) abandon()
+          if (streams.remove(this)) abandon(playerFailed = false)
           return
         }
         inFrames += floats.size / inChannels
@@ -344,11 +354,16 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
       return !ended && pending.isEmpty() && now - maxOf(lastActivity, headSince) > STALL_MS
     }
 
-    /** Ends this stream for another way to play it, without reporting that it finished. */
-    internal fun abandon() {
+    /**
+     * Ends this stream for another way to play it, without reporting that it finished.
+     * [playerFailed] tells whether the player, rather than the engine, is why.
+     */
+    internal fun abandon(playerFailed: Boolean) {
       finished = true
       pending.clear()
-      callbacks.execute { listener.onStalled(id) }
+      callbacks.execute {
+        if (playerFailed) listener.onPlayerFailed(id) else listener.onStalled(id)
+      }
     }
 
     internal fun finish(completed: Boolean) {
@@ -387,7 +402,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
       val stream = SpeechStream(id, volume.coerceIn(0f, 1f), pan.coerceIn(-1f, 1f), listener)
       if (released || broken) {
         // Shut down or given up on since it was got: said the usual way instead.
-        stream.abandon()
+        stream.abandon(playerFailed = true)
         return stream
       }
       streams += stream
@@ -459,6 +474,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     if (thread != null || released || broken) return
     lastWrite = SystemClock.uptimeMillis()
     remakeTrack = false
+    waking = false
     thread = Thread(::run, "LowLatencyAudio").apply { start() }
     // Separate from the audio thread, so that a stuck track cannot stop it.
     watchdog =
@@ -490,14 +506,15 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
       val head = if (held) null else streams.peekFirst()
       if (head != null && head.isStalled(now)) {
         streams.removeFirst()
-        head.abandon()
+        head.abandon(playerFailed = false)
         LogUtils.w(TAG, "Speech %s got no audio in time", head.id)
       }
       val stuckFor = now - lastWrite
-      if (stuckFor > TRACK_STUCK_MS) {
+      val extra = if (waking) WAKE_STUCK_MS else 0L
+      if (stuckFor > TRACK_STUCK_MS + extra) {
         LogUtils.e(TAG, "Track took no audio for %d ms", stuckFor)
         giveUp()
-      } else if (stuckFor > WRITE_STUCK_MS && !remakeTrack) {
+      } else if (stuckFor > WRITE_STUCK_MS + extra && !remakeTrack) {
         // Android stopped taking audio on this track, such as after its output changed.
         LogUtils.w(TAG, "Track took no audio for %d ms, making a new one", stuckFor)
         remakeTrack = true
@@ -511,7 +528,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     synchronized(lock) {
       broken = true
       clips.clear()
-      while (streams.isNotEmpty()) streams.removeFirst().abandon()
+      while (streams.isNotEmpty()) streams.removeFirst().abandon(playerFailed = true)
       if (thread == null) {
         track?.release()
         track = null
@@ -634,7 +651,10 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
 
   private fun play(output: AudioTrack): Boolean =
     try {
-      if (output.playState != AudioTrack.PLAYSTATE_PLAYING) output.play()
+      if (output.playState != AudioTrack.PLAYSTATE_PLAYING) {
+        output.play()
+        if (!fastPath) waking = true
+      }
       true
     } catch (e: IllegalStateException) {
       false
@@ -654,6 +674,7 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
       }
     if (count != buffer.size) return false
     lastWrite = SystemClock.uptimeMillis()
+    waking = false
     try {
       keepUp(output)
     } catch (e: IllegalStateException) {
@@ -794,6 +815,9 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
 
     /** How long the track may take no audio before the watchdog gives up on it. */
     private const val TRACK_STUCK_MS = 1_500L
+
+    /** How much longer a track without the fast path may take to wake from standby. */
+    private const val WAKE_STUCK_MS = 2_000L
 
     private val instances = HashMap<Int, LowLatencyAudio>()
 
