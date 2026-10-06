@@ -1462,6 +1462,13 @@ public class BrailleIme extends InputMethodService {
         }
 
         @Override
+        public boolean wasHeldUprightInScreenAway() {
+          // With the layout chosen by hand, screen-away mode is always screen-away typing.
+          return !layoutOrientatorCallback.useSensorsToDetectLayout()
+              || layoutOrientator.wasHeldUprightInScreenAway();
+        }
+
+        @Override
         public boolean onSwipeProduced(Swipe swipe) {
           if (brailleImeGestureController.performSwipeAction(swipe)) {
             showOnBrailleDisplay();
