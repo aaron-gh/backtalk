@@ -8,6 +8,7 @@ dependencies {
     implementation project(':proguard')
     implementation project(':utils')
     implementation project(':brailleime')
+    phoneImplementation project(':braillecommon')
     implementation project(':brailleinterfaces')
     implementation project(':brailledisplay')
     implementation project(':materialflags')

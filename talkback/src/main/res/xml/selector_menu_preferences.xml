@@ -312,5 +312,11 @@
             android:key="@string/pref_selector_wrap_around_key"
             android:title="@string/title_pref_wrap_around"
             android:summary="@string/summary_support_wrap_around"/>
+        <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
+            android:layout="@layout/listitem_2texts"
+            android:defaultValue="@bool/pref_selector_tablet_held_up_faces_away_default"
+            android:key="@string/pref_selector_tablet_held_up_faces_away_key"
+            android:title="@string/title_selector_tablet_held_up_faces_away"
+            android:summary="@string/summary_support_tablet_held_up_faces_away"/>
     </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
 </PreferenceScreen>
