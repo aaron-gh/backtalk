@@ -80,6 +80,8 @@
     <string name="pref_punctuation_key" translatable="false">pref_punctuation</string>
     <string name="pref_punctuation_verbosity" translatable="false">pref_punctuation_verbosity</string>
     <string name="pref_count_repeated_symbols_key" >pref_collapse_repeated_symbols</string>
+    <string name="pref_emoji_speech_key" translatable="false">pref_emoji_speech</string>
+    <string name="pref_emoji_repeat_count_key" translatable="false">pref_emoji_repeat_count</string>
     <string name="pref_capital_letters_key">pref_capital_letters</string>
     <string name="pref_a11y_hints_key">pref_a11y_hints</string>
     <string name="pref_speak_container_element_positions_key">pref_speak_container_element_positions_key</string>
@@ -193,6 +195,7 @@
     <string name="pref_selector_language_key">pref_selector_language_key</string>
     <string name="pref_selector_verbosity_key">pref_selector_verbosity_key</string>
     <string name="pref_selector_punctuation_key" translatable="false">pref_selector_punctuation_key</string>
+    <string name="pref_selector_emoji_key" translatable="false">pref_selector_emoji_key</string>
     <string name="pref_selector_granularity_key">pref_selector_granularity_key</string>
     <string name="pref_selector_hide_screen_key">pref_selector_hide_screen_key</string>
     <string name="pref_selector_audio_focus_key">pref_selector_audio_focus_key</string>
@@ -1242,6 +1245,42 @@
 
     <string name="pref_punctuation_default" translatable="false">2</string>
 
+    <string-array name="pref_emoji_speech_entries">
+      <item>@string/emoji_speech_engine</item>
+      <item>@string/emoji_speech_names</item>
+      <item>@string/emoji_speech_none</item>
+    </string-array>
+
+    <!-- The values of EmojiSpeech's MODE constants. -->
+    <string-array name="pref_emoji_speech_values" translatable="false">
+      <item>engine</item>
+      <item>names</item>
+      <item>none</item>
+    </string-array>
+
+    <string name="pref_emoji_speech_default" translatable="false">engine</string>
+
+    <string-array name="pref_emoji_repeat_count_entries">
+      <item>@string/emoji_repeat_count_off</item>
+      <item>@string/emoji_repeat_count_2</item>
+      <item>@string/emoji_repeat_count_3</item>
+      <item>@string/emoji_repeat_count_4</item>
+      <item>@string/emoji_repeat_count_5</item>
+      <item>@string/emoji_repeat_count_6</item>
+    </string-array>
+
+    <!-- How many times an emoji repeats before it is counted; 0 names each one. -->
+    <string-array name="pref_emoji_repeat_count_values" translatable="false">
+      <item>0</item>
+      <item>2</item>
+      <item>3</item>
+      <item>4</item>
+      <item>5</item>
+      <item>6</item>
+    </string-array>
+
+    <string name="pref_emoji_repeat_count_default" translatable="false">0</string>
+
     <!-- The list of the gestures which the platform supports. [CHAR_LIMIT=NONE] -->
     <string-array name="service_detected_gesture_list">
       <!-- Start with double tap. -->
@@ -1393,6 +1432,7 @@
     <bool name="pref_selector_language_default">false</bool>
     <bool name="pref_selector_verbosity_default">false</bool>
     <bool name="pref_selector_punctuation_default">false</bool>
+    <bool name="pref_selector_emoji_default">false</bool>
     <bool name="pref_selector_granularity_default">false</bool>
     <bool name="pref_selector_hide_screen_default">false</bool>
     <bool name="pref_selector_scroll_seq_default">false</bool>
@@ -1458,6 +1498,7 @@
     <bool name="pref_show_context_menu_control_telling_time_default">false</bool>
     <bool name="pref_show_context_menu_verbosity_default">false</bool>
     <bool name="pref_show_context_menu_language_default">false</bool>
+    <bool name="pref_show_context_menu_emoji_default">false</bool>
     <bool name="pref_show_context_menu_audio_ducking_default">false</bool>
     <bool name="pref_show_context_menu_sound_feedback_default">false</bool>
     <bool name="pref_show_context_menu_vibration_feedback_default">false</bool>
@@ -1656,6 +1697,7 @@
     <string name="pref_show_context_menu_control_telling_time_setting_key" translatable="false">pref_control_telling_time_menu_setting_key</string>
     <string name="pref_show_context_menu_verbosity_setting_key" translatable="false">pref_verbosity_menu_setting_key</string>
     <string name="pref_show_context_menu_language_setting_key" translatable="false">pref_language_menu_setting_key</string>
+    <string name="pref_show_context_menu_emoji_setting_key" translatable="false">pref_emoji_menu_setting_key</string>
     <string name="pref_show_context_menu_audio_ducking_setting_key" translatable="false">pref_audio_ducking_menu_setting_key</string>
     <string name="pref_show_context_menu_sound_feedback_setting_key" translatable="false">pref_sound_feedback_menu_setting_key</string>
     <string name="pref_show_context_menu_vibration_feedback_setting_key" translatable="false">pref_vibration_feedback_menu_setting_key</string>
@@ -1706,6 +1748,7 @@
     <!-- Selector settings -->
     <string name="selector_verbosity" translatable="false">VERBOSITY</string>
     <string name="selector_punctuation" translatable="false">PUNCTUATION</string>
+    <string name="selector_emoji" translatable="false">EMOJI</string>
     <string name="selector_speech_rate" translatable="false">SPEECH_RATE</string>
     <string name="selector_language" translatable="false">LANGUAGE</string>
     <string name="selector_granularity" translatable="false">GRANULARITY</string>

@@ -32,6 +32,7 @@ import com.google.android.accessibility.talkback.analytics.TalkBackAnalytics;
 import com.google.android.accessibility.talkback.preference.PreferencesActivityUtils;
 import com.google.android.accessibility.talkback.utils.VerbosityPreferences;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
+import com.google.android.accessibility.utils.output.EmojiSpeech;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
@@ -78,7 +79,23 @@ public class VerbosityPrefFragment extends TalkbackBaseFragment {
     super.onCreatePreferences(savedInstanceState, rootKey);
     buildMap();
     setupTellTimePreference();
+    setupEmojiRepeatCountPreference();
     updatePreferences();
+  }
+
+  /** Counting repeated emoji only applies while Backtalk names emoji. */
+  private void setupEmojiRepeatCountPreference() {
+    Preference emoji = findPreference(R.string.pref_emoji_speech_key);
+    Preference repeatCount = findPreference(R.string.pref_emoji_repeat_count_key);
+    if (!(emoji instanceof ListPreference emojiList) || repeatCount == null) {
+      return;
+    }
+    repeatCount.setEnabled(EmojiSpeech.MODE_NAMES.equals(emojiList.getValue()));
+    emoji.setOnPreferenceChangeListener(
+        (preference, newValue) -> {
+          repeatCount.setEnabled(EmojiSpeech.MODE_NAMES.equals(newValue));
+          return true;
+        });
   }
 
   private void setupTellTimePreference() {

@@ -101,6 +101,11 @@
             android:title="@string/pref_punctuation_title"
             android:summary="@string/summary_selector_menu_punctuation"/>
         <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
+            android:defaultValue="@bool/pref_selector_emoji_default"
+            android:key="@string/pref_selector_emoji_key"
+            android:title="@string/title_pref_emoji_speech"
+            android:summary="@string/summary_selector_menu_emoji"/>
+        <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
             android:defaultValue="@bool/pref_selector_text_formatting_inline_default"
             android:key="@string/pref_selector_text_formatting_inline_key"
             android:title="@string/title_switch_text_formatting"

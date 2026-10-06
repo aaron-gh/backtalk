@@ -158,6 +158,20 @@
       android:key="@string/pref_punctuation_verbosity"
       android:summary="%s"
       android:title="@string/title_pref_punctuation" />
+  <ListPreference
+      android:defaultValue="@string/pref_emoji_speech_default"
+      android:entries="@array/pref_emoji_speech_entries"
+      android:entryValues="@array/pref_emoji_speech_values"
+      android:key="@string/pref_emoji_speech_key"
+      android:summary="%s"
+      android:title="@string/title_pref_emoji_speech" />
+  <ListPreference
+      android:defaultValue="@string/pref_emoji_repeat_count_default"
+      android:entries="@array/pref_emoji_repeat_count_entries"
+      android:entryValues="@array/pref_emoji_repeat_count_values"
+      android:key="@string/pref_emoji_repeat_count_key"
+      android:summary="%s"
+      android:title="@string/title_pref_emoji_repeat_count" />
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
       android:defaultValue="@bool/pref_count_repeated_symbols_default"
       android:key="@string/pref_count_repeated_symbols_key"

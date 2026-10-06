@@ -157,6 +157,7 @@ import com.google.android.accessibility.talkback.controlsounds.ControlSoundsSett
 import com.google.android.accessibility.talkback.directtouch.DirectTouchController;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor;
 import com.google.android.accessibility.talkback.eventprocessor.AccessibilityEventProcessor.TalkBackListener;
+import com.google.android.accessibility.talkback.eventprocessor.ProcessorEmojiTraversal;
 import com.google.android.accessibility.talkback.eventprocessor.ProcessorEventQueue;
 import com.google.android.accessibility.talkback.eventprocessor.ProcessorGestureVibrator;
 import com.google.android.accessibility.talkback.eventprocessor.ProcessorMagnification;
@@ -279,6 +280,7 @@ import com.google.android.accessibility.utils.monitor.SpeechStateMonitor;
 import com.google.android.accessibility.utils.monitor.TouchMonitor;
 import com.google.android.accessibility.utils.output.ActorStateProvider;
 import com.google.android.accessibility.utils.output.EditTextActionHistory;
+import com.google.android.accessibility.utils.output.EmojiSpeech;
 import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.accessibility.utils.output.FeedbackController;
 import com.google.android.accessibility.utils.output.FeedbackProcessingUtils;
@@ -2359,6 +2361,7 @@ public class TalkBackService extends AccessibilityServiceCompat
 
     addEventListener(processorEventQueue);
     addEventListener(processorPhoneticLetters);
+    addEventListener(new ProcessorEmojiTraversal(this, pipeline.getFeedbackReturner()));
 
     // Create window event interpreter and announcer.
     windowEventInterpreter = new WindowEventInterpreter(this, displayMonitor);
@@ -2941,6 +2944,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     if (feedbackController != null) {
       feedbackController.shutdown();
     }
+    EmojiSpeech.release();
     if (audioDeviceRouter != null) {
       audioDeviceRouter.shutdown();
       audioDeviceRouter = null;
@@ -3165,6 +3169,17 @@ public class TalkBackService extends AccessibilityServiceCompat
                 res,
                 R.string.pref_punctuation_verbosity,
                 R.string.pref_punctuation_verbosity_default)));
+    EmojiSpeech.setMode(
+        this,
+        SharedPreferencesUtils.getStringPref(
+            prefs, res, R.string.pref_emoji_speech_key, R.string.pref_emoji_speech_default));
+    EmojiSpeech.setRepeatCount(
+        Integer.parseInt(
+            SharedPreferencesUtils.getStringPref(
+                prefs,
+                res,
+                R.string.pref_emoji_repeat_count_key,
+                R.string.pref_emoji_repeat_count_default)));
 
     int formattingOptions = TextFormattingUtils.OPTION_NONE;
     int formattingFeedbackMode = TextFormattingUtils.FEEDBACK_MODE_NONE;
