@@ -571,6 +571,10 @@
       Description: Explains that element IDs will be spoken for unlabeled buttons. [CHAR LIMIT=NONE]
     -->
     <string name="summary_pref_speak_element_ids">Say the ID of buttons that have no label</string>
+    <!-- Verbosity: switch for speaking the new volume after the user changes it with the volume keys. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_speak_volume_changes">Speak volume changes</string>
+    <!-- Verbosity: summary of the switch for speaking volume changes. [CHAR LIMIT=NONE] -->
+    <string name="summary_pref_speak_volume_changes">Say the new volume after you press the volume keys</string>
     <!--
       Source: Preference for speaking notifications as they arrive.
       Description: The user can turn this off to stop new notifications from being read aloud. [CHAR LIMIT=NONE]

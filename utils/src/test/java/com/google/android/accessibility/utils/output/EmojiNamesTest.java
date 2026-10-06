@@ -23,31 +23,45 @@ import static org.junit.Assert.assertTrue;
 import com.google.android.accessibility.utils.output.EmojiNames.Match;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.zip.GZIPInputStream;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class EmojiNamesTest {
+  private static EmojiNames.Index index;
   private static EmojiNames english;
 
   @BeforeClass
   public static void readEnglish() throws IOException {
+    try (BufferedReader reader = open(EmojiNames.INDEX_FILE)) {
+      index = EmojiNames.Index.read(reader);
+    }
     english = read("en");
   }
 
+  private static Path path(String file) {
+    return Paths.get("src/main/assets", EmojiNames.ASSET_FOLDER, file + EmojiNames.EXTENSION);
+  }
+
+  private static BufferedReader open(String file) throws IOException {
+    return new BufferedReader(
+        new InputStreamReader(
+            new GZIPInputStream(Files.newInputStream(path(file))), StandardCharsets.UTF_8));
+  }
+
   private static EmojiNames read(String... files) throws IOException {
-    EmojiNames names = new EmojiNames();
+    EmojiNames names = new EmojiNames(index);
     for (String file : files) {
-      try (BufferedReader reader =
-          Files.newBufferedReader(
-              Paths.get("src/main/assets", EmojiNames.ASSET_FOLDER, file + ".txt"),
-              StandardCharsets.UTF_8)) {
+      try (BufferedReader reader = open(file)) {
         names.read(reader);
       }
     }
@@ -57,8 +71,8 @@ public class EmojiNamesTest {
   /** Returns the names of the emoji in {@code text}, with the text they cover. */
   private static List<String> found(EmojiNames names, String text) {
     List<String> found = new ArrayList<>();
-    for (Match match : names.findAll(text)) {
-      found.add(text.substring(match.start(), match.end()) + "=" + match.name());
+    for (Match match : index.findAll(text)) {
+      found.add(text.substring(match.start(), match.end()) + "=" + names.name(match.emoji()));
     }
     return found;
   }
@@ -142,6 +156,29 @@ public class EmojiNamesTest {
   }
 
   @Test
+  public void symbolsThatAreNotEmojiStartNone() {
+    // Before the emoji are loaded, these are in the ranges emoji are in; the index knows better.
+    String symbols = "€ → ✓ ★ ─ ┼ ½ ™";
+    assertTrue(EmojiNames.mayHaveEmoji(symbols));
+    assertFalse(index.mayHaveEmoji(symbols));
+    assertFalse(index.mayHaveEmoji("Hello, world! 1 + 2 = 3 #tag"));
+    assertTrue(index.mayHaveEmoji("Hello 👋"));
+    assertTrue(index.mayHaveEmoji("❤️"));
+    assertTrue(index.mayHaveEmoji("1️⃣"));
+  }
+
+  @Test
+  public void everyEmojiStartIsPartOfAnEmoji() {
+    for (String text : Arrays.asList("👨‍👩‍👧", "🇨🇦", "#️⃣", "👍🏽", "🏴󠁧󠁢󠁷󠁬󠁳󠁿", "❤︎")) {
+      for (int i = 0; i < text.length(); i++) {
+        assertTrue(text + " at " + i, EmojiNames.mayBePartOfEmoji(text, i));
+      }
+    }
+    assertFalse(EmojiNames.mayBePartOfEmoji("a", 0));
+    assertFalse(EmojiNames.mayBePartOfEmoji(" ", 0));
+  }
+
+  @Test
   public void regionalNamesReplaceTheirParents() throws IOException {
     EmojiNames british = read("en", "en-001", "en-GB");
     assertEquals(Arrays.asList("🍬=sweet"), found(british, "🍬"));
@@ -186,17 +223,23 @@ public class EmojiNamesTest {
 
   @Test
   public void everyLanguageHasEveryEmoji() throws IOException {
-    // Regional files hold only differences; every other file names every emoji English does.
-    long englishCount =
-        Files.lines(Paths.get("src/main/assets", EmojiNames.ASSET_FOLDER, "en.txt")).count();
+    // Regional files hold only differences; every other file names every emoji.
     try (var files = Files.list(Paths.get("src/main/assets", EmojiNames.ASSET_FOLDER))) {
-      for (var path : (Iterable<java.nio.file.Path>) files::iterator) {
-        if (!path.toString().endsWith(".txt")) {
+      for (Path path : (Iterable<Path>) files::iterator) {
+        String name = path.getFileName().toString();
+        if (!name.endsWith(EmojiNames.EXTENSION)
+            || name.equals(EmojiNames.INDEX_FILE + EmojiNames.EXTENSION)) {
           continue;
         }
-        List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
-        if (!lines.get(0).startsWith(EmojiNames.PARENT)) {
-          assertEquals(path.toString(), englishCount, lines.size());
+        String file = name.substring(0, name.length() - EmojiNames.EXTENSION.length());
+        try (BufferedReader reader = open(file)) {
+          if (reader.readLine().startsWith(EmojiNames.PARENT)) {
+            continue;
+          }
+        }
+        EmojiNames names = read(file);
+        for (int emoji = 0; emoji < index.size(); emoji++) {
+          assertTrue(file + " " + emoji, names.name(emoji) != null);
         }
       }
     }

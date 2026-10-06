@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Writes the emoji names Backtalk speaks into utils/src/main/assets/emoji_names.
 
-Download the Unicode emoji list, the CLDR emoji names and CLDR's locale data first:
+Download the Unicode emoji list, the CLDR emoji names and CLDR's locale data first, at the
+versions pinned here, so that the files come out the same each time:
 
-    curl -LO https://www.unicode.org/Public/emoji/latest/emoji-test.txt
+    curl -LO https://www.unicode.org/Public/18.0.0/emoji/emoji-test.txt
     npm pack cldr-annotations-full@49.0.0-BETA1 cldr-annotations-derived-full@49.0.0-BETA1 \
         cldr-core@49.0.0-BETA1
     mkdir annotations derived core
@@ -16,15 +17,16 @@ The files are made from Emoji 18.0 and CLDR 49.0.0-BETA1, the first CLDR with na
 18.0. Use the emoji version that matches the CLDR release, so every emoji has a name, and move
 to the final CLDR 49 once it is out.
 
-Every CLDR language with its own names for at least half the emoji gets a file, named by its
-CLDR locale, with a line per emoji:
+The files are gzipped UTF-8 text. emoji.gz lists the emoji, one per line: the fully qualified
+sequences from emoji-test.txt, components such as skin tones included. Every CLDR language with
+its own names for at least half the emoji gets a file named by its CLDR locale, such as
+en-GB.gz, with a line per emoji:
 
-    <emoji>\t<name>
+    <line of the emoji in emoji.gz, from 0>\t<name>
 
-The emoji is the fully qualified sequence from emoji-test.txt, components such as skin tones
-included, and the name is CLDR's text-to-speech name. Derived names cover every sequence: skin
-tones, families, flags and keycaps. A regional or other variant, such as en-GB or sr-Latn-BA,
-starts with the line
+The name is CLDR's text-to-speech name. Derived names cover every sequence: skin tones,
+families, flags and keycaps. A regional or other variant, such as en-GB or sr-Latn-BA, starts
+with the line
 
     @parent\t<locale>
 
@@ -33,6 +35,7 @@ Parents are CLDR's parentLocales, or the locale with its last part dropped. Name
 a language fall back to its parent, then to English.
 """
 
+import gzip
 import json
 import os
 import sys
@@ -80,6 +83,14 @@ def read_parents(core_dir):
     path = os.path.join(core_dir, "supplemental", "parentLocales.json")
     with open(path, encoding="utf-8") as f:
         return json.load(f)["supplemental"]["parentLocales"]["parentLocale"]
+
+
+def write_gzip(name, lines):
+    """Writes lines to a gzipped file in OUT_DIR, without a time stamp, so runs match."""
+    data = ("\n".join(lines) + "\n").encode("utf-8")
+    with open(os.path.join(OUT_DIR, name + ".gz"), "wb") as f:
+        with gzip.GzipFile(filename="", mode="wb", fileobj=f, compresslevel=9, mtime=0) as z:
+            z.write(data)
 
 
 def main():
@@ -156,8 +167,10 @@ def main():
 
     os.makedirs(OUT_DIR, exist_ok=True)
     for old in os.listdir(OUT_DIR):
-        if old.endswith(".txt"):
+        if old.endswith(".txt") or old.endswith(".gz"):
             os.remove(os.path.join(OUT_DIR, old))
+    write_gzip("emoji", emoji)
+    index = {e: i for i, e in enumerate(emoji)}
     for locale in included:
         names = resolve(locale)
         ancestor = included_ancestor(locale)
@@ -165,11 +178,11 @@ def main():
         if ancestor:
             lines.append("@parent\t" + ancestor)
             ancestor_names = resolve(ancestor)
-            lines += [e + "\t" + n for e, n in names.items() if ancestor_names.get(e) != n]
+            lines += ["%d\t%s" % (index[e], n) for e, n in names.items()
+                      if ancestor_names.get(e) != n]
         else:
-            lines += [e + "\t" + n for e, n in names.items()]
-        with open(os.path.join(OUT_DIR, locale + ".txt"), "w", encoding="utf-8") as f:
-            f.write("\n".join(lines) + "\n")
+            lines += ["%d\t%s" % (index[e], n) for e, n in names.items()]
+        write_gzip(locale, lines)
     print("Wrote %d languages, %d emoji" % (len(included), len(emoji)))
     print(" ".join(sorted(included)))
 

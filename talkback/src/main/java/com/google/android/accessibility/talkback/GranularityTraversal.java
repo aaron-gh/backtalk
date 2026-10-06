@@ -26,7 +26,6 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import com.google.android.accessibility.talkback.Pipeline.SyntheticEvent;
 import com.google.android.accessibility.talkback.eventprocessor.ProcessorPhoneticLetters;
 import com.google.android.accessibility.utils.AccessibilityNodeInfoUtils;
-import com.google.android.accessibility.utils.output.EmojiSpeech;
 import com.google.android.accessibility.utils.FeatureSupport;
 import com.google.android.accessibility.utils.PackageManagerUtils;
 import com.google.android.accessibility.utils.Performance.EventId;
@@ -36,6 +35,7 @@ import com.google.android.accessibility.utils.input.CursorGranularity;
 import com.google.android.accessibility.utils.input.GranularityIterator;
 import com.google.android.accessibility.utils.input.GranularityIterator.TextSegmentIterator;
 import com.google.android.accessibility.utils.input.TextEventInterpreter;
+import com.google.android.accessibility.utils.output.EmojiSpeech;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import java.util.Map;
 import java.util.Optional;
@@ -284,6 +284,10 @@ public final class GranularityTraversal {
    */
   public boolean traverseEmojiWordInFrameworkText(
       AccessibilityNodeInfoCompat node, boolean forward, EventId eventId) {
+    // Checked first, so that moving by word costs nothing more unless Backtalk names emoji.
+    if (!EmojiSpeech.stopsOnEmojiWords()) {
+      return false;
+    }
     boolean editing = Role.getRole(node) == Role.ROLE_EDIT_TEXT && node.isFocused();
     if (!(editing || AccessibilityNodeInfoUtils.isNonEditableSelectableText(node))
         || !node.refresh()) {

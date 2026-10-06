@@ -56,12 +56,20 @@ public final class LanguageSwitch {
 
   /** Sets the language chosen from the language menu, or null when it is reset. */
   public static void setChosenLanguage(@Nullable Locale language) {
+    boolean changed = !Objects.equals(chosenLanguage, language);
     chosenLanguage = language;
+    if (changed) {
+      EmojiSpeech.onLanguageChanged();
+    }
   }
 
   /** Sets the language the speech engine speaks unmarked text in. */
   static void setVoiceLanguage(Locale language) {
+    boolean changed = !language.equals(voiceLanguage);
     voiceLanguage = language;
+    if (changed) {
+      EmojiSpeech.onLanguageChanged();
+    }
   }
 
   /** Returns the language to speak text marked as {@code marked} in, by the switches. */

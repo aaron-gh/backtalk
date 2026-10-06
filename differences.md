@@ -106,6 +106,18 @@ When text is marked as another language, TalkBack switches the voice to that lan
 
 When you turn a change off, Backtalk no longer splits the text or pauses around it. Backtalk compares languages by their codes only, so Serbian in Latin and in Cyrillic script counts as two dialects, and Norwegian marked as `no` and as `nb` counts as two languages.
 
+### How emoji are spoken
+
+Some speech engines read emoji badly, use names of their own, or don't read them at all. **Verbosity** > **Emoji** chooses how they're spoken:
+
+*   **Read by speech engine**, the default, gives the engine the emoji as TalkBack did.
+*   **Read by Backtalk** replaces each emoji with its name from the [Unicode CLDR](https://cldr.unicode.org/), in the language the text is spoken in, for 138 languages and regional variants. A skin tone, a family, a flag or a keycap is one emoji with one name.
+*   **None** leaves emoji out, except in text that is only emoji, such as a reaction button or a character, which is still named.
+
+With **Read by Backtalk**, **Count repeated emoji** says an emoji repeated in a row once with a count, such as "3 grinning face", from 2 to 6 repeats. Moving by character names a whole emoji once, and moving by word stops on emoji. Copying or spelling the last spoken phrase gives the emoji, not their names. You can also add **Emoji** to the reading controls and the Backtalk menu.
+
+With **None**, moving by word skips emoji, as moving by character still names them. Emoji newer than Backtalk's names, Emoji 18.0, are left to the speech engine. Some languages lack CLDR names for some emoji, which are then spoken in English.
+
 ### Resume speech where you paused it
 
 With speech engines that don't report word positions, such as RHVoice and Gryphon, TalkBack started the text over when you resumed speech. Backtalk learns how fast your engine speaks from the items that it finishes, works out how far the engine got when you paused, and resumes from the start of that sentence or phrase. It can repeat a few words, but it never skips any. Engines that report word positions still resume from the word, and with [low-latency audio](#low-latency-audio) on, speech resumes mid-word.
@@ -456,6 +468,16 @@ Backtalk installs as `fyi.quin.backtalk`, so it installs next to Google's TalkBa
 ### Built-in updates
 
 Backtalk checks GitHub for new development builds and installs them when you tap its notification. For more information, see [Updates](README.md#updates).
+
+## Android TV
+
+### Settings on the TV home screen
+
+Android TV has no other way to open an accessibility service's settings, so Backtalk adds **Backtalk settings** to the apps on the TV home screen.
+
+### Phone-only features hidden
+
+Settings for features that need a touchscreen or a phone are hidden on TVs, such as **Direct touch**, **Status readout**, and **Speaker when away from your ear**. Pause Backtalk also isn't available on TVs, because the volume keys often go to the TV or a soundbar, and there's no notification shade to resume from.
 
 ## Wear OS watches
 

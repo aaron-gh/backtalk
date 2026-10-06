@@ -20,6 +20,10 @@ The fork installs as **Backtalk Aaron**, with the app ID `io.github.aaron_gh.bac
 
 Backtalk speaks sooner after each swipe and screen change, and can play its sounds and speech through a low-latency audio path. It adds a two-finger rotor, a circle menu, Pause Backtalk, direct touch for audio games, sound themes with control sounds in 3D, a vibration for every sound, a status gesture, and braille keyboard dots that follow how you hold the device. It also changes some defaults and fixes problems in TalkBack. For the full list, see [Differences from TalkBack](differences.md).
 
+## Third-party data
+
+The emoji names are from the [Unicode CLDR](https://cldr.unicode.org/) and the Unicode emoji data, copyright Unicode, Inc., used under the Unicode License v3, which is in `utils/src/main/assets/emoji_names/LICENSE`.
+
 ## Build
 
 You need JDK 17 or newer, the Android SDK with platform 37, and NDK 27.3.13750724. The Gradle wrapper downloads the correct Gradle version, so you do not need to install Gradle.
@@ -98,6 +102,16 @@ Android only installs an update that is signed with the same key as the installe
 ## Run
 
 After you install Backtalk, go to **Settings > Accessibility**. Backtalk is listed as **Backtalk** and is off by default. Turn off Google's TalkBack first, then turn on Backtalk.
+
+## Android TV
+
+Backtalk includes the Android TV support from Google's TalkBack, and the same `backtalk.apk` installs on Android TV and Google TV. It has been tried on an Android 10 TV emulator, but not yet on a real TV.
+
+1.  Turn on developer options and network debugging on the TV, then connect to it with `adb connect` and the TV's IP address.
+2.  Install the APK with `adb install backtalk.apk`.
+3.  Turn on Backtalk in the TV's accessibility settings. On most Android TVs, this is **Settings** > **Device Preferences** > **Accessibility**.
+
+To open Backtalk settings, choose **Backtalk settings** in the apps on the TV home screen. TVs often don't show notifications, so to update, go to **Check for updates** in Backtalk settings. Pause Backtalk isn't available on TVs, because a TV remote often has no way to resume it.
 
 ## Debug tools
 

@@ -57,6 +57,40 @@ public class EmojiSpeechTest {
   }
 
   @Test
+  public void emojiAroundFindsWholeEmojiInALongRun() {
+    EmojiSpeech.setMode(context, EmojiSpeech.MODE_NAMES);
+    String family = "👨‍👩‍👧‍👦";
+    String text = "a" + family.repeat(10) + "b";
+    // Inside the eighth family, more than 64 characters from the start of the run.
+    int eighth = 1 + 7 * family.length();
+    int[] around = EmojiSpeech.emojiAround(context, text, eighth + 3);
+    assertEquals(eighth, around[0]);
+    assertEquals(eighth + family.length(), around[1]);
+  }
+
+  @Test
+  public void emojiAroundPairsFlagsFromTheStartOfTheRun() {
+    EmojiSpeech.setMode(context, EmojiSpeech.MODE_NAMES);
+    String flags = "🇨🇦🇫🇷".repeat(20);
+    // Each flag is two regional indicators, each two UTF-16 units.
+    int[] around = EmojiSpeech.emojiAround(context, flags, 4 * 33 + 2);
+    assertEquals(4 * 33, around[0]);
+    assertEquals(4 * 34, around[1]);
+  }
+
+  @Test
+  public void namesInSeveralLanguagesAtOnce() {
+    SpannableStringBuilder text = new SpannableStringBuilder("👍 👍 👍 👍");
+    // Each thumbs up is two UTF-16 units, with a space after it.
+    text.setSpan(new LocaleSpan(Locale.GERMAN), 3, 5, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    text.setSpan(new LocaleSpan(Locale.FRENCH), 6, 8, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    text.setSpan(
+        new LocaleSpan(Locale.forLanguageTag("es")), 9, 11, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    String spoken = spoken(EmojiSpeech.MODE_NAMES, text);
+    assertEquals("thumbs up Daumen hoch pouce vers le haut pulgar hacia arriba", spoken);
+  }
+
+  @Test
   public void engineGetsTheTextItself() {
     EmojiSpeech.setMode(context, EmojiSpeech.MODE_ENGINE);
     CharSequence text = "Hi 😀";

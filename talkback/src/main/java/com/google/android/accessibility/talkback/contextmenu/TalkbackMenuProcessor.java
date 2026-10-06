@@ -549,8 +549,9 @@ public class TalkbackMenuProcessor {
     menu.removeItem(R.id.pause_backtalk);
 
     // A watch has no volume keys or keyboard to resume with, and the paused notification needs a
-    // permission watches rarely grant, so pausing could leave the user without a screen reader.
-    if (FormFactorUtils.isAndroidWear()) {
+    // permission watches rarely grant, so pausing could leave the user without a screen reader. On
+    // a TV, the volume keys often go to the TV or a soundbar, and there is no notification shade.
+    if (FormFactorUtils.isAndroidWear() || FormFactorUtils.isAndroidTv()) {
       return;
     }
     if (!showMenuItem(

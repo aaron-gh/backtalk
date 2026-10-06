@@ -26,17 +26,23 @@ import android.text.style.TtsSpan;
 import com.google.android.accessibility.utils.R;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -57,10 +63,10 @@ public final class EmojiSpeech {
   public static final String MODE_NONE = "none";
 
   /**
-   * Most languages kept loaded: the voice's and one that text switches to. Each takes about 800 KB,
-   * and another loads again in tens of milliseconds.
+   * Most languages kept loaded: the voice's and those text switches to. Each holds only its names,
+   * about 300 KB, as the emoji themselves are in the shared index.
    */
-  private static final int MAX_LOADED = 2;
+  private static final int MAX_LOADED = 4;
 
   /** Most regional files read on the way to a language's names, as for hi-Latn > en-IN > en. */
   private static final int MAX_PARENTS = 4;
@@ -73,7 +79,12 @@ public final class EmojiSpeech {
   /** The app, for loading names where no context is at hand, such as text iterators. */
   private static volatile @Nullable Context appContext;
 
-  /** Loaded names by file, least recently used first. Guarded by the class. */
+  /** The emoji, shared by every language, or null until loaded. */
+  private static volatile EmojiNames.@Nullable Index index;
+
+  private static final Object indexLock = new Object();
+
+  /** Loaded names by file, least recently used first. Guarded by itself. */
   private static final LinkedHashMap<String, EmojiNames> loaded =
       new LinkedHashMap<>(MAX_LOADED + 1, 0.75f, /* accessOrder= */ true) {
         @Override
@@ -82,11 +93,32 @@ public final class EmojiSpeech {
         }
       };
 
-  /** The names files in the assets, read once. Guarded by the class. */
+  /**
+   * Names being loaded, by file, so that a second request for them waits for the first rather
+   * than reading them again, and requests for other files don't wait. Guarded by {@link #loaded}.
+   */
+  private static final Map<String, FutureTask<EmojiNames>> loading = new HashMap<>();
+
+  /** The names files in the assets, read once. Guarded by {@link #loaded}. */
   private static @Nullable Set<String> files;
 
-  /** Whether names are being loaded ahead of the first emoji. */
-  private static final AtomicBoolean preloading = new AtomicBoolean();
+  /**
+   * Loads names ahead of the emoji that need them, on one low-priority thread that ends when idle,
+   * so that speech on the main thread doesn't wait for them.
+   */
+  private static final ThreadPoolExecutor preloader =
+      new ThreadPoolExecutor(
+          0,
+          1,
+          10,
+          TimeUnit.SECONDS,
+          new LinkedBlockingQueue<>(),
+          runnable -> {
+            Thread thread = new Thread(runnable, "EmojiNames");
+            thread.setDaemon(true);
+            thread.setPriority(Thread.MIN_PRIORITY);
+            return thread;
+          });
 
   private EmojiSpeech() {}
 
@@ -94,49 +126,51 @@ public final class EmojiSpeech {
   public static void setMode(Context context, String newMode) {
     Context app = context.getApplicationContext();
     appContext = app;
-    String previous = mode;
     mode =
         newMode.equals(MODE_NAMES) || newMode.equals(MODE_NONE) ? newMode : MODE_ENGINE;
     if (mode.equals(MODE_ENGINE)) {
-      synchronized (EmojiSpeech.class) {
-        loaded.clear();
-      }
-    } else if (previous.equals(MODE_ENGINE)) {
-      preload(app);
+      clear();
+    } else {
+      preload(app, LanguageSwitch.spokenLanguage(null));
     }
   }
 
   /**
-   * Loads the names in the voice's language on a short-lived thread, so the first emoji spoken
-   * doesn't wait for them on the main thread.
+   * The voice's language changed, so loads its names ahead of the first emoji spoken in it, while
+   * Backtalk names or leaves out emoji.
    */
-  private static void preload(Context app) {
-    if (!preloading.compareAndSet(false, true)) {
-      return;
+  static void onLanguageChanged() {
+    @Nullable Context app = appContext;
+    if (app != null && !mode.equals(MODE_ENGINE)) {
+      preload(app, LanguageSwitch.spokenLanguage(null));
     }
-    Thread thread =
-        new Thread(
-            () -> {
-              try {
-                namesFor(app, LanguageSwitch.spokenLanguage(null));
-              } catch (Throwable e) {
-                LogUtils.e(TAG, "Can't load emoji names: %s", e);
-              } finally {
-                preloading.set(false);
-              }
-            },
-            "EmojiNames");
-    thread.setDaemon(true);
-    thread.setPriority(Thread.MIN_PRIORITY);
-    thread.start();
   }
 
-  /** Lets go of the loaded names when the service stops; they outlive it otherwise. */
+  /** Loads the emoji, and the names for {@code language}, on the preload thread. */
+  private static void preload(Context app, Locale language) {
+    preloader.execute(
+        () -> {
+          try {
+            if (!mode.equals(MODE_ENGINE)) {
+              namesFor(app, language);
+            }
+          } catch (Throwable e) {
+            LogUtils.e(TAG, "Can't load emoji names: %s", e);
+          }
+        });
+  }
+
+  /** Lets go of the loaded emoji and names when the service stops; they outlive it otherwise. */
   public static void release() {
     mode = MODE_ENGINE;
-    synchronized (EmojiSpeech.class) {
+    clear();
+  }
+
+  private static void clear() {
+    synchronized (loaded) {
       loaded.clear();
     }
+    index = null;
   }
 
   /**
@@ -171,9 +205,7 @@ public final class EmojiSpeech {
    */
   public static CharSequence process(Context context, CharSequence text) {
     String currentMode = mode;
-    if (currentMode.equals(MODE_ENGINE)
-        || TextUtils.isEmpty(text)
-        || !EmojiNames.mayHaveEmoji(text)) {
+    if (currentMode.equals(MODE_ENGINE) || TextUtils.isEmpty(text) || !mayHaveEmoji(text)) {
       return text;
     }
     try {
@@ -198,13 +230,9 @@ public final class EmojiSpeech {
     if (mode.equals(MODE_ENGINE) || !EmojiNames.mayStartEmoji(text, start)) {
       return -1;
     }
-    EmojiNames.@Nullable Match match =
-        namesFor(context, LanguageSwitch.spokenLanguage(null)).find(text, start);
+    EmojiNames.@Nullable Match match = index(context).find(text, start);
     return match == null ? -1 : match.end();
   }
-
-  /** Longest emoji sequence, in UTF-16 units, looked back over to find the one at an index. */
-  private static final int MAX_EMOJI_LENGTH = 64;
 
   /**
    * Returns the start and end of the emoji that {@code index} is in, or null if it isn't in one
@@ -215,16 +243,15 @@ public final class EmojiSpeech {
     if (mode.equals(MODE_ENGINE) || index < 0 || index >= text.length()) {
       return null;
     }
-    // Emoji hold no spaces, so matching from just after a space finds whole emoji.
+    // Matching from just after a character that can't be part of an emoji finds whole emoji, even
+    // in a long run of them, where a flag's halves pair up from the start of the run.
     int start = index;
-    int limit = Math.max(0, index - MAX_EMOJI_LENGTH);
-    while (start > limit && !isSpace(text.charAt(start - 1))) {
+    while (start > 0 && EmojiNames.mayBePartOfEmoji(text, start - 1)) {
       start--;
     }
-    EmojiNames names = namesFor(context, LanguageSwitch.spokenLanguage(null));
+    EmojiNames.Index emoji = index(context);
     for (int i = start; i <= index; ) {
-      EmojiNames.@Nullable Match match =
-          EmojiNames.mayStartEmoji(text, i) ? names.find(text, i) : null;
+      EmojiNames.@Nullable Match match = emoji.mayStartEmoji(text, i) ? emoji.find(text, i) : null;
       if (match != null) {
         if (match.end() > index) {
           return new int[] {i, match.end()};
@@ -250,9 +277,23 @@ public final class EmojiSpeech {
     return emojiEnd(context, text, index);
   }
 
+  /** Returns whether moving by word stops on emoji, which it does when Backtalk names them. */
+  public static boolean stopsOnEmojiWords() {
+    return mode.equals(MODE_NAMES);
+  }
+
   /** Returns whether moving by word should stop on emoji in {@code text}. */
   public static boolean hasEmojiWords(@Nullable CharSequence text) {
-    return mode.equals(MODE_NAMES) && text != null && EmojiNames.mayHaveEmoji(text);
+    return stopsOnEmojiWords() && text != null && mayHaveEmoji(text);
+  }
+
+  /**
+   * Returns whether {@code text} may hold an emoji, without loading anything: exactly, once the
+   * emoji are loaded, and by the ranges emoji are in before that.
+   */
+  private static boolean mayHaveEmoji(CharSequence text) {
+    EmojiNames.@Nullable Index emoji = index;
+    return emoji != null ? emoji.mayHaveEmoji(text) : EmojiNames.mayHaveEmoji(text);
   }
 
   /** Returns {@code text} with the text that speech replaced put back. */
@@ -284,19 +325,20 @@ public final class EmojiSpeech {
    */
   private static boolean replaceEmoji(
       Context context, SpannableStringBuilder text, boolean names) {
-    List<EmojiNames.Match> matches = new ArrayList<>();
-    for (EmojiNames.Match match : findAll(context, text)) {
+    List<Found> matches = new ArrayList<>();
+    for (Found match : findAll(context, text)) {
       if (!isReplaced(text, match.start(), match.end())) {
         matches.add(match);
       }
     }
+    boolean changed = false;
     int countFrom = names ? repeatCount : 0;
     for (int last = matches.size() - 1; last >= 0; ) {
       // The same emoji repeated right after itself, counted when there are enough of them.
       int first = last;
       while (first > 0
           && matches.get(first - 1).end() == matches.get(first).start()
-          && matches.get(first - 1).name().equals(matches.get(first).name())) {
+          && matches.get(first - 1).isSameEmoji(matches.get(first))) {
         first--;
       }
       int repeats = last - first + 1;
@@ -308,7 +350,12 @@ public final class EmojiSpeech {
       int end = matches.get(last).end();
       String replacement;
       if (names) {
-        String name = matches.get(last).name();
+        @Nullable String name = nameOf(context, matches.get(last));
+        if (name == null) {
+          // The names couldn't be read, so the emoji is left to the speech engine.
+          last = first - 1;
+          continue;
+        }
         if (repeats > 1) {
           name = context.getString(R.string.character_collapse_template, repeats, name).trim();
         }
@@ -320,9 +367,10 @@ public final class EmojiSpeech {
         replacement = " ";
       }
       replace(text, start, end, replacement);
+      changed = true;
       last = first - 1;
     }
-    return !matches.isEmpty();
+    return changed;
   }
 
   /**
@@ -397,37 +445,35 @@ public final class EmojiSpeech {
         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
   }
 
-  private static EmojiNames.Match[] findAll(Context context, Spanned text) {
-    // Text in one language is matched as one piece.
-    List<LanguageSwitch.Run> runs = LanguageSwitch.runs(text);
-    EmojiNames.Match[][] perRun = new EmojiNames.Match[runs.size()][];
-    int count = 0;
-    for (int r = 0; r < runs.size(); r++) {
-      LanguageSwitch.Run run = runs.get(r);
-      Locale language = LanguageSwitch.spokenLanguage(run.locale());
-      List<EmojiNames.Match> found =
-          namesFor(context, language).findAll(text.subSequence(run.start(), run.end()));
-      perRun[r] = new EmojiNames.Match[found.size()];
-      for (int i = 0; i < found.size(); i++) {
-        EmojiNames.Match m = found.get(i);
-        perRun[r][i] =
-            new EmojiNames.Match(run.start() + m.start(), run.start() + m.end(), m.name());
-      }
-      count += found.size();
+  /** An emoji found in text, and the language the text is spoken in there. */
+  private record Found(int start, int end, int emoji, Locale language) {
+    boolean isSameEmoji(Found other) {
+      return emoji == other.emoji && language.equals(other.language);
     }
-    EmojiNames.Match[] all = new EmojiNames.Match[count];
-    int next = 0;
-    for (EmojiNames.Match[] matches : perRun) {
-      System.arraycopy(matches, 0, all, next, matches.length);
-      next += matches.length;
+  }
+
+  private static List<Found> findAll(Context context, Spanned text) {
+    EmojiNames.Index emoji = index(context);
+    List<Found> all = new ArrayList<>();
+    // Text in one language is matched as one piece.
+    for (LanguageSwitch.Run run : LanguageSwitch.runs(text)) {
+      Locale language = LanguageSwitch.spokenLanguage(run.locale());
+      for (EmojiNames.Match m : emoji.findAll(text.subSequence(run.start(), run.end()))) {
+        all.add(new Found(run.start() + m.start(), run.start() + m.end(), m.emoji(), language));
+      }
     }
     return all;
+  }
+
+  /** Returns the name of an emoji found in text, or null if the names couldn't be read. */
+  private static @Nullable String nameOf(Context context, Found found) {
+    return namesFor(context, found.language()).name(found.emoji());
   }
 
   /** Returns whether {@code text} holds nothing but emoji and spaces. */
   private static boolean onlyEmoji(Context context, Spanned text) {
     int i = 0;
-    for (EmojiNames.Match match : findAll(context, text)) {
+    for (Found match : findAll(context, text)) {
       for (; i < match.start(); i++) {
         if (!isSpace(text.charAt(i))) {
           return false;
@@ -447,39 +493,103 @@ public final class EmojiSpeech {
     return Character.isWhitespace(c) || Character.isSpaceChar(c);
   }
 
-  /** Returns the names for {@code language}, or English names if there are none for it. */
-  private static synchronized EmojiNames namesFor(Context context, Locale language) {
-    Set<String> available = availableFiles(context.getAssets());
-    String file = "en";
-    for (String candidate : EmojiNames.filesFor(language)) {
-      if (available.contains(candidate)) {
-        file = candidate;
-        break;
+  /** Returns the emoji, loading them the first time. */
+  private static EmojiNames.Index index(Context context) {
+    EmojiNames.@Nullable Index emoji = index;
+    if (emoji != null) {
+      return emoji;
+    }
+    synchronized (indexLock) {
+      emoji = index;
+      if (emoji == null) {
+        emoji = readIndex(context.getAssets());
+        index = emoji;
+      }
+      return emoji;
+    }
+  }
+
+  /** Reads the emoji. If they can't be read, no emoji are found, and the engine reads them. */
+  private static EmojiNames.Index readIndex(AssetManager assets) {
+    try (BufferedReader reader = open(assets, EmojiNames.INDEX_FILE)) {
+      return EmojiNames.Index.read(reader);
+    } catch (Exception e) {
+      LogUtils.e(TAG, "Can't read the emoji: %s", e);
+      return new EmojiNames.Index();
+    }
+  }
+
+  /**
+   * Returns the names for {@code language}, or English names if there are none for it. Loading
+   * them waits only for a load of the same names already under way, not for other languages.
+   */
+  private static EmojiNames namesFor(Context context, Locale language) {
+    AssetManager assets = context.getAssets();
+    EmojiNames.Index emoji = index(context);
+    FutureTask<EmojiNames> task;
+    boolean loadHere = false;
+    Set<String> available;
+    String file;
+    synchronized (loaded) {
+      available = availableFiles(assets);
+      file = "en";
+      for (String candidate : EmojiNames.filesFor(language)) {
+        if (available.contains(candidate)) {
+          file = candidate;
+          break;
+        }
+      }
+      @Nullable EmojiNames names = loaded.get(file);
+      if (names != null) {
+        return names;
+      }
+      task = loading.get(file);
+      if (task == null) {
+        String toLoad = file;
+        task = new FutureTask<>(() -> load(assets, toLoad, available, emoji));
+        loading.put(file, task);
+        loadHere = true;
       }
     }
-    @Nullable EmojiNames names = loaded.get(file);
-    if (names == null) {
-      names = load(context.getAssets(), file, available);
-      loaded.put(file, names);
+    if (loadHere) {
+      task.run();
+    }
+    EmojiNames names;
+    try {
+      names = task.get();
+    } catch (ExecutionException | InterruptedException e) {
+      LogUtils.e(TAG, "Can't load emoji names %s: %s", file, e);
+      if (e instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
+      names = new EmojiNames(emoji);
+    }
+    if (loadHere) {
+      synchronized (loaded) {
+        loading.remove(file);
+        // Kept unless the emoji were let go of while loading, as when the mode changed.
+        if (index == emoji) {
+          loaded.put(file, names);
+        }
+      }
     }
     return names;
   }
 
+  /** Returns the names files in the assets, by language. Called with {@link #loaded} held. */
   private static Set<String> availableFiles(AssetManager assets) {
     if (files == null) {
       Set<String> found = new HashSet<>();
       try {
         @Nullable String[] list = assets.list(EmojiNames.ASSET_FOLDER);
         if (list != null) {
-          for (String name : Arrays.asList(list)) {
-            if (name.endsWith(".txt")) {
-              found.add(name.substring(0, name.length() - ".txt".length()));
-            }
-          }
+          found.addAll(Arrays.asList(list));
         }
       } catch (Exception e) {
         LogUtils.e(TAG, "Can't list emoji names: %s", e);
       }
+      found.remove(EmojiNames.INDEX_FILE);
+      found.remove(EmojiNames.LICENSE_FILE);
       files = found;
     }
     return files;
@@ -489,7 +599,8 @@ public final class EmojiSpeech {
    * Reads the names in {@code file}, after the names of the languages it builds on. A file that
    * can't be read gives no names, so its emoji are left as they are rather than tried again.
    */
-  private static EmojiNames load(AssetManager assets, String file, Set<String> available) {
+  private static EmojiNames load(
+      AssetManager assets, String file, Set<String> available, EmojiNames.Index emoji) {
     // Read the chain of parents, then apply the most general first.
     String[] chain = new String[MAX_PARENTS + 1];
     int length = 0;
@@ -498,7 +609,7 @@ public final class EmojiSpeech {
       chain[length++] = next;
       next = readParent(assets, next);
     }
-    EmojiNames names = new EmojiNames();
+    EmojiNames names = new EmojiNames(emoji);
     for (int i = length - 1; i >= 0; i--) {
       read(assets, chain[i], names);
     }
@@ -528,9 +639,10 @@ public final class EmojiSpeech {
     }
   }
 
-  private static BufferedReader open(AssetManager assets, String file) throws Exception {
+  /** Opens a file of the emoji or names, which the build has unzipped: see EmojiNames.EXTENSION. */
+  private static BufferedReader open(AssetManager assets, String file) throws IOException {
     return new BufferedReader(
         new InputStreamReader(
-            assets.open(EmojiNames.ASSET_FOLDER + "/" + file + ".txt"), StandardCharsets.UTF_8));
+            assets.open(EmojiNames.ASSET_FOLDER + "/" + file), StandardCharsets.UTF_8));
   }
 }
