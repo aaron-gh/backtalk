@@ -199,7 +199,16 @@ public class BrailleInputView extends View
   /** The side of the charging port the user last typed with in screen-away mode, or null. */
   @Nullable private Boolean screenAwayPortOnRight;
 
-  /** The side of the charging port in tabletop mode, decided when the phone was laid flat. */
+  /**
+   * On a phone in tabletop mode, where the charging port is, decided when the phone was laid flat
+   * and turned with it on the table.
+   */
+  private PortPosition tabletopPort = PortPosition.LEFT;
+
+  /**
+   * The side of the charging port that a phone's tabletop layout uses: the side of {@link
+   * #tabletopPort}, or the last side while the port is toward or away from the user.
+   */
   private boolean tabletopPortOnRight;
 
   /** When the tabletop side was last decided, in uptime milliseconds, or -1 if not yet. */
@@ -487,12 +496,16 @@ public class BrailleInputView extends View
       return;
     }
     if (isPhone()) {
-      tabletopPortOnRight =
-          DotsOrientation.decideTabletopPortOnRight(
+      tabletopPort =
+          DotsOrientation.decidePhoneTabletopPort(
               screenAwayPortOnRight,
               HeldOrientationTracker.getLastHeld(),
               isPortrait(),
               displayRotation());
+      tabletopPortOnRight =
+          DotsOrientation.phonePortOnRight(
+              tabletopPort,
+              DotsOrientation.tabletopLayoutExpectsPortOnRight(isPortrait(), displayRotation()));
     } else {
       // Laying a tablet flat keeps the rotation it was last held up with, as auto-rotate does,
       // unless it was held from behind: see DotsOrientation#tabletTabletopRotation.
@@ -548,14 +561,14 @@ public class BrailleInputView extends View
 
   /**
    * The device was turned while lying flat, by this many quarter turns clockwise seen from above. A
-   * phone only turns by half turns. Returns where the charging port is now in tabletop mode.
+   * phone's dots only turn once its charging port reaches the other side. Returns where the
+   * charging port is now in tabletop mode.
    */
   @Nullable
   public PortPosition turnTabletop(int quarters) {
     if (isPhone()) {
-      if (DotsOrientation.swapsSides(quarters)) {
-        tabletopPortOnRight = !tabletopPortOnRight;
-      }
+      tabletopPort = DotsOrientation.turnPortPosition(tabletopPort, quarters);
+      tabletopPortOnRight = DotsOrientation.phonePortOnRight(tabletopPort, tabletopPortOnRight);
     } else {
       tabletopRotation = DotsOrientation.turnRotation(tabletopRotation, quarters);
     }
@@ -575,10 +588,9 @@ public class BrailleInputView extends View
     int lock =
         BrailleUserPreferences.readOrientationLock(getContext(), !isPhone(), /* tabletop= */ true);
     if (isPhone()) {
-      return DotsOrientation.phonePortPosition(
-          lock != DotsOrientation.UNLOCKED
-              ? DotsOrientation.phoneLockPortOnRight(lock)
-              : tabletopPortOnRight);
+      return lock != DotsOrientation.UNLOCKED
+          ? DotsOrientation.phonePortPosition(DotsOrientation.phoneLockPortOnRight(lock))
+          : tabletopPort;
     }
     return tabletPortPosition(
         lock != DotsOrientation.UNLOCKED ? lock : tabletopRotation, /* tabletop= */ true);

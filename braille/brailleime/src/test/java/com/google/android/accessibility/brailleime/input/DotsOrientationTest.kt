@@ -62,11 +62,29 @@ class DotsOrientationTest {
   }
 
   @Test
-  fun swapsSides_onlyOnHalfTurns() {
-    assertTrue(DotsOrientation.swapsSides(2))
-    assertTrue(DotsOrientation.swapsSides(-2))
-    assertFalse(DotsOrientation.swapsSides(0))
-    assertFalse(DotsOrientation.swapsSides(4))
+  fun turnPortPosition_goesRoundClockwiseSeenFromAbove() {
+    assertEquals(PortPosition.LEFT, DotsOrientation.turnPortPosition(PortPosition.NEAR, 1))
+    assertEquals(PortPosition.RIGHT, DotsOrientation.turnPortPosition(PortPosition.NEAR, -1))
+    assertEquals(PortPosition.FAR, DotsOrientation.turnPortPosition(PortPosition.LEFT, 1))
+    assertEquals(PortPosition.RIGHT, DotsOrientation.turnPortPosition(PortPosition.LEFT, 2))
+    assertEquals(PortPosition.LEFT, DotsOrientation.turnPortPosition(PortPosition.RIGHT, -2))
+    assertEquals(PortPosition.NEAR, DotsOrientation.turnPortPosition(PortPosition.RIGHT, 1))
+    assertEquals(PortPosition.FAR, DotsOrientation.turnPortPosition(PortPosition.FAR, 4))
+  }
+
+  @Test
+  fun turnPortPosition_matchesHowATabletTurns() {
+    for (rotation in 0..3) {
+      for (quarters in -2..2) {
+        assertEquals(
+          DotsOrientation.tabletPortPosition(DotsOrientation.turnRotation(rotation, quarters), true),
+          DotsOrientation.turnPortPosition(
+            DotsOrientation.tabletPortPosition(rotation, true),
+            quarters,
+          ),
+        )
+      }
+    }
   }
 
   @Test
@@ -139,31 +157,105 @@ class DotsOrientationTest {
   }
 
   @Test
-  fun decideTabletop_typingInScreenAwayModeComesFirst() {
-    assertFalse(
-      DotsOrientation.decideTabletopPortOnRight(false, Orientation.LANDSCAPE, false, rotation270)
+  fun laidFlatPortPosition_takesItThatTheScreenFacedTheUser() {
+    // Held up facing the user with the right edge down, the port is on the left.
+    assertEquals(PortPosition.LEFT, DotsOrientation.laidFlatPortPosition(Orientation.LANDSCAPE))
+    assertEquals(
+      PortPosition.RIGHT,
+      DotsOrientation.laidFlatPortPosition(Orientation.REVERSE_LANDSCAPE),
     )
-    assertTrue(
-      DotsOrientation.decideTabletopPortOnRight(true, Orientation.REVERSE_LANDSCAPE, true, rotation0)
+    assertEquals(PortPosition.NEAR, DotsOrientation.laidFlatPortPosition(Orientation.PORTRAIT))
+    assertEquals(
+      PortPosition.FAR,
+      DotsOrientation.laidFlatPortPosition(Orientation.REVERSE_PORTRAIT),
+    )
+    assertNull(DotsOrientation.laidFlatPortPosition(Orientation.UNKNOWN))
+  }
+
+  @Test
+  fun laidFlatPortPosition_matchesATabletFacingTheUser() {
+    // Auto-rotate turns the screen to face the user, so the tablet rule gives the same sides.
+    for ((held, degrees) in
+      listOf(
+        Orientation.PORTRAIT to 0,
+        Orientation.LANDSCAPE to 90,
+        Orientation.REVERSE_PORTRAIT to 180,
+        Orientation.REVERSE_LANDSCAPE to 270,
+      )) {
+      assertEquals(
+        DotsOrientation.tabletPortPosition(DotsOrientation.rotationForDegrees(degrees), true),
+        DotsOrientation.laidFlatPortPosition(held),
+      )
+    }
+  }
+
+  @Test
+  fun decidePhoneTabletop_typingInScreenAwayModeComesFirst() {
+    assertEquals(
+      PortPosition.LEFT,
+      DotsOrientation.decidePhoneTabletopPort(false, Orientation.REVERSE_LANDSCAPE, false, rotation90),
+    )
+    assertEquals(
+      PortPosition.RIGHT,
+      DotsOrientation.decidePhoneTabletopPort(true, Orientation.LANDSCAPE, true, rotation0),
     )
   }
 
   @Test
-  fun decideTabletop_thenHowThePhoneWasLastHeldUp() {
-    assertTrue(DotsOrientation.decideTabletopPortOnRight(null, Orientation.LANDSCAPE, true, rotation0))
-    assertFalse(
-      DotsOrientation.decideTabletopPortOnRight(null, Orientation.REVERSE_LANDSCAPE, false, rotation270)
+  fun decidePhoneTabletop_thenHowThePhoneWasLastHeldUpFacingTheUser() {
+    assertEquals(
+      PortPosition.LEFT,
+      DotsOrientation.decidePhoneTabletopPort(null, Orientation.LANDSCAPE, true, rotation0),
+    )
+    assertEquals(
+      PortPosition.RIGHT,
+      DotsOrientation.decidePhoneTabletopPort(null, Orientation.REVERSE_LANDSCAPE, false, rotation270),
+    )
+    assertEquals(
+      PortPosition.NEAR,
+      DotsOrientation.decidePhoneTabletopPort(null, Orientation.PORTRAIT, true, rotation0),
+    )
+    assertEquals(
+      PortPosition.FAR,
+      DotsOrientation.decidePhoneTabletopPort(null, Orientation.REVERSE_PORTRAIT, true, rotation0),
     )
   }
 
   @Test
-  fun decideTabletop_otherwiseTheScreenRotation() {
-    // Never held up, or last held in portrait, with auto-rotate off: the port on the left.
-    assertFalse(DotsOrientation.decideTabletopPortOnRight(null, Orientation.UNKNOWN, true, rotation0))
-    assertFalse(DotsOrientation.decideTabletopPortOnRight(null, Orientation.PORTRAIT, true, rotation0))
-    assertTrue(
-      DotsOrientation.decideTabletopPortOnRight(null, Orientation.UNKNOWN, false, rotation270)
+  fun decidePhoneTabletop_heldInPortraitButTheScreenTurnedSince() {
+    assertEquals(
+      PortPosition.LEFT,
+      DotsOrientation.decidePhoneTabletopPort(null, Orientation.PORTRAIT, false, rotation270),
     )
+    assertEquals(
+      PortPosition.RIGHT,
+      DotsOrientation.decidePhoneTabletopPort(null, Orientation.PORTRAIT, false, rotation90),
+    )
+  }
+
+  @Test
+  fun decidePhoneTabletop_otherwiseTheScreenRotation() {
+    // Never held up, with auto-rotate off: the port on the left, as the layout expects.
+    assertEquals(
+      PortPosition.LEFT,
+      DotsOrientation.decidePhoneTabletopPort(null, Orientation.UNKNOWN, true, rotation0),
+    )
+    assertEquals(
+      PortPosition.RIGHT,
+      DotsOrientation.decidePhoneTabletopPort(null, Orientation.UNKNOWN, false, rotation90),
+    )
+    assertEquals(
+      PortPosition.LEFT,
+      DotsOrientation.decidePhoneTabletopPort(null, Orientation.UNKNOWN, false, rotation270),
+    )
+  }
+
+  @Test
+  fun phonePortOnRight_keepsTheLastSideWhileThePortIsTowardOrAwayFromTheUser() {
+    assertTrue(DotsOrientation.phonePortOnRight(PortPosition.RIGHT, false))
+    assertFalse(DotsOrientation.phonePortOnRight(PortPosition.LEFT, true))
+    assertTrue(DotsOrientation.phonePortOnRight(PortPosition.NEAR, true))
+    assertFalse(DotsOrientation.phonePortOnRight(PortPosition.FAR, false))
   }
 
   @Test
