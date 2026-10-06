@@ -457,6 +457,16 @@ Backtalk installs as `fyi.quin.backtalk`, so it installs next to Google's TalkBa
 
 Backtalk checks GitHub for new development builds and installs them when you tap its notification. For more information, see [Updates](README.md#updates).
 
+## Android TV
+
+### Settings on the TV home screen
+
+Android TV has no other way to open an accessibility service's settings, so Backtalk adds **Backtalk settings** to the apps on the TV home screen.
+
+### Phone-only features hidden
+
+Settings for features that need a touchscreen or a phone are hidden on TVs, such as **Direct touch**, **Status readout**, and **Speaker when away from your ear**. Pause Backtalk also isn't available on TVs, because the volume keys often go to the TV or a soundbar, and there's no notification shade to resume from.
+
 ## Wear OS watches
 
 ### Same settings as phones

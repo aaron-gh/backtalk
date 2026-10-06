@@ -78,6 +78,10 @@
     <uses-feature
         android:name="android.hardware.sensor.accelerometer"
         android:required="false" />
+    <!-- Android TV is supported, but not needed. -->
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
 
     <!-- Granted by the user with adb, for the speakerphone setting. -->
     <uses-permission android:name="android.permission.MANAGE_ONGOING_CALLS" />
@@ -190,6 +194,21 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <!-- Puts Backtalk settings on the Android TV home screen, where an accessibility service has
+             no other way in. Phones and watches ignore it. -->
+        <activity-alias
+            android:name="com.google.android.accessibility.talkback.preference.TvSettingsLauncher"
+            android:targetActivity="com.google.android.accessibility.talkback.preference.TalkBackPreferencesActivity"
+            android:banner="@drawable/tv_banner"
+            android:exported="true"
+            android:icon="@drawable/icon"
+            android:label="@string/talkback_preferences_title">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- TalkBack subsettings Preferences -->
         <activity

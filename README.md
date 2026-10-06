@@ -93,6 +93,16 @@ Android only installs an update that is signed with the same key as the installe
 
 After you install Backtalk, go to **Settings > Accessibility**. Backtalk is listed as **Backtalk** and is off by default. Turn off Google's TalkBack first, then turn on Backtalk.
 
+## Android TV
+
+Backtalk includes the Android TV support from Google's TalkBack, and the same `backtalk.apk` installs on Android TV and Google TV. It has been tried on an Android 10 TV emulator, but not yet on a real TV.
+
+1.  Turn on developer options and network debugging on the TV, then connect to it with `adb connect` and the TV's IP address.
+2.  Install the APK with `adb install backtalk.apk`.
+3.  Turn on Backtalk in the TV's accessibility settings. On most Android TVs, this is **Settings** > **Device Preferences** > **Accessibility**.
+
+To open Backtalk settings, choose **Backtalk settings** in the apps on the TV home screen. TVs often don't show notifications, so to update, go to **Check for updates** in Backtalk settings. Pause Backtalk isn't available on TVs, because a TV remote often has no way to resume it.
+
 ## Debug tools
 
 Debug builds include tools to find lag:
