@@ -84,8 +84,26 @@ object IndividualFeedbackSettings {
     )
 
   /**
+   * The braille keyboard's vibrations, which play without a sound. Their switches are named after
+   * the vibrations, as sound themes name them.
+   */
+  val BRAILLE_KEYBOARD_VIBRATIONS =
+    listOf(
+      FeedbackItem("braille_keyboard_character", R.string.individual_vibration_braille_character),
+      FeedbackItem("braille_keyboard_space", R.string.individual_vibration_braille_space),
+      FeedbackItem("braille_keyboard_new_line", R.string.individual_vibration_braille_new_line),
+      FeedbackItem("braille_keyboard_hold", R.string.individual_vibration_braille_hold),
+      FeedbackItem("braille_keyboard_gesture", R.string.individual_vibration_braille_gesture),
+      FeedbackItem(
+        "braille_keyboard_nothing_to_delete",
+        R.string.individual_vibration_braille_nothing_to_delete,
+      ),
+    )
+
+  /**
    * One switch for each sound's vibration, in the same order and with the same titles as the
-   * sounds, and one for announcements, which vibrate without a sound.
+   * sounds, one for announcements and one for each of the braille keyboard's vibrations, which
+   * vibrate without a sound.
    */
   val VIBRATIONS =
     listOf(
@@ -118,6 +136,7 @@ object IndividualFeedbackSettings {
         (1..8).map { "radial_menu_${it}_pattern" },
       ),
       FeedbackItem("notification_pattern", R.string.individual_vibration_notification),
+      *BRAILLE_KEYBOARD_VIBRATIONS.toTypedArray(),
       // Control vibrations come only from sound themes.
       FeedbackItem("control_button_pattern", R.string.individual_sound_control_button),
       FeedbackItem("control_checkbox_pattern", R.string.individual_sound_control_checkbox),
