@@ -135,7 +135,7 @@ class SpatialSoundPlayer(private val context: Context) {
     val frames = stereo.size / 2
     val newTrack =
       AudioTrack.Builder()
-        .setAudioAttributes(FeedbackController.FEEDBACK_ATTRIBUTES)
+        .setAudioAttributes(FeedbackController.feedbackAttributes())
         .setAudioFormat(
           AudioFormat.Builder()
             .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)

@@ -22,6 +22,7 @@ import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import com.google.android.accessibility.talkback.soundthemes.SoundThemes
+import com.google.android.accessibility.utils.output.FailoverTextToSpeech
 import java.io.IOException
 
 /** Plays one sound at a time on settings screens, the sound of the theme in use if it has one. */
@@ -32,7 +33,13 @@ class SoundPreview {
     stop()
     val attributes =
       AudioAttributes.Builder()
-        .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
+        .setUsage(
+          if (FailoverTextToSpeech.shouldUseAccessibilityStream(context)) {
+            AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY
+          } else {
+            AudioAttributes.USAGE_MEDIA
+          }
+        )
         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
         .build()
     val custom = SoundThemes.soundFile(context, prefs, item)
