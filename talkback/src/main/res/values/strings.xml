@@ -392,6 +392,58 @@
     -->
     <string name="punctuation_some">Some</string>
     <!--
+      Source: Preference for how emoji are spoken. [CHAR LIMIT=45]
+    -->
+    <string name="title_pref_emoji_speech">Emoji</string>
+    <!--
+      Source: Emoji preference choice: the speech engine reads emoji itself. [CHAR LIMIT=45]
+    -->
+    <string name="emoji_speech_engine">Read by speech engine</string>
+    <!--
+      Source: Emoji preference choice: Backtalk sends the speech engine each emoji's name. [CHAR LIMIT=45]
+    -->
+    <string name="emoji_speech_names">Read by Backtalk</string>
+    <!--
+      Source: Emoji preference choice: emoji are left out of speech. [CHAR LIMIT=45]
+    -->
+    <string name="emoji_speech_none">None</string>
+    <!--
+      Source: Summary of the Emoji reading control, and of the Emoji item in the list of Backtalk menu items. [CHAR LIMIT=NONE]
+    -->
+    <string name="summary_selector_menu_emoji">Change how emoji are read</string>
+    <!--
+      Source: Spoken when the Emoji reading control or menu changes how emoji are read, like "Emoji: Read by Backtalk". [CHAR LIMIT=NONE]
+    -->
+    <string name="emoji_speech_state">Emoji: <xliff:g example="Read by Backtalk" id="state">%1$s</xliff:g></string>
+    <!--
+      Source: Preference for saying how many times an emoji repeats, like "3 grinning face", instead of naming it each time. [CHAR LIMIT=45]
+    -->
+    <string name="title_pref_emoji_repeat_count">Count repeated emoji</string>
+    <!--
+      Source: Count repeated emoji choice: each emoji is named every time. [CHAR LIMIT=45]
+    -->
+    <string name="emoji_repeat_count_off">Off</string>
+    <!--
+      Source: Count repeated emoji choice: count an emoji that repeats 2 or more times in a row. [CHAR LIMIT=45]
+    -->
+    <string name="emoji_repeat_count_2">2 or more</string>
+    <!--
+      Source: Count repeated emoji choice: count an emoji that repeats 3 or more times in a row. [CHAR LIMIT=45]
+    -->
+    <string name="emoji_repeat_count_3">3 or more</string>
+    <!--
+      Source: Count repeated emoji choice: count an emoji that repeats 4 or more times in a row. [CHAR LIMIT=45]
+    -->
+    <string name="emoji_repeat_count_4">4 or more</string>
+    <!--
+      Source: Count repeated emoji choice: count an emoji that repeats 5 or more times in a row. [CHAR LIMIT=45]
+    -->
+    <string name="emoji_repeat_count_5">5 or more</string>
+    <!--
+      Source: Count repeated emoji choice: count an emoji that repeats 6 or more times in a row. [CHAR LIMIT=45]
+    -->
+    <string name="emoji_repeat_count_6">6 or more</string>
+    <!--
       Source: Preference for count repeated symbols. [CHAR LIMIT=45]
     -->
     <string name="title_pref_count_repeated_symbols">Count repeated symbols</string>

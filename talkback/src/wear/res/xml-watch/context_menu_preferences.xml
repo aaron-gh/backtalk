@@ -141,6 +141,13 @@
             android:title="@string/title_selector_voice_profile"
             app:singleLineTitle="false"/>
         <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
+            android:defaultValue="@bool/pref_show_context_menu_emoji_default"
+            android:key="@string/pref_show_context_menu_emoji_setting_key"
+            android:order="15"
+            android:title="@string/title_pref_emoji_speech"
+            android:summary="@string/summary_selector_menu_emoji"
+            app:splitSummary="true" />
+        <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
             android:defaultValue="@bool/pref_show_context_menu_audio_ducking_default"
             android:key="@string/pref_show_context_menu_audio_ducking_setting_key"
             android:order="16"

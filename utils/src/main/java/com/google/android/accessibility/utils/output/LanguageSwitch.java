@@ -96,6 +96,29 @@ public final class LanguageSwitch {
     return (sameLanguage ? switchDialects : switchLanguages) ? marked : chosen;
   }
 
+  /** Returns the language text marked as {@code marked} is spoken in, which may be the voice's. */
+  static Locale spokenLanguage(@Nullable Locale marked) {
+    Locale toSpeak = localeToSpeak(marked);
+    if (toSpeak != null) {
+      return toSpeak;
+    }
+    Locale chosen = chosenLanguage;
+    return chosen != null ? chosen : voiceLanguage;
+  }
+
+  /** Splits {@code text} where its language marks change, into runs in the language marked. */
+  static List<Run> runs(Spanned text) {
+    int length = text.length();
+    List<Run> runs = new ArrayList<>();
+    for (int start = 0, end; start < length; start = end) {
+      end = text.nextSpanTransition(start, length, LocaleSpan.class);
+      // The first mark is the one the text splitter has always used where marks overlap.
+      LocaleSpan[] here = text.getSpans(start, end, LocaleSpan.class);
+      runs.add(new Run(start, end, here.length == 0 ? null : here[0].getLocale()));
+    }
+    return runs;
+  }
+
   /**
    * Returns {@code text} marked with the languages speech will use. Text is split into separate
    * utterances wherever its language marks change, and each split adds a pause, so a change that
@@ -121,11 +144,8 @@ public final class LanguageSwitch {
       return unmarked;
     }
     List<Run> marked = new ArrayList<>();
-    for (int start = 0, end; start < length; start = end) {
-      end = text.nextSpanTransition(start, length, LocaleSpan.class);
-      // The first mark is the one the text splitter has always used where marks overlap.
-      LocaleSpan[] here = text.getSpans(start, end, LocaleSpan.class);
-      marked.add(new Run(start, end, here.length == 0 ? null : localeToSpeak(here[0].getLocale())));
+    for (Run run : runs(text)) {
+      marked.add(new Run(run.start(), run.end(), localeToSpeak(run.locale())));
     }
     Spannable spoken = new SpannableString(text);
     for (LocaleSpan mark : marks) {

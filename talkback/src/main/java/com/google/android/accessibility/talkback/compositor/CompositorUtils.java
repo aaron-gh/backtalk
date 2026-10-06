@@ -28,6 +28,7 @@ import android.text.style.TtsSpan;
 import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.utils.EmojiUtils;
+import com.google.android.accessibility.utils.output.EmojiSpeech;
 import com.google.android.accessibility.utils.SpannableUtils;
 import com.google.android.accessibility.utils.SpannableUtils.SourceTextSpan;
 import com.google.android.accessibility.utils.output.SpeechCleanupUtils;
@@ -212,7 +213,8 @@ public final class CompositorUtils {
 
   /** Appends postfix "emoji" to the emoji in text but respect the original TtsSpan. */
   public static CharSequence enhanceEmojiFeedback(Context context, @Nullable CharSequence text) {
-    if (!FeatureFlagReader.enableEmojiPostfixFeedback(context)) {
+    if (!FeatureFlagReader.enableEmojiPostfixFeedback(context)
+        || !EmojiSpeech.engineSpeaksEmoji()) {
       return text;
     }
     if (TextUtils.isEmpty(text)) {
