@@ -53,7 +53,7 @@ import com.google.android.accessibility.utils.StringBuilderUtils;
 import com.google.android.accessibility.utils.broadcast.SameThreadBroadcastReceiver;
 import com.google.android.accessibility.utils.monitor.DisplayMonitor;
 import com.google.android.accessibility.utils.monitor.DisplayMonitor.DisplayStateChangedListener;
-import com.google.android.accessibility.utils.output.FeedbackController;
+import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.accessibility.utils.output.FeedbackItem;
 import com.google.android.accessibility.utils.output.SpeechController;
 import com.google.android.accessibility.utils.output.SpeechController.SpeakOptions;
@@ -318,8 +318,9 @@ public class RingerModeAndScreenMonitor extends SameThreadBroadcastReceiver
               .setFlags(FeedbackItem.FLAG_NO_HISTORY);
       final float volume;
       if (ringerMode == AudioManager.RINGER_MODE_NORMAL) {
-        // Gets TalkBack's default earcon volume from FeedbackController.
-        final float talkbackVolume = getStreamVolume(FeedbackController.DEFAULT_STREAM);
+        // Gets the volume of Backtalk's sounds, which use the speech volume.
+        final float talkbackVolume =
+            getStreamVolume(FailoverTextToSpeech.getSpeechAudioStream(service));
         if ((talkbackVolume > 0)
             && (audioManager.isWiredHeadsetOn() || audioManager.isBluetoothA2dpOn())) {
           // TODO: refactor the following lines.

@@ -16,6 +16,7 @@
 
 package com.google.android.accessibility.utils.output
 
+import android.media.AudioAttributes
 import android.media.SoundPool
 
 /**
@@ -29,6 +30,8 @@ object ThemeSounds {
   private val lock = Any()
   private var paths: Map<String, String> = emptyMap()
   private var pool: SoundPool? = null
+  // How the pool plays, so that it is made again when sounds change volume.
+  private var poolAttributes: AudioAttributes? = null
   // SoundPool sound IDs, by file path.
   private val soundIds = HashMap<String, Int>()
 
@@ -36,17 +39,16 @@ object ThemeSounds {
   @JvmStatic
   fun set(pathsByName: Map<String, String>) {
     synchronized(lock) {
-      if (pathsByName == paths) return
+      val attributes = FeedbackController.feedbackAttributes()
+      if (pathsByName == paths && attributes == poolAttributes) return
       paths = HashMap(pathsByName)
+      poolAttributes = attributes
       pool?.release()
       pool = null
       soundIds.clear()
       if (paths.isEmpty()) return
       val newPool =
-        SoundPool.Builder()
-          .setMaxStreams(MAX_STREAMS)
-          .setAudioAttributes(FeedbackController.FEEDBACK_ATTRIBUTES)
-          .build()
+        SoundPool.Builder().setMaxStreams(MAX_STREAMS).setAudioAttributes(attributes).build()
       for (path in paths.values.toSet()) {
         soundIds[path] = newPool.load(path, 1)
       }
