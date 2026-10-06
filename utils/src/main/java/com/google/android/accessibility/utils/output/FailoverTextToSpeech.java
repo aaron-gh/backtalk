@@ -237,10 +237,6 @@ public class FailoverTextToSpeech {
   public static final String PREF_SPEAK_IN_PHRASES_KEY = "pref_speak_in_phrases";
   private static final boolean SPEAK_IN_PHRASES_DEFAULT = false;
   private volatile boolean speakInPhrases = SPEAK_IN_PHRASES_DEFAULT;
-  public static final String PREF_SWITCH_LANGUAGES_KEY = "pref_switch_languages";
-  public static final String PREF_SWITCH_DIALECTS_KEY = "pref_switch_dialects";
-  private static final boolean SWITCH_LANGUAGES_DEFAULT = true;
-  private static final boolean SWITCH_DIALECTS_DEFAULT = true;
 
   /** Plays speech through {@link LowLatencyAudio}, which reaches the speaker sooner. */
   public static final String PREF_LOW_LATENCY_AUDIO_KEY = "pref_low_latency_audio";
@@ -328,6 +324,20 @@ public class FailoverTextToSpeech {
   /** What each low-latency utterance said, to say it again the usual way if it gives no audio. */
   private final Map<String, Pair<CharSequence, Bundle>> lowLatencyRequests =
       new ConcurrentHashMap<>();
+
+  /**
+   * Low-latency utterances being said again the usual way, by ID. The engine can still report on
+   * the silent first try, which must not reach Backtalk as the utterance's progress, or Backtalk
+   * would take it as done before it is heard. So the second try has its own ID, {@link
+   * #RESPOKEN_ID_PREFIX} and the utterance's, and reports on the first try are dropped.
+   */
+  private final Set<String> respokenUtterances = ConcurrentHashMap.newKeySet();
+
+  private static final String RESPOKEN_ID_PREFIX = "respoken:";
+  public static final String PREF_SWITCH_LANGUAGES_KEY = "pref_switch_languages";
+  public static final String PREF_SWITCH_DIALECTS_KEY = "pref_switch_dialects";
+  private static final boolean SWITCH_LANGUAGES_DEFAULT = true;
+  private static final boolean SWITCH_DIALECTS_DEFAULT = true;
   private @Nullable String preferredTtsEngine;
 
   private final OnSharedPreferenceChangeListener preferenceChangeListener =
@@ -1535,6 +1545,7 @@ public class FailoverTextToSpeech {
     heldPlayer = null;
     lowLatencyStreams.clear();
     lowLatencyRequests.clear();
+    respokenUtterances.clear();
     mHandler.removeCallbacks(checkEngineHang);
     engineQuietSince = 0;
     unfinishedUtterances.clear();
@@ -1587,7 +1598,7 @@ public class FailoverTextToSpeech {
           mHandler.post(
               () -> {
                 LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.get(id);
-                speakAgainWithoutLowLatency(id, stream);
+                speakAgainWithoutLowLatency(id, stream, /* engineAtFault= */ true);
               });
         }
 
@@ -1600,7 +1611,17 @@ public class FailoverTextToSpeech {
         @Override
         public void onStalled(String id) {
           // Say it the usual way, and speak the usual way with this engine from now on.
-          mHandler.post(() -> speakAgainWithoutLowLatency(id, /* stream= */ null));
+          mHandler.post(
+              () -> speakAgainWithoutLowLatency(id, /* stream= */ null, /* engineAtFault= */ true));
+        }
+
+        @Override
+        public void onPlayerFailed(String id) {
+          // Say it the usual way. The player is not used again until it is made again, but the
+          // engine is not at fault, so a new player may use low latency with it.
+          mHandler.post(
+              () ->
+                  speakAgainWithoutLowLatency(id, /* stream= */ null, /* engineAtFault= */ false));
         }
 
         @Override
@@ -1686,6 +1707,7 @@ public class FailoverTextToSpeech {
     lowLatencyStreams.clear();
     LowLatencyAudio.stopAllStreams();
     lowLatencyRequests.clear();
+    respokenUtterances.clear();
     // Restarting the same engine does not help, since its process stays hung.
     ttsFailures = Math.max(ttsFailures, MAX_TTS_FAILURES - 1);
     attemptTtsFailover(ttsEngine);
@@ -1704,21 +1726,67 @@ public class FailoverTextToSpeech {
     LogUtils.e(TAG, "Low-latency playback off for %s: %s", ttsEngine, reason);
   }
 
-  /** Says a low-latency utterance that failed again the usual way, and stops using low latency. */
+  /**
+   * Says a low-latency utterance that failed again the usual way. If {@code engineAtFault}, the
+   * engine speaks the usual way from now on.
+   */
   private void speakAgainWithoutLowLatency(
-      String utteranceId, LowLatencyAudio.@Nullable SpeechStream stream) {
+      String utteranceId, LowLatencyAudio.@Nullable SpeechStream stream, boolean engineAtFault) {
     // A stream that stalled has left its player already.
     if (stream != null) {
       stream.discard();
     }
     lowLatencyStreams.remove(utteranceId);
-    stopUsingLowLatencyAudio(stream == null ? "no audio in time" : "engine error");
-    @Nullable Pair<CharSequence, Bundle> request = lowLatencyRequests.remove(utteranceId);
-    if (request != null && tts != null) {
-      mHandler.post(() -> tts.speak(request.first, QUEUE_ADD, request.second, utteranceId));
+    if (engineAtFault) {
+      stopUsingLowLatencyAudio(stream == null ? "no audio in time" : "engine error");
     } else {
-      utteranceProgressCallback.onError(utteranceId);
+      LogUtils.e(TAG, "Low-latency player failed, so %s is said the usual way", utteranceId);
     }
+    @Nullable Pair<CharSequence, Bundle> request = lowLatencyRequests.remove(utteranceId);
+    if (request == null || tts == null) {
+      utteranceProgressCallback.onError(utteranceId);
+      return;
+    }
+    respokenUtterances.add(utteranceId);
+    mHandler.post(
+        () -> {
+          if (tts == null) {
+            respokenUtterances.remove(utteranceId);
+            utteranceProgressCallback.onError(utteranceId);
+            return;
+          }
+          // The silent first try may still be in the engine, which would hold up the second try
+          // for as long as it takes. Stop it, unless other speech waits in the engine too, which
+          // stopping would lose.
+          boolean onlyThis =
+              unfinishedUtterances.isEmpty()
+                  || (unfinishedUtterances.size() == 1
+                      && unfinishedUtterances.contains(utteranceId));
+          if (onlyThis) {
+            tts.stop();
+          }
+          tts.speak(request.first, QUEUE_ADD, request.second, RESPOKEN_ID_PREFIX + utteranceId);
+        });
+  }
+
+  /** Whether {@code utteranceId} is the silent first try of an utterance said again. */
+  private boolean isRespokenFirstTry(@Nullable String utteranceId) {
+    return utteranceId != null && respokenUtterances.contains(utteranceId);
+  }
+
+  /**
+   * Returns the ID to report the engine's callback for {@code utteranceId} under: the utterance's
+   * own ID for its second try, said the usual way. See {@link #respokenUtterances}.
+   */
+  private @Nullable String reportedId(@Nullable String utteranceId, boolean finished) {
+    if (utteranceId == null || !utteranceId.startsWith(RESPOKEN_ID_PREFIX)) {
+      return utteranceId;
+    }
+    String original = utteranceId.substring(RESPOKEN_ID_PREFIX.length());
+    if (finished) {
+      respokenUtterances.remove(original);
+    }
+    return original;
   }
 
   /**
@@ -1730,8 +1798,12 @@ public class FailoverTextToSpeech {
         @Override
         public void onStart(String utteranceId) {
           engineResponded(utteranceId, /* finished= */ false);
+          if (isRespokenFirstTry(utteranceId)) {
+            return;
+          }
+          String reported = reportedId(utteranceId, /* finished= */ false);
           if (!lowLatencyStreams.containsKey(utteranceId)) {
-            utteranceProgressCallback.onStart(utteranceId);
+            utteranceProgressCallback.onStart(reported);
           }
         }
 
@@ -1739,83 +1811,111 @@ public class FailoverTextToSpeech {
         public void onBeginSynthesis(
             String utteranceId, int sampleRateInHz, int audioFormat, int channelCount) {
           engineResponded(utteranceId, /* finished= */ false);
+          if (isRespokenFirstTry(utteranceId)) {
+            return;
+          }
+          String reported = reportedId(utteranceId, /* finished= */ false);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.get(utteranceId);
           if (stream != null) {
             stream.begin(sampleRateInHz, audioFormat, channelCount);
           } else {
             utteranceProgressCallback.onBeginSynthesis(
-                utteranceId, sampleRateInHz, audioFormat, channelCount);
+                reported, sampleRateInHz, audioFormat, channelCount);
           }
         }
 
         @Override
         public void onAudioAvailable(String utteranceId, byte[] audio) {
           engineResponded(utteranceId, /* finished= */ false);
+          if (isRespokenFirstTry(utteranceId)) {
+            return;
+          }
+          String reported = reportedId(utteranceId, /* finished= */ false);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.get(utteranceId);
           if (stream != null) {
             stream.write(audio);
           }
-          utteranceProgressCallback.onAudioAvailable(utteranceId, audio);
+          utteranceProgressCallback.onAudioAvailable(reported, audio);
         }
 
         @Override
         public void onRangeStart(String utteranceId, int start, int end, int frame) {
           engineResponded(utteranceId, /* finished= */ false);
+          if (isRespokenFirstTry(utteranceId)) {
+            return;
+          }
+          String reported = reportedId(utteranceId, /* finished= */ false);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.get(utteranceId);
           if (stream != null) {
             stream.range(start, end, frame);
           } else {
-            utteranceProgressCallback.onRangeStart(utteranceId, start, end, frame);
+            utteranceProgressCallback.onRangeStart(reported, start, end, frame);
           }
         }
 
         @Override
         public void onDone(String utteranceId) {
           engineResponded(utteranceId, /* finished= */ true);
+          if (isRespokenFirstTry(utteranceId)) {
+            return;
+          }
+          String reported = reportedId(utteranceId, /* finished= */ true);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.remove(utteranceId);
           if (stream != null) {
             stream.end();
           } else {
-            utteranceProgressCallback.onDone(utteranceId);
+            utteranceProgressCallback.onDone(reported);
           }
         }
 
         @Override
         public void onStop(String utteranceId, boolean interrupted) {
           engineResponded(utteranceId, /* finished= */ true);
+          if (isRespokenFirstTry(utteranceId)) {
+            return;
+          }
+          String reported = reportedId(utteranceId, /* finished= */ true);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.remove(utteranceId);
           if (stream != null) {
             stream.stop();
           } else {
-            utteranceProgressCallback.onStop(utteranceId, interrupted);
+            utteranceProgressCallback.onStop(reported, interrupted);
           }
         }
 
         @Override
         public void onError(String utteranceId) {
           engineResponded(utteranceId, /* finished= */ true);
+          if (isRespokenFirstTry(utteranceId)) {
+            return;
+          }
+          String reported = reportedId(utteranceId, /* finished= */ true);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.remove(utteranceId);
           if (stream != null) {
             // Not for speech that was stopped already, and reported so.
             if (!stream.isFinished()) {
-              speakAgainWithoutLowLatency(utteranceId, stream);
+              speakAgainWithoutLowLatency(utteranceId, stream, /* engineAtFault= */ true);
             }
           } else {
-            utteranceProgressCallback.onError(utteranceId);
+            utteranceProgressCallback.onError(reported);
           }
         }
 
         @Override
         public void onError(String utteranceId, int errorCode) {
           engineResponded(utteranceId, /* finished= */ true);
+          if (isRespokenFirstTry(utteranceId)) {
+            return;
+          }
+          String reported = reportedId(utteranceId, /* finished= */ true);
           LowLatencyAudio.@Nullable SpeechStream stream = lowLatencyStreams.remove(utteranceId);
           if (stream != null) {
             // Not for speech that was stopped already, and reported so.
             if (!stream.isFinished()) {
-              speakAgainWithoutLowLatency(utteranceId, stream);
+              speakAgainWithoutLowLatency(utteranceId, stream, /* engineAtFault= */ true);
             }
           } else {
-            utteranceProgressCallback.onError(utteranceId, errorCode);
+            utteranceProgressCallback.onError(reported, errorCode);
           }
         }
       };
@@ -1956,6 +2056,7 @@ public class FailoverTextToSpeech {
     heldPlayer = null;
     lowLatencyStreams.clear();
     lowLatencyRequests.clear();
+    respokenUtterances.clear();
     LowLatencyAudio.stopAllStreams();
     mHandler.removeCallbacks(checkEngineHang);
     engineQuietSince = 0;
