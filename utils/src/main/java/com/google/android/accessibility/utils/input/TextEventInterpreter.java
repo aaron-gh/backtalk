@@ -44,6 +44,7 @@ import com.google.android.accessibility.utils.monitor.InputModeTracker;
 import com.google.android.accessibility.utils.monitor.VoiceActionDelegate;
 import com.google.android.accessibility.utils.output.ActorStateProvider;
 import com.google.android.accessibility.utils.output.EditTextActionHistory;
+import com.google.android.accessibility.utils.output.EmojiSpeech;
 import com.google.android.accessibility.utils.output.SelectionStateReader;
 import com.google.android.accessibility.utils.output.SpeechCleanupUtils;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
@@ -636,7 +637,16 @@ public class TextEventInterpreter {
             == AccessibilityNodeInfoCompat.MOVEMENT_GRANULARITY_CHARACTER) {
           int charIndex = Math.min(fromIndex, toIndex);
           if (0 <= charIndex && charIndex < textLength) {
-            traversedText = getSubsequenceWithSpans(text, charIndex, charIndex + 1);
+            int[] range =
+                characterRange(
+                    mContext,
+                    text,
+                    charIndex,
+                    Math.max(fromIndex, toIndex),
+                    event.getAction()
+                        != AccessibilityNodeInfoCompat.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY);
+            traversedText =
+                range == null ? "" : getSubsequenceWithSpans(text, range[0], range[1]);
           }
         } else {
           traversedText =
@@ -653,6 +663,24 @@ public class TextEventInterpreter {
     mHistory.setLastToIndex(event.getToIndex());
 
     return interpretation.setInvalid("Unhandled selection event.");
+  }
+
+  /**
+   * Returns the text to speak for a move by character over {@code start} to {@code end}, or null
+   * to say nothing. An emoji, which may be several characters such as one with a skin tone, is
+   * taken whole when Backtalk speaks emoji, so that it can be named. Apps that move through its
+   * parts one at a time get it named once, as the move enters it, and nothing for the other parts,
+   * which ProcessorEmojiTraversal moves over.
+   */
+  @VisibleForTesting
+  static int @Nullable [] characterRange(
+      Context context, CharSequence text, int start, int end, boolean forward) {
+    int[] emoji = EmojiSpeech.emojiAround(context, text, start);
+    if (emoji == null) {
+      return new int[] {start, start + 1};
+    }
+    boolean entering = forward ? start == emoji[0] : end >= emoji[1];
+    return entering ? emoji : null;
   }
 
   private boolean isUpDownKey() {

@@ -469,6 +469,10 @@ public class CursorGranularityManager {
         if (granularityTraversal.traverseAtLineGranularity(currentNode, forward, eventId)) {
           return SUCCESS;
         }
+      } else if (requestedGranularity == CursorGranularity.WORD
+          && !isSelectionModeActive()
+          && granularityTraversal.traverseEmojiWordInFrameworkText(currentNode, forward, eventId)) {
+        return SUCCESS;
       } else if (pipeline.returnFeedback(
           eventId, Feedback.nodeAction(currentNode, action, arguments))) {
         LogUtils.d(TAG, "Granularity traversal handled by framework");
