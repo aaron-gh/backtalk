@@ -52,6 +52,9 @@ import com.google.android.accessibility.talkback.utils.FocusIndicatorUtils;
 import com.google.android.accessibility.utils.FeatureSupport;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.monitor.ScreenMonitor;
+import com.google.android.accessibility.utils.output.FeedbackItem;
+import com.google.android.accessibility.utils.output.SpeechController;
+import com.google.android.accessibility.utils.output.SpeechController.SpeakOptions;
 import com.google.android.accessibility.utils.widget.DialogUtils;
 import java.util.concurrent.TimeUnit;
 
@@ -354,7 +357,9 @@ public class DimScreenActor implements OnConfigurationChangedListener {
     if (!stopFeedback) {
       pipeline.returnFeedback(
           EVENT_ID_UNTRACKED,
-          Feedback.speech(service.getString(R.string.screen_brightness_restored)));
+          Feedback.speech(
+              service.getString(R.string.screen_brightness_restored),
+              announcementOptions(SpeechController.QUEUE_MODE_INTERRUPT)));
     }
   }
 
@@ -403,6 +408,7 @@ public class DimScreenActor implements OnConfigurationChangedListener {
                 Speech.builder()
                     .setAction(Action.SPEAK)
                     .setText(service.getString(R.string.screen_dimmed))
+                    .setOptions(announcementOptions(SpeechController.QUEUE_MODE_INTERRUPT))
                     .build()));
     // Users who turned off the confirmation dialog already know how to show the screen again.
     if (!getShouldShowDialogPref()) {
@@ -423,7 +429,23 @@ public class DimScreenActor implements OnConfigurationChangedListener {
                             gestureShortcutMapping.getGestureFromActionKey(
                                 service.getString(R.string.shortcut_value_talkback_breakout)),
                             service.getString(R.string.shortcut_disable_dimming)))
+                    .setOptions(announcementOptions(SpeechController.QUEUE_MODE_QUEUE))
                     .build()));
+  }
+
+  /**
+   * Options for saying that the screen was hidden or shown. The user asked for it, so it is said
+   * even over other audio, or Backtalk's own speech, which would otherwise silence it. Without
+   * that, hiding or showing the screen while something played went unannounced.
+   */
+  private static SpeakOptions announcementOptions(int queueMode) {
+    return SpeakOptions.create()
+        .setQueueMode(queueMode)
+        .setFlags(
+            FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
+                | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
+                | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
+                | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE);
   }
 
   @VisibleForTesting
