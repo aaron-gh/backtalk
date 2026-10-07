@@ -83,15 +83,12 @@
     <string name="value_audio_output_device_default">Výchozí nastavení systému</string>
     <string name="value_audio_output_device_speaker">Reproduktor telefonu</string>
     <string name="value_audio_output_device_bluetooth_or_wired">Připojené Bluetooth nebo kabelové zařízení</string>
-    <string name="value_audio_output_device_none_connected">Bluetooth nebo kabelové zařízení (žádné není připojeno)</string>
     <string name="value_audio_output_device_disconnected">odpojeno</string>
     <string name="value_audio_output_device_bluetooth_default">Zvukové zařízení Bluetooth</string>
     <string name="value_audio_output_device_wired_headset">Kabelová náhlavní souprava</string>
     <string name="value_audio_output_device_wired_headphones">Kabelová sluchátka</string>
     <string name="value_audio_output_device_usb_headset">USB náhlavní souprava</string>
     <string name="value_audio_output_device_usb_device">USB zvukové zařízení</string>
-    <string name="value_audio_output_device_aux_line">Zvukový výstup AUX</string>
-    <string name="pref_category_selector_menu_summary_no_rotor">Přejetím třemi prsty doleva nebo doprava zvolte ovládání čtení. Potom ho změňte přejetím nahoru nebo dolů.</string>
 
     <!-- Individual braille keyboard vibrations. -->
     <string name="individual_vibration_braille_character">Braillská klávesnice: napsání znaku</string>
