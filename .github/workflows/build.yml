@@ -46,6 +46,17 @@ jobs:
       - name: Build debug APKs
         run: ./gradlew assembleDebug --console=plain
 
+      # Only the phone flavor: the watch's braille keyboard is a stub, so the braille keyboard's
+      # tests don't compile for it, and the rest of the code is shared.
+      - name: Run unit tests
+        run: ./gradlew testPhoneDebugUnitTest --console=plain
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: test-reports
+          path: "**/build/reports/tests/"
+
       - uses: actions/upload-artifact@v7
         with:
           name: apks
