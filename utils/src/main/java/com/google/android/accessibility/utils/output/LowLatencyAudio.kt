@@ -43,7 +43,9 @@ import java.util.concurrent.TimeUnit
  *
  * The track keeps running while there is something to play and for a moment after, so that the
  * next sound starts at once, then pauses. Its thread ends then, and nothing runs until the next
- * sound or speech.
+ * sound or speech. While an app records from the microphone, the track pauses as soon as what it
+ * played has been heard: some apps, such as Gemini, don't take the user's voice while accessibility
+ * audio plays, even silence.
  */
 class LowLatencyAudio private constructor(context: Context, private val attributes: AudioAttributes) {
   /** Output frames per second. */
@@ -695,7 +697,8 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     return true
   }
 
-  private fun idleLimit(): Int = sampleRate * IDLE_MS / 1000
+  private fun idleLimit(): Int =
+    sampleRate * (if (microphoneInUse) MICROPHONE_IDLE_MS else IDLE_MS) / 1000
 
   /** Mixes the next burst of every sound and the speech stream at the head of the queue. */
   private fun mix(out: FloatArray) {
@@ -814,6 +817,8 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     // How long the audio thread waits for the engine's speech at a time, well within WRITE_STUCK_MS.
     private const val REST_MS = 100L
     private const val IDLE_MS = 2_000
+    // While an app records, long enough for the audio already queued to be heard.
+    private const val MICROPHONE_IDLE_MS = 100
     // How long the callback thread is kept with nothing to do.
     private const val THREAD_KEEP_ALIVE_MS = 5_000L
 
@@ -866,6 +871,18 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
         .apply { allowCoreThreadTimeOut(true) }
 
     /** The players made so far, without making new ones. */
+    /** Whether an app is recording from the microphone, set by [setMicrophoneInUse]. */
+    @Volatile private var microphoneInUse = false
+
+    /**
+     * Tells the players whether an app is recording from the microphone, so that while one is,
+     * their tracks pause soon after each sound rather than running on in silence.
+     */
+    @JvmStatic
+    fun setMicrophoneInUse(inUse: Boolean) {
+      microphoneInUse = inUse
+    }
+
     @JvmStatic
     fun players(): List<LowLatencyAudio> = synchronized(instances) { instances.values.toList() }
 
