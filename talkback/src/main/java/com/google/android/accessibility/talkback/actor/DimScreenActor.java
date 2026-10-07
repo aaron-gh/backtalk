@@ -442,10 +442,7 @@ public class DimScreenActor implements OnConfigurationChangedListener {
     return SpeakOptions.create()
         .setQueueMode(queueMode)
         .setFlags(
-            FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
-                | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-                | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
-                | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE);
+            FeedbackItem.FLAG_FORCE_FEEDBACK_ALL);
   }
 
   @VisibleForTesting

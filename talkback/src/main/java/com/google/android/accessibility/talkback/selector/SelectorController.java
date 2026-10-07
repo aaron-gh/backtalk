@@ -1539,10 +1539,7 @@ public class SelectorController implements UserInputEventListener {
                   .setQueueMode(SpeechController.QUEUE_MODE_INTERRUPT)
                   .setFlags(
                       FeedbackItem.FLAG_NO_HISTORY
-                          | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
-                          | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-                          | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
-                          | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE
+                          | FeedbackItem.FLAG_FORCE_FEEDBACK_ALL
                           | FeedbackItem.FLAG_SKIP_DUPLICATE)));
       selectorEventNotifier.onSelectorSettingAnnounced(announcement);
     }
@@ -2386,10 +2383,7 @@ public class SelectorController implements UserInputEventListener {
                 .setQueueMode(SpeechController.QUEUE_MODE_INTERRUPT)
                 .setFlags(
                     FeedbackItem.FLAG_NO_HISTORY
-                        | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
-                        | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-                        | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
-                        | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE
+                        | FeedbackItem.FLAG_FORCE_FEEDBACK_ALL
                         | FeedbackItem.FLAG_SKIP_DUPLICATE)));
   }
 

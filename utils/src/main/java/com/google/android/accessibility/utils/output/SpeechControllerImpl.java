@@ -821,10 +821,7 @@ public class SpeechControllerImpl implements SpeechController {
      */
     final FeedbackItem newItem = new FeedbackItem(item);
     newItem.addFlag(
-        FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE);
+        FeedbackItem.FLAG_FORCE_FEEDBACK_ALL);
     speak(
         /* item= */ newItem,
         /* queueMode= */ QUEUE_MODE_BIT_FLUSH_ALL,
@@ -884,10 +881,7 @@ public class SpeechControllerImpl implements SpeechController {
     options.mQueueMode = QUEUE_MODE_BIT_INTERRUPT | QUEUE_MODE_BIT_UNINTERRUPTIBLE_BY_NEW_SPEECH;
     options.mFlags =
         FeedbackItem.FLAG_NO_HISTORY
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE;
+            | FeedbackItem.FLAG_FORCE_FEEDBACK_ALL;
     options.mUtteranceGroup = UTTERANCE_GROUP_DEFAULT;
     speak(builder, /* eventId= */ null, options);
     return true;

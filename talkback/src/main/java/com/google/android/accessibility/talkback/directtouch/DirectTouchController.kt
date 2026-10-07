@@ -41,8 +41,7 @@ import com.google.android.accessibility.utils.Performance.EventId
 import com.google.android.accessibility.utils.input.WindowEventInterpreter
 import com.google.android.accessibility.utils.input.WindowEventInterpreter.EventInterpretation
 import com.google.android.accessibility.utils.monitor.DisplayMonitor
-import com.google.android.accessibility.utils.output.FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
-import com.google.android.accessibility.utils.output.FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
+import com.google.android.accessibility.utils.output.FeedbackItem.FLAG_FORCE_FEEDBACK_ALL
 import com.google.android.accessibility.utils.output.FeedbackItem.FLAG_NO_HISTORY
 import com.google.android.accessibility.utils.output.SpeechController.QUEUE_MODE_QUEUE
 import com.google.android.accessibility.utils.output.SpeechController.SpeakOptions
@@ -277,9 +276,7 @@ class DirectTouchController(
         SpeakOptions.create()
           .setQueueMode(QUEUE_MODE_QUEUE)
           .setFlags(
-            FLAG_NO_HISTORY or
-              FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE or
-              FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
+            FLAG_NO_HISTORY or FLAG_FORCE_FEEDBACK_ALL
           )
       feedback.returnFeedback(Performance.EVENT_ID_UNTRACKED, Feedback.speech(text, options))
     }
