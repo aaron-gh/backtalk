@@ -2931,6 +2931,10 @@ public class TalkBackService extends AccessibilityServiceCompat
       dimScreenController.shutdown();
     }
 
+    // The saved reading order holds nodes, which would outlive the service and could be reused,
+    // stale, when Backtalk is turned on again.
+    TraversalTreeCache.clear("shutdown");
+
     if (fullScreenReadActor != null) {
       fullScreenReadActor.shutdown();
     }

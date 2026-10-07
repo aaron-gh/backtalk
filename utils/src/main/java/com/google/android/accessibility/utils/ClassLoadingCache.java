@@ -19,6 +19,8 @@ package com.google.android.accessibility.utils;
 import android.text.TextUtils;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** This class manages efficient loading of classes. */
@@ -129,9 +131,17 @@ public class ClassLoadingCache {
 
   // Results of checkInstanceOf, by target class name and then by reference class or class name.
   // Role checks a node's class against dozens of classes, many times for each focus change, so
-  // looking each pair up again was a large part of the time to answer a swipe.
-  private static final HashMap<String, HashMap<Object, Boolean>> instanceOfResults =
-      new HashMap<>();
+  // looking each pair up again was a large part of the time to answer a swipe. The answers never
+  // change, but apps have many class names, so only the most recently used are kept.
+  private static final int MAX_TARGET_CLASSES = 512;
+
+  private static final LinkedHashMap<String, HashMap<Object, Boolean>> instanceOfResults =
+      new LinkedHashMap<String, HashMap<Object, Boolean>>(64, 0.75f, /* accessOrder= */ true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, HashMap<Object, Boolean>> eldest) {
+          return size() > MAX_TARGET_CLASSES;
+        }
+      };
   // The target of the last check, since most checks come in runs for the same node's class name.
   private static @Nullable String lastTargetClassName;
   private static HashMap<Object, Boolean> lastTargetResults = new HashMap<>();
