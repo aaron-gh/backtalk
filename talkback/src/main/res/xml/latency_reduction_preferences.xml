@@ -24,6 +24,10 @@
         android:key="pref_low_latency_audio" />
 
     <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+        android:defaultValue="@bool/pref_speak_items_before_scroll_default"
+        android:title="@string/title_pref_speak_items_before_scroll"
+        android:key="@string/pref_speak_items_before_scroll_key" />
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
         android:defaultValue="@bool/pref_cache_keyboard_keys_default"
         android:title="@string/title_pref_cache_keyboard_keys"
         android:summary="@string/summary_cache_keyboard_keys"

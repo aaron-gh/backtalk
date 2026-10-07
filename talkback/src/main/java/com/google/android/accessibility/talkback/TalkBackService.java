@@ -3088,6 +3088,10 @@ public class TalkBackService extends AccessibilityServiceCompat
 
     FocusProcessorForLogicalNavigation.setWrapAround(
         getBooleanPref(R.string.pref_wrap_around_key, R.bool.pref_wrap_around_default));
+    EventFilter.setSpeakItemsBeforeScroll(
+        getBooleanPref(
+            R.string.pref_speak_items_before_scroll_key,
+            R.bool.pref_speak_items_before_scroll_default));
 
     // If performance statistics changing enabled setting... clear collected stats.
     boolean performanceEnabled =

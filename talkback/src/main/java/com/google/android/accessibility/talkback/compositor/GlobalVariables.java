@@ -162,6 +162,7 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
   private boolean isLastFocusInScrollableNode = false;
   private boolean isFocusPage = false;
   private boolean isInterpretAsEntryKey = false;
+  private boolean isDescribingSwipeTarget = false;
 
   private final @Nullable GestureShortcutProvider gestureShortcutProvider;
 
@@ -583,6 +584,20 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
    */
   public boolean isInterpretAsEntryKey() {
     return isInterpretAsEntryKey;
+  }
+
+  /**
+   * Sets whether the node being described is where a swipe moves focus, described before the swipe
+   * has scrolled it into view. Its children that are off screen only because of where they are,
+   * below or above the edge of the list, will then be on screen when it is spoken.
+   */
+  public void setDescribingSwipeTarget(boolean describingSwipeTarget) {
+    isDescribingSwipeTarget = describingSwipeTarget;
+  }
+
+  /** Returns whether the node being described is a swipe's target; see setDescribingSwipeTarget. */
+  public boolean isDescribingSwipeTarget() {
+    return isDescribingSwipeTarget;
   }
 
   /** Returns if TalkBack speaks collection info. */
