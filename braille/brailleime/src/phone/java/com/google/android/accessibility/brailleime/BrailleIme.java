@@ -407,8 +407,6 @@ public class BrailleIme extends InputMethodService {
   @Override
   public void onConfigurationChanged(Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
-    // Folding or unfolding switches between the phone and tablet layouts.
-    flatTurnDetector.setQuarterTurns(!BrailleUtils.isPhoneSizedDevice(getResources()));
     if (orientation != newConfig.orientation) {
       orientation = newConfig.orientation;
       keyboardView.onOrientationChanged(newConfig.orientation);
@@ -494,7 +492,7 @@ public class BrailleIme extends InputMethodService {
           }
         });
     // Watches the whole time, so that a turn on the table that tilts the device for a moment counts.
-    flatTurnDetector.start(/* quarterTurns= */ !BrailleUtils.isPhoneSizedDevice(getResources()));
+    flatTurnDetector.start();
     layoutOrientator.startIfNeeded();
     updateNavigationBarColor();
     brailleImeActor =
@@ -1461,6 +1459,13 @@ public class BrailleIme extends InputMethodService {
         @Override
         public void onTabletopPortSideDecided() {
           flatTurnDetector.reset();
+        }
+
+        @Override
+        public boolean wasHeldUprightInScreenAway() {
+          // With the layout chosen by hand, screen-away mode is always screen-away typing.
+          return !layoutOrientatorCallback.useSensorsToDetectLayout()
+              || layoutOrientator.wasHeldUprightInScreenAway();
         }
 
         @Override
