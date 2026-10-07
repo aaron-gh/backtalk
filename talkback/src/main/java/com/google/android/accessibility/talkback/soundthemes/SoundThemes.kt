@@ -69,12 +69,20 @@ class ThemeFeedback(
 ) {
   /**
    * The vibrations, with the ones whose switch is in [mutedVibrations] made empty, so that they
-   * play nothing rather than the vibration they replace.
+   * play nothing rather than the vibration they replace. The braille keyboard's vibrations that
+   * are turned off are empty too, theme or not, as the keyboard plays its own vibrations only
+   * when the theme leaves them alone.
    */
-  fun vibrationsPlaying(mutedVibrations: Set<String>): Map<String, IntArray> =
-    vibrations.mapValues { (name, pattern) ->
-      if (SoundVibrations.switchOfPlayed(name) in mutedVibrations) IntArray(0) else pattern
-    }
+  fun vibrationsPlaying(mutedVibrations: Set<String>): Map<String, IntArray> {
+    val playing =
+      vibrations.mapValues { (name, pattern) ->
+        if (SoundVibrations.switchOfPlayed(name) in mutedVibrations) IntArray(0) else pattern
+      }
+    val mutedKeyboard =
+      SoundVibrations.BRAILLE_KEYBOARD.filter { it in mutedVibrations && it !in playing }
+    return if (mutedKeyboard.isEmpty()) playing
+    else playing + mutedKeyboard.associateWith { IntArray(0) }
+  }
 
   /** The sounds the theme gives a vibration that can be felt, by resource name. */
   fun felt(): Set<String> = vibrations.filterValues { it.isNotEmpty() }.keys

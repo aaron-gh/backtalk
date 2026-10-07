@@ -85,6 +85,24 @@ class BrailleImeVibrator private constructor(context: Context) {
     if (!enabled || ThemeVibrations.play(vibrator, vibrationType.themeName)) {
       return
     }
+    playOwn(vibrationType)
+  }
+
+  /**
+   * Plays Backtalk's own vibration named [themeName], as sound themes name it, even while the
+   * keyboard is closed, so that Individual sounds and vibrations can preview it. Returns false if
+   * there is no such vibration.
+   */
+  fun preview(themeName: String): Boolean {
+    val vibrationType = VibrationType.entries.firstOrNull { it.themeName == themeName }
+    if (vibrationType == null || vibrator == null || !vibrator.hasVibrator()) {
+      return false
+    }
+    playOwn(vibrationType)
+    return true
+  }
+
+  private fun playOwn(vibrationType: VibrationType) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && isCompositionSupported(vibrationType)) {
       val composition = VibrationEffect.startComposition()
       vibrationType.steps.forEach { composition.addPrimitive(it.primitive, it.scale, it.delayMs) }

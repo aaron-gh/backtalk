@@ -205,8 +205,9 @@ These vibrations have no sound, and a theme replaces them by these names:
 | `direct_touch_on` | Direct touch turning on |
 | `direct_touch_off` | Direct touch turning off |
 
-The braille keyboard vibrations play only with the braille keyboard's own vibration setting on, and
-the direct touch vibrations only with direct touch's.
+The braille keyboard vibrations play only with **Vibration feedback** on, and each has its own
+switch in **Individual sounds and vibrations**. The direct touch vibrations play only with direct
+touch's vibration setting on.
 
 #### Control vibrations
 
