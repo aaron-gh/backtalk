@@ -24,6 +24,7 @@ import static com.google.android.accessibility.talkback.compositor.roledescripti
 import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_STATE_NAME_ROLE_POSITION;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.text.TextUtils;
 import android.view.accessibility.AccessibilityEvent;
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
@@ -321,12 +322,18 @@ public class TreeNodesDescription {
           logString.append(
               String.format("error: sourceNode (%s) has a null child.", node.hashCode()));
         } else {
-          boolean isVisible = AccessibilityNodeInfoUtils.isVisible(childNode);
+          boolean isVisible =
+              AccessibilityNodeInfoUtils.isVisible(childNode)
+                  || (globalVariables.isDescribingSwipeTarget() && isOffScreen(childNode));
           boolean isAccessibilityFocusable =
               AccessibilityNodeInfoUtils.isAccessibilityFocusable(childNode);
           logString
               .append(String.format("\n        childNode:(%s)", childNode.hashCode()))
               .append(String.format(", isVisible=%b", isVisible))
+              .append(
+                  globalVariables.isDescribingSwipeTarget()
+                      ? String.format(", bounds=%s", boundsOf(childNode))
+                      : "")
               .append(String.format(", isAccessibilityFocusable=%b", isAccessibilityFocusable));
 
           if (isVisible && (!isAccessibilityFocusable || shouldAppendChildNode)) {
@@ -345,5 +352,22 @@ public class TreeNodesDescription {
     LogUtils.v(TAG, "      treeNodesDescription:  %s", logString.toString());
 
     return CompositorUtils.joinCharSequences(joinList, CompositorUtils.getSeparator(), PRUNE_EMPTY);
+  }
+
+  /**
+   * Whether {@code node} is off screen only because of where it is. Its bounds on screen are clamped
+   * to each parent's, so when it is wholly past the edge of a list they come out inside out, with
+   * the top below the bottom or the left right of the right. A node that is on screen but hidden,
+   * even one shrunk to nothing, keeps bounds that are the right way round.
+   */
+  private static boolean isOffScreen(AccessibilityNodeInfoCompat node) {
+    Rect bounds = boundsOf(node);
+    return bounds.top > bounds.bottom || bounds.left > bounds.right;
+  }
+
+  private static Rect boundsOf(AccessibilityNodeInfoCompat node) {
+    Rect bounds = new Rect();
+    node.getBoundsInScreen(bounds);
+    return bounds;
   }
 }

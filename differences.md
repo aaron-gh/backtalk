@@ -18,6 +18,12 @@ While you listen to an item, Backtalk works out what a swipe forward or back wou
 
 Backtalk doesn't prepare anything for the first swipe on a screen or after the screen changes, and it discards prepared speech after 5 seconds.
 
+### Items that a swipe scrolls into view
+
+When a swipe moves to a list item that is only partly on screen, the list scrolls it into view. By default, Backtalk then waits for the app to confirm the new focus, as TalkBack does, so these swipes don't get the faster speech above. Speaking straight away would come before the list had scrolled, when the item's text can still be off screen, and only its place in the list, such as "20 of 80", would be said.
+
+When you turn on **Advanced settings** > **Reduce delay** > **Speak items before they scroll into view**, Backtalk speaks these items straight away too, including the parts that are still past the edge of the list, since they will be on screen once it has scrolled. Parts the app has hidden are still left out. Apps that follow Android's conventions work correctly with this setting on. It is off by default to protect you from apps that don't: in those, a part that the app keeps out of sight by moving it outside the item, instead of hiding it, is read even though it isn't shown, and so is a part that stays off screen when the list can't scroll the whole item into view.
+
 ### Reading order kept between swipes
 
 TalkBack asked the app for every item on the screen on each swipe, and waited for each answer. Backtalk keeps the reading order between swipes, and builds it again only when the screen changes, or when Backtalk scrolls or clicks. Changes to text or state, such as a clock that ticks or a progress bar that moves, don't discard the order.
