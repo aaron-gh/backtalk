@@ -32,6 +32,7 @@ import android.content.res.Configuration;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
+import android.media.AudioPlaybackConfiguration;
 import android.media.AudioRecordingConfiguration;
 import android.os.Bundle;
 import android.os.Handler;
@@ -2182,6 +2183,11 @@ public class SpeechControllerImpl implements SpeechController {
     if (!recordConfigurations.isEmpty()) {
       useAudioFocus = false;
     }
+    // An assistant such as Gemini stops its answer for good when it loses focus, even when it
+    // could duck, so speech plays alongside it instead.
+    if (useAudioFocus && isAssistantPlaying()) {
+      useAudioFocus = false;
+    }
 
     if (useAudioFocus) {
       LogUtils.v(TAG, "Request Audio Focus.");
@@ -2198,6 +2204,16 @@ public class SpeechControllerImpl implements SpeechController {
     }
 
     mIsSpeaking = true;
+  }
+
+  /** Returns whether an app is playing assistant audio, such as Gemini speaking an answer. */
+  private boolean isAssistantPlaying() {
+    for (AudioPlaybackConfiguration config : audioManager.getActivePlaybackConfigurations()) {
+      if (config.getAudioAttributes().getUsage() == AudioAttributes.USAGE_ASSISTANT) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
