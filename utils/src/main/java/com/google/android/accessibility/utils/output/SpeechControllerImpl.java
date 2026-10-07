@@ -748,7 +748,10 @@ public class SpeechControllerImpl implements SpeechController {
       return false;
     }
 
-    CharSequence copyableText = SpannableUtils.getCopyableText(item.getAggregateText());
+    // Copy what was on screen, such as emoji, not the words speech used for it.
+    CharSequence copyableText =
+        EmojiSpeech.restoreOriginalText(
+            SpannableUtils.getCopyableText(item.getAggregateText()));
 
     if (TextUtils.isEmpty(copyableText)) {
       return false;
@@ -842,7 +845,8 @@ public class SpeechControllerImpl implements SpeechController {
 
   /** Spells the given utterance. */
   public boolean spellUtterance(FeedbackItem utterance) {
-    CharSequence text = utterance.getAggregateText();
+    // Spell what was on screen, such as emoji, not the words speech used for it.
+    CharSequence text = EmojiSpeech.restoreOriginalText(utterance.getAggregateText());
     /*
      * We spell the utterance then append a copy of the original utterance to the history.
      * This guarantees that it is consistently the last item in the history.
@@ -863,6 +867,13 @@ public class SpeechControllerImpl implements SpeechController {
 
     final SpannableStringBuilder builder = new SpannableStringBuilder();
     for (int i = 0; i < text.length(); i++) {
+      // An emoji, which may be many characters, is spelled as one, by its name.
+      int emojiEnd = EmojiSpeech.emojiEnd(mContext, text, i);
+      if (emojiEnd > i) {
+        StringBuilderUtils.appendWithSeparator(builder, text.subSequence(i, emojiEnd));
+        i = emojiEnd - 1;
+        continue;
+      }
       final String cleanedChar = SpeechCleanupUtils.getCleanValueFor(mContext, text.charAt(i));
 
       StringBuilderUtils.appendWithSeparator(builder, cleanedChar);
@@ -1142,6 +1153,7 @@ public class SpeechControllerImpl implements SpeechController {
 
     text = replaceSpanByContentDescription(text);
     text = replaceBrailleSymbolByDescription(mContext, text);
+    text = EmojiSpeech.process(mContext, text);
     final FeedbackItem pendingItem =
         FeedbackProcessingUtils.generateFeedbackItemFromInput(
             mContext,

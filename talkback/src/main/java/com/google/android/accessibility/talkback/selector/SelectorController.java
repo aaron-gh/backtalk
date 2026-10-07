@@ -172,6 +172,10 @@ public class SelectorController implements UserInputEventListener {
         R.string.pref_selector_punctuation_key,
         R.string.selector_punctuation,
         R.bool.pref_selector_punctuation_default),
+    EMOJI(
+        R.string.pref_selector_emoji_key,
+        R.string.selector_emoji,
+        R.bool.pref_selector_emoji_default),
     GRANULARITY(
         R.string.pref_selector_granularity_key,
         R.string.selector_granularity,
@@ -621,6 +625,7 @@ public class SelectorController implements UserInputEventListener {
           Setting.SPEECH_RATE,
           Setting.VERBOSITY,
           Setting.PUNCTUATION,
+          Setting.EMOJI,
           Setting.FORMATTING,
           Setting.LANGUAGE,
           // TODO Supports sound feedback and vibration feedback.
@@ -911,6 +916,10 @@ public class SelectorController implements UserInputEventListener {
       }
       case PUNCTUATION -> {
         actionDescription = context.getString(R.string.title_pref_selector_punctuation);
+        hint = getAdjustSelectedSettingGestures();
+      }
+      case EMOJI -> {
+        actionDescription = context.getString(R.string.title_pref_emoji_speech);
         hint = getAdjustSelectedSettingGestures();
       }
       case FORMATTING -> {
@@ -1391,6 +1400,9 @@ public class SelectorController implements UserInputEventListener {
       case SCROLLING_SEQUENTIAL -> {
         return true;
       }
+      case EMOJI -> {
+        return true;
+      }
       case CHANGE_ACCESSIBILITY_VOLUME -> {
         return FeatureSupport.hasAccessibilityAudioStream(context);
       }
@@ -1700,6 +1712,10 @@ public class SelectorController implements UserInputEventListener {
       }
       case PUNCTUATION -> {
         cycleSpeakPunctuationVerbosity(eventId, TalkBackAnalytics.TYPE_SELECTOR);
+        return;
+      }
+      case EMOJI -> {
+        cycleEmojiSpeech(eventId, isNext);
         return;
       }
       case FORMATTING -> {
@@ -2050,6 +2066,27 @@ public class SelectorController implements UserInputEventListener {
         getSelectSettingGestures());
     showQuickMenuActionOverlay(
         eventId, VerbosityPreferences.verbosityValueToName(newVerbosity, context));
+  }
+
+  /** Moves how emoji are read to the next or previous choice of the Emoji setting. */
+  private void cycleEmojiSpeech(EventId eventId, boolean isNext) {
+    String[] values = context.getResources().getStringArray(R.array.pref_emoji_speech_values);
+    String[] entries = context.getResources().getStringArray(R.array.pref_emoji_speech_entries);
+    String current =
+        SharedPreferencesUtils.getStringPref(
+            prefs,
+            context.getResources(),
+            R.string.pref_emoji_speech_key,
+            R.string.pref_emoji_speech_default);
+    int index = Math.max(0, Arrays.asList(values).indexOf(current));
+    index = (index + (isNext ? 1 : values.length - 1)) % values.length;
+    SharedPreferencesUtils.putStringPref(
+        prefs, context.getResources(), R.string.pref_emoji_speech_key, values[index]);
+    announceSetting(
+        eventId,
+        context.getString(R.string.emoji_speech_state, entries[index]),
+        getSelectSettingGestures());
+    showQuickMenuActionOverlay(eventId, entries[index]);
   }
 
   /** Cycle the punctuation verbosity to the next value */
