@@ -330,6 +330,10 @@ public class TreeNodesDescription {
           logString
               .append(String.format("\n        childNode:(%s)", childNode.hashCode()))
               .append(String.format(", isVisible=%b", isVisible))
+              .append(
+                  globalVariables.isDescribingSwipeTarget()
+                      ? String.format(", bounds=%s", boundsOf(childNode))
+                      : "")
               .append(String.format(", isAccessibilityFocusable=%b", isAccessibilityFocusable));
 
           if (isVisible && (!isAccessibilityFocusable || shouldAppendChildNode)) {
@@ -351,13 +355,19 @@ public class TreeNodesDescription {
   }
 
   /**
-   * Whether {@code node} is off screen only because of where it is. Its bounds on screen are clipped
-   * to its parents, so they are empty when it is wholly past the edge of a list, unlike those of a
-   * node that is on screen but hidden.
+   * Whether {@code node} is off screen only because of where it is. Its bounds on screen are clamped
+   * to each parent's, so when it is wholly past the edge of a list they come out inside out, with
+   * the top below the bottom or the left right of the right. A node that is on screen but hidden,
+   * even one shrunk to nothing, keeps bounds that are the right way round.
    */
   private static boolean isOffScreen(AccessibilityNodeInfoCompat node) {
+    Rect bounds = boundsOf(node);
+    return bounds.top > bounds.bottom || bounds.left > bounds.right;
+  }
+
+  private static Rect boundsOf(AccessibilityNodeInfoCompat node) {
     Rect bounds = new Rect();
     node.getBoundsInScreen(bounds);
-    return bounds.isEmpty();
+    return bounds;
   }
 }
