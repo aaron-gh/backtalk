@@ -435,7 +435,7 @@
     <!-- Title of dialog to confirm the Focus delay reading control items being added. [CHAR LIMIT=NONE] -->
     <string name="confirm_focus_delay_reading_control_added_dialog_title">Focus delay added to reading control</string>
     <!-- Message of dialog to confirm the Focus delay reading control items being added. [CHAR LIMIT=NONE] -->
-    <string name="confirm_focus_delay_reading_control_added_dialog_message">Swipe with 3 fingers to use reading control and change the focus delay at any time</string>
+    <string name="confirm_focus_delay_reading_control_added_dialog_message">You can now change the focus delay at any time with the reading controls.</string>
 
     <!-- Title of dialog to confirm the typing focus delay reduction which enables the Lift-to-type to do the CLICK. [CHAR LIMIT=NONE] -->
     <string name="confirm_the_typing_focus_delay_reduction_dialog_title">Switch to lift-to-type?</string>
@@ -444,7 +444,7 @@
     <!-- Title of dialog to confirm the typing focus delay reading control items being added. [CHAR LIMIT=NONE] -->
     <string name="confirm_typing_focus_delay_reading_control_added_dialog_title">Typing focus delay added to reading control</string>
     <!-- Message of dialog to confirm the Focus delay reading control items being added. [CHAR LIMIT=NONE] -->
-    <string name="confirm_typing_focus_delay_reading_control_added_dialog_message">If you have issues with double-tap while typing, swipe with 3 fingers to use reading control and change to a longer typing focus delay</string>
+    <string name="confirm_typing_focus_delay_reading_control_added_dialog_message">If double-tap is unreliable while you type, you can change to a longer typing focus delay at any time with the reading controls.</string>
     <!-- A warning message to tell the situation user cannot change typing focus delay. [CHAR LIMIT=NONE] -->
     <string name="gestures_announce_typing_focus_wont_change">Typing focus delay is not functioning without Lift-to-type.</string>
 
