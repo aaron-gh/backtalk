@@ -47,7 +47,12 @@ android {
     }
     lint {
         checkReleaseBuilds = false
-        abortOnError = false
+        // Lint the library modules too, where most of the code is, in one report.
+        checkDependencies = true
+        // The issues that were already there when lint was added to CI. Only new ones fail the
+        // build. To accept new ones on purpose, run ./gradlew updateLintBaselinePhoneDebug.
+        baseline = file("lint-baseline.xml")
+        abortOnError = true
     }
     productFlavors {
         phone {
