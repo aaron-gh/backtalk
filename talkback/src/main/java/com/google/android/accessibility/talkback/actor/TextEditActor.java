@@ -25,6 +25,7 @@ import static com.google.android.accessibility.talkback.compositor.CompositorUti
 import static com.google.android.accessibility.talkback.utils.ClipboardUtils.copyToClipboard;
 import static com.google.android.accessibility.utils.output.FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE;
 import static com.google.android.accessibility.utils.output.FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE;
+import static com.google.android.accessibility.utils.output.FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE;
 import static com.google.android.accessibility.utils.output.FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE;
 import static com.google.android.accessibility.utils.output.FeedbackItem.FLAG_NO_HISTORY;
 import static com.google.android.accessibility.utils.output.SpeechController.QUEUE_MODE_INTERRUPT_AND_UNINTERRUPTIBLE_BY_NEW_SPEECH;
@@ -89,7 +90,8 @@ public class TextEditActor implements VoiceDictationDelegate {
               FLAG_NO_HISTORY
                   | FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
                   | FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-                  | FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE);
+                  | FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
+                  | FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE);
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   // Inner class for actor-state reader
@@ -299,7 +301,8 @@ public class TextEditActor implements VoiceDictationDelegate {
             .setFlags(
                 FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
                     | FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-                    | FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE);
+                    | FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
+                    | FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE);
     pipeline.returnFeedback(eventId, Feedback.speech(textToSpeak, speakOptions));
 
     return true;

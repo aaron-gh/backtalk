@@ -38,7 +38,8 @@ public final class GeminiCommandUtils {
               FeedbackItem.FLAG_NO_HISTORY
                   | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
                   | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-                  | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE);
+                  | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
+                  | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE);
 
   public static Feedback.Part.Builder feedbackForDescribeImage(
       Context context, AccessibilityNodeInfoCompat node, ActorState actorState) {
