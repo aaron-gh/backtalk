@@ -383,10 +383,6 @@ If you develop a game, add this `<meta-data>` element inside your `<application>
     android:value="true" />
 ```
 
-### Limitations
-
-Backtalk can't see a dialog or text field that a game draws inside its own screen. When that happens, use the quick settings tile to pause direct touch.
-
 ## Braille keyboard
 
 ### Keyboard echo for the braille keyboard
