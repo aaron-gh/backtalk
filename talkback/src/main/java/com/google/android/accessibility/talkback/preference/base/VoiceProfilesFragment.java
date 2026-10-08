@@ -73,6 +73,14 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
   /** Each profile's name by ID, read again whenever the rows are. */
   private Map<String, String> names = Map.of();
   private AccessibilitySuiteListPreference inUse;
+
+  /** Shows the profile in use when a gesture, keyboard shortcut or the Backtalk menu switches it. */
+  private final SharedPreferences.OnSharedPreferenceChangeListener activeListener =
+      (sharedPrefs, key) -> {
+        if (VoiceProfiles.PREF_ACTIVE.equals(key) && inUse != null) {
+          inUse.setValue(VoiceProfiles.activeId(prefs));
+        }
+      };
   private ProfilesAdapter profiles = new ProfilesAdapter();
   private final boolean wear = FormFactorUtils.isAndroidWear();
 
@@ -134,6 +142,13 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
     VoiceProfileNames.saveNames(requireContext(), prefs);
     reloadRows();
     updateInUse();
+    prefs.registerOnSharedPreferenceChangeListener(activeListener);
+  }
+
+  @Override
+  public void onPause() {
+    super.onPause();
+    prefs.unregisterOnSharedPreferenceChangeListener(activeListener);
   }
 
   private void reloadRows() {

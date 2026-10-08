@@ -41,6 +41,9 @@ public class TextToSpeechSettingsFragment extends TalkbackBaseFragment {
         if (TextUtils.equals(key, getString(R.string.pref_speech_rate_key))
             || TextUtils.equals(key, getString(R.string.pref_speech_pitch_key))) {
           updateSeekBarValues();
+        } else if (TextUtils.equals(key, VoiceProfiles.PREF_ACTIVE)) {
+          // Switched by a gesture, keyboard shortcut or the Backtalk menu.
+          updateVoiceProfileSummary();
         }
       };
 
