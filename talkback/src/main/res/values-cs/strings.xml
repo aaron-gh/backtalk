@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <string name="talkback_service_description">Když je aplikace Backtalk zapnutá, poskytuje hlasovou odezvu, abyste mohli zařízení používat i bez dívání na obrazovku. Tato možnost může být užitečná pro nevidomé nebo slabozraké.\n\nPostup navigace pomocí aplikace Backtalk:\n• Mezi položkami se můžete posouvat přejetím prstem doprava nebo doleva\n• Dvojitým klepnutím aktivujete položku\n• Zobrazení posunete přetáhnutím dvou prstů po obrazovce\n\nPostup vypnutí aplikace Backtalk:\n• Klepněte na přepínač. Zobrazí se obrys. Dvakrát klepněte na přepínač.\n• Ve zprávě s potvrzením klepněte na OK. Poté dvakrát klepněte na OK.</string>
-  <string name="talkback_service_html_description">Když je zapnutá funkce Backtalk, poskytuje hlasovou odezvu, abyste zařízení mohli používat a nemuseli se přitom dívat na displej. Funkce Backtalk je určená i pro lidi, kteří na displej dobře nevidí.&lt;br&gt;&lt;br&gt;&lt;b&gt;Jak používat funkci Backtalk&lt;/b&gt;&lt;br&gt;• Přejetím prstem vlevo nebo vpravo lze přecházet mezi položkami.&lt;br&gt;• Dvojitým klepnutím položku aktivujete.&lt;br&gt;• Přetažením dvěma prsty můžete obsah posouvat.&lt;br&gt;&lt;br&gt;Jak vypnout funkci Backtalk&lt;/b&gt;&lt;br&gt;1. V Nastavení klepněte na &lt;b&gt;Používat Backtalk&lt;/b&gt;. Zobrazí se obrys. Dvakrát na něj klepněte.&lt;br&gt;2. V žádosti o potvrzení klepněte na &lt;b&gt;Zastavit&lt;/b&gt;. Zobrazí se obrys. Dvakrát na něj klepněte.</string>
+  <string name="talkback_service_html_description">Když je zapnutá funkce Backtalk, poskytuje hlasovou odezvu, abyste zařízení mohli používat a nemuseli se přitom dívat na displej. Funkce Backtalk je určená i pro lidi, kteří na displej dobře nevidí.&lt;br&gt;&lt;br&gt;&lt;b&gt;Jak používat funkci Backtalk&lt;/b&gt;&lt;br&gt;• Přejetím prstem vlevo nebo vpravo lze přecházet mezi položkami.&lt;br&gt;• Dvojitým klepnutím položku aktivujete.&lt;br&gt;• Přetažením dvěma prsty můžete obsah posouvat.&lt;br&gt;&lt;br&gt;&lt;b&gt;Jak vypnout funkci Backtalk&lt;/b&gt;&lt;br&gt;1. V Nastavení klepněte na &lt;b&gt;Používat Backtalk&lt;/b&gt;. Zobrazí se obrys. Dvakrát na něj klepněte.&lt;br&gt;2. V žádosti o potvrzení klepněte na &lt;b&gt;Zastavit&lt;/b&gt;. Zobrazí se obrys. Dvakrát na něj klepněte.</string>
   <string name="talkback_service_summary">Použití čtečky obrazovky ke čtení názvů věcí</string>
   <string name="talkback_preferences_title">Nastavení funkce Backtalk</string>
   <string name="talkback_settings_screen_title_breadcrumb">Nastavení</string>
@@ -61,11 +61,11 @@
   <string name="pref_speak_time_summary">Když zapnete obrazovku</string>
   <string name="summary_speak_container_element_positions">Říkat, když vstoupíte do seznamu, mřížky nebo jiného kontejneru nebo je opustíte</string>
   <string name="confirm_focus_delay_reading_control_added_dialog_title">Do ovládání čtení byla přidána prodleva po označení</string>
-  <string name="confirm_focus_delay_reading_control_added_dialog_message">Přejetím třemi prsty můžete použít ovládání čtení a prodlevu po označení kdykoli změnit.</string>
+  <string name="confirm_focus_delay_reading_control_added_dialog_message">Prodlevu po označení teď můžete kdykoli změnit pomocí ovládání čtení.</string>
   <string name="confirm_the_typing_focus_delay_reduction_dialog_title">Přepnout na psaní zvednutím prstu?</string>
   <string name="message_of_typing_focus_delay_reduction_confirm_dialog">Pokud je prodleva po označení při psaní nastavená na méně než 0,3 sekundy, bude psaní dvojitým klepnutím velmi obtížné. Pokud chcete automaticky přepnout na psaní zvednutím prstu, vyberte Přepnout.\n\nPři psaní zvednutím prstu vyberte podržením prstu požadovanou klávesu a pak příslušný znak zvednutím prstu napište.\n\nTuto funkci si můžete přizpůsobit v nastavení aplikace Backtalk.</string>
   <string name="confirm_typing_focus_delay_reading_control_added_dialog_title">Do ovládání čtení byla přidána prodleva po označení při psaní</string>
-  <string name="confirm_typing_focus_delay_reading_control_added_dialog_message">V případě problémů s dvojitým klepnutím při psaní můžete přejetím třemi prsty použít ovládání čtení a prodlevu po označení při psaní prodloužit.</string>
+  <string name="confirm_typing_focus_delay_reading_control_added_dialog_message">Pokud dvojité klepnutí při psaní nefunguje spolehlivě, můžete kdykoli pomocí ovládání čtení nastavit delší prodlevu po označení při psaní.</string>
   <string name="gestures_announce_typing_focus_wont_change">Bez psaní zvednutím prstu prodleva po označení při psaní nefunguje.</string>
   <string name="confirm_latency_reduction_reading_control_added_dialog_positive_button">Rozumím</string>
   <string name="reset_letency_reduction_settings_dialog_title">Resetovat nastavení prodlev?</string>
@@ -78,7 +78,7 @@
   <string name="Reset_gesture_settings_set_dialog_title">Resetovat gesta aktuální sady?</string>
   <string name="message_reset_gesture_settings_confirm_dialog">Všechna gesta budou resetována na výchozí akce.\n\nVšechny provedené změny budou ztraceny.</string>
   <string name="reset_button_in_reset_gesture_settings_confirm_dialog">Resetovat</string>
-  <string name="gestures_announce_reset_gesture_settings">Nestavení gest byla resetována.</string>
+  <string name="gestures_announce_reset_gesture_settings">Nastavení gest byla resetována.</string>
   <string name="pref_speak_roles_title">Číst typ položky</string>
   <string name="pref_speak_roles_summary">Například tlačítko nebo zaškrtávací políčko</string>
   <string name="title_pref_speak_element_ids">Čtení ID prvků</string>
