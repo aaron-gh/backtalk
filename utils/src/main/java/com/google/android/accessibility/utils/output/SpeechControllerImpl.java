@@ -587,6 +587,11 @@ public class SpeechControllerImpl implements SpeechController {
     this.speechListener = speechListener;
   }
 
+  /** Speaks the usual way from now on, rather than through low-latency audio. */
+  public void speakWithoutLowLatencyAudio() {
+    failoverTts.speakWithoutLowLatencyAudio();
+  }
+
   @Override
   public void setHandleTtsCallbackInHandlerThread(boolean shouldHandleTtsCallBackInHandlerThread) {
     this.shouldHandleTtsCallBackInHandlerThread = shouldHandleTtsCallBackInHandlerThread;
@@ -821,10 +826,7 @@ public class SpeechControllerImpl implements SpeechController {
      */
     final FeedbackItem newItem = new FeedbackItem(item);
     newItem.addFlag(
-        FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE);
+        FeedbackItem.FLAG_FORCE_FEEDBACK_ALL);
     speak(
         /* item= */ newItem,
         /* queueMode= */ QUEUE_MODE_BIT_FLUSH_ALL,
@@ -884,10 +886,7 @@ public class SpeechControllerImpl implements SpeechController {
     options.mQueueMode = QUEUE_MODE_BIT_INTERRUPT | QUEUE_MODE_BIT_UNINTERRUPTIBLE_BY_NEW_SPEECH;
     options.mFlags =
         FeedbackItem.FLAG_NO_HISTORY
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
-            | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE;
+            | FeedbackItem.FLAG_FORCE_FEEDBACK_ALL;
     options.mUtteranceGroup = UTTERANCE_GROUP_DEFAULT;
     speak(builder, /* eventId= */ null, options);
     return true;
@@ -2226,6 +2225,18 @@ public class SpeechControllerImpl implements SpeechController {
    * @see #handleSpeechStarting()
    */
   private void handleSpeechCompleted(int status) {
+    if (!mIsSpeaking) {
+      // Speech already completed, such as when an interrupt completes the current item and the
+      // engine then reports that it stopped. Audio focus was released then, and observers told,
+      // except that a pause that stopped the speech is only known now.
+      if (status == STATUS_PAUSE) {
+        for (SpeechController.Observer observer : observers) {
+          observer.onSpeechPaused();
+        }
+      }
+      return;
+    }
+
     for (SpeechController.Observer observer : observers) {
       if (status == STATUS_PAUSE) {
         observer.onSpeechPaused();
@@ -2241,10 +2252,6 @@ public class SpeechControllerImpl implements SpeechController {
       } else {
         audioManager.abandonAudioFocus(mAudioFocusListener);
       }
-    }
-
-    if (!mIsSpeaking) {
-      LogUtils.e(TAG, "Completed speech while already completed!");
     }
 
     mIsSpeaking = false;

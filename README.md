@@ -30,7 +30,7 @@ You need JDK 17 or newer, the Android SDK with platform 37, and NDK 27.3.1375072
 
 ### Linux or macOS
 
-Set `ANDROID_SDK` to your SDK path, then run `./build.sh`. This produces an APK file.
+Set `ANDROID_SDK` to your SDK path, then run `./build.sh`. This builds the phone and watch APKs, and keeps anything else that's in `local.properties`, such as a Gemini API key.
 
 ### Windows
 

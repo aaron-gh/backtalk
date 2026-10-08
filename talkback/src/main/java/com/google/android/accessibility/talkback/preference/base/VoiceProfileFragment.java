@@ -20,6 +20,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import androidx.appcompat.app.AlertDialog;
@@ -33,6 +35,7 @@ import com.google.android.accessibility.material.preference.AccessibilitySuitePr
 import com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference;
 import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.actor.SpeechRateAndPitchActor;
+import com.google.android.accessibility.talkback.speech.VoiceProfileNames;
 import com.google.android.accessibility.utils.FormFactorUtils;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
@@ -66,6 +69,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
 
   private @Nullable TextToSpeech tts;
   private int ttsGeneration;
+  private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
   /** The engine's voices, by language and then name, or null while they load. */
   private @Nullable List<Voice> voices;
@@ -88,7 +92,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
     Bundle args = getArguments();
     String profileId = (args == null) ? "" : args.getString(ARG_PROFILE_ID, "");
     Context context = requireContext();
-    return VoiceProfilesFragment.nameOf(
+    return VoiceProfileNames.nameOf(
         context, SharedPreferencesUtils.getSharedPreferences(context), profileId);
   }
 
@@ -195,6 +199,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
   @Override
   public void onDestroy() {
     super.onDestroy();
+    mainHandler.removeCallbacksAndMessages(null);
     shutDownTts();
   }
 
@@ -229,7 +234,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
         (step < 0) ? R.string.voice_profile_moved_above : R.string.voice_profile_moved_below;
     getListView()
         .announceForAccessibility(
-            getString(movedResId, VoiceProfilesFragment.nameOf(requireContext(), prefs, neighbour)));
+            getString(movedResId, VoiceProfileNames.nameOf(requireContext(), prefs, neighbour)));
   }
 
   /** Nothing moves above Backtalk default or below the last profile. */
@@ -250,7 +255,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
   private void addName(Context context, PreferenceScreen screen) {
     Preference name = new AccessibilitySuitePreference(context);
     name.setTitle(R.string.title_pref_voice_profile_name);
-    name.setSummary(VoiceProfilesFragment.nameOf(context, prefs, id));
+    name.setSummary(VoiceProfileNames.nameOf(context, prefs, id));
     name.setPersistent(false);
     name.setIconSpaceReserved(false);
     name.setOnPreferenceClickListener(
@@ -268,7 +273,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
         prefs,
         R.string.title_pref_voice_profile_name,
         id,
-        VoiceProfilesFragment.nameOf(context, prefs, id),
+        VoiceProfileNames.nameOf(context, prefs, id),
         name -> {
           if (VoiceProfiles.rename(prefs, id, name, getString(R.string.voice_profile_default))) {
             String saved = profile().name();
@@ -298,11 +303,21 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
     enginePref.setSummary("%s");
     enginePref.setOnPreferenceChangeListener(
         (preference, newValue) -> {
-          // Another engine has other languages and voices.
+          String engine = (String) newValue;
+          // Another engine has other languages and voices. All three are saved together, so that a
+          // profile in use changes engine once, rather than first setting the old engine's voice.
+          prefs
+              .edit()
+              .putString(VoiceProfiles.key(id, VoiceProfiles.ENGINE), engine)
+              .putString(VoiceProfiles.key(id, VoiceProfiles.LANGUAGE), "")
+              .putString(VoiceProfiles.key(id, VoiceProfiles.VOICE), "")
+              .apply();
+          // Saved already, so these only show the new values.
+          enginePref.setValue(engine);
           languagePref.setValue("");
           voicePref.setValue("");
-          loadVoices((String) newValue);
-          return true;
+          loadVoices(engine);
+          return false;
         });
   }
 
@@ -369,10 +384,12 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
       return;
     }
     int generation = ++ttsGeneration;
+    // An engine that can't be started reports so from inside the constructor, before tts is set,
+    // so the result is handled once the constructor has returned.
     tts =
         new TextToSpeech(
             requireContext().getApplicationContext(),
-            status -> onTtsReady(generation, status),
+            status -> mainHandler.post(() -> onTtsReady(generation, status)),
             engine);
   }
 
@@ -494,7 +511,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
   }
 
   private void confirmDelete() {
-    String name = VoiceProfilesFragment.nameOf(requireContext(), prefs, id);
+    String name = VoiceProfileNames.nameOf(requireContext(), prefs, id);
     new AlertDialog.Builder(requireContext())
         .setMessage(getString(R.string.voice_profile_delete_confirm, name))
         .setPositiveButton(

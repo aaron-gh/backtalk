@@ -163,9 +163,6 @@ class AudioDeviceRouter @JvmOverloads constructor(
     }
   }
 
-  /** Returns the current audio output target. */
-  fun getCurrentTarget(): AudioTarget = currentTarget
-
   /** Sets the preferred audio output target from the preference string value. */
   fun setPreferredDevice(prefValue: String?) {
     val target = AudioTarget.parse(prefValue)

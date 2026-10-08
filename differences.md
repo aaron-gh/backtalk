@@ -102,7 +102,13 @@ In TalkBack, **Text-to-speech** opens Android's system speech settings. Backtalk
 
 ### Voice profiles
 
-A voice profile is a set of speech settings you can switch to at once: a speech engine, language, voice, volume, rate and pitch, and **Send long text a sentence at a time**. For example, one profile can read books in a slower voice while Backtalk default stays fast. To add one, go to **Text-to-speech > Voice profiles** in Backtalk settings and choose **Add voice profile**. When you choose a language, the voice list shows only the engine's voices in that language. The reading control goes through the profiles in the order of the **Voice profiles** screen, after **Backtalk default**. To change the order, hold a profile and drag it, or use the **Move up** and **Move down** actions. Backtalk says which profile it moved above or below. Profiles also have **Rename** and **Delete** actions, which a long press shows too. To switch profiles, turn on the **Voice profile** reading control and swipe up or down, or choose **Voice profile in use** on the **Voice profiles** screen. You can also add a **Voice profile** item to the Backtalk menu in **Backtalk menu** settings, which lists the profiles and says which is in use. The **Choose voice profile**, **Previous voice profile** and **Next voice profile** actions can be assigned to gestures and keyboard shortcuts. **Backtalk default** is always there, and uses the rest of the text-to-speech settings. While a profile is in use, changing the speech rate or pitch with gestures or the reading controls changes that profile only. The profile speaks everything in its own voice: Backtalk does not switch language or dialect, and the **Spoken language** reading control and menu item are hidden. The **Voice profile** reading control replaces **Speech engine**.
+A voice profile is a set of speech settings that you can switch to at once: a speech engine, language, voice, volume, rate and pitch, and **Send long text a sentence at a time**. For example, one profile can use a slower rate for long text while **Backtalk default** stays fast. To add one, go to **Text-to-speech** > **Voice profiles** and choose **Add voice profile**. When you choose a language, the voice list shows only the engine's voices in that language.
+
+To switch profiles, swipe up or down with the **Voice profile** reading control, or choose **Voice profile in use** on the **Voice profiles** screen. The **Voice profile** reading control replaces the **Speech engine** reading control. It isn't in the reading controls by default. To add it, go to **Reading controls**. You can also add a **Voice profile** item to the Backtalk menu in **Backtalk menu** settings, which lists the profiles and says which is in use. The **Choose voice profile**, **Previous voice profile** and **Next voice profile** actions can be assigned to gestures and keyboard shortcuts.
+
+The reading control goes through the profiles in the order of the **Voice profiles** screen, after **Backtalk default**. To change the order, hold a profile and drag it, or use the **Move up** and **Move down** actions. Backtalk says which profile it moved above or below. Profiles also have **Rename** and **Delete** actions, which a long press shows too.
+
+**Backtalk default** is always there, and uses the rest of the text-to-speech settings. While a profile is in use, changing the speech rate or pitch with gestures or the reading controls changes that profile only. All speech uses the profile's engine and voice, so Backtalk doesn't switch language or dialect, and the **Spoken language** reading control and menu item are hidden.
 
 ### Accessibility volume or media volume
 
@@ -256,6 +262,8 @@ The rotor requires Android 13 or later and **Handle gestures in Backtalk** turne
 ### Lift to activate
 
 Backtalk can activate the item under your finger when you lift your finger after exploring by touch, as TalkBack already does for keys on the keyboard. In **Advanced settings** > **Lift to activate**, choose **Only on navigation bar** to use it for the Back, Home, and Overview buttons only, or **Entire screen** to use it everywhere. It's **Disabled** by default.
+
+With **Only on navigation bar** on Android 11 and later, touches on the navigation bar go straight to Android, so a single tap presses a button and holding Home holds it, as without a screen reader. Backtalk doesn't say the buttons as you touch them.
 
 **Lift to activate** is also a reading control, so you can change it with a swipe up or down.
 

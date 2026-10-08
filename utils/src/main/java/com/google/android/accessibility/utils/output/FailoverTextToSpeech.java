@@ -1009,6 +1009,12 @@ public class FailoverTextToSpeech {
   /** The current engine's voices, for {@link #findVoice}, or null until they're needed. */
   private @Nullable Set<Voice> engineVoices;
 
+  /**
+   * A voice {@link #findVoice} didn't find even after listing the voices again, so that it isn't
+   * listed again for every utterance. Cleared with {@link #engineVoices}, when the engine changes.
+   */
+  private @Nullable String missingVoice;
+
   /** Whether long text is sent a sentence at a time, by the voice profile in use if any. */
   private boolean speaksInPhrases() {
     VoiceProfile profile = VoiceProfiles.active();
@@ -1035,12 +1041,20 @@ public class FailoverTextToSpeech {
       return;
     }
     LogUtils.i(TAG, "Voice profile: %s", profile == null ? "default" : profile.name());
+    if (profile != null && speechCacheManager != null) {
+      // Speech from the cache was made in the voice in use until now, and speech queued behind it
+      // would set its language over the profile's voice.
+      notifyInterruptedForSuspendQueue();
+      speechCacheManager.stopSpeaking();
+    }
+    cancelEngineSwitchAwayFrom(getTargetEngine());
     // A new engine sets its voice once it starts.
     updateDefaultEngine();
     if (tts != null && tempTts == null) {
       synchronized (ttsLock) {
         cachedTtsLocale = null;
         mLastUtteranceLocale = null;
+        missingVoice = null;
         if (profile == null) {
           // Backtalk default sets only a language, which can fail, so start from the engine's own
           // voice rather than keep the profile's.
@@ -1060,7 +1074,7 @@ public class FailoverTextToSpeech {
   }
 
   /**
-   * Sets the voice of a voice profile: its own voice, else its language's default voice, else the
+   * Sets the voice of a voice profile: its voice, else its language's default voice, else the
    * engine's default voice.
    *
    * @return the voice's language, or null if no voice could be set
@@ -1073,22 +1087,27 @@ public class FailoverTextToSpeech {
       mLastUtteranceLocale = null;
       cachedTtsLocale = null;
       try {
+        // Each step is tried in turn, since a voice the engine lists can still fail to be set,
+        // and the engine would otherwise keep the voice it had, such as another profile's.
         Voice voice = findVoice(profile.voice());
-        if (voice == null && !profile.language().isEmpty()) {
+        if (voice != null && tts.setVoice(voice) == TextToSpeech.SUCCESS) {
+          LogUtils.i(TAG, "Voice profile voice: %s", voice.getName());
+          cachedTtsLocale = voice.getLocale();
+          return cachedTtsLocale;
+        }
+        if (!profile.language().isEmpty()) {
           Locale language = Locale.forLanguageTag(profile.language());
           if (!isNotAvailableStatus(tts.setLanguage(language))) {
-            LogUtils.i(TAG, "Voice profile speaks in %s", language);
+            LogUtils.i(TAG, "Voice profile language: %s", language);
             cachedTtsLocale = language;
             return language;
           }
           LogUtils.w(TAG, "Voice profile language %s is not available", language);
         }
-        if (voice == null) {
-          voice = tts.getDefaultVoice();
-        }
-        if (voice != null && tts.setVoice(voice) == TextToSpeech.SUCCESS) {
-          LogUtils.i(TAG, "Voice profile speaks with %s", voice.getName());
-          cachedTtsLocale = voice.getLocale();
+        Voice engineDefault = tts.getDefaultVoice();
+        if (engineDefault != null && tts.setVoice(engineDefault) == TextToSpeech.SUCCESS) {
+          LogUtils.i(TAG, "Voice profile voice: engine default %s", engineDefault.getName());
+          cachedTtsLocale = engineDefault.getLocale();
           return cachedTtsLocale;
         }
       } catch (RuntimeException e) {
@@ -1101,12 +1120,14 @@ public class FailoverTextToSpeech {
   }
 
   /**
-   * Returns the current engine's voice called {@code name}, or null if it has none. The engine's
-   * voices are kept from the last time they were needed, as listing them is slow, and listed again
-   * only if the voice isn't there, as it may have been installed since. Call with {@link #ttsLock}.
+   * Returns the current engine's installed voice called {@code name}, or null if it has none. The
+   * engine's voices are kept from the last time they were needed, as listing them is slow, and
+   * listed again only if the voice isn't there, as it may have been installed since. A voice still
+   * missing after that isn't looked for again until the engine changes. Call with {@link
+   * #ttsLock}.
    */
   private @Nullable Voice findVoice(String name) {
-    if (name.isEmpty()) {
+    if (name.isEmpty() || name.equals(missingVoice)) {
       return null;
     }
     boolean listed = false;
@@ -1121,15 +1142,21 @@ public class FailoverTextToSpeech {
     }
     if (voice == null) {
       LogUtils.w(TAG, "Voice %s is not installed", name);
+      missingVoice = name;
     }
     return voice;
   }
 
+  /** Returns the voice called {@code name} in {@code voices}, unless it needs downloading. */
   private static @Nullable Voice findVoice(@Nullable Set<Voice> voices, String name) {
     if (voices != null) {
       for (Voice voice : voices) {
         if (voice != null && name.equals(voice.getName())) {
-          return voice;
+          Set<String> features = voice.getFeatures();
+          boolean installed =
+              features == null
+                  || !features.contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED);
+          return installed ? voice : null;
         }
       }
     }
@@ -1502,6 +1529,17 @@ public class FailoverTextToSpeech {
   private static String parentUtteranceId(String utteranceId) {
     int separator = utteranceId.indexOf(CHUNK_ID_SEPARATOR);
     return separator < 0 ? utteranceId : utteranceId.substring(0, separator);
+  }
+
+  /**
+   * Speaks the usual way from now on, rather than through {@link LowLatencyAudio}, until the
+   * setting is read again.
+   */
+  public void speakWithoutLowLatencyAudio() {
+    if (lowLatencyAudio) {
+      lowLatencyAudio = false;
+      turnOffLowLatencyAudio();
+    }
   }
 
   /** Stops the speech playing through {@link LowLatencyAudio}. */
@@ -1962,6 +2000,24 @@ public class FailoverTextToSpeech {
    *
    * @param engine The package name of the desired TTS engine
    */
+  /**
+   * Stops starting another engine if {@code engine} is the one in use, such as when switching to a
+   * profile with another engine and back before it has started. Otherwise that engine would take
+   * over once it started.
+   */
+  private void cancelEngineSwitchAwayFrom(@Nullable String engine) {
+    if (tempTts == null || engine == null || !engine.equals(ttsEngine)
+        || engine.equals(tempTtsEngine)) {
+      return;
+    }
+    LogUtils.i(TAG, "Not switching to TTS engine %s, staying with %s", tempTtsEngine, engine);
+    TextToSpeechUtils.attemptTtsShutdown(tempTts);
+    tempTts = null;
+    tempTtsEngine = null;
+    // Its start-up callback is ignored.
+    tempTtsGeneration++;
+  }
+
   private void setTtsEngine(String engine, boolean resetFailures) {
     if (resetFailures) {
       ttsFailures = 0;
@@ -2038,6 +2094,7 @@ public class FailoverTextToSpeech {
     synchronized (ttsLock) {
       cachedTtsLocale = null;
       engineVoices = null;
+      missingVoice = null;
     }
 
     if (status != TextToSpeech.SUCCESS) {
@@ -2107,7 +2164,10 @@ public class FailoverTextToSpeech {
       return;
     }
     if (usableSpeechCache() == null) {
-      resultNotifier.onFinished(null, false);
+      // Nothing is cached while a voice profile is in use. Reported as a failure, as when the
+      // engine isn't ready, so that it's cached again once Backtalk default is back.
+      resultNotifier.onFinished(
+          new SpeechInfo(text, /* utteranceId= */ null, /* locale= */ null, pitch, rate), false);
       return;
     }
     Locale locale = null;
@@ -2746,7 +2806,7 @@ public class FailoverTextToSpeech {
       if (speechCacheManager != null && speechCacheManager.handleOnStop(utteranceId, interrupted)) {
         return;
       }
-      handleUtteranceCompleted(utteranceId, /* success= */ !interrupted);
+      reportUtteranceCompleted(utteranceId, /* success= */ !interrupted);
     }
 
     @Override
@@ -2763,7 +2823,7 @@ public class FailoverTextToSpeech {
       if (speechCacheManager != null && speechCacheManager.handleOnError(utteranceId)) {
         return;
       }
-      handleUtteranceCompleted(utteranceId, /* success= */ false);
+      reportUtteranceCompleted(utteranceId, /* success= */ false);
     }
 
     @Override
@@ -2781,7 +2841,19 @@ public class FailoverTextToSpeech {
       if (speechCacheManager != null && speechCacheManager.handleOnDone(utteranceId)) {
         return;
       }
-      handleUtteranceCompleted(utteranceId, /* success= */ true);
+      reportUtteranceCompleted(utteranceId, /* success= */ true);
+    }
+
+    /**
+     * Hands the end of an utterance over to the handler thread, as its start is, since the speech
+     * controller starts the next utterance from it and is not safe to use from two threads.
+     */
+    private void reportUtteranceCompleted(String utteranceId, boolean success) {
+      if (shouldHandleTtsCallbackInHandlerThread) {
+        mHandler.onUtteranceCompleted(utteranceId, success);
+      } else {
+        handleUtteranceCompleted(utteranceId, success);
+      }
     }
   }
 

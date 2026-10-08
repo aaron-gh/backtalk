@@ -77,8 +77,11 @@ public class TalkbackMenuProcessor {
   private static final int ORDER_NAVIGATION = 7;
   public static final int ORDER_TEXT_FORMATTING = 13;
   private static final int ORDER_LANGUAGES = 14;
-  private static final int ORDER_VOICE_PROFILES = 15;
   private static final int ORDER_EMOJI = 15;
+  // Every order up to 27 is taken, so this shares Emoji's, as ORDER_SUMMARIZE_VIEW and
+  // ORDER_IMAGE_CAPTION share theirs. The menu keeps items with the same order in the order they're
+  // added, and the menu settings sort them by title, so Emoji is added first to match.
+  private static final int ORDER_VOICE_PROFILES = 15;
   private static final int ORDER_SHOW_HIDE_SCREEN = 20;
   private static final int ORDER_PAUSE_BACKTALK = 21;
   private static final int ORDER_SYSTEM_ACTIONS = 24;
@@ -159,9 +162,9 @@ public class TalkbackMenuProcessor {
     addTellingTimeActionMenu(menu, prefs);
     // Language
     addLanguageMenuIfValid(menu);
+    addEmojiMenuIfValid(menu);
     // Voice profile
     addVoiceProfileMenuIfValid(menu);
-    addEmojiMenuIfValid(menu);
     // System Action
     addWindowActionMenu(menu);
 
@@ -502,8 +505,7 @@ public class TalkbackMenuProcessor {
                         SpeakOptions.create()
                             .setFlags(
                                 FeedbackItem.FLAG_NO_HISTORY
-                                    | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
-                                    | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE)));
+                                    | FeedbackItem.FLAG_FORCE_FEEDBACK_ALL)));
                 return true;
               });
       subMenu.add(item);

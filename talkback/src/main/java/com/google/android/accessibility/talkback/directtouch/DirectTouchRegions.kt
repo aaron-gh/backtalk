@@ -46,6 +46,34 @@ object DirectTouchRegions {
     eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED ||
       eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
 
+  /**
+   * Whether a window with these bounds on a display of [displayWidth] by [displayHeight] pixels is
+   * a navigation bar: a thin strip along the bottom edge, or along a side edge in landscape, that
+   * spans at least half the display. The window can be just the cluster of buttons, so it need not
+   * span all of it. The status bar and the notification shade are not navigation bars.
+   */
+  fun isNavigationBar(
+    left: Int,
+    top: Int,
+    right: Int,
+    bottom: Int,
+    displayWidth: Int,
+    displayHeight: Int,
+  ): Boolean {
+    val width = right - left
+    val height = bottom - top
+    if (width <= 0 || height <= 0) {
+      return false
+    }
+    val alongBottom =
+      bottom >= displayHeight && height * 5 <= displayHeight && width * 2 >= displayWidth
+    val alongSide =
+      (left <= 0 || right >= displayWidth) &&
+        width * 5 <= displayWidth &&
+        height * 2 >= displayHeight
+    return alongBottom || alongSide
+  }
+
   /** The whole display minus the [excluded] rectangles. */
   fun passthroughRegion(displayBounds: Rect, excluded: List<Rect>): Region {
     val region = Region(displayBounds)

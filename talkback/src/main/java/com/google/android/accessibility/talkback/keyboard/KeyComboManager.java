@@ -115,10 +115,7 @@ public class KeyComboManager
           .setQueueMode(SpeechController.QUEUE_MODE_INTERRUPT)
           .setFlags(
               FeedbackItem.FLAG_NO_HISTORY
-                  | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
-                  | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-                  | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
-                  | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE
+                  | FeedbackItem.FLAG_FORCE_FEEDBACK_ALL
                   | FeedbackItem.FLAG_SKIP_DUPLICATE);
 
   /** Speak options for speech feedback that is uninterruptible by new speech. */
@@ -128,10 +125,7 @@ public class KeyComboManager
           .setQueueMode(SpeechController.QUEUE_MODE_UNINTERRUPTIBLE_BY_NEW_SPEECH)
           .setFlags(
               FeedbackItem.FLAG_NO_HISTORY
-                  | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
-                  | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-                  | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
-                  | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE
+                  | FeedbackItem.FLAG_FORCE_FEEDBACK_ALL
                   | FeedbackItem.FLAG_SKIP_DUPLICATE);
 
   /**

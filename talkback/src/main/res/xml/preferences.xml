@@ -41,12 +41,10 @@
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:fragment="com.google.android.accessibility.talkback.preference.base.ContextMenuFragment"
         android:key="@string/pref_category_manage_context_menu_key"
-        android:summary="@string/pref_category_context_menu_summary"
         android:title="@string/title_pref_category_context_menu" />
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:fragment="com.google.android.accessibility.talkback.preference.base.SelectorMenuFragment"
         android:key="@string/pref_category_manage_selector_menu_key"
-        android:summary="@string/pref_category_selector_menu_summary"
         android:title="@string/title_pref_category_selector_menu" />
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:fragment="com.google.android.accessibility.talkback.status.StatusReadoutFragment"

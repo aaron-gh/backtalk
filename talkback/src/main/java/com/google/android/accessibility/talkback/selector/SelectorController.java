@@ -101,8 +101,8 @@ import com.google.android.accessibility.talkback.monitor.VolumeMonitor;
 import com.google.android.accessibility.talkback.monitor.VolumeMonitor.VolumeChangedListener;
 import com.google.android.accessibility.talkback.preference.base.FocusDelayPrefFragment;
 import com.google.android.accessibility.talkback.preference.base.TypingFocusDelayPrefFragment;
-import com.google.android.accessibility.talkback.preference.base.VoiceProfilesFragment;
 import com.google.android.accessibility.talkback.selector.SelectorController.Setting.DescriptionAndHint;
+import com.google.android.accessibility.talkback.speech.VoiceProfileNames;
 import com.google.android.accessibility.talkback.utils.VerbosityPreferences;
 import com.google.android.accessibility.utils.FeatureSupport;
 import com.google.android.accessibility.utils.FormFactorUtils;
@@ -1540,10 +1540,7 @@ public class SelectorController implements UserInputEventListener {
                   .setQueueMode(SpeechController.QUEUE_MODE_INTERRUPT)
                   .setFlags(
                       FeedbackItem.FLAG_NO_HISTORY
-                          | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
-                          | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-                          | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
-                          | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE
+                          | FeedbackItem.FLAG_FORCE_FEEDBACK_ALL
                           | FeedbackItem.FLAG_SKIP_DUPLICATE)));
       selectorEventNotifier.onSelectorSettingAnnounced(announcement);
     }
@@ -1995,21 +1992,24 @@ public class SelectorController implements UserInputEventListener {
    * Backtalk's default first.
    */
   public void changeVoiceProfile(EventId eventId, boolean isNext) {
-    if (VoiceProfiles.ids(prefs).isEmpty()) {
-      String displayText = context.getString(R.string.no_voice_profiles);
-      announceSetting(eventId, displayText, /* hint= */ null);
-      showQuickMenuActionOverlay(eventId, displayText);
-      return;
-    }
     changeVoiceProfile(eventId, isNext, /* hint= */ null);
   }
 
-  /** Changes to the previous or next voice profile, with Backtalk's default first. */
+  /**
+   * Changes to the previous or next voice profile, with Backtalk's default first, or says there are
+   * none to change to.
+   */
   private void changeVoiceProfile(EventId eventId, boolean isNext, @Nullable String hint) {
+    if (VoiceProfiles.ids(prefs).isEmpty()) {
+      String displayText = context.getString(R.string.no_voice_profiles);
+      announceSetting(eventId, displayText, hint);
+      showQuickMenuActionOverlay(eventId, displayText);
+      return;
+    }
     String nextId = VoiceProfiles.adjacentId(prefs, isNext);
     prefs.edit().putString(VoiceProfiles.PREF_ACTIVE, nextId).apply();
 
-    String displayText = VoiceProfilesFragment.nameOf(context, prefs, nextId);
+    String displayText = VoiceProfileNames.nameOf(context, prefs, nextId);
     announceSetting(eventId, displayText, hint);
     showQuickMenuActionOverlay(eventId, displayText);
   }
@@ -2395,10 +2395,7 @@ public class SelectorController implements UserInputEventListener {
                 .setQueueMode(SpeechController.QUEUE_MODE_INTERRUPT)
                 .setFlags(
                     FeedbackItem.FLAG_NO_HISTORY
-                        | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_AUDIO_PLAYBACK_ACTIVE
-                        | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_MICROPHONE_ACTIVE
-                        | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_SSB_ACTIVE
-                        | FeedbackItem.FLAG_FORCE_FEEDBACK_EVEN_IF_PHONE_CALL_ACTIVE
+                        | FeedbackItem.FLAG_FORCE_FEEDBACK_ALL
                         | FeedbackItem.FLAG_SKIP_DUPLICATE)));
   }
 
