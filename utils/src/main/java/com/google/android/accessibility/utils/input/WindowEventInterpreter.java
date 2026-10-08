@@ -854,6 +854,8 @@ public class WindowEventInterpreter implements WindowsDelegate, DisplayStateChan
     // Don't send delayed interpretation if it's a dialog opened event to avoid announcing the
     // dialog content twice.
     if (interpretation.isWebDialogOpenedEvent()) {
+      // The transition is over, so the next window change starts its own.
+      screenTransitionStartTime = 0;
       return;
     }
 

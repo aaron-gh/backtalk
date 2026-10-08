@@ -47,6 +47,8 @@
     <string name="pref_keyboard_echo_key">pref_keyboard_echo</string>
     <string name="pref_keyboard_echo_on_screen_key" translatable="false">pref_keyboard_echo_on_screen</string>
     <string name="pref_keyboard_echo_physical_key" translatable="false">pref_keyboard_echo_physical</string>
+    <string name="pref_interrupt_typing_key" translatable="false">pref_interrupt_typing</string>
+    <string name="pref_interrupt_enter_key" translatable="false">pref_interrupt_enter</string>
     <string name="pref_node_desc_order_key">pref_node_desc_order_key</string>
     <string name="pref_time_feedback_format_key">pref_time_feedback_format_key</string>
     <string name="pref_speak_element_ids_key">pref_element_ids_key</string>
@@ -715,6 +717,21 @@
         <item>1</item>
         <item>3</item>
         <item>0</item>
+    </string-array>
+
+    <!-- Interrupt speech when typing values. TalkBackService compares the stored value with these strings. -->
+    <string name="value_interrupt_typing_always" translatable="false">always</string>
+    <string name="value_interrupt_typing_edit_fields" translatable="false">edit_fields</string>
+    <string name="value_interrupt_typing_keyboard_echo" translatable="false">keyboard_echo</string>
+    <string-array name="pref_interrupt_typing_entries">
+        <item>@string/pref_interrupt_typing_entry_always</item>
+        <item>@string/pref_interrupt_typing_entry_edit_fields</item>
+        <item>@string/pref_interrupt_typing_entry_keyboard_echo</item>
+    </string-array>
+    <string-array name="pref_interrupt_typing_values">
+        <item>@string/value_interrupt_typing_always</item>
+        <item>@string/value_interrupt_typing_edit_fields</item>
+        <item>@string/value_interrupt_typing_keyboard_echo</item>
     </string-array>
 
     <!-- Node description order preferences. Matches Compositor.DescriptionOrder -->
@@ -1388,6 +1405,8 @@
     <string name="pref_soundback_volume_default">50</string>
     <bool name="pref_intonation_default">true</bool>
     <string name="pref_keyboard_echo_default" translatable="false">0</string>
+    <string name="pref_interrupt_typing_default" translatable="false">@string/value_interrupt_typing_always</string>
+    <bool name="pref_interrupt_enter_default">true</bool>
     <string name="pref_capital_letters_default">1</string>
     <bool name="pref_punctuation_default">false</bool>
     <string name="pref_punctuation_verbosity_default">2</string>
