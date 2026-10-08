@@ -2599,7 +2599,7 @@ public class FailoverTextToSpeech {
       if (speechCacheManager != null && speechCacheManager.handleOnStop(utteranceId, interrupted)) {
         return;
       }
-      handleUtteranceCompleted(utteranceId, /* success= */ !interrupted);
+      reportUtteranceCompleted(utteranceId, /* success= */ !interrupted);
     }
 
     @Override
@@ -2616,7 +2616,7 @@ public class FailoverTextToSpeech {
       if (speechCacheManager != null && speechCacheManager.handleOnError(utteranceId)) {
         return;
       }
-      handleUtteranceCompleted(utteranceId, /* success= */ false);
+      reportUtteranceCompleted(utteranceId, /* success= */ false);
     }
 
     @Override
@@ -2634,7 +2634,19 @@ public class FailoverTextToSpeech {
       if (speechCacheManager != null && speechCacheManager.handleOnDone(utteranceId)) {
         return;
       }
-      handleUtteranceCompleted(utteranceId, /* success= */ true);
+      reportUtteranceCompleted(utteranceId, /* success= */ true);
+    }
+
+    /**
+     * Hands the end of an utterance over to the handler thread, as its start is, since the speech
+     * controller starts the next utterance from it and is not safe to use from two threads.
+     */
+    private void reportUtteranceCompleted(String utteranceId, boolean success) {
+      if (shouldHandleTtsCallbackInHandlerThread) {
+        mHandler.onUtteranceCompleted(utteranceId, success);
+      } else {
+        handleUtteranceCompleted(utteranceId, success);
+      }
     }
   }
 
