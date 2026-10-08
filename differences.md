@@ -48,7 +48,7 @@ Low-latency audio also changes how pausing speech works. When you tap with two f
 
 With low-latency audio on, Backtalk also watches for a speech engine that stops responding. If the engine says nothing about new speech for 3 seconds, Backtalk switches to the next installed engine.
 
-Low-latency audio is off by default. Low-latency speech requires Android 11 or later; on older versions, only Backtalk's sounds use the fast path. Speech falls back to the usual path for engines that play their own audio or that report errors. Each sound plays the usual way the first time that Backtalk uses it, and 3D sounds still play through the 3D player.
+Low-latency audio is on by default, except on Wear OS watches. If you used an earlier version of Backtalk with the setting off, Backtalk turns it on once when you update. If speech or sounds break up, turn the setting off. Low-latency speech requires Android 11 or later; on older versions, only Backtalk's sounds use the fast path. Speech falls back to the usual path for engines that play their own audio or that report errors. Each sound plays the usual way the first time that Backtalk uses it, and 3D sounds still play through the 3D player.
 
 ### Less lag while scrolling
 
@@ -57,6 +57,12 @@ After each scroll event, TalkBack searched the list for a new item to focus. The
 ### Less stalling in busy apps
 
 In busy apps, a backlog of accessibility events could block gestures for almost 3 seconds. Backtalk handles events in slices of about 16 ms, so gestures get through between them. It also skips lookups of view classes that can never succeed, which stalled screens that have many custom views.
+
+### Shorter focus delay
+
+When you touch the screen, Backtalk waits to see whether you're starting a gesture before it focuses the item under your finger. **Advanced settings** > **Reduce delay** > **Focus delay** sets this wait. TalkBack waits 300 ms by default, which is most of the time between touching an item and hearing it. Backtalk waits 200 ms.
+
+If you used an earlier version of Backtalk with the delay at 300 ms, Backtalk changes it to 200 ms once when you update. If you chose another delay, Backtalk keeps it. If Backtalk focuses items when you meant to swipe, choose a longer delay.
 
 ### Faster response on empty space
 

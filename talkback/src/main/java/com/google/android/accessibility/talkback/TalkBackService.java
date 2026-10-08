@@ -3309,7 +3309,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     feedbackController.setLowLatencyAudio(
         prefs.getBoolean(
             FailoverTextToSpeech.PREF_LOW_LATENCY_AUDIO_KEY,
-            FailoverTextToSpeech.LOW_LATENCY_AUDIO_DEFAULT));
+            FailoverTextToSpeech.lowLatencyAudioDefault(this)));
     IndividualFeedbackSettings.INSTANCE.migrate(prefs);
     Set<String> mutedSounds = IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs);
     feedbackController.setMutedAuditory(mutedSounds);

@@ -970,7 +970,7 @@
     <item>300</item>
   </string-array>
 
-  <string name="touch_focus_time_out_default" translatable="false">300</string>
+  <string name="touch_focus_time_out_default" translatable="false">200</string>
 
   <!-- Shortcut preference of basic navigation -->
     <string-array name="shortcut_basic_navigation">
