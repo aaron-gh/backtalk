@@ -108,6 +108,7 @@ import com.google.android.accessibility.talkback.analytics.TalkBackAnalytics;
 import com.google.android.accessibility.talkback.compositor.WindowContentChangeAnnouncementFilter;
 import com.google.android.accessibility.talkback.contextmenu.ListMenuManager;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
+import com.google.android.accessibility.talkback.focusmanagement.record.FocusActionRecord;
 import com.google.android.accessibility.talkback.focusmanagement.AccessibilityFocusMonitor;
 import com.google.android.accessibility.talkback.focusmanagement.action.NavigationAction;
 import com.google.android.accessibility.talkback.labeling.TalkBackLabelManager;
@@ -1038,8 +1039,15 @@ class Actors {
    * </ul>
    */
   public void interruptGentle(EventId eventId) {
+    // Every item touch exploration moves to interrupts gently, so asking the app for its focus
+    // here was a round trip on each one, the largest part of handling a hover. When dragging, that
+    // was slower than the hovers came, so Backtalk fell further and further behind. The focus
+    // Backtalk set last is used instead, and the app is asked only if there is none.
+    @Nullable FocusActionRecord lastFocus = actorState.focusHistory.getLastFocusActionRecord();
     @Nullable AccessibilityNodeInfoCompat currentFocus =
-        accessibilityFocusMonitor.getAccessibilityFocus(/* useInputFocusIfEmpty= */ false);
+        (lastFocus != null)
+            ? lastFocus.getFocusedNode()
+            : accessibilityFocusMonitor.getAccessibilityFocus(/* useInputFocusIfEmpty= */ false);
     if (Role.getRole(currentFocus) == Role.ROLE_WEB_VIEW) {
       return;
     }
