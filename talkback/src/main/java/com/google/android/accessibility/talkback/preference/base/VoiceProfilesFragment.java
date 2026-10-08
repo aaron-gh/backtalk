@@ -47,6 +47,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference;
 import com.google.android.accessibility.material.preference.AccessibilitySuitePreference;
 import com.google.android.accessibility.talkback.R;
+import com.google.android.accessibility.talkback.speech.VoiceProfileNames;
 import com.google.android.accessibility.utils.FormFactorUtils;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
@@ -54,7 +55,6 @@ import com.google.android.accessibility.utils.output.VoiceProfiles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.IntFunction;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -70,6 +70,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class VoiceProfilesFragment extends TalkbackBaseFragment {
 
   private SharedPreferences prefs;
+  /** Each profile's name by ID, read again whenever the rows are. */
+  private Map<String, String> names = Map.of();
   private AccessibilitySuiteListPreference inUse;
   private ProfilesAdapter profiles = new ProfilesAdapter();
   private final boolean wear = FormFactorUtils.isAndroidWear();
@@ -97,6 +99,7 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
     inUse.setIconSpaceReserved(false);
     screen.addPreference(inUse);
     setPreferenceScreen(screen);
+    names = VoiceProfileNames.names(context, prefs);
     updateInUse();
   }
 
@@ -128,11 +131,13 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
   public void onResume() {
     super.onResume();
     // A profile may have been renamed, removed or switched to meanwhile.
+    VoiceProfileNames.saveNames(requireContext(), prefs);
     reloadRows();
     updateInUse();
   }
 
   private void reloadRows() {
+    names = VoiceProfileNames.names(requireContext(), prefs);
     if (wear) {
       addWatchRows();
     } else {
@@ -203,34 +208,13 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
     inUse.setValue(VoiceProfiles.activeId(prefs));
   }
 
+  /** Returns the name of profile {@code id}, or Backtalk default's for an empty ID. */
   private String nameOf(String id) {
-    return nameOf(requireContext(), prefs, id);
-  }
-
-  /**
-   * Returns the name of profile {@code id}, or Backtalk default's for an empty ID. A profile left
-   * with a blank name or another's name by a damaged setting is given a numbered name of its own.
-   */
-  public static String nameOf(Context context, SharedPreferences prefs, String id) {
     if (id.isEmpty()) {
-      return context.getString(R.string.voice_profile_default);
+      return getString(R.string.voice_profile_default);
     }
-    String name = names(context, prefs).get(id);
-    return (name == null) ? "" : name;
-  }
-
-  /**
-   * Returns each profile's name by ID, first giving a name of its own to any profile a damaged
-   * setting left without one. See {@link VoiceProfiles#names}.
-   */
-  public static Map<String, String> names(Context context, SharedPreferences prefs) {
-    return VoiceProfiles.names(
-        prefs, context.getString(R.string.voice_profile_default), numberedName(context));
-  }
-
-  /** Gives "Voice profile 1", "Voice profile 2" and so on. */
-  private static IntFunction<String> numberedName(Context context) {
-    return number -> context.getString(R.string.voice_profile_new_name, number);
+    String name = names.get(id);
+    return (name == null) ? VoiceProfileNames.nameOf(requireContext(), prefs, id) : name;
   }
 
   private void open(String id) {
@@ -247,8 +231,7 @@ public class VoiceProfilesFragment extends TalkbackBaseFragment {
         prefs,
         R.string.title_pref_add_voice_profile,
         /* id= */ "",
-        VoiceProfiles.unusedName(
-            prefs, getString(R.string.voice_profile_default), numberedName(context)),
+        VoiceProfileNames.unusedName(context, prefs),
         this::add);
   }
 

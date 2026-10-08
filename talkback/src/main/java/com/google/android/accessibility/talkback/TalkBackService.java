@@ -219,12 +219,12 @@ import com.google.android.accessibility.talkback.monitor.RingerModeAndScreenMoni
 import com.google.android.accessibility.talkback.monitor.VolumeMonitor;
 import com.google.android.accessibility.talkback.pause.PauseController;
 import com.google.android.accessibility.talkback.preference.PreferencesActivityUtils;
-import com.google.android.accessibility.talkback.preference.base.VoiceProfilesFragment;
 import com.google.android.accessibility.talkback.selector.SelectorController;
 import com.google.android.accessibility.talkback.selector.SelectorController.SelectorEventNotifier;
 import com.google.android.accessibility.talkback.soundthemes.SoundThemes;
 import com.google.android.accessibility.talkback.soundthemes.ThemeFeedback;
 import com.google.android.accessibility.talkback.speech.SpeechCacheController;
+import com.google.android.accessibility.talkback.speech.VoiceProfileNames;
 import com.google.android.accessibility.talkback.speechbubble.DisableTalkBackDialog;
 import com.google.android.accessibility.talkback.migration.AppIdHandOver;
 import com.google.android.accessibility.talkback.status.StatusReader;
@@ -2791,7 +2791,7 @@ public class TalkBackService extends AccessibilityServiceCompat
 
     // Gives a name of its own to any voice profile that a damaged setting left without one, before
     // anything says it.
-    VoiceProfilesFragment.names(this, prefs);
+    VoiceProfileNames.saveNames(this, prefs);
     reloadPreferences();
 
     inputFocusInterpreter.initLastEditableFocusForGlobalVariables();

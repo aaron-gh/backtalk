@@ -33,6 +33,7 @@ import com.google.android.accessibility.material.preference.AccessibilitySuitePr
 import com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference;
 import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.actor.SpeechRateAndPitchActor;
+import com.google.android.accessibility.talkback.speech.VoiceProfileNames;
 import com.google.android.accessibility.utils.FormFactorUtils;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
@@ -88,7 +89,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
     Bundle args = getArguments();
     String profileId = (args == null) ? "" : args.getString(ARG_PROFILE_ID, "");
     Context context = requireContext();
-    return VoiceProfilesFragment.nameOf(
+    return VoiceProfileNames.nameOf(
         context, SharedPreferencesUtils.getSharedPreferences(context), profileId);
   }
 
@@ -229,7 +230,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
         (step < 0) ? R.string.voice_profile_moved_above : R.string.voice_profile_moved_below;
     getListView()
         .announceForAccessibility(
-            getString(movedResId, VoiceProfilesFragment.nameOf(requireContext(), prefs, neighbour)));
+            getString(movedResId, VoiceProfileNames.nameOf(requireContext(), prefs, neighbour)));
   }
 
   /** Nothing moves above Backtalk default or below the last profile. */
@@ -250,7 +251,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
   private void addName(Context context, PreferenceScreen screen) {
     Preference name = new AccessibilitySuitePreference(context);
     name.setTitle(R.string.title_pref_voice_profile_name);
-    name.setSummary(VoiceProfilesFragment.nameOf(context, prefs, id));
+    name.setSummary(VoiceProfileNames.nameOf(context, prefs, id));
     name.setPersistent(false);
     name.setIconSpaceReserved(false);
     name.setOnPreferenceClickListener(
@@ -268,7 +269,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
         prefs,
         R.string.title_pref_voice_profile_name,
         id,
-        VoiceProfilesFragment.nameOf(context, prefs, id),
+        VoiceProfileNames.nameOf(context, prefs, id),
         name -> {
           if (VoiceProfiles.rename(prefs, id, name, getString(R.string.voice_profile_default))) {
             String saved = profile().name();
@@ -494,7 +495,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
   }
 
   private void confirmDelete() {
-    String name = VoiceProfilesFragment.nameOf(requireContext(), prefs, id);
+    String name = VoiceProfileNames.nameOf(requireContext(), prefs, id);
     new AlertDialog.Builder(requireContext())
         .setMessage(getString(R.string.voice_profile_delete_confirm, name))
         .setPositiveButton(

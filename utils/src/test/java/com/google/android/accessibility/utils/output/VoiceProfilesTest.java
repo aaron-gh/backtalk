@@ -154,7 +154,9 @@ public class VoiceProfilesTest {
     assertEquals("Profile 4", names.get(otherBlank));
     assertEquals("Profile 5", VoiceProfiles.unusedName(prefs, DEFAULT, NUMBERED));
 
-    // Saved as soon as they were found.
+    // Reading names doesn't save them; saveNames does.
+    assertEquals("", VoiceProfiles.read(prefs, blank).name());
+    VoiceProfiles.saveNames(prefs, DEFAULT, NUMBERED);
     assertEquals("Profile 2", VoiceProfiles.read(prefs, blank).name());
     assertEquals("Profile 4", VoiceProfiles.read(prefs, otherBlank).name());
   }
@@ -188,8 +190,22 @@ public class VoiceProfilesTest {
     assertEquals("Reading", names.get(first));
     assertEquals("Profile 1", names.get(second));
     assertEquals("Profile 2", names.get(third));
+    VoiceProfiles.saveNames(prefs, DEFAULT, NUMBERED);
+    assertEquals("Reading", VoiceProfiles.read(prefs, first).name());
     assertEquals("Profile 1", VoiceProfiles.read(prefs, second).name());
     assertEquals("Profile 2", VoiceProfiles.read(prefs, third).name());
+  }
+
+  @Test
+  public void duplicateIdsCountOnce() {
+    String first = create("Reading", "e");
+    String second = create("Fast", "e");
+    prefs.values.put(VoiceProfiles.PREF_IDS, first + "," + second + "," + first);
+    assertEquals(Arrays.asList(first, second), VoiceProfiles.ids(prefs));
+
+    VoiceProfiles.delete(prefs, first);
+    assertEquals(Arrays.asList(second), VoiceProfiles.ids(prefs));
+    assertEquals(second, prefs.values.get(VoiceProfiles.PREF_IDS));
   }
 
   @Test
@@ -210,6 +226,7 @@ public class VoiceProfilesTest {
     assertTrue(VoiceProfiles.isProfileKey(VoiceProfiles.PREF_IDS));
     assertTrue(VoiceProfiles.isProfileKey(VoiceProfiles.key("1", VoiceProfiles.RATE)));
     assertFalse(VoiceProfiles.isProfileKey("pref_tts_engine"));
+    assertFalse(VoiceProfiles.isProfileKey("pref_voice_profile_menu_setting_key"));
     assertFalse(VoiceProfiles.isProfileKey(null));
   }
 
