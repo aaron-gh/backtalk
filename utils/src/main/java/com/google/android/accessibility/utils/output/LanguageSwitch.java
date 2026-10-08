@@ -29,8 +29,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * Decides whether speech follows the language an app marks text as. Switching to another
  * language, such as German for a British English voice, and switching to another country's form
- * of the voice's own language, such as US English, are turned off separately. A voice profile
- * speaks everything in its own voice, so speech never switches while one is in use.
+ * of the voice's own language, such as US English, are turned off separately. While a voice
+ * profile is in use, all speech uses its voice, so speech never switches.
  */
 public final class LanguageSwitch {
 

@@ -71,7 +71,7 @@
     <string name="voice_profile_in_use">In use: <xliff:g id="name" example="Reading">%1$s</xliff:g></string>
     <!--
       Said when the user tries to change the spoken language from the reading controls while a
-      voice profile is in use, as a profile always speaks in its own voice. [CHAR LIMIT=NONE]
+      voice profile is in use, as all speech then uses the profile's voice. [CHAR LIMIT=NONE]
     -->
     <string name="spoken_language_unavailable_with_profile">Spoken language unavailable while using a voice profile</string>
     <!--
@@ -100,9 +100,9 @@
     <string name="voice_profile_name_taken">A voice profile is already called <xliff:g id="name" example="Reading">%1$s</xliff:g></string>
     <!-- Title for the setting with a voice profile's name. [CHAR LIMIT=NONE] -->
     <string name="title_pref_voice_profile_name">Name</string>
-    <!-- Title for the setting with the language a voice profile speaks. [CHAR LIMIT=NONE] -->
+    <!-- Title for the setting with a voice profile's language. [CHAR LIMIT=NONE] -->
     <string name="title_pref_voice_profile_language">Language</string>
-    <!-- Title for the setting with the voice a voice profile speaks with. [CHAR LIMIT=NONE] -->
+    <!-- Title for the setting with a voice profile's voice. [CHAR LIMIT=NONE] -->
     <string name="title_pref_voice_profile_voice">Voice</string>
     <!--
       Choice of language or voice for a voice profile that uses the speech engine's own default.
