@@ -37,6 +37,7 @@
     <string name="pref_speak_in_phrases_key">pref_speak_in_phrases</string>
     <string name="pref_switch_languages_key">pref_switch_languages</string>
     <string name="pref_switch_dialects_key">pref_switch_dialects</string>
+    <string name="pref_voice_profiles_screen_key">pref_tts_voice_profiles</string>
     <string name="pref_speech_pitch_seekbar_key_int" translatable="false">pref_speech_pitch_seekbar_key_int</string>
     <string name="pref_speech_volume_seekbar_key_int" translatable="false">pref_speech_volume_seekbar_key_int</string>
     <string name="pref_intonation_key">pref_intonation</string>
@@ -225,7 +226,7 @@
       <item>1</item>
       <item>2</item>
     </string-array>
-    <string name="pref_selector_switch_tts_engine_key" translatable="false">pref_selector_switch_tts_engine_key</string>
+    <string name="pref_selector_voice_profile_key" translatable="false">pref_selector_switch_tts_engine_key</string>
     <string name="pref_selector_control_telling_time" translatable="false">pref_selector_control_telling_time</string>
     <string name="pref_selector_actions_key" translatable="false">pref_selector_actions_key </string>
 
@@ -1031,6 +1032,9 @@
         <item>@string/shortcut_pause_or_resume_feedback</item>
         <item>@string/shortcut_toggle_voice_feedback</item>
         <item>@string/shortcut_show_language_options</item>
+        <item>@string/shortcut_voice_profiles</item>
+        <item>@string/shortcut_previous_voice_profile</item>
+        <item>@string/shortcut_next_voice_profile</item>
     </string-array>
 
     <!-- Shortcut preference value of reading control -->
@@ -1042,6 +1046,9 @@
         <item>@string/shortcut_value_pause_or_resume_feedback</item>
         <item>@string/shortcut_value_toggle_voice_feedback</item>
         <item>@string/shortcut_value_show_language_options</item>
+        <item>@string/shortcut_value_voice_profiles</item>
+        <item>@string/shortcut_value_previous_voice_profile</item>
+        <item>@string/shortcut_value_next_voice_profile</item>
     </string-array>
 
     <!-- Shortcut preference of menu control -->
@@ -1449,7 +1456,7 @@
     <bool name="pref_selector_lift_to_activate_default">true</bool>
     <bool name="pref_selector_wrap_around_default">true</bool>
     <bool name="pref_selector_tablet_held_up_faces_away_default">false</bool>
-    <bool name="pref_selector_switch_tts_engine_default">false</bool>
+    <bool name="pref_selector_voice_profile_default">false</bool>
     <bool name="pref_selector_touch_focus_latency_default">false</bool>
     <bool name="pref_selector_control_telling_time_default">false</bool>
     <bool name="pref_selector_audio_focus_default">false</bool>
@@ -1769,7 +1776,7 @@
     <string name="selector_lift_to_activate_change" translatable="false">SELECTOR_LIFT_TO_ACTIVATE_CHANGE</string>
     <string name="selector_wrap_around" translatable="false">SELECTOR_WRAP_AROUND</string>
     <string name="selector_tablet_held_up_faces_away" translatable="false">SELECTOR_TABLET_HELD_UP_FACES_AWAY</string>
-    <string name="selector_switch_tts_engine" translatable="false">SELECTOR_SWITCH_TTS_ENGINE</string>
+    <string name="selector_voice_profile" translatable="false">SELECTOR_SWITCH_TTS_ENGINE</string>
     <string name="selector_touch_focus_latency_change" translatable="false">SELECTOR_TOUCH_FOCUS_LATENCY_CHANGE</string>
     <string name="selector_control_telling_time" translatable="false">SELECTOR_CONTROL_TELLING_TIME</string>
     <string name="selector_actions" translatable="false">SELECTOR_ACTIONS</string>
@@ -1914,4 +1921,16 @@
   </string-array>
   <item type="id" name="pause_backtalk" />
   <item type="id" name="notification_backtalk_paused" />
+
+  <!-- Voice profile menu and shortcuts. -->
+  <string name="keycombo_shortcut_other_voice_profiles">keycombo_shortcut_other_voice_profiles</string>
+  <string name="keycombo_shortcut_global_previous_voice_profile">keycombo_shortcut_global_previous_voice_profile</string>
+  <string name="keycombo_shortcut_global_next_voice_profile">keycombo_shortcut_global_next_voice_profile</string>
+  <string name="shortcut_value_voice_profiles" translatable="false">VOICE_PROFILES</string>
+  <string name="shortcut_value_previous_voice_profile" translatable="false">PREVIOUS_VOICE_PROFILE</string>
+  <string name="shortcut_value_next_voice_profile" translatable="false">NEXT_VOICE_PROFILE</string>
+  <string name="pref_show_context_menu_voice_profile_setting_key" translatable="false">pref_voice_profile_menu_setting_key</string>
+  <bool name="pref_show_context_menu_voice_profile_default">false</bool>
+  <item type="id" name="group_voice_profile" />
+  <item type="id" name="voice_profile_menu" />
 </resources>
