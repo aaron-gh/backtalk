@@ -2,6 +2,12 @@
 
 Backtalk is a fork of [Google's TalkBack](https://github.com/google/talkback), the screen reader for blind and visually-impaired users of Android. It adds fixes and features on top of Google's source releases. It is not affiliated with Google.
 
+## This fork
+
+This is Aaron's fork of [Backtalk](https://github.com/trypsynth/backtalk). It has Backtalk's changes, plus Aaron's that are not merged into Backtalk yet. Each of those is also a pull request to Backtalk.
+
+The fork installs as **Backtalk Aaron**, with the app ID `io.github.aaron_gh.backtalk`, so it installs next to Backtalk instead of replacing it. The two apps have separate settings. Its development builds are on the fork's [dev release](https://github.com/aaron-gh/backtalk/releases/tag/dev) page. Its updater checks there about once an hour instead of once a day, so that each push reaches the phone soon. The rest of this readme describes Backtalk.
+
 ## Goals
 
 *   Make Backtalk faster and more responsive for people who use their phone quickly.
