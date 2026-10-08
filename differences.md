@@ -257,6 +257,8 @@ The rotor requires Android 13 or later and **Handle gestures in Backtalk** turne
 
 Backtalk can activate the item under your finger when you lift your finger after exploring by touch, as TalkBack already does for keys on the keyboard. In **Advanced settings** > **Lift to activate**, choose **Only on navigation bar** to use it for the Back, Home, and Overview buttons only, or **Entire screen** to use it everywhere. It's **Disabled** by default.
 
+With **Only on navigation bar** on Android 11 and later, touches on the navigation bar go straight to Android, so a single tap presses a button and holding Home holds it, as without a screen reader. Backtalk doesn't say the buttons as you touch them.
+
 **Lift to activate** is also a reading control, so you can change it with a swipe up or down.
 
 ### Wrap around
