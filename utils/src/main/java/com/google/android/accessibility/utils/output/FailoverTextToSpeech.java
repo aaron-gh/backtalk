@@ -1368,6 +1368,17 @@ public class FailoverTextToSpeech {
     return separator < 0 ? utteranceId : utteranceId.substring(0, separator);
   }
 
+  /**
+   * Speaks the usual way from now on, rather than through {@link LowLatencyAudio}, until the
+   * setting is read again.
+   */
+  public void speakWithoutLowLatencyAudio() {
+    if (lowLatencyAudio) {
+      lowLatencyAudio = false;
+      turnOffLowLatencyAudio();
+    }
+  }
+
   /** Stops the speech playing through {@link LowLatencyAudio}. */
   private void stopLowLatencySpeech() {
     // Speech the engine has finished making may still be playing, until it reports finishing.

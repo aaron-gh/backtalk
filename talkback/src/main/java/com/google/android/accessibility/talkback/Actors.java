@@ -1001,6 +1001,9 @@ class Actors {
     // Main thread will be waiting during the TTS announcement, thus in this special case we should
     // not handle TTS callback in main thread.
     speaker.setHandleTtsCallbackInHandlerThread(false);
+    // The sounds shut down the low-latency players as soon as the last announcement is queued, and
+    // speech shares them, so the announcement would stop before it was heard.
+    speaker.speakWithoutLowLatencyAudio();
     // TalkBack is not allowed to display overlay at this state.
     speaker.setOverlayEnabled(false);
     speaker.setSpeechVolume(finalAnnouncementVolume);

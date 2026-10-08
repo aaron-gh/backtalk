@@ -587,6 +587,11 @@ public class SpeechControllerImpl implements SpeechController {
     this.speechListener = speechListener;
   }
 
+  /** Speaks the usual way from now on, rather than through low-latency audio. */
+  public void speakWithoutLowLatencyAudio() {
+    failoverTts.speakWithoutLowLatencyAudio();
+  }
+
   @Override
   public void setHandleTtsCallbackInHandlerThread(boolean shouldHandleTtsCallBackInHandlerThread) {
     this.shouldHandleTtsCallBackInHandlerThread = shouldHandleTtsCallBackInHandlerThread;
