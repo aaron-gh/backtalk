@@ -34,6 +34,7 @@ enum class Scenario(val title: String, val description: String) {
   ),
   COMPOSE_SCROLL("Compose scroll", "A Compose column with verticalScroll, 60 lines, animated."),
   LIST("List", "A RecyclerView list of 100 items."),
+  GRID("Grid", "A RecyclerView grid of 60 items in 3 columns, like a photo gallery."),
   CHAT_LIST(
     "Chat list",
     "A RecyclerView with reverse layout, like a chat. Message 1 is the newest, at the bottom.",

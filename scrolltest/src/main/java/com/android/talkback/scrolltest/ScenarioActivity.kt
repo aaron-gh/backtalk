@@ -40,6 +40,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.widget.NestedScrollView
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
@@ -61,6 +62,13 @@ class ScenarioActivity : ComponentActivity() {
       Scenario.SCROLL_VIEW_WITH_COLLAPSED_SECTION -> setContentView(scrollViewWithCollapsedSection())
       Scenario.COMPOSE_SCROLL -> setContent { composeLines() }
       Scenario.LIST -> setContentView(list(reverse = false, label = "Item"))
+      Scenario.GRID ->
+        setContentView(
+          RecyclerView(this).apply {
+            layoutManager = GridLayoutManager(this@ScenarioActivity, 3)
+            adapter = LineAdapter("Photo", 60)
+          }
+        )
       Scenario.CHAT_LIST -> setContentView(list(reverse = true, label = "Message"))
     }
   }
