@@ -1992,17 +1992,20 @@ public class SelectorController implements UserInputEventListener {
    * Backtalk's default first.
    */
   public void changeVoiceProfile(EventId eventId, boolean isNext) {
-    if (VoiceProfiles.ids(prefs).isEmpty()) {
-      String displayText = context.getString(R.string.no_voice_profiles);
-      announceSetting(eventId, displayText, /* hint= */ null);
-      showQuickMenuActionOverlay(eventId, displayText);
-      return;
-    }
     changeVoiceProfile(eventId, isNext, /* hint= */ null);
   }
 
-  /** Changes to the previous or next voice profile, with Backtalk's default first. */
+  /**
+   * Changes to the previous or next voice profile, with Backtalk's default first, or says there are
+   * none to change to.
+   */
   private void changeVoiceProfile(EventId eventId, boolean isNext, @Nullable String hint) {
+    if (VoiceProfiles.ids(prefs).isEmpty()) {
+      String displayText = context.getString(R.string.no_voice_profiles);
+      announceSetting(eventId, displayText, hint);
+      showQuickMenuActionOverlay(eventId, displayText);
+      return;
+    }
     String nextId = VoiceProfiles.adjacentId(prefs, isNext);
     prefs.edit().putString(VoiceProfiles.PREF_ACTIVE, nextId).apply();
 

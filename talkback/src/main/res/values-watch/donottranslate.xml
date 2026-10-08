@@ -73,6 +73,9 @@
         <item>@string/shortcut_pause_or_resume_feedback</item>
         <item>@string/shortcut_toggle_voice_feedback</item>
         <item>@string/shortcut_show_language_options</item>
+        <item>@string/shortcut_voice_profiles</item>
+        <item>@string/shortcut_previous_voice_profile</item>
+        <item>@string/shortcut_next_voice_profile</item>
     </string-array>
 
     <!-- Shortcut preference value of reading control -->
@@ -84,6 +87,9 @@
         <item>@string/shortcut_value_pause_or_resume_feedback</item>
         <item>@string/shortcut_value_toggle_voice_feedback</item>
         <item>@string/shortcut_value_show_language_options</item>
+        <item>@string/shortcut_value_voice_profiles</item>
+        <item>@string/shortcut_value_previous_voice_profile</item>
+        <item>@string/shortcut_value_next_voice_profile</item>
     </string-array>
 
     <!-- Shortcut preference of menu control -->
