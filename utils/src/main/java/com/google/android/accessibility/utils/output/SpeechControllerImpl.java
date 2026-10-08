@@ -2225,6 +2225,18 @@ public class SpeechControllerImpl implements SpeechController {
    * @see #handleSpeechStarting()
    */
   private void handleSpeechCompleted(int status) {
+    if (!mIsSpeaking) {
+      // Speech already completed, such as when an interrupt completes the current item and the
+      // engine then reports that it stopped. Audio focus was released then, and observers told,
+      // except that a pause that stopped the speech is only known now.
+      if (status == STATUS_PAUSE) {
+        for (SpeechController.Observer observer : observers) {
+          observer.onSpeechPaused();
+        }
+      }
+      return;
+    }
+
     for (SpeechController.Observer observer : observers) {
       if (status == STATUS_PAUSE) {
         observer.onSpeechPaused();
@@ -2240,10 +2252,6 @@ public class SpeechControllerImpl implements SpeechController {
       } else {
         audioManager.abandonAudioFocus(mAudioFocusListener);
       }
-    }
-
-    if (!mIsSpeaking) {
-      LogUtils.e(TAG, "Completed speech while already completed!");
     }
 
     mIsSpeaking = false;
