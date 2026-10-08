@@ -20,6 +20,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import androidx.appcompat.app.AlertDialog;
@@ -67,6 +69,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
 
   private @Nullable TextToSpeech tts;
   private int ttsGeneration;
+  private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
   /** The engine's voices, by language and then name, or null while they load. */
   private @Nullable List<Voice> voices;
@@ -196,6 +199,7 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
   @Override
   public void onDestroy() {
     super.onDestroy();
+    mainHandler.removeCallbacksAndMessages(null);
     shutDownTts();
   }
 
@@ -299,11 +303,21 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
     enginePref.setSummary("%s");
     enginePref.setOnPreferenceChangeListener(
         (preference, newValue) -> {
-          // Another engine has other languages and voices.
+          String engine = (String) newValue;
+          // Another engine has other languages and voices. All three are saved together, so that a
+          // profile in use changes engine once, rather than first setting the old engine's voice.
+          prefs
+              .edit()
+              .putString(VoiceProfiles.key(id, VoiceProfiles.ENGINE), engine)
+              .putString(VoiceProfiles.key(id, VoiceProfiles.LANGUAGE), "")
+              .putString(VoiceProfiles.key(id, VoiceProfiles.VOICE), "")
+              .apply();
+          // Saved already, so these only show the new values.
+          enginePref.setValue(engine);
           languagePref.setValue("");
           voicePref.setValue("");
-          loadVoices((String) newValue);
-          return true;
+          loadVoices(engine);
+          return false;
         });
   }
 
@@ -370,10 +384,12 @@ public class VoiceProfileFragment extends TalkbackBaseFragment {
       return;
     }
     int generation = ++ttsGeneration;
+    // An engine that can't be started reports so from inside the constructor, before tts is set,
+    // so the result is handled once the constructor has returned.
     tts =
         new TextToSpeech(
             requireContext().getApplicationContext(),
-            status -> onTtsReady(generation, status),
+            status -> mainHandler.post(() -> onTtsReady(generation, status)),
             engine);
   }
 
