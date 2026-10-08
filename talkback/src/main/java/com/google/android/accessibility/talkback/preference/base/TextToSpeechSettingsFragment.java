@@ -14,6 +14,7 @@ import androidx.preference.SeekBarPreference;
 import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.TalkBackService;
 import com.google.android.accessibility.talkback.actor.SpeechRateAndPitchActor;
+import com.google.android.accessibility.talkback.speech.VoiceProfileNames;
 import com.google.android.accessibility.utils.FormFactorUtils;
 import com.google.android.accessibility.utils.PreferenceSettingsUtils;
 import com.google.android.accessibility.utils.ServiceStateListener;
@@ -140,7 +141,7 @@ public class TextToSpeechSettingsFragment extends TalkbackBaseFragment {
             ? null
             : getString(
                 R.string.voice_profile_in_use,
-                VoiceProfilesFragment.nameOf(requireContext(), prefs, profile.id())));
+                VoiceProfileNames.nameOf(requireContext(), prefs, profile.id())));
   }
 
   private void setUpSystemTtsSettingsPreference() {

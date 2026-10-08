@@ -101,8 +101,8 @@ import com.google.android.accessibility.talkback.monitor.VolumeMonitor;
 import com.google.android.accessibility.talkback.monitor.VolumeMonitor.VolumeChangedListener;
 import com.google.android.accessibility.talkback.preference.base.FocusDelayPrefFragment;
 import com.google.android.accessibility.talkback.preference.base.TypingFocusDelayPrefFragment;
-import com.google.android.accessibility.talkback.preference.base.VoiceProfilesFragment;
 import com.google.android.accessibility.talkback.selector.SelectorController.Setting.DescriptionAndHint;
+import com.google.android.accessibility.talkback.speech.VoiceProfileNames;
 import com.google.android.accessibility.talkback.utils.VerbosityPreferences;
 import com.google.android.accessibility.utils.FeatureSupport;
 import com.google.android.accessibility.utils.FormFactorUtils;
@@ -2006,7 +2006,7 @@ public class SelectorController implements UserInputEventListener {
     String nextId = VoiceProfiles.adjacentId(prefs, isNext);
     prefs.edit().putString(VoiceProfiles.PREF_ACTIVE, nextId).apply();
 
-    String displayText = VoiceProfilesFragment.nameOf(context, prefs, nextId);
+    String displayText = VoiceProfileNames.nameOf(context, prefs, nextId);
     announceSetting(eventId, displayText, hint);
     showQuickMenuActionOverlay(eventId, displayText);
   }

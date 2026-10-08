@@ -24,7 +24,7 @@ import android.view.Menu;
 import com.google.android.accessibility.talkback.Feedback;
 import com.google.android.accessibility.talkback.Pipeline;
 import com.google.android.accessibility.talkback.R;
-import com.google.android.accessibility.talkback.preference.base.VoiceProfilesFragment;
+import com.google.android.accessibility.talkback.speech.VoiceProfileNames;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.output.VoiceProfiles;
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ public final class VoiceProfileMenuProcessor {
     if (ids.isEmpty()) {
       return menuItems;
     }
-    Map<String, String> names = VoiceProfilesFragment.names(context, prefs);
+    Map<String, String> names = VoiceProfileNames.names(context, prefs);
     String activeId = VoiceProfiles.activeId(prefs);
 
     List<String> choices = new ArrayList<>();

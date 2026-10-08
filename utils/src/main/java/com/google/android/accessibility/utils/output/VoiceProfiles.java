@@ -25,13 +25,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.IntFunction;
+import java.util.regex.Pattern;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Voice profiles: speech settings the user can switch to from the reading controls, each with its
  * own engine, language, voice, volume, rate, pitch, and sentence sending. Backtalk's default is no
- * profile, and uses the text-to-speech settings. A profile speaks everything in its own voice, so
- * speech never changes language while one is in use.
+ * profile, and uses the text-to-speech settings. While a profile is in use, all speech uses its
+ * engine and voice, so speech never changes language.
  *
  * <p>Each profile's settings are separate preferences, named by {@link #key}, so that settings
  * screens can bind to them directly.
@@ -49,6 +50,10 @@ public final class VoiceProfiles {
 
   /** Starts the name of every voice profile preference. */
   public static final String PREF_PREFIX = "pref_voice_profile";
+
+  /** A setting of one profile, named by {@link #key}. */
+  private static final Pattern PROFILE_KEY =
+      Pattern.compile(Pattern.quote(PREF_PREFIX) + "_[0-9]+_[a-z]+");
 
   public static final String NAME = "name";
   public static final String ENGINE = "engine";
@@ -91,7 +96,7 @@ public final class VoiceProfiles {
       float pitch,
       boolean phrases) {
 
-    /** Whether this profile speaks with the same engine and voice as {@code other}. */
+    /** Whether this profile has the same engine, language and voice as {@code other}. */
     boolean sameVoiceAs(@Nullable VoiceProfile other) {
       return other != null
           && engine.equals(other.engine)
@@ -124,16 +129,26 @@ public final class VoiceProfiles {
     return PREF_PREFIX + "_" + id + "_" + field;
   }
 
-  /** Whether {@code key} is one of the voice profile preferences. */
+  /**
+   * Whether {@code key} is one of the voice profile preferences: the profile in use, the list of
+   * profiles, or one of a profile's settings. Other settings that start the same way, such as the
+   * Backtalk menu's voice profile item, are not.
+   */
   public static boolean isProfileKey(@Nullable String key) {
-    return key != null && key.startsWith(PREF_PREFIX);
+    return key != null
+        && (key.equals(PREF_ACTIVE)
+            || key.equals(PREF_IDS)
+            || PROFILE_KEY.matcher(key).matches());
   }
 
-  /** Returns the IDs of the profiles, in order. */
+  /**
+   * Returns the IDs of the profiles, in order. A damaged setting can list an ID twice, which counts
+   * once, in its first place.
+   */
   public static List<String> ids(SharedPreferences prefs) {
     List<String> ids = new ArrayList<>();
     for (String id : getString(prefs, PREF_IDS, "").split(",")) {
-      if (!id.isEmpty()) {
+      if (!id.isEmpty() && !ids.contains(id)) {
         ids.add(id);
       }
     }
@@ -246,7 +261,7 @@ public final class VoiceProfiles {
    * profile's, but a damaged setting, such as one restored from a backup, can leave them so. A
    * profile with a blank name, or the name of a profile above it or of Backtalk default, gets the
    * first numbered name, such as "Voice profile 2", that no other profile has, as a new profile
-   * would. The name is saved at once, so it stays the same from then on.
+   * would. {@link #saveNames} saves those names, so that they stay the same from then on.
    *
    * @param defaultName Backtalk default's name, which no profile can have
    * @param numberedName gives the numbered name for a number
@@ -268,17 +283,33 @@ public final class VoiceProfiles {
         taken.add(nameKey);
       }
     }
-    if (!unnamed.isEmpty()) {
-      SharedPreferences.Editor editor = prefs.edit();
-      for (String id : unnamed) {
-        String name = unusedName(taken, numberedName);
-        names.put(id, name);
-        taken.add(nameKey(name));
-        editor.putString(key(id, NAME), name);
-      }
-      editor.apply();
+    for (String id : unnamed) {
+      String name = unusedName(taken, numberedName);
+      names.put(id, name);
+      taken.add(nameKey(name));
     }
     return names;
+  }
+
+  /**
+   * Saves the names {@link #names} gives profiles whose saved names are blank or another's, if
+   * there are any.
+   */
+  public static void saveNames(
+      SharedPreferences prefs, String defaultName, IntFunction<String> numberedName) {
+    SharedPreferences.Editor editor = null;
+    for (Map.Entry<String, String> entry : names(prefs, defaultName, numberedName).entrySet()) {
+      String id = entry.getKey();
+      if (!entry.getValue().equals(read(prefs, id).name())) {
+        if (editor == null) {
+          editor = prefs.edit();
+        }
+        editor.putString(key(id, NAME), entry.getValue());
+      }
+    }
+    if (editor != null) {
+      editor.apply();
+    }
   }
 
   /** Returns the first numbered name, such as "Voice profile 1", that no profile has. */
@@ -346,7 +377,10 @@ public final class VoiceProfiles {
     return true;
   }
 
-  /** Removes profile {@code id}, going back to Backtalk's default if it is in use. */
+  /**
+   * Removes profile {@code id}, going back to Backtalk's default if it is in use. The list of
+   * profiles is saved without any duplicates a damaged setting left in it.
+   */
   public static void delete(SharedPreferences prefs, String id) {
     List<String> ids = ids(prefs);
     ids.remove(id);
