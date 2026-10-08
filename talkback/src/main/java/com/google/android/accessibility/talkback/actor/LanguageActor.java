@@ -90,7 +90,7 @@ public class LanguageActor {
       return false;
     }
 
-    // A voice profile speaks in its own voice's language.
+    // While a voice profile is in use, all speech uses its voice's language.
     if (VoiceProfiles.isProfileActive()) {
       return false;
     }
