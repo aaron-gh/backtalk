@@ -1042,11 +1042,7 @@ public class FocusProcessorForLogicalNavigation {
     CharSequence keyword = searchState.getLastKeyword();
     if (TextUtils.isEmpty(keyword)) {
       LogUtils.d(TAG, "navigateToScreenSearchTarget  keyword empty");
-      announce(
-          FeatureSupport.isMultiFingerGestureSupported()
-              ? service.getString(R.string.screen_search_no_keyword_hint)
-              : service.getString(R.string.screen_search_no_keyword_hint_pre_r),
-          eventId);
+      announce(globalVariables.getScreenSearchNoKeywordHint(), eventId);
       return false;
     }
 
@@ -2683,7 +2679,12 @@ public class FocusProcessorForLogicalNavigation {
             ScrollTimeout.SCROLL_TIMEOUT_LONG,
             autoScrollChecker,
             eventId);
-    if (scrolled && scrollCallback != null) {
+    // Only a plain swipe continues early. Lists lay out the items a scroll brings in while it
+    // runs, so a search for a heading, link or control partway through the scroll can miss one
+    // that is still coming in and say there is none.
+    if (scrolled
+        && scrollCallback != null
+        && navigationAction.targetType == NavigationTarget.TARGET_DEFAULT) {
       AutoScrollCallback callback = scrollCallback;
       AccessibilityNodeInfoCompat scrollable = scrollableNodeInfo.getNode();
       earlyScrollCheckHandler.post(

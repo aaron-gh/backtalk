@@ -41,6 +41,8 @@ import com.google.android.accessibility.talkback.compositor.rule.InputTextFeedba
 import com.google.android.accessibility.talkback.compositor.rule.MagnificationStateChangedFeedbackRule;
 import com.google.android.accessibility.talkback.controlsounds.ControlSounds;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
+import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForTapAndTouchExploration;
+import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForTapAndTouchExploration.TypingMethod;
 import com.google.android.accessibility.talkback.keyboard.KeyComboManager;
 import com.google.android.accessibility.talkback.keyboard.KeyComboModel;
 import com.google.android.accessibility.talkback.selector.SelectorController;
@@ -161,7 +163,7 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
   private boolean isCurrentFocusInScrollableNode = false;
   private boolean isLastFocusInScrollableNode = false;
   private boolean isFocusPage = false;
-  private boolean isInterpretAsEntryKey = false;
+  @TypingMethod private int typingMethod = FocusProcessorForTapAndTouchExploration.LIFT_TO_TYPE;
   private boolean isDescribingSwipeTarget = false;
 
   private final @Nullable GestureShortcutProvider gestureShortcutProvider;
@@ -573,17 +575,30 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
         || checkAndClearRecentFlag(EVENT_SKIP_FOCUS_PROCESSING_AFTER_IME_CLOSED);
   }
 
-  /** Used by the hint decision. */
-  public void setInterpretAsEntryKey(boolean interpretAsEntryKey) {
-    isInterpretAsEntryKey = interpretAsEntryKey;
+  /** Sets the typing method, which the hint decision uses. */
+  public void setTypingMethod(@TypingMethod int typingMethod) {
+    this.typingMethod = typingMethod;
   }
 
   /**
    * Returns if it interprets all keys as entry keys. It is {@code true} when the typing method is
-   * {@link FocusProcessorForTapAndTouchExploration#FORCE_LIFT_TO_TYPE_ON_IME}
+   * {@link FocusProcessorForTapAndTouchExploration#FORCE_LIFT_TO_TYPE_ON_IME} or {@link
+   * FocusProcessorForTapAndTouchExploration#LIFT_TO_TYPE_EXCEPT_ACTION_KEY}.
    */
   public boolean isInterpretAsEntryKey() {
-    return isInterpretAsEntryKey;
+    return FocusProcessorForTapAndTouchExploration.liftsToTypeAnyKey(typingMethod);
+  }
+
+  /**
+   * Returns whether {@code node} is a keyboard key that types on lift with a typing method that
+   * interprets keyboard keys as entry keys, so it needs no hint to double-tap. The keyboard's
+   * action key needs a double-tap with {@link
+   * FocusProcessorForTapAndTouchExploration#LIFT_TO_TYPE_EXCEPT_ACTION_KEY}, so it isn't one.
+   */
+  public boolean liftsToType(@Nullable AccessibilityNodeInfoCompat node) {
+    return isInterpretAsEntryKey()
+        && AccessibilityNodeInfoUtils.isKeyboard(node)
+        && FocusProcessorForTapAndTouchExploration.liftsToType(typingMethod, node);
   }
 
   /**
@@ -756,6 +771,13 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
     return deviceScreenNoTouch;
   }
 
+  /** Returns the hint for screen search with no keyword yet, naming the user's gesture. */
+  public CharSequence getScreenSearchNoKeywordHint() {
+    return gestureShortcutProvider != null
+        ? gestureShortcutProvider.screenSearchNoKeywordHint()
+        : mContext.getString(R.string.screen_search_no_keyword_hint_pre_r);
+  }
+
   /** Returns the gesture string for the node actions in TalkBack menu. */
   public CharSequence getGestureStringForNodeActions() {
     if (inputModeTracker.getInputMode() == INPUT_MODE_KEYBOARD) {
@@ -765,7 +787,8 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
         return keyCombo;
       }
     }
-    return gestureShortcutProvider != null ? gestureShortcutProvider.nodeMenuShortcut() : "";
+    return gestureInSentence(
+        gestureShortcutProvider != null ? gestureShortcutProvider.nodeMenuShortcut() : null);
   }
 
   /** Returns the gesture string for the node actions in reading control. */
@@ -863,7 +886,13 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
 
   /** Returns the gesture string to perform the next action of selected setting in reading menu. */
   public CharSequence getGestureStringForActionShortcut() {
-    return gestureShortcutProvider != null ? gestureShortcutProvider.actionsShortcut() : "";
+    return gestureInSentence(
+        gestureShortcutProvider != null ? gestureShortcutProvider.actionsShortcut() : null);
+  }
+
+  /** Returns {@code gesture} in lower case to go inside a sentence, or "" if it's null. */
+  private CharSequence gestureInSentence(@Nullable CharSequence gesture) {
+    return TextUtils.isEmpty(gesture) ? "" : Ascii.toLowerCase(gesture.toString());
   }
 
   /** Returns the gesture string to get to the next window. */

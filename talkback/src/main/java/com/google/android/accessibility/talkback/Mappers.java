@@ -280,6 +280,12 @@ public final class Mappers {
         LogDepth.log(LOG_TAG, depth, "Return, target is null or fails to refresh");
         return null;
       }
+      // Chrome moves accessibility focus along with input focus on its own, and speaks it with its
+      // own event. Focusing the node again makes Chrome send a second event, so it is spoken twice.
+      if (targetedNode.isAccessibilityFocused()) {
+        LogDepth.log(LOG_TAG, depth, "Return, target already has accessibility focus");
+        return null;
+      }
       FocusActionInfo focusActionInfo =
           FocusActionInfo.builder().setSourceAction(FocusActionInfo.FOCUS_SYNCHRONIZATION).build();
       return Feedback.create(

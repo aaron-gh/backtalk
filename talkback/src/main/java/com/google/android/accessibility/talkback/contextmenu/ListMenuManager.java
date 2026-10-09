@@ -30,6 +30,7 @@ import static com.google.android.accessibility.talkback.contextmenu.ListMenuMana
 import static com.google.android.accessibility.talkback.contextmenu.ListMenuManager.MenuId.VOICE_PROFILE;
 import static com.google.android.accessibility.talkback.eventprocessor.EventState.EVENT_SKIP_FOCUS_SYNC_FROM_VIEW_FOCUSED;
 
+import android.accessibilityservice.AccessibilityService;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -64,6 +65,8 @@ import com.google.android.accessibility.talkback.contextmenu.radial.RadialMenuCo
 import com.google.android.accessibility.talkback.eventprocessor.EventState;
 import com.google.android.accessibility.talkback.focusmanagement.AccessibilityFocusMonitor;
 import com.google.android.accessibility.talkback.focusmanagement.record.FocusActionRecord;
+import com.google.android.accessibility.talkback.gesture.GestureHints;
+import com.google.android.accessibility.talkback.gesture.GestureShortcutMapping;
 import com.google.android.accessibility.talkback.menurules.NodeMenuRuleProcessor;
 import com.google.android.accessibility.utils.AccessibilityEventListener;
 import com.google.android.accessibility.utils.AccessibilityServiceCompatUtils;
@@ -254,8 +257,7 @@ public class ListMenuManager implements WindowEventHandler, AccessibilityEventLi
     if (menuId == CONTEXT
         && currentDialog != null
         && !SettingsUtils.allowLinksOutOfSettings(service)) {
-      String titleContentDescription =
-          service.getString(R.string.talkback_menu_title_content_description);
+      String titleContentDescription = menuTitleContentDescription();
       if (FormFactorUtils.isAndroidTv()) {
         new Handler(Looper.getMainLooper())
             .post(() -> attachContentDescriptionOnTitle(currentDialog, titleContentDescription));
@@ -264,6 +266,24 @@ public class ListMenuManager implements WindowEventHandler, AccessibilityEventLi
       }
     }
     return true;
+  }
+
+  /**
+   * The menu title as read in setup, which says to swipe right to explore the menu. If swiping right
+   * no longer moves to the next item, it names the user's gesture for that instead.
+   */
+  private String menuTitleContentDescription() {
+    GestureShortcutMapping mapping = service.getGestureShortcutMapping();
+    if (mapping == null
+        || GestureHints.isAssigned(
+            mapping,
+            AccessibilityService.GESTURE_SWIPE_RIGHT,
+            service.getString(R.string.shortcut_value_next))) {
+      return service.getString(R.string.talkback_menu_title_content_description);
+    }
+    return service.getString(R.string.talkback_menu_title)
+        + "\n\n"
+        + GestureHints.actionLine(service, mapping, R.string.shortcut_value_next);
   }
 
   private void prepareMenu(ContextMenu menu, MenuId menuId) {

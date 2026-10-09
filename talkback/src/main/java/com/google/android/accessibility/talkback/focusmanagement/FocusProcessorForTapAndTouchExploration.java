@@ -86,10 +86,14 @@ public class FocusProcessorForTapAndTouchExploration {
   /**
    * Returns whether lifting the finger on {@code key} in the keyboard types it with {@code
    * typingMethod}. The keyboard's action key needs a double-tap with {@link
-   * #LIFT_TO_TYPE_EXCEPT_ACTION_KEY}.
+   * #LIFT_TO_TYPE_EXCEPT_ACTION_KEY}. Returns false if there's no key, such as when the finger
+   * lifts where nothing can take focus.
    */
   public static boolean liftsToType(
-      @TypingMethod int typingMethod, AccessibilityNodeInfoCompat key) {
+      @TypingMethod int typingMethod, @Nullable AccessibilityNodeInfoCompat key) {
+    if (key == null) {
+      return false;
+    }
     if (typingMethod == LIFT_TO_TYPE_EXCEPT_ACTION_KEY) {
       String id = key.getViewIdResourceName();
       return id == null || !id.endsWith(GBOARD_ACTION_KEY_ID_SUFFIX);

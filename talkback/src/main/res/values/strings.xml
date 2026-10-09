@@ -1271,7 +1271,7 @@
       Source: Dialog title when choosing the audio output device.
       Description: Dialog title for selecting audio output target. [CHAR LIMIT=45]
     -->
-    <string name="dialog_title_audio_output_device">Choose where to play TalkBack sound</string>
+    <string name="dialog_title_audio_output_device">Choose where to play Backtalk sound</string>
     <!--
       Source: Entry in the audio output device list for using system default.
       Description: Follows Android system default audio routing. [CHAR LIMIT=30]
@@ -1498,7 +1498,7 @@ Delays below 0.3 seconds will change double-tap to activate to two-finger tap to
   <string name="summary_pref_ai_description">Hear longer descriptions when you select \"<xliff:g id="Backtalk menu item" example="Describe image">%1$s</xliff:g>\" from the Backtalk menu</string>
 
   <!-- Message for dialog shown when a user wants to enable detailed image description. [CHAR LIMIT=NONE]  -->
-  <string name="dialog_message_detailed_ai_description">When using this feature, selected images will be sent to Google for processing and then deleted.\n\nGenerative AI is experimental, so it will make mistakes. By continuing, you agree to <xliff:g id="Gen AI Terms of Service" example="Google\'s Terms of Service">%1$s</xliff:g>.</string>
+  <string name="dialog_message_detailed_ai_description">Selected images are sent to Google\'s Gemini API to be described. With On-device AI turned on, they\'re described on this phone instead and aren\'t sent.\n\nWith a free API key, Google may keep what it receives, use it to improve its products, and have people review it. Generative AI is experimental, so it will make mistakes. The <xliff:g id="Gemini API terms" example="Gemini API Additional Terms of Service">%1$s</xliff:g> apply.</string>
 
   <!-- Message for dialog shown when a user wants to enable detailed image description. [CHAR LIMIT=NONE]  -->
   <string name="dialog_message_on_device_ai_description">You’ll hear a brief description when you focus on an image in supported apps.\n\nImages are processed on your device and never sent to Google. \n\nGenerative AI is experimental, so it will make mistakes. By continuing, you agree to <a href="https://policies.google.com/terms/generative-ai">Google\'s Terms of Service</a>.</string>
@@ -1640,10 +1640,10 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
   -->
   <string name="title_pref_disable_auto_icon_detection">Don\'t describe icons</string>
   <!-- Message for dialog shown when a user wants to enable detailed image description. [CHAR LIMIT=NONE]  -->
-  <string name="dialog_message_detailed_ai_promotion">Detailed image descriptions are powered by generative AI. When using this feature, selected images will be sent to Google for processing and then deleted.\n\nGenerative AI is experimental, so it will make mistakes. You can turn off detailed image descriptions anytime in Backtalk settings.\n\nBy continuing, you agree to <xliff:g id="Gen AI Terms of Service" example="Google\'s Terms of Service">%1$s</xliff:g>.</string>
+  <string name="dialog_message_detailed_ai_promotion">Detailed image descriptions are powered by generative AI. Selected images are sent to Google\'s Gemini API to be described. With On-device AI turned on, they\'re described on this phone instead and aren\'t sent.\n\nWith a free API key, Google may keep what it receives, use it to improve its products, and have people review it. Generative AI is experimental, so it will make mistakes. You can turn off detailed image descriptions anytime in Backtalk settings.\n\nThe <xliff:g id="Gemini API terms" example="Gemini API Additional Terms of Service">%1$s</xliff:g> apply.</string>
 
   <!-- Message for dialog shown when a user wants to enable screen description. [CHAR LIMIT=NONE]  -->
-  <string name="dialog_message_screen_overview_promotion">When using this feature, a screenshot of your screen will be sent to Google for processing and then deleted. Processing takes several seconds.\n\nGenerative AI is experimental, so it will make mistakes. By continuing, you agree to <xliff:g id="Gen AI Terms of Service" example="Google\'s Terms of Service">%1$s</xliff:g>.</string>
+  <string name="dialog_message_screen_overview_promotion">A screenshot of the screen is sent to Google\'s Gemini API to be described, which takes several seconds. With On-device AI turned on, it\'s described on this phone instead and isn\'t sent.\n\nWith a free API key, Google may keep what it receives, use it to improve its products, and have people review it. Generative AI is experimental, so it will make mistakes. The <xliff:g id="Gemini API terms" example="Gemini API Additional Terms of Service">%1$s</xliff:g> apply.</string>
 
   <!-- Message for dialog shown when a user wants to enable detailed image description. [CHAR LIMIT=NONE]  -->
   <string name="dialog_message_on_device_ai_model_download">You’ll hear a brief description when you focus on an image in supported apps.\n\nImages are processed on your device and never sent to Google.\n\nGenerative AI is experimental, so it will make mistakes. By continuing, you agree to <xliff:g id="Gen AI Terms of Service" example="Google\'s Terms of Service">%1$s</xliff:g>.</string>
@@ -3447,9 +3447,9 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
   <!-- The description of other ways to type in typing text page. [CHAR_LIMIT=NONE]-->
   <string name="other_ways_to_type_text">There are other ways to type in Backtalk. For example, you can use double tap to enter a letter.</string>
   <!-- The description of other ways to type in typing text page. [CHAR_LIMIT=NONE]-->
-  <string name="basic_other_ways_to_type_text">There are other ways to type in Backtalk. For example, you can use double tap to enter a letter. You can change this later in Backtalk settings > On-screen keyboard > Typing preference.</string>
+  <string name="basic_other_ways_to_type_text">There are other ways to type in Backtalk. For example, you can use double tap to enter a letter. You can change this later in Backtalk settings > On-screen keyboard > Typing method.</string>
   <!-- Source: The text of introducing TalkBack for TTS span. [CHAR_LIMIT=NONE] [BACKUP_MESSAGE_ID: 380750154623317254]-->
-  <string name="basic_other_ways_to_type_text_tts">There are other ways to type in Backtalk. For example, you can use double tap to enter a letter. You can change this later in Backtalk settings then On-screen keyboard then Typing preference.</string>
+  <string name="basic_other_ways_to_type_text_tts">There are other ways to type in Backtalk. For example, you can use double tap to enter a letter. You can change this later in Backtalk settings then On-screen keyboard then Typing method.</string>
   <!-- The text of change typing preference button in typing text page. [CHAR_LIMIT=NONE]-->
   <string name="change_typing_preference_text">Change typing preference</string>
   <!-- The title of moving cursor page. [CHAR_LIMIT=NONE]-->
@@ -3659,9 +3659,9 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
   <!-- General image description tutorial playground page content one. [CHAR_LIMIT=NONE] -->
   <string name="image_description_playground_content_one">When you’re focused on an image, open the Backtalk menu and select “Describe image”.\n\nThere’s one photo below. Try getting a description for it.</string>
   <!-- General image description tutorial playground page content two. [CHAR_LIMIT=NONE] -->
-  <string name="image_description_playground_content_two">You can change image description settings anytime in Backtalk settings > Image &#38; icon descriptions.</string>
+  <string name="image_description_playground_content_two">You can change image description settings anytime in Backtalk settings > Automatic descriptions.</string>
   <!-- General image description tutorial playground page content two for TTS. [CHAR_LIMIT=NONE] -->
-  <string name="image_description_playground_content_two_tts">You can change image description settings anytime in Backtalk settings then Image &#38; icon descriptions.</string>
+  <string name="image_description_playground_content_two_tts">You can change image description settings anytime in Backtalk settings then Automatic descriptions.</string>
   <!-- Image description tutorial playground image content description. [CHAR_LIMIT=NONE] -->
   <string name="image_description_sample_image_content_description">Sample image; tap with 3 fingers to open the Backtalk menu and select \"Describe image\" to hear a description.</string>
 

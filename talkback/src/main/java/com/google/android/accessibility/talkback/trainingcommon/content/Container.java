@@ -58,22 +58,27 @@ public class Container extends PageContentConfig {
           }
         });
 
-    final int containerItemSubText;
-    final int containerItemExitSubText;
+    final int containerItemSubTextRes;
+    final int containerItemExitSubTextRes;
     if (isKeyboardTutorial) {
-      containerItemSubText = R.string.keyboard_tutorial_go_to_next_container;
-      containerItemExitSubText = R.string.keyboard_tutorial_exit_container;
+      containerItemSubTextRes = R.string.keyboard_tutorial_go_to_next_container;
+      containerItemExitSubTextRes = R.string.keyboard_tutorial_exit_container;
     } else {
-      containerItemSubText =
+      containerItemSubTextRes =
           FeatureSupport.isMultiFingerGestureSupported()
               ? R.string.container_item_subtext
               : R.string.container_item_subtext_pre_r;
-      containerItemExitSubText =
+      containerItemExitSubTextRes =
           FeatureSupport.isMultiFingerGestureSupported()
               ? R.string.container_item_exit_subtext
               : R.string.container_item_exit_subtext_pre_r;
     }
 
+    // The texts name gestures, which say what the user's gestures are if they changed.
+    String containerItemSubText =
+        TutorialGestureUses.getText(context, containerItemSubTextRes, data);
+    String containerItemExitSubText =
+        TutorialGestureUses.getText(context, containerItemExitSubTextRes, data);
     addContainerItem(
         view,
         R.id.training_container_title1,
@@ -114,14 +119,14 @@ public class Container extends PageContentConfig {
   }
 
   private void addContainerItem(
-      View view, int titleResId, String titleString, int subTextResId, int subTextStringRes) {
+      View view, int titleResId, String titleString, int subTextResId, String subTextString) {
     TextView title = view.findViewById(titleResId);
     if (title != null) {
       title.setText(titleString);
     }
     TextView subText = view.findViewById(subTextResId);
     if (subText != null) {
-      subText.setText(subTextStringRes);
+      subText.setText(subTextString);
     }
   }
 }
