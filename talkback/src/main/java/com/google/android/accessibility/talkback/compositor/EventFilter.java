@@ -29,6 +29,7 @@ import android.view.accessibility.AccessibilityWindowInfo;
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import com.google.android.accessibility.talkback.compositor.rule.EventTypeViewAccessibilityFocusedFeedbackRule;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
+import com.google.android.accessibility.talkback.focusmanagement.TraversalTreeCache;
 import com.google.android.accessibility.talkback.focusmanagement.record.FocusActionInfo;
 import com.google.android.accessibility.utils.AccessibilityEventUtils;
 import com.google.android.accessibility.utils.AccessibilityNodeInfoUtils;
@@ -306,6 +307,11 @@ public class EventFilter {
       node = prepared.getNode();
       preparedFeedback = prepared.getFeedback();
       preparedContainerTitle = prepared.getContainerTitle();
+    } else if (TraversalTreeCache.holdsCurrent(focusedNode)) {
+      // Read from the app with the saved order, and nothing in its window has changed since, so a
+      // second read would only wait for the app, which on a watch is often busy scrolling.
+      node = focusedNode;
+      preparedFeedback = null;
     } else {
       // The node may come from the saved reading order, which keeps nodes for a while after their
       // text or state changes, such as a progress label or a switch the app turned on. Read it

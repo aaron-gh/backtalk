@@ -77,6 +77,13 @@ object TraversalTreeCache {
       AccessibilityNodeInfoCompat.ACTION_CLEAR_FOCUS,
     )
 
+  /**
+   * Showing a node on screen only scrolls when the node is near the edge, which on a round watch
+   * screen is nearly every swipe, and a scroll sends its own event, which throws the order away if
+   * it arrives. Throwing it away for the action as well rebuilt the order on every swipe there.
+   */
+  private val SHOW_ON_SCREEN = AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_SHOW_ON_SCREEN.id
+
   private const val NO_WINDOW_ID = -1
 
   private var root: AccessibilityNodeInfoCompat? = null
@@ -129,6 +136,15 @@ object TraversalTreeCache {
    */
   @JvmStatic
   fun holds(node: AccessibilityNodeInfoCompat): Boolean = strategy?.containsNode(node) == true
+
+  /**
+   * Whether the saved order holds [node] as the app has it now: nothing in its window has changed
+   * since the order was read from the app, not even a text or state, so the node needs no second
+   * read.
+   */
+  @JvmStatic
+  fun holdsCurrent(node: AccessibilityNodeInfoCompat): Boolean =
+    firstIgnoredChangeTime == 0L && holds(node)
 
   /**
    * Remembers where a navigation started. When the focused node is later removed — an app
@@ -205,10 +221,14 @@ object TraversalTreeCache {
    */
   @JvmStatic
   fun onNodeAction(actionId: Int) {
-    if (actionId !in FOCUS_ACTIONS) {
+    if (changesNodes(actionId)) {
       clear(if (BuildConfig.DEBUG) AccessibilityNodeInfoUtils.actionToString(actionId) else "")
     }
   }
+
+  /** Whether [actionId] can change the nodes before the app's event about it arrives. */
+  @JvmStatic
+  fun changesNodes(actionId: Int): Boolean = actionId !in FOCUS_ACTIONS && actionId != SHOW_ON_SCREEN
 
   /** Throws away the saved order if [event] can change its window. */
   @JvmStatic
