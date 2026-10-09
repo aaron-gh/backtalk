@@ -41,12 +41,14 @@ import android.content.Context;
 import android.text.TextUtils;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
+import androidx.annotation.VisibleForTesting;
 import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.gesture.GestureHints;
 import com.google.android.accessibility.talkback.gesture.GestureShortcutMapping;
 import com.google.android.accessibility.talkback.trainingcommon.TrainingIpcClient.ServiceData;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -222,13 +224,19 @@ public final class TutorialGestureUses {
    */
   public static @Nullable String gestureLinesIfChanged(
       Context context, @StringRes int textResId, ServiceData data) {
+    if (USES.containsKey(textResId) || KeyboardTutorialKeys.texts().contains(textResId)) {
+      data.getShortcuts().noteTextShown(textResId);
+    }
     @Nullable String keyLines = KeyboardTutorialKeys.linesIfChanged(context, textResId, data);
     if (keyLines != null) {
       return keyLines;
     }
     ImmutableList<GestureUse> uses = forText(textResId);
     if (uses.isEmpty()
-        || uses.stream().allMatch(use -> data.isGestureAssigned(use.gestureId, use.actionKey))) {
+        || uses.stream()
+            .allMatch(
+                use ->
+                    data.getShortcuts().isGestureAssigned(context, use.gestureId, use.actionKey))) {
       return null;
     }
     Set<Integer> actions = new LinkedHashSet<>();
@@ -264,6 +272,29 @@ public final class TutorialGestureUses {
       Context context, @StringRes int announcementResId, @Nullable String action) {
     Integer described = ANNOUNCEMENT_ACTIONS.get(announcementResId);
     return described == null || TextUtils.equals(context.getString(described), action);
+  }
+
+  /**
+   * Whether a text shown before the service sent its gestures and keyboard shortcuts, and so shown
+   * as written, is now replaced by lines.
+   */
+  public static boolean anyEarlyTextReplaced(Context context, ServiceData data) {
+    for (int textResId : data.getShortcuts().takeTextsShownEarly()) {
+      if (gestureLinesIfChanged(context, textResId, data) != null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** The texts that name gestures or keyboard shortcuts. */
+  @VisibleForTesting
+  static ImmutableSet<Integer> textsNamingShortcuts() {
+    return ImmutableSet.<Integer>builder()
+        .addAll(USES.keySet())
+        .addAll(ANNOUNCEMENT_ACTIONS.keySet())
+        .addAll(KeyboardTutorialKeys.texts())
+        .build();
   }
 
   /** Returns the gestures that the text {@code textResId} names, or an empty list. */

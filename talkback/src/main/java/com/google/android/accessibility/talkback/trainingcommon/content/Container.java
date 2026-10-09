@@ -58,75 +58,82 @@ public class Container extends PageContentConfig {
           }
         });
 
-    final int containerItemSubTextRes;
-    final int containerItemExitSubTextRes;
+    final int containerItemSubText;
+    final int containerItemExitSubText;
     if (isKeyboardTutorial) {
-      containerItemSubTextRes = R.string.keyboard_tutorial_go_to_next_container;
-      containerItemExitSubTextRes = R.string.keyboard_tutorial_exit_container;
+      containerItemSubText = R.string.keyboard_tutorial_go_to_next_container;
+      containerItemExitSubText = R.string.keyboard_tutorial_exit_container;
     } else {
-      containerItemSubTextRes =
+      containerItemSubText =
           FeatureSupport.isMultiFingerGestureSupported()
               ? R.string.container_item_subtext
               : R.string.container_item_subtext_pre_r;
-      containerItemExitSubTextRes =
+      containerItemExitSubText =
           FeatureSupport.isMultiFingerGestureSupported()
               ? R.string.container_item_exit_subtext
               : R.string.container_item_exit_subtext_pre_r;
     }
 
-    // The texts name gestures, which say what the user's gestures are if they changed.
-    String containerItemSubText =
-        TutorialGestureUses.getText(context, containerItemSubTextRes, data);
-    String containerItemExitSubText =
-        TutorialGestureUses.getText(context, containerItemExitSubTextRes, data);
     addContainerItem(
         view,
         R.id.training_container_title1,
         context.getString(R.string.container_tem_title) + " " + 1,
         R.id.training_container_subtext1,
-        containerItemSubText);
+        containerItemSubText,
+        data);
     addContainerItem(
         view,
         R.id.training_container_title2,
         context.getString(R.string.container_tem_title) + " " + 2,
         R.id.training_container_subtext2,
-        containerItemSubText);
+        containerItemSubText,
+        data);
     addContainerItem(
         view,
         R.id.training_container_title3,
         context.getString(R.string.container_tem_title) + " " + 3,
         R.id.training_container_subtext3,
-        containerItemSubText);
+        containerItemSubText,
+        data);
     addContainerItem(
         view,
         R.id.training_container_title4,
         context.getString(R.string.container_tem_title) + " " + 4,
         R.id.training_container_subtext4,
-        containerItemSubText);
+        containerItemSubText,
+        data);
     addContainerItem(
         view,
         R.id.training_container_title5,
         context.getString(R.string.container_tem_title) + " " + 5,
         R.id.training_container_subtext5,
-        containerItemSubText);
+        containerItemSubText,
+        data);
     addContainerItem(
         view,
         R.id.training_container_title6,
         context.getString(R.string.container_tem_title) + " " + 6,
         R.id.training_container_subtext6,
-        containerItemExitSubText);
+        containerItemExitSubText,
+        data);
     return view;
   }
 
   private void addContainerItem(
-      View view, int titleResId, String titleString, int subTextResId, String subTextString) {
+      View view,
+      int titleResId,
+      String titleString,
+      int subTextResId,
+      int subTextStringRes,
+      ServiceData data) {
     TextView title = view.findViewById(titleResId);
     if (title != null) {
       title.setText(titleString);
     }
     TextView subText = view.findViewById(subTextResId);
     if (subText != null) {
-      subText.setText(subTextString);
+      // The text names gestures or keys, which are the user's own if they were changed.
+      subText.setText(TutorialGestureUses.getText(view.getContext(), subTextStringRes, data));
     }
   }
 }

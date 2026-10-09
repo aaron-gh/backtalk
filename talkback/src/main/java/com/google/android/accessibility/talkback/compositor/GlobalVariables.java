@@ -43,6 +43,7 @@ import com.google.android.accessibility.talkback.controlsounds.ControlSounds;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForTapAndTouchExploration;
 import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForTapAndTouchExploration.TypingMethod;
+import com.google.android.accessibility.talkback.gesture.GestureHints;
 import com.google.android.accessibility.talkback.keyboard.KeyComboManager;
 import com.google.android.accessibility.talkback.keyboard.KeyComboModel;
 import com.google.android.accessibility.talkback.selector.SelectorController;
@@ -58,7 +59,6 @@ import com.google.android.accessibility.utils.input.WindowsDelegate;
 import com.google.android.accessibility.utils.monitor.CollectionState;
 import com.google.android.accessibility.utils.monitor.InputModeTracker;
 import com.google.android.apps.common.proguard.UsedByReflection;
-import com.google.common.base.Ascii;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
@@ -834,13 +834,13 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
     return TextUtils.isEmpty(readingMenuUpShortcut)
         ? (TextUtils.isEmpty(readingMenuDownShortcut)
             ? ""
-            : Ascii.toLowerCase(readingMenuDownShortcut))
+            : lowerCaseFirst(readingMenuDownShortcut))
         : (TextUtils.isEmpty(readingMenuDownShortcut)
-            ? Ascii.toLowerCase(readingMenuUpShortcut)
+            ? lowerCaseFirst(readingMenuUpShortcut)
             : mContext.getString(
                 R.string.gesture_1_or_2,
-                Ascii.toLowerCase(readingMenuUpShortcut),
-                Ascii.toLowerCase(readingMenuDownShortcut)));
+                lowerCaseFirst(readingMenuUpShortcut),
+                lowerCaseFirst(readingMenuDownShortcut)));
   }
 
   /** Returns the global input mode. */
@@ -862,8 +862,7 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
           ? ""
           : mContext.getString(
               R.string.no_adjust_setting_gesture,
-              Ascii.toLowerCase(
-                  mContext.getString(R.string.shortcut_selected_setting_next_action)));
+              lowerCaseFirst(mContext.getString(R.string.shortcut_selected_setting_next_action)));
     } else {
       return mContext.getString(
           R.string.template_hint_adjustable_1gesture,
@@ -913,9 +912,14 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
         gestureShortcutProvider != null ? gestureShortcutProvider.actionsShortcut() : null);
   }
 
-  /** Returns {@code gesture} in lower case to go inside a sentence, or "" if it's null. */
+  /** Returns {@code gesture} starting in lower case to go inside a sentence, or "" if it's null. */
   private CharSequence gestureInSentence(@Nullable CharSequence gesture) {
-    return TextUtils.isEmpty(gesture) ? "" : Ascii.toLowerCase(gesture.toString());
+    return TextUtils.isEmpty(gesture) ? "" : lowerCaseFirst(gesture);
+  }
+
+  /** Lower-cases the first letter of a gesture or action name, to go inside a sentence. */
+  private String lowerCaseFirst(CharSequence text) {
+    return GestureHints.lowerCaseFirst(mContext, text.toString());
   }
 
   /** Returns the gesture string to get to the next window. */

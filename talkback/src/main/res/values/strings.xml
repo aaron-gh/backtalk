@@ -758,6 +758,8 @@
     <string name="talkback_exit_watermark_text">Backtalk on. Hold 2 fingers on screen for 5 seconds to turn off. To stop showing this message, tap with 3 fingers to open the Backtalk menu.</string>
     <!-- The hint text of TalkBack mis-trigger-prevention watermark. [CHAR_LIMIT=NONE]-->
     <string name="talkback_exit_watermark_hint_text">Showing banner indicating Backtalk is on. To turn off Backtalk, hold 2 fingers on the screen for 5 seconds. To remove this banner, go to Backtalk Settings.</string>
+    <!-- The text of the Backtalk-on banner when no 3-finger tap opens the Backtalk menu. [CHAR_LIMIT=NONE]-->
+    <string name="talkback_exit_watermark_text_no_menu_gesture">Backtalk on. Hold 2 fingers on screen for 5 seconds to turn off. To stop showing this message, turn off Backtalk settings &gt; Advanced settings &gt; Show instructions for turning off Backtalk.</string>
 
     <!-- Label for the reset gesture settings. [CHAR_LIMIT=66] -->
     <string name="reset_gesture_settings_title">Reset gesture settings</string>

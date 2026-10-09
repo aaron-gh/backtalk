@@ -16,14 +16,20 @@
 
 package com.google.android.accessibility.talkback.trainingcommon.content;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
 import android.content.Context;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
+import androidx.annotation.VisibleForTesting;
 import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.keyboard.TalkBackPhysicalKeyboardShortcut;
 import com.google.android.accessibility.talkback.trainingcommon.TrainingIpcClient.ServiceData;
+import com.google.android.accessibility.talkback.trainingcommon.TutorialShortcuts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import java.util.List;
 
 /**
  * The keyboard shortcuts that each keyboard tutorial text names. The texts are written for the
@@ -62,13 +68,11 @@ final class KeyboardTutorialKeys {
               ImmutableList.of(NEXT_CONTROL, PREVIOUS_CONTROL, UP, DOWN))
           .put(
               R.string.keyboard_tutorial_system_navigation_page_text,
+              // Home, Recents, Back and Notifications are named by their system keys, which have no
+              // Backtalk shortcut on the default keymap.
               ImmutableList.of(
                   R.string.keycombo_shortcut_navigate_previous_window,
-                  R.string.keycombo_shortcut_navigate_next_window,
-                  R.string.keycombo_shortcut_global_home,
-                  R.string.keycombo_shortcut_global_recents,
-                  R.string.keycombo_shortcut_global_back,
-                  R.string.keycombo_shortcut_global_notifications))
+                  R.string.keycombo_shortcut_navigate_next_window))
           .put(
               R.string.keyboard_tutorial_speech_settings_page_text,
               ImmutableList.of(
@@ -159,14 +163,20 @@ final class KeyboardTutorialKeys {
   static @Nullable String linesIfChanged(
       Context context, @StringRes int textResId, ServiceData data) {
     ImmutableList<Integer> keys = KEYS.get(textResId);
+    TutorialShortcuts shortcuts = data.getShortcuts();
     if (keys == null
-        || keys.stream().allMatch(key -> data.isKeyComboAsWritten(context.getString(key)))) {
+        || keys.stream().allMatch(key -> shortcuts.isKeyComboAsWritten(context.getString(key)))) {
       return null;
     }
     StringBuilder lines = new StringBuilder();
     for (int keyRes : keys) {
       String key = context.getString(keyRes);
-      @Nullable String keysText = data.getKeyComboText(key);
+      @Nullable String title = title(context, key);
+      if (title == null) {
+        // A line needs the shortcut's name. Without one, the text as written is better.
+        return null;
+      }
+      @Nullable String keysText = shortcuts.getKeyComboText(key);
       if (keysText == null || keysText.equals(context.getString(R.string.keycombo_unassigned))) {
         keysText =
             context.getString(
@@ -178,17 +188,32 @@ final class KeyboardTutorialKeys {
         lines.append('\n');
       }
       lines.append(
-          context.getString(R.string.template_action_and_gesture, title(context, key), keysText));
+          context.getString(R.string.template_action_and_gesture, title, keysText));
     }
     return lines.toString();
   }
 
-  /** The name of the shortcut saved as {@code key}, as the keyboard shortcuts settings show it. */
-  private static String title(Context context, String key) {
+  /** The texts that name keyboard shortcuts. */
+  static ImmutableSet<Integer> texts() {
+    return KEYS.keySet();
+  }
+
+  /** The shortcuts that the texts name. */
+  @VisibleForTesting
+  static ImmutableSet<Integer> keys() {
+    return KEYS.values().stream().flatMap(List::stream).collect(toImmutableSet());
+  }
+
+  /**
+   * The name of the shortcut saved as {@code key}, as the keyboard shortcuts settings show it, or
+   * null if the settings don't list it.
+   */
+  @VisibleForTesting
+  static @Nullable String title(Context context, String key) {
     // The navigation shortcuts are saved with "_default" after the names the list knows.
     String listKey = key.endsWith("_default") ? key.substring(0, key.length() - 8) : key;
     TalkBackPhysicalKeyboardShortcut shortcut =
         TalkBackPhysicalKeyboardShortcut.getActionFromKey(context.getResources(), listKey);
-    return shortcut == null ? key : shortcut.getDescription(context.getResources());
+    return shortcut == null ? null : shortcut.getDescription(context.getResources());
   }
 }

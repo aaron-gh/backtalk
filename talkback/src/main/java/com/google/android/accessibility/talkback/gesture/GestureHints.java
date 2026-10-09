@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.utils.FeatureSupport;
+import com.google.android.accessibility.utils.WindowUtils;
 import java.util.Locale;
 
 /**
@@ -34,9 +35,33 @@ public final class GestureHints {
 
   private GestureHints() {}
 
-  /** Whether {@code gestureId} is assigned to the action saved as {@code action}. */
-  public static boolean isAssigned(GestureShortcutMapping mapping, int gestureId, String action) {
-    return TextUtils.equals(mapping.getActionKeyFromGestureId(gestureId), action);
+  /**
+   * Whether {@code gestureId}, as a left-to-right text names it, is assigned to the action saved as
+   * {@code action}.
+   */
+  public static boolean isAssigned(
+      Context context, GestureShortcutMapping mapping, int gestureId, String action) {
+    int laidOut = asLaidOut(gestureId, WindowUtils.isScreenLayoutRTL(context));
+    return TextUtils.equals(mapping.getActionKeyFromGestureId(laidOut), action);
+  }
+
+  /**
+   * Returns the gesture that does what {@code gestureId} does in a left-to-right layout. In a
+   * right-to-left layout, the left and right swipes swap settings, and the texts swap them too.
+   */
+  public static int asLaidOut(int gestureId, boolean isRtl) {
+    if (!isRtl) {
+      return gestureId;
+    }
+    return switch (gestureId) {
+      case AccessibilityService.GESTURE_SWIPE_LEFT -> AccessibilityService.GESTURE_SWIPE_RIGHT;
+      case AccessibilityService.GESTURE_SWIPE_RIGHT -> AccessibilityService.GESTURE_SWIPE_LEFT;
+      case AccessibilityService.GESTURE_SWIPE_LEFT_AND_RIGHT ->
+          AccessibilityService.GESTURE_SWIPE_RIGHT_AND_LEFT;
+      case AccessibilityService.GESTURE_SWIPE_RIGHT_AND_LEFT ->
+          AccessibilityService.GESTURE_SWIPE_LEFT_AND_RIGHT;
+      default -> gestureId;
+    };
   }
 
   /**
@@ -83,10 +108,11 @@ public final class GestureHints {
   public static String screenSearchNoKeywordHint(Context context, GestureShortcutMapping mapping) {
     String action = context.getString(R.string.shortcut_value_screen_search);
     if (FeatureSupport.isMultiFingerGestureSupported()
-        && isAssigned(mapping, AccessibilityService.GESTURE_3_FINGER_SINGLE_TAP_AND_HOLD, action)) {
+        && isAssigned(
+            context, mapping, AccessibilityService.GESTURE_3_FINGER_SINGLE_TAP_AND_HOLD, action)) {
       return context.getString(R.string.screen_search_no_keyword_hint);
     }
-    if (isAssigned(mapping, AccessibilityService.GESTURE_SWIPE_LEFT_AND_DOWN, action)) {
+    if (isAssigned(context, mapping, AccessibilityService.GESTURE_SWIPE_LEFT_AND_DOWN, action)) {
       return context.getString(R.string.screen_search_no_keyword_hint_pre_r);
     }
     return actionLine(context, mapping, R.string.shortcut_value_screen_search);

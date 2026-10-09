@@ -206,15 +206,16 @@ public class TalkBackExitController implements AccessibilityEventListener, Scree
     LayoutInflater inflater = LayoutInflater.from(service);
     talkbackExitWatermark = inflater.inflate(R.layout.talkback_exit_watermark, /* root= */ null);
     // The banner says to tap with 3 fingers for the Backtalk menu. If that gesture does something
-    // else, show the spoken text instead, which names no gesture that can be changed.
+    // else, it names the setting that hides the banner instead.
     GestureShortcutMapping mapping = service.getGestureShortcutMapping();
     if (mapping != null
         && !GestureHints.isAssigned(
+            service,
             mapping,
             AccessibilityService.GESTURE_3_FINGER_SINGLE_TAP,
             service.getString(R.string.shortcut_value_talkback_breakout))) {
       TextView text = talkbackExitWatermark.findViewById(R.id.talkback_exit_watermark_text);
-      text.setText(R.string.talkback_exit_watermark_hint_text);
+      text.setText(R.string.talkback_exit_watermark_text_no_menu_gesture);
     }
 
     WindowManager wm = (WindowManager) service.getSystemService(Context.WINDOW_SERVICE);

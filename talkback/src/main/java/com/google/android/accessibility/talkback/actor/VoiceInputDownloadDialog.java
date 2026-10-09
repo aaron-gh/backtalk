@@ -80,6 +80,7 @@ public class VoiceInputDownloadDialog extends BaseDialog {
         (context instanceof TalkBackService service) ? service.getGestureShortcutMapping() : null;
     if (mapping == null
         || GestureHints.isAssigned(
+            context,
             mapping,
             AccessibilityService.GESTURE_2_FINGER_DOUBLE_TAP,
             context.getString(R.string.shortcut_value_media_control_or_voice_input))) {
