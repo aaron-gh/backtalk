@@ -19,6 +19,9 @@ package com.google.android.accessibility.talkback.trainingcommon;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_GESTURE_ACTION_PREFIX;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_ANY_GESTURE_CHANGED;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_ICON_DETECTION_UNAVAILABLE;
+import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_KEYMAP_AS_WRITTEN;
+import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_KEY_COMBO_DEFAULT_PREFIX;
+import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_KEY_COMBO_TEXT_PREFIX;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_IMAGE_DESCRIPTION_UNAVAILABLE;
 import static com.google.android.accessibility.talkback.ipc.IpcService.MSG_REQUEST_AVAILABLE_FEATURES;
 import static com.google.android.accessibility.talkback.ipc.IpcService.MSG_REQUEST_GESTURES;
@@ -86,7 +89,10 @@ public class TrainingIpcClient extends IpcClient {
       case MSG_REQUEST_GESTURES -> {
         serviceData.actionKeyToGestureText.clear();
         serviceData.gestureIdToAction.clear();
+        serviceData.keyComboTexts.clear();
+        serviceData.keyComboDefaults.clear();
         Bundle data = msg.getData();
+        serviceData.keymapAsWritten = data.getBoolean(EXTRA_KEYMAP_AS_WRITTEN, true);
         data.keySet()
             .forEach(
                 key -> {
@@ -94,6 +100,20 @@ public class TrainingIpcClient extends IpcClient {
                   if (TextUtils.equals(key, EXTRA_IS_ANY_GESTURE_CHANGED)) {
                     serviceData.isAnyGestureChanged =
                         data.getBoolean(EXTRA_IS_ANY_GESTURE_CHANGED, /* defaultValue= */ true);
+                    return;
+                  }
+                  if (key.startsWith(EXTRA_KEY_COMBO_TEXT_PREFIX)) {
+                    serviceData.keyComboTexts.put(
+                        key.substring(EXTRA_KEY_COMBO_TEXT_PREFIX.length()), data.getString(key));
+                    return;
+                  }
+                  if (key.startsWith(EXTRA_KEY_COMBO_DEFAULT_PREFIX)) {
+                    serviceData.keyComboDefaults.put(
+                        key.substring(EXTRA_KEY_COMBO_DEFAULT_PREFIX.length()),
+                        data.getBoolean(key));
+                    return;
+                  }
+                  if (key.equals(EXTRA_KEYMAP_AS_WRITTEN)) {
                     return;
                   }
                   if (key.startsWith(EXTRA_GESTURE_ACTION_PREFIX)) {
@@ -143,6 +163,9 @@ public class TrainingIpcClient extends IpcClient {
     private boolean isAnyGestureChanged = true;
     private final HashMap<String, String> actionKeyToGestureText = new HashMap<>();
     private final HashMap<Integer, String> gestureIdToAction = new HashMap<>();
+    private final HashMap<String, String> keyComboTexts = new HashMap<>();
+    private final HashMap<String, Boolean> keyComboDefaults = new HashMap<>();
+    private boolean keymapAsWritten = true;
     private final boolean showExitBanner;
     private boolean isIconDetectionUnavailable = false;
     private boolean isImageDescriptionUnavailable = false;
@@ -177,6 +200,23 @@ public class TrainingIpcClient extends IpcClient {
         return true;
       }
       return TextUtils.equals(gestureIdToAction.get(gestureId), context.getString(actionKey));
+    }
+
+    /**
+     * Returns whether the keyboard shortcut {@code key} has the keys the keyboard tutorial names: the
+     * enhanced keymap's default keys with the Action key. Returns true before the service has sent
+     * its shortcuts.
+     */
+    public boolean isKeyComboAsWritten(String key) {
+      if (keyComboDefaults.isEmpty()) {
+        return true;
+      }
+      return keymapAsWritten && Boolean.TRUE.equals(keyComboDefaults.get(key));
+    }
+
+    /** Returns the text of the keys of the keyboard shortcut {@code key}, or null if it has none. */
+    public @Nullable String getKeyComboText(String key) {
+      return keyComboTexts.get(key);
     }
 
     /**

@@ -204,13 +204,18 @@ public final class TutorialGestureUses {
   private TutorialGestureUses() {}
 
   /**
-   * Returns null if the text {@code textResId} names no gestures, or if all the gestures it names
-   * still do what it says, so that the translated text is right. Otherwise it returns a line for
+   * Returns null if the text {@code textResId} names no gestures or keyboard shortcuts, or if all
+   * of them still do what it says, so that the translated text is right. Keyboard tutorial texts
+   * are checked by {@link KeyboardTutorialKeys}. Otherwise it returns a line for
    * each action the text names, with the gesture the user has for it, built from translated action
    * and gesture names, such as "Open Backtalk menu: Swipe down then right".
    */
   public static @Nullable String gestureLinesIfChanged(
       Context context, @StringRes int textResId, ServiceData data) {
+    @Nullable String keyLines = KeyboardTutorialKeys.linesIfChanged(context, textResId, data);
+    if (keyLines != null) {
+      return keyLines;
+    }
     ImmutableList<GestureUse> uses = forText(textResId);
     if (uses.isEmpty()
         || uses.stream().allMatch(use -> data.isGestureAssigned(use.gestureId, use.actionKey))) {
