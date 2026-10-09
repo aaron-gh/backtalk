@@ -172,7 +172,6 @@ import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.talkback.flags.Flags;
 import com.google.android.accessibility.talkback.focusmanagement.AccessibilityFocusMonitor;
 import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForLogicalNavigation;
-import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForTapAndTouchExploration;
 import com.google.android.accessibility.talkback.focusmanagement.TraversalTreeCache;
 import com.google.android.accessibility.talkback.focusmanagement.interpreter.ScreenStateMonitor;
 import com.google.android.accessibility.talkback.focusmanagement.interpreter.TouchExplorationInterpreter;
@@ -3287,9 +3286,7 @@ public class TalkBackService extends AccessibilityServiceCompat
             res,
             R.string.pref_rotor_step_degrees_key,
             R.string.pref_rotor_step_degrees_default));
-    globalVariables.setInterpretAsEntryKey(
-        FocusProcessorForTapAndTouchExploration.liftsToTypeAnyKey(
-            accessibilityFocusInterpreter.getTypingMethod()));
+    globalVariables.setTypingMethod(accessibilityFocusInterpreter.getTypingMethod());
 
     applyTouchExplorationPreference();
 
