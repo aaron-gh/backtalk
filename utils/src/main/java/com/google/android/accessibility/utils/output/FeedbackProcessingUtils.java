@@ -585,7 +585,8 @@ public class FeedbackProcessingUtils {
     }
     Object[] spans = spannable.getSpans(index, index, type);
     for (Object span : spans) {
-      if (!TextFormattingUtils.isSpanMatchingOptions(span, options)) {
+      if (!TextFormattingUtils.isSpanMatchingOptions(span, options)
+          || TextFormattingUtils.isComposingSpan(spannable, span)) {
         continue;
       }
       int spanStart = spannable.getSpanStart(span);
