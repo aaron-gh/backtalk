@@ -117,6 +117,14 @@
       android:key="@string/pref_node_desc_order_key"
       android:summary="%s"
       android:title="@string/pref_node_desc_order_title" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
+      android:defaultValue="@string/pref_time_feedback_format_default"
+      android:dialogTitle="@string/pref_time_feedback_format_title"
+      android:entries="@array/pref_time_feedback_format_entries"
+      android:entryValues="@array/pref_time_feedback_format_values"
+      android:key="@string/pref_time_feedback_format_key"
+      android:summary="%s"
+      android:title="@string/pref_time_feedback_format_title"/>
 
   <!-- Formatting -->
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference

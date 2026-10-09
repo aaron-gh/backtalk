@@ -72,7 +72,7 @@ When you touched an empty part of the screen, TalkBack waited 100 ms after the f
 
 After a window changes, TalkBack waits for the window to settle before it says the title. TalkBack counted that wait in a way that made 550 ms last about 900 ms. Backtalk counts the real time.
 
-The **Turn off animations** setting in **Advanced settings** turns off animations for the whole phone, so screens change immediately and the wait is only 200 ms. TalkBack called this setting **Reduce window announcement delay**, and had disabled the code that turns animations off, so the setting did nothing. Backtalk makes the setting work, and turns animations back on when you turn Backtalk off. On Android 12 and earlier, which don't let Backtalk turn animations off, the setting only shortens the wait. The setting is on by default.
+The **Turn off animations** setting in **Advanced settings** > **Reduce delay** turns off animations for the whole phone, so screens change immediately and the wait is only 200 ms. TalkBack called this setting **Reduce window announcement delay**, and had disabled the code that turns animations off, so the setting did nothing. Backtalk makes the setting work, and turns animations back on when you turn Backtalk off. On Android 12 and earlier, which don't let Backtalk turn animations off, the setting only shortens the wait. The setting is on by default.
 
 ### Swiping into the next part of a list
 
@@ -333,7 +333,7 @@ If you turn off **Always show this** in the hide screen dialog, Backtalk says on
 
 ### Proximity sensor
 
-Backtalk doesn't stop speech when something covers the proximity sensor. To turn this back on, go to **Advanced settings** > **Cover proximity sensor to stop speech**.
+Backtalk doesn't stop speech when something covers the proximity sensor. To turn this back on, go to **Sound and vibration** > **Cover proximity sensor to stop speech**.
 
 ### Screen on and off announcements
 
@@ -365,7 +365,7 @@ Android lets only certain apps, such as smartwatch companions, change where call
 adb shell appops set fyi.quin.backtalk MANAGE_ONGOING_CALLS allow
 ```
 
-Then turn on **Advanced settings** > **Speaker when away from your ear**. Until you grant the permission, the setting is unavailable and shows the command. This feature requires Android 12 or later.
+Then turn on **Sound and vibration** > **Speaker when away from your ear**. Until you grant the permission, the setting is unavailable and shows the command. This feature requires Android 12 or later.
 
 ## Direct touch
 
@@ -477,7 +477,7 @@ When Gemini can't describe something, TalkBack says "Something went wrong". Back
 
 ### Layout and wording
 
-Backtalk groups its main settings under **Feedback**, **Controls**, **Typing and braille**, and **More**, and puts **Backtalk menu** and **Reading controls** in the main settings. Many settings have clearer names, such as **Speak item type** and **Order of item details**. Backtalk removes the links to the Play Store, the privacy policy, the terms of service, Disability Support, and Google's TalkBack help, and the pages about new features in TalkBack. **Display speech output** is only in **Developer settings**.
+Backtalk groups its main settings under **Feedback**, **Controls**, **Typing and braille**, and **More**, and puts **Backtalk menu** and **Reading controls** in the main settings. Many settings have clearer names, such as **Speak item type** and **Order of item details**. Backtalk removes the links to the Play Store, the privacy policy, the terms of service, Disability Support, and Google's TalkBack help, and the pages about new features in TalkBack. **Display speech output** is only in **Developer settings**. **Time format** is in **Verbosity**, **Turn off animations** is in **Reduce delay**, and **Cover proximity sensor to stop speech** is in **Sound and vibration**, instead of in **Advanced settings**.
 
 ### Dark mode
 
