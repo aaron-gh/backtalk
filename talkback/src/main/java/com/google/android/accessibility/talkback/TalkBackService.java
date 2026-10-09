@@ -1178,15 +1178,46 @@ public class TalkBackService extends AccessibilityServiceCompat
   private static final int KEY_STOPS_SPEECH = 1;
   private static final int TYPED_KEY_STOPS_SPEECH = 2;
 
+  /** Whether Ctrl is held on a physical keyboard with no other key pressed since it went down. */
+  private boolean ctrlTapPending = false;
+
   /**
-   * Returns what a key press on a physical keyboard does to speech. Ctrl and every key that isn't a
-   * modifier or volume key stop it, except typed characters and Enter, which follow their settings.
+   * Pauses or resumes speech when Ctrl on a physical keyboard is pressed and released with no other
+   * key, as a two-finger tap does. A shortcut with Ctrl doesn't.
+   */
+  private void handleCtrlTap(KeyEvent keyEvent, EventId eventId) {
+    int keyCode = keyEvent.getKeyCode();
+    boolean isCtrl =
+        keyCode == KeyEvent.KEYCODE_CTRL_LEFT || keyCode == KeyEvent.KEYCODE_CTRL_RIGHT;
+    if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+      if (!isCtrl) {
+        ctrlTapPending = false;
+      } else if (keyEvent.getRepeatCount() == 0) {
+        ctrlTapPending = isFromPhysicalKeyboard(keyEvent);
+      }
+      return;
+    }
+    if (!isCtrl || !ctrlTapPending) {
+      return;
+    }
+    ctrlTapPending = false;
+    if (!pipeline.getActorState().getContinuousRead().isActive()
+        && speechController.readyToPause()) {
+      // As the gesture does, clear the pause that read from top keeps for itself.
+      interruptFullScreenReadActor();
+    }
+    pipeline
+        .getFeedbackReturner()
+        .returnFeedback(eventId, Feedback.speech(Feedback.Speech.Action.PAUSE_OR_RESUME));
+  }
+
+  /**
+   * Returns what a key press on a physical keyboard does to speech. Every key that isn't a
+   * modifier, lock or volume key stops it, except typed characters and Enter, which follow their
+   * settings. Ctrl alone pauses speech instead, see {@link #handleCtrlTap}.
    */
   private int keyEffectOnSpeech(KeyEvent keyEvent) {
     int keyCode = keyEvent.getKeyCode();
-    if (keyCode == KeyEvent.KEYCODE_CTRL_LEFT || keyCode == KeyEvent.KEYCODE_CTRL_RIGHT) {
-      return KEY_STOPS_SPEECH;
-    }
     if (KeyEvent.isModifierKey(keyCode)
         || keyCode == KeyEvent.KEYCODE_CAPS_LOCK
         || keyCode == KeyEvent.KEYCODE_NUM_LOCK
@@ -1348,6 +1379,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     EventId eventId = perf.onEventReceived(keyEvent);
 
     if (isServiceActive()) {
+      handleCtrlTap(keyEvent, eventId);
       if (keyAction == KeyEvent.ACTION_DOWN
           && shouldInterruptByAnyKeyEvent()
           && isFromPhysicalKeyboard(keyEvent)) {
