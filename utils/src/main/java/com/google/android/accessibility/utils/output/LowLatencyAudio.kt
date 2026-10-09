@@ -45,7 +45,8 @@ import java.util.concurrent.TimeUnit
  * next sound starts at once, then pauses. Its thread ends then, and nothing runs until the next
  * sound or speech. While an app records from the microphone, the track pauses as soon as what it
  * played has been heard: some apps, such as Gemini, don't take the user's voice while accessibility
- * audio plays, even silence.
+ * audio plays, even silence. Speech and sounds that start while an app records play the usual
+ * way instead, for the same reason.
  */
 class LowLatencyAudio private constructor(context: Context, private val attributes: AudioAttributes) {
   /** Output frames per second. */
@@ -873,6 +874,13 @@ class LowLatencyAudio private constructor(context: Context, private val attribut
     /** The players made so far, without making new ones. */
     /** Whether an app is recording from the microphone, set by [setMicrophoneInUse]. */
     @Volatile private var microphoneInUse = false
+
+    /**
+     * Whether an app is recording from the microphone. Speech and sounds then play the usual way:
+     * some apps, such as Gemini, don't hear the user while the accessibility service itself plays
+     * audio, but do while the speech engine plays it.
+     */
+    @JvmStatic fun isMicrophoneInUse(): Boolean = microphoneInUse
 
     /**
      * Tells the players whether an app is recording from the microphone, so that while one is,

@@ -473,7 +473,9 @@ public class FeedbackController {
 
   private void playFromPool(int resId, float rate, float leftVolume, float rightVolume) {
     @Nullable String path = customSoundPath(resId);
-    if (mLowLatencyAudio && playLowLatency(resId, path, rate, leftVolume, rightVolume)) {
+    if (mLowLatencyAudio
+        && !LowLatencyAudio.isMicrophoneInUse()
+        && playLowLatency(resId, path, rate, leftVolume, rightVolume)) {
       return;
     }
     int soundId = mSoundIds.get(resId);
