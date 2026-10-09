@@ -41,6 +41,7 @@ import com.google.android.accessibility.talkback.compositor.Compositor;
 import com.google.android.accessibility.talkback.eventprocessor.EventState;
 import com.google.android.accessibility.talkback.eventprocessor.ProcessorAccessibilityHints;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
+import com.google.android.accessibility.talkback.gesture.GestureHints;
 import com.google.android.accessibility.talkback.gesture.GestureShortcutMapping;
 import com.google.android.accessibility.utils.AccessibilityEventListener;
 import com.google.android.accessibility.utils.AccessibilityNodeInfoUtils;
@@ -554,7 +555,9 @@ public class ScreenFeedbackManager
         }
         String utterance =
             (FeatureSupport.isMultiFingerGestureSupported() && gesture != null)
-                ? context.getString(R.string.suggestions_window_available_with_gesture, gesture)
+                ? context.getString(
+                    R.string.suggestions_window_available_with_gesture,
+                    GestureHints.lowerCaseFirst(context, gesture))
                 : context.getString(R.string.suggestions_window_available);
         feedback.addPart(
             new FeedbackPart(utterance)

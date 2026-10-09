@@ -46,6 +46,7 @@ import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.TalkBackService;
 import com.google.android.accessibility.talkback.compositor.Compositor;
 import com.google.android.accessibility.talkback.compositor.Compositor.Flavor;
+import com.google.android.accessibility.talkback.gesture.GestureHints;
 import com.google.android.accessibility.talkback.gesture.GestureShortcutMapping;
 import com.google.android.accessibility.talkback.monitor.DeviceConfigurationMonitor.OnConfigurationChangedListener;
 import com.google.android.accessibility.talkback.utils.FocusIndicatorUtils;
@@ -244,10 +245,7 @@ public class DimScreenActor implements OnConfigurationChangedListener {
       view.setTimerLimit(INSTRUCTION_VISIBLE_SECONDS);
     }
 
-    // Updates the gesture to open TalkBack menu on the dimming overlay.
-    view.setInstruction(
-        gestureShortcutMapping.getGestureFromActionKey(
-            service.getString(R.string.shortcut_value_talkback_breakout)));
+    view.setInstruction(exitInstruction());
 
     initCurtainSize();
   }
@@ -423,14 +421,30 @@ public class DimScreenActor implements OnConfigurationChangedListener {
             .setSpeech(
                 Speech.builder()
                     .setAction(Action.SPEAK)
-                    .setText(
-                        service.getString(
-                            R.string.screen_dimming_exit_instruction_line2,
-                            gestureShortcutMapping.getGestureFromActionKey(
-                                service.getString(R.string.shortcut_value_talkback_breakout)),
-                            service.getString(R.string.shortcut_disable_dimming)))
+                    .setText(exitInstruction())
                     .setOptions(announcementOptions(SpeechController.QUEUE_MODE_QUEUE))
                     .build()));
+  }
+
+  /**
+   * How to show the screen again, with the user's gestures: from the Backtalk menu if a gesture
+   * opens it, or else with the gesture for hiding and showing the screen, or else where gestures
+   * are assigned.
+   */
+  private String exitInstruction() {
+    String menuGesture =
+        GestureHints.gestureInSentence(
+            service,
+            gestureShortcutMapping,
+            service.getString(R.string.shortcut_value_talkback_breakout));
+    if (menuGesture != null) {
+      return service.getString(
+          R.string.screen_dimming_exit_instruction_line2,
+          menuGesture,
+          service.getString(R.string.shortcut_disable_dimming));
+    }
+    return GestureHints.actionLine(
+        service, gestureShortcutMapping, R.string.shortcut_value_show_hide_screen);
   }
 
   /**

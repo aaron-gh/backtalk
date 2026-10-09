@@ -1526,6 +1526,11 @@ public class TalkBackService extends AccessibilityServiceCompat
     return true;
   }
 
+  /** The gesture settings, or null before the service has connected. */
+  public @Nullable GestureShortcutMapping getGestureShortcutMapping() {
+    return gestureShortcutMapping;
+  }
+
   public SpeechControllerImpl getSpeechController() {
     if (speechController == null) {
       throw new IllegalStateException("mSpeechController has not been initialized");
