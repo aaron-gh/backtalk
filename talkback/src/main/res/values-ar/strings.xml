@@ -386,7 +386,6 @@
   <string name="dialog_message_turn_on_image_description">يمكنك إعادة المحاولة بعد تفعيل الأوصاف التلقائية أو المفصَّلة للصور</string>
   <string name="title_pref_detailed_image_description">أوصاف الصور التفصيلية</string>
   <string name="summary_pref_ai_description">‏الاستماع إلى أوصاف أكثر تفصيلاً عند اختيار \"%1$s\" من قائمة TalkBack</string>
-  <string name="dialog_message_detailed_ai_description">‏عند استخدام هذه الميزة، ستُرسَل الصور المحدَّدة إلى Google لمعالجتها وسيتم حذفها بعد ذلك.\n\nما زال الذكاء الاصطناعي التوليدي في مرحلة تجريبية، لذا قد يقدِّم معلومات غير دقيقة. تشير المتابعة إلى موافقتك على %1$s.</string>
   <string name="dialog_message_on_device_ai_description">‏ستتمكّن من سماع وصف موجز عند التركيز على صورة في التطبيقات المتوافقة.\n\nتتم معالجة الصور على جهازك ولا يتم إرسالها إلى Google أبدًا. \n\nإنّ الذكاء الاصطناعي التوليدي هو تكنولوجيا تجريبية، لذا قد يقدِّم معلومات غير دقيقة. تعني المتابعة موافقتك على <a href="https://policies.google.com/terms/generative-ai">بنود الخدمة من Google</a>.</string>
   <string name="enable_gemini">تفعيل</string>
   <string name="powered_by_gemini">نشاط مستنِد إلى الذكاء الاصطناعي التوليدي</string>
@@ -417,8 +416,6 @@
   <string name="title_pref_enable_auto_icon_detection">كل الرموز</string>
   <string name="title_pref_enable_auto_icon_detection_unlabelled_only">الرموز غير المصنَّفة فقط</string>
   <string name="title_pref_disable_auto_icon_detection">عدم وصف الرموز</string>
-  <string name="dialog_message_detailed_ai_promotion">‏أوصاف الصور المفصَّلة هي ميزة تستنِد إلى الذكاء الاصطناعي التوليدي. عند استخدام هذه الميزة، ستُرسَل الصور المحدَّدة إلى Google لمعالجتها وسيتم حذفها بعد ذلك.\n\nالذكاء الاصطناعي التوليدي هو تقنية تجريبية، لذا قد يقدِّم معلومات غير دقيقة. يمكنك في أي وقت إيقاف ميزة أوصاف الصور المفصَّلة من خلال \"إعدادات TalkBack\".\n\nتشير المتابعة إلى موافقتك على %1$s.</string>
-  <string name="dialog_message_screen_overview_promotion">‏عند استخدام هذه الميزة، سيتم إرسال لقطة شاشة من شاشتك إلى Google لمعالجتها وسيتم حذفها بعد ذلك. وتستغرق عملية المعالجة عدة ثوانٍ.\n\nيُرجى العِلم بأنّ الذكاء الاصطناعي التوليدي تكنولوجيا تجريبية، لذا قد يقدِّم معلومات غير دقيقة. تشير المتابعة إلى موافقتك على \"%1$s\".</string>
   <string name="dialog_message_on_device_ai_model_download">‏ستتمكّن من سماع وصف موجز عند التركيز على صورة في التطبيقات المتوافقة.\n\nتتم معالجة الصور على جهازك ولا يتم إرسالها إلى Google أبدًا.\n\nإنّ الذكاء الاصطناعي التوليدي هو تكنولوجيا تجريبية، لذا قد يقدِّم معلومات غير دقيقة. تعني المتابعة موافقتك على %1$s.</string>
   <string name="title_pref_enable_gemini_support">تفعيل</string>
   <string name="title_pref_disable_gemini_support">إيقاف</string>

@@ -386,7 +386,6 @@
   <string name="dialog_message_turn_on_image_description">Включите автоматические или подробные описания изображений и повторите попытку.</string>
   <string name="title_pref_detailed_image_description">Подробные описания изображений</string>
   <string name="summary_pref_ai_description">Чтобы прослушать описание, понадобится нажать \"%1$s\" в меню TalkBack</string>
-  <string name="dialog_message_detailed_ai_description">При использовании этой функции выбранные изображения будут отправляться в Google для обработки, а затем удаляться.\n\nГенеративный ИИ – экспериментальная технология, поэтому он может допускать ошибки. Продолжая, вы принимаете %1$s.</string>
   <string name="dialog_message_on_device_ai_description">При переходе к изображению в поддерживаемом приложении вы услышите краткое описание.\n\nИзображения обрабатываются на вашем устройстве и никогда не отправляются в Google. \n\nГенеративный ИИ может допускать ошибки, поскольку это экспериментальная технология. Продолжая, вы принимаете <a href="https://policies.google.com/terms/generative-ai">Условия использования Google</a>.</string>
   <string name="enable_gemini">Включить</string>
   <string name="powered_by_gemini">На базе генеративного ИИ</string>
@@ -417,8 +416,6 @@
   <string name="title_pref_enable_auto_icon_detection">Все значки</string>
   <string name="title_pref_enable_auto_icon_detection_unlabelled_only">Только значки без подписей</string>
   <string name="title_pref_disable_auto_icon_detection">Не описывать значки</string>
-  <string name="dialog_message_detailed_ai_promotion">Подробные описания изображений создаются с помощью генеративного ИИ. При использовании этой функции выбранные изображения будут отправляться в Google для обработки, а затем удаляться.\n\nГенеративный ИИ – экспериментальная технология, поэтому он может допускать ошибки. Подробное описание изображений можно в любой момент отключить в настройках TalkBack.\n\nПродолжая, вы принимаете %1$s.</string>
-  <string name="dialog_message_screen_overview_promotion">При использовании этой функции скриншоты экрана отправляются в Google на обработку, а затем удаляются. Обработка занимает несколько секунд.\n\nГенеративный ИИ – экспериментальная технология, поэтому он будет допускать ошибки. Продолжая, вы принимаете %1$s.</string>
   <string name="dialog_message_on_device_ai_model_download">При переходе к изображению в поддерживаемом приложении вы услышите краткое описание.\n\nИзображения обрабатываются на вашем устройстве и никогда не отправляются в Google.\n\nГенеративный ИИ может допускать ошибки, поскольку это экспериментальная технология. Продолжая, вы принимаете %1$s.</string>
   <string name="title_pref_enable_gemini_support">Включить</string>
   <string name="title_pref_disable_gemini_support">Отключить</string>
