@@ -17,6 +17,7 @@
 package com.google.android.accessibility.talkback.directtouch
 
 import android.accessibilityservice.AccessibilityService
+import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.graphics.Rect
 import android.graphics.Region
@@ -270,7 +271,8 @@ class DirectTouchController(
     lastNavBarButtonTime = now
     // The press opens another screen at once, and that screen's announcement would cut the button
     // off, so the button can't be interrupted, and the announcement follows it. It is also said
-    // over media, as a press always is.
+    // over media, as a press always is. No named queue mode both interrupts and ignores interrupts.
+    @SuppressLint("WrongConstant")
     val options =
       SpeakOptions.create()
         .setQueueMode(
