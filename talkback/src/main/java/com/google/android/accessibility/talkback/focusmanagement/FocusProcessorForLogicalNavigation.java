@@ -2683,7 +2683,9 @@ public class FocusProcessorForLogicalNavigation {
             ScrollTimeout.SCROLL_TIMEOUT_LONG,
             autoScrollChecker,
             eventId);
-    if (scrolled && scrollCallback != null) {
+    if (scrolled
+        && scrollCallback != null
+        && navigationAction.targetType == NavigationTarget.TARGET_DEFAULT) {
       AutoScrollCallback callback = scrollCallback;
       AccessibilityNodeInfoCompat scrollable = scrollableNodeInfo.getNode();
       earlyScrollCheckHandler.post(
