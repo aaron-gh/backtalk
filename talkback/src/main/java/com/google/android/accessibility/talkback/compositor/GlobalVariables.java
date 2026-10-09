@@ -756,6 +756,13 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
     return deviceScreenNoTouch;
   }
 
+  /** Returns the hint for screen search with no keyword yet, naming the user's gesture. */
+  public CharSequence getScreenSearchNoKeywordHint() {
+    return gestureShortcutProvider != null
+        ? gestureShortcutProvider.screenSearchNoKeywordHint()
+        : mContext.getString(R.string.screen_search_no_keyword_hint_pre_r);
+  }
+
   /** Returns the gesture string for the node actions in TalkBack menu. */
   public CharSequence getGestureStringForNodeActions() {
     if (inputModeTracker.getInputMode() == INPUT_MODE_KEYBOARD) {
@@ -765,7 +772,8 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
         return keyCombo;
       }
     }
-    return gestureShortcutProvider != null ? gestureShortcutProvider.nodeMenuShortcut() : "";
+    return gestureInSentence(
+        gestureShortcutProvider != null ? gestureShortcutProvider.nodeMenuShortcut() : null);
   }
 
   /** Returns the gesture string for the node actions in reading control. */
@@ -863,7 +871,13 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
 
   /** Returns the gesture string to perform the next action of selected setting in reading menu. */
   public CharSequence getGestureStringForActionShortcut() {
-    return gestureShortcutProvider != null ? gestureShortcutProvider.actionsShortcut() : "";
+    return gestureInSentence(
+        gestureShortcutProvider != null ? gestureShortcutProvider.actionsShortcut() : null);
+  }
+
+  /** Returns {@code gesture} in lower case to go inside a sentence, or "" if it's null. */
+  private CharSequence gestureInSentence(@Nullable CharSequence gesture) {
+    return TextUtils.isEmpty(gesture) ? "" : Ascii.toLowerCase(gesture.toString());
   }
 
   /** Returns the gesture string to get to the next window. */

@@ -37,7 +37,11 @@ import static com.google.android.accessibility.talkback.compositor.roledescripti
 import static com.google.android.accessibility.talkback.dynamicfeature.ModuleDownloadPrompter.Requester.ONBOARDING;
 import static com.google.android.accessibility.talkback.imagecaption.ImageCaptionUtils.CaptionType.ICON_LABEL;
 import static com.google.android.accessibility.talkback.imagecaption.ImageCaptionUtils.CaptionType.IMAGE_DESCRIPTION;
+import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_GESTURE_ACTION_PREFIX;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_ANY_GESTURE_CHANGED;
+import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_KEYMAP_AS_WRITTEN;
+import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_KEY_COMBO_DEFAULT_PREFIX;
+import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_KEY_COMBO_TEXT_PREFIX;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_ICON_DETECTION_UNAVAILABLE;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_IMAGE_DESCRIPTION_UNAVAILABLE;
 import static com.google.android.accessibility.talkback.logging.EventLatencyLogger.EVENTS_TO_LOG_ATTRIBUTES;
@@ -203,7 +207,10 @@ import com.google.android.accessibility.talkback.interpreters.UiChangeEventInter
 import com.google.android.accessibility.talkback.ipc.IpcService;
 import com.google.android.accessibility.talkback.ipc.IpcService.IpcClientCallback;
 import com.google.android.accessibility.talkback.ipc.IpcService.ServerOnDestroyListener;
+import com.google.android.accessibility.talkback.keyboard.KeyCombo;
 import com.google.android.accessibility.talkback.keyboard.KeyComboManager;
+import com.google.android.accessibility.talkback.keyboard.KeyComboModel;
+import com.google.android.accessibility.talkback.keyboard.NewKeyComboModel;
 import com.google.android.accessibility.talkback.labeling.CustomLabelManager;
 import com.google.android.accessibility.talkback.labeling.StoragelessLabelManager;
 import com.google.android.accessibility.talkback.labeling.TalkBackLabelManager;
@@ -412,8 +419,37 @@ public class TalkBackService extends AccessibilityServiceCompat
 
       Bundle data = new Bundle();
       actionKeyToGestureText.forEach(data::putString);
+      // So that the tutorial can tell whether the gestures its texts name still do their actions.
+      mapping
+          .getGestureActions()
+          .forEach(
+              (gestureId, action) ->
+                  data.putString(EXTRA_GESTURE_ACTION_PREFIX + gestureId, action));
+      putKeyCombos(data);
       data.putBoolean(EXTRA_IS_ANY_GESTURE_CHANGED, GestureController.isAnyGestureChanged(context));
+      // The mapping listens to preference changes until unbound.
+      mapping.onUnbind();
       return data;
+    }
+
+    /** Adds the keyboard shortcuts, so that the keyboard tutorial can name the user's keys. */
+    private void putKeyCombos(Bundle data) {
+      KeyComboManager manager = talkBackService.keyComboManager;
+      @Nullable KeyComboModel model = (manager == null) ? null : manager.getKeyComboModel();
+      if (model == null) {
+        return;
+      }
+      data.putBoolean(
+          EXTRA_KEYMAP_AS_WRITTEN,
+          model instanceof NewKeyComboModel
+              && model.getTriggerModifier() == KeyEvent.META_META_ON);
+      for (String key : model.getKeyComboMap().keySet()) {
+        KeyCombo combo = model.getKeyComboForKey(key);
+        data.putString(
+            EXTRA_KEY_COMBO_TEXT_PREFIX + key, manager.getKeyComboStringRepresentation(combo));
+        data.putBoolean(
+            EXTRA_KEY_COMBO_DEFAULT_PREFIX + key, combo.equals(model.getDefaultKeyCombo(key)));
+      }
     }
 
     @Override
@@ -1524,6 +1560,11 @@ public class TalkBackService extends AccessibilityServiceCompat
     perf.onHandlerDone(eventId);
     primesController.stopTimer(TimerAction.GESTURE_EVENT);
     return true;
+  }
+
+  /** The gesture settings, or null before the service has connected. */
+  public @Nullable GestureShortcutMapping getGestureShortcutMapping() {
+    return gestureShortcutMapping;
   }
 
   public SpeechControllerImpl getSpeechController() {

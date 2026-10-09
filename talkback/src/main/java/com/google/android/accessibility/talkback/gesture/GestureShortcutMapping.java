@@ -766,6 +766,11 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
         : shortcut;
   }
 
+  @Override
+  public CharSequence screenSearchNoKeywordHint() {
+    return GestureHints.screenSearchNoKeywordHint(context, this);
+  }
+
   /**
    * Gets corresponding action from gesture-action mappings.
    *
@@ -856,6 +861,11 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
       }
     }
     return matchedGestures;
+  }
+
+  /** Returns the action of each gesture in the current gesture set, by gesture ID. */
+  public Map<Integer, String> getGestureActions() {
+    return new HashMap<>(gestureIdToActionKey.get(currentGestureSet));
   }
 
   /**

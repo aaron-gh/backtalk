@@ -631,13 +631,14 @@ public class AccessibilityNodeFeedbackUtils {
         }
       }
 
-      // Gets a hint for node actions in the TalkBack menu.
-      if (!menuTypeList.isEmpty()) {
+      // Gets a hint for node actions in the TalkBack menu, if a gesture or key opens it.
+      CharSequence menuShortcut = globalVariables.getGestureStringForNodeActions();
+      if (!menuTypeList.isEmpty() && !TextUtils.isEmpty(menuShortcut)) {
         hint.append(
             context.getString(
                 R.string.template_hint_menu_type_high_verbosity,
                 Joiner.on(CompositorUtils.getSeparator()).join(menuTypeList),
-                globalVariables.getGestureStringForNodeActions()));
+                menuShortcut));
       }
       return hint;
     }

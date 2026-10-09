@@ -1627,9 +1627,7 @@ public class SelectorController implements UserInputEventListener {
     if (granularity.setting == GRANULARITY_SEARCH) {
       CharSequence keyword = actorState.getSearchState().getLastKeyword();
       if (TextUtils.isEmpty(keyword)) {
-        return FeatureSupport.isMultiFingerGestureSupported()
-            ? context.getString(R.string.screen_search_no_keyword_hint)
-            : context.getString(R.string.screen_search_no_keyword_hint_pre_r);
+        return gestureMapping.screenSearchNoKeywordHint().toString();
       }
       CharSequence keywordHint =
           keyword.length() < 15
