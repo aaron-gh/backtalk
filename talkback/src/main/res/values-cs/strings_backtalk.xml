@@ -107,5 +107,12 @@
     <string name="pref_node_desc_order_entry_state_role_name_pos">Stav, typ, název</string>
     <string name="value_focus_delay_200ms_default">0,2 sekundy (výchozí)</string>
     <string name="value_focus_delay_300ms">0,3 sekundy</string>
+
+    <!-- Physical keyboard speech interruption. -->
+    <string name="title_pref_interrupt_typing">Přerušovat řeč při psaní</string>
+    <string name="pref_interrupt_typing_entry_always">Vždy</string>
+    <string name="pref_interrupt_typing_entry_edit_fields">V editačních polích</string>
+    <string name="pref_interrupt_typing_entry_keyboard_echo">Při odezvě klávesnice</string>
+    <string name="title_pref_interrupt_enter">Přerušovat řeč klávesou Enter</string>
     <string name="value_type_confirmation_lift_to_type_except_action_key">Podržením prstu vyberte libovolnou klávesu, pak prst zvedněte. Pro Enter, Hotovo nebo Odeslat klepněte dvakrát.</string>
 </resources>
