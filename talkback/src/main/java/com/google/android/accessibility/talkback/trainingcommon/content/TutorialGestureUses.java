@@ -33,6 +33,7 @@ import static android.accessibilityservice.AccessibilityService.GESTURE_SWIPE_DO
 import static android.accessibilityservice.AccessibilityService.GESTURE_SWIPE_DOWN_AND_UP;
 import static android.accessibilityservice.AccessibilityService.GESTURE_SWIPE_LEFT;
 import static android.accessibilityservice.AccessibilityService.GESTURE_SWIPE_RIGHT;
+import static android.accessibilityservice.AccessibilityService.GESTURE_SWIPE_RIGHT_AND_DOWN;
 import static android.accessibilityservice.AccessibilityService.GESTURE_SWIPE_RIGHT_AND_UP;
 import static android.accessibilityservice.AccessibilityService.GESTURE_SWIPE_UP;
 
@@ -106,6 +107,10 @@ public final class TutorialGestureUses {
       use(GESTURE_4_FINGER_SWIPE_DOWN, R.string.shortcut_value_next_window);
   private static final GestureUse VOICE_COMMANDS =
       use(GESTURE_SWIPE_RIGHT_AND_UP, R.string.shortcut_value_voice_commands);
+  private static final GestureUse VOLUME_UP_WATCH =
+      use(GESTURE_SWIPE_RIGHT_AND_UP, R.string.shortcut_value_increase_volume);
+  private static final GestureUse VOLUME_DOWN_WATCH =
+      use(GESTURE_SWIPE_RIGHT_AND_DOWN, R.string.shortcut_value_decrease_volume);
 
   private static final ImmutableMap<Integer, ImmutableList<GestureUse>> USES =
       ImmutableMap.<Integer, ImmutableList<GestureUse>>builder()
@@ -186,6 +191,11 @@ public final class TutorialGestureUses {
           .put(R.string.container_item_exit_subtext_pre_r, ImmutableList.of(ADJUST_DOWN))
           .put(R.string.welcome_to_talkback_page_idle_announcement, ImmutableList.of(NEXT))
           .put(R.string.image_description_sample_image_content_description, ImmutableList.of(MENU_3F))
+          // Watch tutorial.
+          .put(R.string.wear_training_welcome_paragraph, ImmutableList.of(NEXT, PREVIOUS))
+          .put(R.string.wear_training_volume_up_text, ImmutableList.of(VOLUME_UP_WATCH))
+          .put(R.string.wear_training_volume_down_text, ImmutableList.of(VOLUME_DOWN_WATCH))
+          .put(R.string.wear_training_open_talkback_menu_text, ImmutableList.of(MENU_PRE_R))
           .buildOrThrow();
 
   /** The action that each onboarding announcement says its gesture did. */
