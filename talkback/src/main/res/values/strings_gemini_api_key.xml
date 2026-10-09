@@ -16,4 +16,6 @@
     <string name="gemini_api_key_save">Save</string>
     <!-- Button that opens Google AI Studio in the browser to get a Gemini API key. [CHAR LIMIT=20] -->
     <string name="gemini_api_key_get">Get a key</string>
+    <!-- Link text in the AI consent dialogs, to the terms that cover requests to the Gemini API. -->
+    <string name="gemini_api_terms_link">Gemini API Additional Terms of Service</string>
 </resources>
