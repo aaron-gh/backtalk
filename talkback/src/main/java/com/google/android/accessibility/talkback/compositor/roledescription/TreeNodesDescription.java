@@ -303,6 +303,10 @@ public class TreeNodesDescription {
         .append(String.format(", isContentDescriptionEmpty=%b", isContentDescriptionEmpty))
         .append(String.format(", shouldAppendChildNode=%b", shouldAppendChildNode));
 
+    // A control with no text of its own, such as the checkbox in a settings row, takes its name
+    // from the rest of the row. It's left out of the list here, and its type and state are put
+    // around the row's text in the description order below.
+    AccessibilityNodeInfoCompat namelessControl = null;
     if (shouldIterateChildren
         && role != Role.ROLE_WEB_VIEW
         && (role == Role.ROLE_GRID
@@ -337,6 +341,15 @@ public class TreeNodesDescription {
               .append(String.format(", isAccessibilityFocusable=%b", isAccessibilityFocusable));
 
           if (isVisible && (!isAccessibilityFocusable || shouldAppendChildNode)) {
+            if (namelessControl == null
+                && isContentDescriptionEmpty
+                && role != Role.ROLE_GRID
+                && role != Role.ROLE_LIST
+                && role != Role.ROLE_PAGER
+                && isNamelessControl(childNode, event)) {
+              namelessControl = childNode;
+              continue;
+            }
             // Join the tree description of child node.
             CharSequence description =
                 getAppendedTreeDescription(
@@ -351,7 +364,54 @@ public class TreeNodesDescription {
 
     LogUtils.v(TAG, "      treeNodesDescription:  %s", logString.toString());
 
-    return CompositorUtils.joinCharSequences(joinList, CompositorUtils.getSeparator(), PRUNE_EMPTY);
+    CharSequence description =
+        CompositorUtils.joinCharSequences(joinList, CompositorUtils.getSeparator(), PRUNE_EMPTY);
+    return namelessControl == null
+        ? description
+        : describeWithNamelessControl(description, namelessControl, event);
+  }
+
+  /**
+   * Returns whether {@code node} is a checkbox, switch, or radio button with no text, hint, or error
+   * of its own, so that it only adds its type and state to the description of its parent.
+   */
+  private boolean isNamelessControl(AccessibilityNodeInfoCompat node, AccessibilityEvent event) {
+    int role = Role.getRole(node);
+    if (role != Role.ROLE_CHECK_BOX
+        && role != Role.ROLE_SWITCH
+        && role != Role.ROLE_TOGGLE_BUTTON
+        && role != Role.ROLE_RADIO_BUTTON) {
+      return false;
+    }
+    RoleDescription roleDescription = roleDescriptionExtractor.getRoleDescription(node);
+    return node.getChildCount() == 0
+        && TextUtils.isEmpty(
+            AccessibilityNodeFeedbackUtils.getUnlabelledNodeDescription(
+                role, node, context, imageContents, globalVariables))
+        && TextUtils.isEmpty(roleDescription.nodeName(node, context, globalVariables))
+        && TextUtils.isEmpty(AccessibilityNodeFeedbackUtils.getHintDescription(node))
+        && TextUtils.isEmpty(
+            AccessibilityNodeFeedbackUtils.getAccessibilityNodeErrorText(node, context))
+        && !TextUtils.isEmpty(roleDescription.nodeRole(node, context, globalVariables));
+  }
+
+  /**
+   * Puts the type and state of {@code control}, a {@link #isNamelessControl nameless control}, around
+   * {@code text}, the rest of its parent's description, in the description order.
+   */
+  private CharSequence describeWithNamelessControl(
+      CharSequence text, AccessibilityNodeInfoCompat control, AccessibilityEvent event) {
+    RoleDescription roleDescription = roleDescriptionExtractor.getRoleDescription(control);
+    CharSequence role = roleDescription.nodeRole(control, context, globalVariables);
+    CharSequence state =
+        CompositorUtils.joinCharSequences(
+            roleDescription.nodeState(event, control, context, globalVariables),
+            nodeStatusDescription(control));
+    return switch (globalVariables.getDescriptionOrder()) {
+      case DESC_ORDER_ROLE_NAME_STATE_POSITION -> CompositorUtils.dedupJoin(role, text, state);
+      case DESC_ORDER_STATE_NAME_ROLE_POSITION -> CompositorUtils.dedupJoin(state, text, role);
+      default -> CompositorUtils.dedupJoin(text, role, state);
+    };
   }
 
   /**
