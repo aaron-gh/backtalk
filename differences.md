@@ -148,7 +148,7 @@ TalkBack echoed a word such as "don't" as two words. Backtalk echoes it as one w
 
 ### Order of item details
 
-**Advanced settings** > **Order of item details** sets the order in which Backtalk says an item's name, type, and state. TalkBack offers three orders. Backtalk offers all six, adding **Name, state, type**, **Type, state, name**, and **State, type, name**.
+**Verbosity** > **Order of item details** sets the order in which Backtalk says an item's name, type, and state. TalkBack has this setting in **Advanced settings** and offers three orders. Backtalk offers all six, adding **Name, state, type**, **Type, state, name**, and **State, type, name**.
 
 TalkBack ignored the order for a row whose checkbox or switch has no text of its own, such as the rows in **Reading controls**, and always read the checkbox's type and state before the row's text. Backtalk reads such a row as one control, with the row's text as its name, in the order that you chose.
 

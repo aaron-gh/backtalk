@@ -49,15 +49,6 @@
         android:key="@string/pref_single_tap_key"
         android:summary="@string/summary_pref_single_tap"
         android:title="@string/title_pref_single_tap" />
-    <!-- Description order -->
-    <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
-        android:defaultValue="@string/pref_node_desc_order_default"
-        android:dialogTitle="@string/pref_node_desc_order_title"
-        android:entries="@array/pref_node_desc_order_entries"
-        android:entryValues="@array/pref_node_desc_order_values"
-        android:key="@string/pref_node_desc_order_key"
-        android:summary="%s"
-        android:title="@string/pref_node_desc_order_title" />
     <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
         android:defaultValue="@string/pref_time_feedback_format_default"
         android:dialogTitle="@string/pref_time_feedback_format_title"
