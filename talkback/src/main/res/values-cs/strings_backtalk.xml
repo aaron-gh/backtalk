@@ -115,4 +115,7 @@
     <string name="pref_interrupt_typing_entry_keyboard_echo">Při odezvě klávesnice</string>
     <string name="title_pref_interrupt_enter">Přerušovat řeč klávesou Enter</string>
     <string name="value_type_confirmation_lift_to_type_except_action_key">Podržením prstu vyberte libovolnou klávesu, pak prst zvedněte. Pro Enter, Hotovo nebo Odeslat klepněte dvakrát.</string>
+    <string name="template_battery_level">Baterie %1$s procent</string>
+    <string name="template_battery_level_unknown">Úroveň baterie neznámá</string>
+    <string name="value_charger_connected">Nabíječka připojena</string>
 </resources>
