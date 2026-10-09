@@ -766,6 +766,11 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
         : shortcut;
   }
 
+  @Override
+  public CharSequence screenSearchNoKeywordHint() {
+    return GestureHints.screenSearchNoKeywordHint(context, this);
+  }
+
   /**
    * Gets corresponding action from gesture-action mappings.
    *
