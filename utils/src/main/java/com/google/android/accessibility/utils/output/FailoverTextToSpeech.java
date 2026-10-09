@@ -2028,24 +2028,6 @@ public class FailoverTextToSpeech {
    *
    * @param engine The package name of the desired TTS engine
    */
-  /**
-   * Stops starting another engine if {@code engine} is the one in use, such as when switching to a
-   * profile with another engine and back before it has started. Otherwise that engine would take
-   * over once it started.
-   */
-  private void cancelEngineSwitchAwayFrom(@Nullable String engine) {
-    if (tempTts == null || engine == null || !engine.equals(ttsEngine)
-        || engine.equals(tempTtsEngine)) {
-      return;
-    }
-    LogUtils.i(TAG, "Not switching to TTS engine %s, staying with %s", tempTtsEngine, engine);
-    TextToSpeechUtils.attemptTtsShutdown(tempTts);
-    tempTts = null;
-    tempTtsEngine = null;
-    // Its start-up callback is ignored.
-    tempTtsGeneration++;
-  }
-
   private void setTtsEngine(String engine, boolean resetFailures) {
     if (resetFailures) {
       ttsFailures = 0;
