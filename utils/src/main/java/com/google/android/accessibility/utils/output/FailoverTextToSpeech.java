@@ -2005,11 +2005,6 @@ public class FailoverTextToSpeech {
   }
 
   /**
-   * Try to switch the TTS engine.
-   *
-   * @param engine The package name of the desired TTS engine
-   */
-  /**
    * Stops starting another engine if {@code engine} is the one in use, such as when switching to a
    * profile with another engine and back before it has started. Otherwise that engine would take
    * over once it started.
@@ -2027,6 +2022,11 @@ public class FailoverTextToSpeech {
     tempTtsGeneration++;
   }
 
+  /**
+   * Try to switch the TTS engine.
+   *
+   * @param engine The package name of the desired TTS engine
+   */
   private void setTtsEngine(String engine, boolean resetFailures) {
     if (resetFailures) {
       ttsFailures = 0;
