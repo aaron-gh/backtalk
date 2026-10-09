@@ -111,6 +111,19 @@
       android:summary="%s"
       android:title="@string/pref_node_desc_order_title" />
 
+  <!-- Physical keyboard interrupts -->
+  <ListPreference
+      android:defaultValue="@string/pref_interrupt_typing_default"
+      android:entries="@array/pref_interrupt_typing_entries"
+      android:entryValues="@array/pref_interrupt_typing_values"
+      android:key="@string/pref_interrupt_typing_key"
+      android:summary="%s"
+      android:title="@string/title_pref_interrupt_typing" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+      android:defaultValue="@bool/pref_interrupt_enter_default"
+      android:key="@string/pref_interrupt_enter_key"
+      android:title="@string/title_pref_interrupt_enter" />
+
   <!-- Formatting -->
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
     android:defaultValue="@bool/pref_formatting_inline_default"
