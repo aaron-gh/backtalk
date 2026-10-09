@@ -232,6 +232,7 @@ import com.google.android.accessibility.talkback.training.OnboardingInitiator;
 import com.google.android.accessibility.talkback.training.TutorialInitiator;
 import com.google.android.accessibility.talkback.trainingcommon.PageConfig;
 import com.google.android.accessibility.talkback.trainingcommon.PageConfig.PageId;
+import com.google.android.accessibility.talkback.trainingcommon.TutorialShortcuts;
 import com.google.android.accessibility.talkback.update.Updater;
 import com.google.android.accessibility.talkback.updatetasks.TalkBackUpdateHelper;
 import com.google.android.accessibility.talkback.utils.DiagnosticOverlayControllerImpl;
@@ -411,7 +412,10 @@ public class TalkBackService extends AccessibilityServiceCompat
 
       Bundle data = new Bundle();
       actionKeyToGestureText.forEach(data::putString);
+      TutorialShortcuts.put(data, mapping, talkBackService.keyComboManager);
       data.putBoolean(EXTRA_IS_ANY_GESTURE_CHANGED, GestureController.isAnyGestureChanged(context));
+      // The mapping listens to preference changes until unbound.
+      mapping.onUnbind();
       return data;
     }
 
@@ -1523,6 +1527,11 @@ public class TalkBackService extends AccessibilityServiceCompat
     perf.onHandlerDone(eventId);
     primesController.stopTimer(TimerAction.GESTURE_EVENT);
     return true;
+  }
+
+  /** The gesture settings, or null before the service has connected. */
+  public @Nullable GestureShortcutMapping getGestureShortcutMapping() {
+    return gestureShortcutMapping;
   }
 
   public SpeechControllerImpl getSpeechController() {
