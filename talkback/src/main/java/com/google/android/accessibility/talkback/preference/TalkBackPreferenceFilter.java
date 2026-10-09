@@ -149,6 +149,8 @@ public class TalkBackPreferenceFilter {
     CUSTOM_LABELS(
         R.string.pref_manage_labels_key,
         HIDDEN_ON_TV | HIDDEN_SETUP | HIDDEN_ON_XR),
+    // Scripts run on phones only; the watch build has no Scripts screen to open.
+    SCRIPTS(R.string.pref_scripts_key, HIDDEN_ON_WATCH),
     SINGLE_TAP_ACTIVATION(
         R.string.pref_single_tap_key, HIDDEN_ON_TV | HIDDEN_ON_XR),
     REDUCE_WINDOW_DELAY(

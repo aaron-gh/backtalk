@@ -103,6 +103,8 @@ import com.google.android.accessibility.talkback.monitor.VolumeMonitor;
 import com.google.android.accessibility.talkback.monitor.VolumeMonitor.VolumeChangedListener;
 import com.google.android.accessibility.talkback.preference.base.FocusDelayPrefFragment;
 import com.google.android.accessibility.talkback.preference.base.TypingFocusDelayPrefFragment;
+import com.google.android.accessibility.talkback.scripting.ScriptReadingControl;
+import com.google.android.accessibility.talkback.scripting.Scripts;
 import com.google.android.accessibility.talkback.selector.SelectorController.Setting.DescriptionAndHint;
 import com.google.android.accessibility.talkback.speech.VoiceProfileNames;
 import com.google.android.accessibility.talkback.utils.VerbosityPreferences;
@@ -665,6 +667,8 @@ public class SelectorController implements UserInputEventListener {
 
   private Setting settingToRestore;
 
+  private @Nullable String scriptControlKey;
+
   private final VolumeMonitor volumeMonitor;
 
   /**
@@ -1064,6 +1068,7 @@ public class SelectorController implements UserInputEventListener {
   /** Sets the current Setting and announces depends on {@code announceType}. */
   private void setCurrentSetting(
       EventId eventId, Setting newSetting, AnnounceType announceType, boolean showOverlay) {
+    scriptControlKey = null;
     Setting previousSetting = getCurrentSetting(context, prefs);
     updateSettingPref(context, newSetting);
     DescriptionAndHint descriptionAndHint = getSettingActionDescriptionAndHint(newSetting, eventId);
@@ -1259,12 +1264,9 @@ public class SelectorController implements UserInputEventListener {
   /** Selects the previous or next setting. For selecting setting via gesture. */
   public void selectPreviousOrNextSetting(
       EventId eventId, AnnounceType announceType, boolean isNext) {
-    Optional<Setting> setting = getNextOrPreviousSetting(isNext);
-    if (setting.isEmpty()) {
-      return;
+    if (selectPreviousOrNext(eventId, announceType, isNext, true)) {
+      analytics.onSelectorEvent();
     }
-    analytics.onSelectorEvent();
-    setCurrentSetting(eventId, setting.get(), announceType, /* showOverlay= */ true);
   }
 
   /**
@@ -1273,23 +1275,25 @@ public class SelectorController implements UserInputEventListener {
    */
   public void selectPreviousOrNextSettingWithoutOverlay(
       EventId eventId, AnnounceType announceType, boolean isNext) {
-    Optional<Setting> setting = getNextOrPreviousSetting(isNext);
-    if (setting.isEmpty()) {
-      return;
-    }
-    setCurrentSetting(eventId, setting.get(), announceType, /* showOverlay= */ false);
+    selectPreviousOrNext(eventId, announceType, isNext, false);
   }
 
-  private Optional<Setting> getNextOrPreviousSetting(boolean isNext) {
+  private boolean selectPreviousOrNext(
+      EventId eventId, AnnounceType announceType, boolean isNext, boolean showOverlay) {
     List<Setting> settings = getFilteredSettings();
+    List<ScriptReadingControl> controls = Scripts.readingControls();
 
-    int settingsSize = settings.size();
+    int settingsSize = settings.size() + controls.size();
     if (settingsSize == 0) {
-      return Optional.empty();
+      return false;
     }
 
     // Get the index of the selected setting.
-    int index = settings.indexOf(getCurrentSetting(context, prefs));
+    @Nullable ScriptReadingControl currentControl = currentScriptControl(controls);
+    int index =
+        currentControl != null
+            ? settings.size() + controls.indexOf(currentControl)
+            : settings.indexOf(getCurrentSetting(context, prefs));
 
     // Change the selected setting.
     // If the current settings is not valid, the index (-1) will fall-back to 0 or settingsSize - 1
@@ -1307,7 +1311,46 @@ public class SelectorController implements UserInputEventListener {
         index = settingsSize - 1;
       }
     }
-    return Optional.of(settings.get(index));
+    if (index < settings.size()) {
+      setCurrentSetting(eventId, settings.get(index), announceType, showOverlay);
+    } else {
+      selectScriptControl(
+          eventId, controls.get(index - settings.size()), announceType, showOverlay);
+    }
+    return true;
+  }
+
+  private @Nullable ScriptReadingControl currentScriptControl(
+      List<ScriptReadingControl> controls) {
+    if (scriptControlKey == null) {
+      return null;
+    }
+    for (ScriptReadingControl control : controls) {
+      if (control.getKey().equals(scriptControlKey)) {
+        return control;
+      }
+    }
+    scriptControlKey = null;
+    return null;
+  }
+
+  private void selectScriptControl(
+      EventId eventId,
+      ScriptReadingControl control,
+      AnnounceType announceType,
+      boolean showOverlay) {
+    requestServiceHandlesDoubleTap(EVENT_ID_UNTRACKED, false);
+    scriptControlKey = control.getKey();
+    if (announceType == AnnounceType.DESCRIPTION) {
+      announceSetting(eventId, control.getTitle(), null);
+    } else if (announceType == AnnounceType.DESCRIPTION_AND_HINT) {
+      announceSetting(eventId, control.getTitle(), getAdjustSelectedSettingGestures());
+    }
+    if (showOverlay
+        && !(actorState.getDimScreen().isDimmingEnabled()
+            && !actorState.getDimScreen().isInstructionDisplayed())) {
+      showQuickMenuOverlay(eventId, control.getTitle());
+    }
   }
 
   /**
@@ -1684,6 +1727,11 @@ public class SelectorController implements UserInputEventListener {
 
   /** Change the value of the selected setting or scroll forward/backard of the seeker. */
   public void adjustSelectedSetting(EventId eventId, boolean isNext) {
+    @Nullable ScriptReadingControl scriptControl = currentScriptControl(Scripts.readingControls());
+    if (scriptControl != null) {
+      scriptControl.adjust(isNext);
+      return;
+    }
     Setting currentSetting = getCurrentSetting(context, prefs);
     if (isContextualSetting(currentSetting)
         && !accessibilityFocusMonitor.hasAccessibilityFocus(/* useInputFocusIfEmpty= */ false)) {

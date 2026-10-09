@@ -31,6 +31,7 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor;
 import com.google.android.accessibility.talkback.eventprocessor.ProcessorPhoneticLetters;
 import com.google.android.accessibility.talkback.imagecaption.ImageContents;
+import com.google.android.accessibility.talkback.scripting.Scripts;
 import com.google.android.accessibility.utils.AccessibilityEventUtils;
 import com.google.android.accessibility.utils.Performance.EventId;
 import com.google.android.accessibility.utils.input.TextEventInterpretation;
@@ -570,6 +571,11 @@ public class Compositor {
     // Compose speech, and speech parameters.
     CharSequence ttsOutput =
         eventFeedback.ttsOutput().isPresent() ? eventFeedback.ttsOutput().get() : "";
+    CharSequence scripted =
+        Scripts.rewriteSpeech(event, options.eventObject, options.sourceNode, ttsOutput);
+    if (scripted != null) {
+      ttsOutput = scripted;
+    }
     if (!TextUtils.isEmpty(ttsOutput)) {
       // Cleans up the TTS output if it is just 1 character long. This will announce single
       // symbols correctly.
