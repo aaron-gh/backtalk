@@ -117,10 +117,6 @@ public final class FeatureFlagReader {
     return false;
   }
 
-  public static boolean enableOnlyCtrlToStopSpeech(Context context) {
-    return true;
-  }
-
   public static boolean enableOpenTalkbackSettingsKeyboard(Context context) {
     return true;
   }

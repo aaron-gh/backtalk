@@ -102,14 +102,32 @@
   </PreferenceCategory>
 
   <!-- Order of item details -->
-  <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
-      android:defaultValue="@string/pref_node_desc_order_default"
-      android:dialogTitle="@string/pref_node_desc_order_title"
-      android:entries="@array/pref_node_desc_order_entries"
-      android:entryValues="@array/pref_node_desc_order_values"
+  <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
+      android:fragment="com.google.android.accessibility.talkback.preference.base.ItemDetailsOrderFragment"
       android:key="@string/pref_node_desc_order_key"
-      android:summary="%s"
+      android:persistent="false"
       android:title="@string/pref_node_desc_order_title" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
+      android:defaultValue="@string/pref_time_feedback_format_default"
+      android:dialogTitle="@string/pref_time_feedback_format_title"
+      android:entries="@array/pref_time_feedback_format_entries"
+      android:entryValues="@array/pref_time_feedback_format_values"
+      android:key="@string/pref_time_feedback_format_key"
+      android:summary="%s"
+      android:title="@string/pref_time_feedback_format_title"/>
+
+  <!-- Physical keyboard interrupts -->
+  <ListPreference
+      android:defaultValue="@string/pref_interrupt_typing_default"
+      android:entries="@array/pref_interrupt_typing_entries"
+      android:entryValues="@array/pref_interrupt_typing_values"
+      android:key="@string/pref_interrupt_typing_key"
+      android:summary="%s"
+      android:title="@string/title_pref_interrupt_typing" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+      android:defaultValue="@bool/pref_interrupt_enter_default"
+      android:key="@string/pref_interrupt_enter_key"
+      android:title="@string/title_pref_interrupt_enter" />
 
   <!-- Formatting -->
   <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference

@@ -41,7 +41,6 @@ import android.content.res.Resources;
 import android.os.Handler;
 import android.text.TextUtils;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 import com.google.android.accessibility.talkback.NotificationActivity;
 import com.google.android.accessibility.talkback.R;
 import com.google.android.accessibility.talkback.TalkBackService;
@@ -50,7 +49,6 @@ import com.google.android.accessibility.talkback.keyboard.KeyComboManager;
 import com.google.android.accessibility.talkback.preference.GestureChangeNotificationActivity;
 import com.google.android.accessibility.talkback.preference.PreferencesActivityUtils;
 import com.google.android.accessibility.talkback.selector.SelectorController;
-import com.google.android.accessibility.talkback.training.OnboardingInitiator;
 import com.google.android.accessibility.talkback.utils.NotificationUtils;
 import com.google.android.accessibility.talkback.utils.VerbosityPreferences;
 import com.google.android.accessibility.utils.AccessibilityEventUtils;
@@ -87,7 +85,6 @@ public class TalkBackUpdateHelper {
   private static final int BUILT_IN_GESTURE_CHANGE_NOTIFICATION_ID = 3;
 
   private static final int SIDE_TAP_REMOVED_CHANGE_NOTIFICATION_ID = 4;
-  @VisibleForTesting static final int TALKBACK_UPDATED_NOTIFICATION_ID = 5;
 
   private final Handler handler = new Handler();
   private final List<Runnable> notificationRunnablePendingList = new ArrayList<>();
@@ -331,8 +328,6 @@ public class TalkBackUpdateHelper {
             .apply();
       }
     }
-
-    notifyTalkBackUpdatedIfNeeded(previousVersion);
 
     // Update key combo model.
     KeyComboManager keyComboManager = service.getKeyComboManager();
@@ -789,78 +784,6 @@ public class TalkBackUpdateHelper {
         }
       }
     }
-  }
-
-  /**
-   * Posts a notification to notify TalkBack has been updated, and redirects to the onboarding page.
-   */
-  private void notifyTalkBackUpdatedIfNeeded(int previousVersion) {
-    if (FormFactorUtils.isAndroidTv()) {
-      return;
-    }
-
-    if (FormFactorUtils.isAndroidWear()) {
-      notifyTalkBackUpdatedOnWearIfNeeded(previousVersion);
-      return;
-    }
-
-    notifyTalkBackUpdatedDefaultIfNeeded(previousVersion);
-  }
-
-  private void notifyTalkBackUpdatedDefaultIfNeeded(int previousVersion) {
-    if (previousVersion == VERSION_CODE_UNKNOWN
-        // Don't post the update notification if there is onboarding for the update and hasn't been
-        // shown.
-        || !OnboardingInitiator.hasOnboardingForNewFeaturesBeenShown(
-            SharedPreferencesUtils.getSharedPreferences(service), service)) {
-      return;
-    }
-
-    addNotificationToPendingList(
-        NotificationUtils.createNotification(
-            service,
-            service.getString(R.string.talkback_updated_notification_title),
-            service.getString(R.string.talkback_updated_notification_title),
-            /* content= */ null,
-            /* pendingIntent= */ null,
-            /* autoCancel= */ true),
-        TALKBACK_UPDATED_NOTIFICATION_ID);
-  }
-
-  // TODO: Replace versionCode with versionName in TalkBackUpdateHelper.
-  // the version code for talkback_wear_14.1_RC06
-  private static final int VERSION_CODE_WEAR_14_1 = 622776723;
-
-  private void notifyTalkBackUpdatedOnWearIfNeeded(int previousVersion) {
-    if (previousVersion == VERSION_CODE_UNKNOWN || previousVersion >= VERSION_CODE_WEAR_14_1) {
-      return;
-    }
-
-    Intent intent =
-        NotificationActivity.createStartIntent(
-            service,
-            R.string.wear_new_feature_page_title,
-            R.string.wear_new_feature_page_content,
-            Integer.MIN_VALUE,
-            R.string.wear_new_feature_page_button_content_description,
-            /* url= */ null);
-
-    PendingIntent pendingIntent =
-        PendingIntent.getActivity(
-            service,
-            /* requestCode= */ 0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-    addNotificationToPendingList(
-        NotificationUtils.createNotification(
-            service,
-            service.getString(R.string.talkback_updated_notification_title),
-            service.getString(R.string.talkback_updated_notification_title),
-            service.getString(R.string.talkback_updated_notification_content),
-            pendingIntent,
-            /* autoCancel= */ true),
-        TALKBACK_UPDATED_NOTIFICATION_ID);
   }
 
   /**

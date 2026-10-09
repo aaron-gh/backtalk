@@ -16,6 +16,11 @@
         android:key="@string/pref_touch_focus_time_out_key"
         app:summary="%s"
         android:title="@string/title_pref_touch_focus_timeout" />
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+        android:defaultValue="@bool/pref_reduce_window_delay_default"
+        android:key="@string/pref_reduce_window_delay_key"
+        android:summary="@string/pref_reduce_window_delay_summary"
+        android:title="@string/pref_reduce_window_delay_title"/>
 
     <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
         android:defaultValue="@bool/pref_speak_items_before_scroll_default"

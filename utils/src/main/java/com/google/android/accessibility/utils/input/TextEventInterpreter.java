@@ -880,6 +880,11 @@ public class TextEventInterpreter {
     return PUNCTUATION_PATTERN.matcher(Character.toString(ch)).matches();
   }
 
+  /** Returns whether typing {@code ch} can make keyboard echo speak the word before it. */
+  public static boolean endsWordForEcho(char ch) {
+    return isWhiteSpace(ch) || isPunctuation(ch);
+  }
+
   private boolean appendLastWordIfNeeded(
       AccessibilityEvent event, TextEventInterpretation interpretation) {
     // Do not handle word's keyboard echo for password field.
@@ -895,7 +900,7 @@ public class TextEventInterpreter {
     final int wordEnd = getWordEchoEnd(addedText);
     char lastChar = addedText.charAt(wordEnd);
     // Echo word only occurs when the added character is either a space or a punctuation symbol.
-    if (!isWhiteSpace(lastChar) && !isPunctuation(lastChar)) {
+    if (!endsWordForEcho(lastChar)) {
       return false;
     }
 
