@@ -10,6 +10,11 @@
         android:summary="@string/talkback_latency_reduction_summary"
         android:fragment="com.google.android.accessibility.talkback.preference.base.TalkBackLatencyReductionPreferenceFragment" >
     </com.google.android.accessibility.material.preference.AccessibilitySuitePreference>
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+        android:defaultValue="false"
+        android:key="@string/pref_reserve_vibration_watch_gestures_key"
+        android:title="@string/title_pref_reserve_vibration_watch_gestures"
+        android:summary="@string/summary_pref_reserve_vibration_watch_gestures" />
     <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
         android:defaultValue="@string/pref_lift_to_activate_default"
         android:dialogTitle="@string/title_pref_lift_to_activate"
@@ -44,15 +49,6 @@
         android:key="@string/pref_single_tap_key"
         android:summary="@string/summary_pref_single_tap"
         android:title="@string/title_pref_single_tap" />
-    <!-- Description order -->
-    <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
-        android:defaultValue="@string/pref_node_desc_order_default"
-        android:dialogTitle="@string/pref_node_desc_order_title"
-        android:entries="@array/pref_node_desc_order_entries"
-        android:entryValues="@array/pref_node_desc_order_values"
-        android:key="@string/pref_node_desc_order_key"
-        android:summary="%s"
-        android:title="@string/pref_node_desc_order_title" />
     <com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
         android:defaultValue="@string/pref_time_feedback_format_default"
         android:dialogTitle="@string/pref_time_feedback_format_title"

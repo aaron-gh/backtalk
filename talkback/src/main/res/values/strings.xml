@@ -357,6 +357,12 @@
       Description: The user can check or not check this. [CHAR LIMIT=120]
     -->
     <string name="title_pref_cover_proximity_sensor">Cover proximity sensor to stop speech</string>
+    <!-- Title of a switch in Advanced Settings on Wear OS watches. Reserves two-finger single and double taps for Samsung's Vibration Watch feature, which tells the time through vibrations. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_reserve_vibration_watch_gestures">Reserve gestures for Vibration Watch</string>
+    <!-- Summary of the Vibration Watch gesture switch. Backtalk stops handling the two gestures; the user must separately enable Samsung's Vibration Watch feature in the watch's accessibility settings. [CHAR LIMIT=NONE] -->
+    <string name="summary_pref_reserve_vibration_watch_gestures">Stops Backtalk handling two-finger single and double taps so Samsung Vibration Watch can use them. Enable Vibration Watch in your watch’s accessibility settings.</string>
+    <!-- Explanation shown instead of a gesture's assigned action when the Vibration Watch switch in Advanced Settings makes its two-finger single or double tap unavailable to Backtalk. [CHAR LIMIT=NONE] -->
+    <string name="shortcut_reserved_for_vibration_watch">Reserved for Vibration Watch in Advanced Settings</string>
     <!-- Title of the setting that moves calls to the speaker when the phone is away from the ear. [CHAR LIMIT=NONE] -->
     <string name="title_pref_speakerphone_away_from_ear">Speaker when away from your ear</string>
     <!-- Summary of that setting. [CHAR LIMIT=NONE] -->
@@ -2387,6 +2393,10 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <string name="value_touch_explore_time_out_250ms">0.25 seconds</string>
     <!-- Label for touch explore time out. [CHAR LIMIT=NONE]-->
     <string name="value_touch_explore_time_out_300ms">0.3 seconds (default)</string>
+    <!-- Label for the default focus delay, 0.2 seconds. [CHAR LIMIT=NONE]-->
+    <string name="value_focus_delay_200ms_default">0.2 seconds (default)</string>
+    <!-- Label for a focus delay of 0.3 seconds, which isn't the default. [CHAR LIMIT=NONE]-->
+    <string name="value_focus_delay_300ms">0.3 seconds</string>
 
     <!-- Title of the setting that activates the item under the finger when the finger is lifted. [CHAR LIMIT=NONE]-->
     <string name="title_pref_lift_to_activate">Lift to activate</string>
@@ -2457,6 +2467,12 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <string name="pref_node_desc_order_entry_role_name_state_pos">Type, name, state</string>
     <!-- Label for preference specifying that TalkBack should describe elements in order: name, type, state. -->
     <string name="pref_node_desc_order_entry_name_role_state_pos">Name, type, state</string>
+    <!-- Label for preference specifying that Backtalk should describe elements in order: name, state, type. -->
+    <string name="pref_node_desc_order_entry_name_state_role_pos">Name, state, type</string>
+    <!-- Label for preference specifying that Backtalk should describe elements in order: type, state, name. -->
+    <string name="pref_node_desc_order_entry_role_state_name_pos">Type, state, name</string>
+    <!-- Label for preference specifying that Backtalk should describe elements in order: state, type, name. -->
+    <string name="pref_node_desc_order_entry_state_role_name_pos">State, type, name</string>
 
     <!-- Label for preference specifying that TalkBack should announce time in the format used by the paired device. [CHAR LIMIT=120] -->
     <string name="pref_time_feedback_format_entries_default">Use device time format</string>

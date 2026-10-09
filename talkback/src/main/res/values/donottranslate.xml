@@ -9,6 +9,8 @@
     <string name="pref_proximity_key">pref_proximity</string>
     <!-- Must match SpeakerphoneSettings.PREF_ENABLED. -->
     <string name="pref_speakerphone_away_from_ear_key">pref_speakerphone_away_from_ear</string>
+    <!-- Must match VibrationWatchGestureSettings.PREF_RESERVED. -->
+    <string name="pref_reserve_vibration_watch_gestures_key">pref_reserve_vibration_watch_gestures</string>
     <string name="pref_status_readout_key" translatable="false">pref_status_readout</string>
     <string name="pref_direct_touch_key" translatable="false">pref_direct_touch</string>
     <string name="pref_check_for_updates_key" translatable="false">pref_check_for_updates</string>
@@ -721,15 +723,24 @@
         <item>@string/pref_node_desc_order_entry_state_name_role_pos</item>
         <item>@string/pref_node_desc_order_entry_role_name_state_pos</item>
         <item>@string/pref_node_desc_order_entry_name_role_state_pos</item>
+        <item>@string/pref_node_desc_order_entry_name_state_role_pos</item>
+        <item>@string/pref_node_desc_order_entry_role_state_name_pos</item>
+        <item>@string/pref_node_desc_order_entry_state_role_name_pos</item>
     </string-array>
     <string-array name="pref_node_desc_order_values">
         <item>@string/pref_node_desc_order_value_state_name_role_pos</item>
         <item>@string/pref_node_desc_order_value_role_name_state_pos</item>
         <item>@string/pref_node_desc_order_value_name_role_state_pos</item>
+        <item>@string/pref_node_desc_order_value_name_state_role_pos</item>
+        <item>@string/pref_node_desc_order_value_role_state_name_pos</item>
+        <item>@string/pref_node_desc_order_value_state_role_name_pos</item>
     </string-array>
     <string name="pref_node_desc_order_value_state_name_role_pos">pref_node_desc_order_value_state_name_role_pos</string>
     <string name="pref_node_desc_order_value_role_name_state_pos">pref_node_desc_order_value_role_name_state_pos</string>
     <string name="pref_node_desc_order_value_name_role_state_pos">pref_node_desc_order_value_name_role_state_pos</string>
+    <string name="pref_node_desc_order_value_name_state_role_pos">pref_node_desc_order_value_name_state_role_pos</string>
+    <string name="pref_node_desc_order_value_role_state_name_pos">pref_node_desc_order_value_role_state_name_pos</string>
+    <string name="pref_node_desc_order_value_state_role_name_pos">pref_node_desc_order_value_state_role_name_pos</string>
 
     <!-- Time feedback format -->
     <string-array name="pref_time_feedback_format_entries">
@@ -971,7 +982,7 @@
     <item>300</item>
   </string-array>
 
-  <string name="touch_focus_time_out_default" translatable="false">300</string>
+  <string name="touch_focus_time_out_default" translatable="false">200</string>
 
   <!-- Shortcut preference of basic navigation -->
     <string-array name="shortcut_basic_navigation">

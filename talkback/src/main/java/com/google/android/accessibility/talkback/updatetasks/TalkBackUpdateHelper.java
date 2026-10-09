@@ -59,6 +59,7 @@ import com.google.android.accessibility.utils.FeatureSupport;
 import com.google.android.accessibility.utils.FormFactorUtils;
 import com.google.android.accessibility.utils.SettingsUtils;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
+import com.google.android.accessibility.utils.output.FailoverTextToSpeech;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +73,9 @@ public class TalkBackUpdateHelper {
   /** Version codes below this are earlier Backtalk builds, not TalkBack versions. */
   private static final int BACKTALK_VERSION_CODE_MIN = 1_000_000;
   public static final String PREF_APP_PREV_VERSION_NAME = "app_prev_version_name";
+
+  /** Whether {@link #moveToFasterDefaults} has run. */
+  private static final String PREF_FASTER_DEFAULTS_DONE = "faster_defaults_done";
 
   /** The undefined previous version indicating that a user haven't upgraded TalkBack yet. */
   public static final int VERSION_CODE_UNKNOWN = -1;
@@ -102,6 +106,7 @@ public class TalkBackUpdateHelper {
   public void checkUpdate() {
 
     showPendingNotifications();
+    moveToFasterDefaults();
 
     final int previousVersion = sharedPreferences.getInt(PREF_APP_VERSION, VERSION_CODE_UNKNOWN);
     String previousVersionName =
@@ -478,6 +483,26 @@ public class TalkBackUpdateHelper {
 
     notifyGestureChange(
         R.string.side_tap_shortcuts_removed_details, SIDE_TAP_REMOVED_CHANGE_NOTIFICATION_ID);
+  }
+
+  /**
+   * Moves users who kept the old 300 ms touch focus delay or left low-latency audio off to the
+   * faster defaults, once. The settings screen saved those defaults, so changing them in resources
+   * alone wouldn't reach these users. Other choices are left alone.
+   */
+  private void moveToFasterDefaults() {
+    if (sharedPreferences.getBoolean(PREF_FASTER_DEFAULTS_DONE, false)) {
+      return;
+    }
+    Editor editor = sharedPreferences.edit();
+    String touchFocusKey = service.getString(R.string.pref_touch_focus_time_out_key);
+    if ("300".equals(sharedPreferences.getString(touchFocusKey, null))) {
+      editor.remove(touchFocusKey);
+    }
+    if (!sharedPreferences.getBoolean(FailoverTextToSpeech.PREF_LOW_LATENCY_AUDIO_KEY, true)) {
+      editor.remove(FailoverTextToSpeech.PREF_LOW_LATENCY_AUDIO_KEY);
+    }
+    editor.putBoolean(PREF_FASTER_DEFAULTS_DONE, true).apply();
   }
 
   private void showPendingNotifications() {

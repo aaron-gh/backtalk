@@ -41,9 +41,9 @@ public class FocusDelayPrefFragment extends TalkbackBaseFragment {
   /** Preference items for focus delay. */
   public enum FocusDelayPref {
     DELAY_150_MS(R.string.value_touch_explore_time_out_150ms, 150),
-    DELAY_200_MS(R.string.value_touch_explore_time_out_200ms, 200),
+    DELAY_200_MS(R.string.value_focus_delay_200ms_default, 200),
     DELAY_250_MS(R.string.value_touch_explore_time_out_250ms, 250),
-    DELAY_300_MS(R.string.value_touch_explore_time_out_300ms, 300);
+    DELAY_300_MS(R.string.value_focus_delay_300ms, 300);
 
     @StringRes private final int titleId;
     private final int delay;

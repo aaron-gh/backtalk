@@ -29,6 +29,9 @@ import static com.google.android.accessibility.talkback.TalkBackServiceDumpHelpe
 import static com.google.android.accessibility.talkback.TalkBackServiceDumpHelperKt.getConditionGivenArgs;
 import static com.google.android.accessibility.talkback.analytics.TalkBackAnalytics.GESTURE_SPLIT_TAP;
 import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_NAME_ROLE_STATE_POSITION;
+import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_NAME_STATE_ROLE_POSITION;
+import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_ROLE_STATE_NAME_POSITION;
+import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_STATE_ROLE_NAME_POSITION;
 import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_ROLE_NAME_STATE_POSITION;
 import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_STATE_NAME_ROLE_POSITION;
 import static com.google.android.accessibility.talkback.dynamicfeature.ModuleDownloadPrompter.Requester.ONBOARDING;
@@ -177,6 +180,7 @@ import com.google.android.accessibility.talkback.gesture.GestureController;
 import com.google.android.accessibility.talkback.gesture.GestureHistory;
 import com.google.android.accessibility.talkback.gesture.GestureShortcutMapping;
 import com.google.android.accessibility.talkback.gesture.TwoFingerRotationTracker;
+import com.google.android.accessibility.talkback.gesture.VibrationWatchGestureSettings;
 import com.google.android.accessibility.talkback.imagecaption.ImageCaptionStorage;
 import com.google.android.accessibility.talkback.imagecaption.ImageCaptionUtils.CaptionType;
 import com.google.android.accessibility.talkback.imagecaption.ImageContents;
@@ -1359,6 +1363,12 @@ public class TalkBackService extends AccessibilityServiceCompat
 
   private boolean handleOnGestureById(int displayId, int gestureId) {
     if (!isServiceActive() || PauseController.isPaused()) {
+      return false;
+    }
+    // Return before feedback, training, menus and gesture recording. Both callback overloads
+    // use this entry point; ignoring an action in GestureController still reports it as handled.
+    if (VibrationWatchGestureSettings.shouldReserve(
+        prefs, FormFactorUtils.isAndroidWear(), gestureId)) {
       return false;
     }
     Performance perf = Performance.getInstance();
@@ -3323,7 +3333,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     feedbackController.setLowLatencyAudio(
         prefs.getBoolean(
             FailoverTextToSpeech.PREF_LOW_LATENCY_AUDIO_KEY,
-            FailoverTextToSpeech.LOW_LATENCY_AUDIO_DEFAULT));
+            FailoverTextToSpeech.lowLatencyAudioDefault(this)));
     IndividualFeedbackSettings.INSTANCE.migrate(prefs);
     Set<String> mutedSounds = IndividualFeedbackSettings.INSTANCE.mutedSoundResources(prefs);
     feedbackController.setMutedAuditory(mutedSounds);
@@ -3552,6 +3562,15 @@ public class TalkBackService extends AccessibilityServiceCompat
     } else if (TextUtils.equals(
         value, resources.getString(R.string.pref_node_desc_order_value_name_role_state_pos))) {
       return DESC_ORDER_NAME_ROLE_STATE_POSITION;
+    } else if (TextUtils.equals(
+        value, resources.getString(R.string.pref_node_desc_order_value_name_state_role_pos))) {
+      return DESC_ORDER_NAME_STATE_ROLE_POSITION;
+    } else if (TextUtils.equals(
+        value, resources.getString(R.string.pref_node_desc_order_value_role_state_name_pos))) {
+      return DESC_ORDER_ROLE_STATE_NAME_POSITION;
+    } else if (TextUtils.equals(
+        value, resources.getString(R.string.pref_node_desc_order_value_state_role_name_pos))) {
+      return DESC_ORDER_STATE_ROLE_NAME_POSITION;
     } else {
       LogUtils.e(TAG, "Unhandled description order preference value \"%s\"", value);
       return DESC_ORDER_STATE_NAME_ROLE_POSITION;
