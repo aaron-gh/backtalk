@@ -54,10 +54,85 @@
       Description: Distinguishes the system settings from TalkBack's own speech settings. [CHAR LIMIT=NONE]
     -->
     <string name="title_pref_system_tts_settings">System text-to-speech settings</string>
-    <!-- Title for the "switch TTS engine" reading control selector item. [CHAR LIMIT=NONE] -->
-    <string name="title_selector_switch_tts_engine">Speech engine</string>
-    <!-- Summary for the "switch TTS engine" reading control selector item. [CHAR LIMIT=NONE] -->
-    <string name="summary_selector_switch_tts_engine">Switch between installed speech engines</string>
+    <!-- Title for the reading control that switches between voice profiles. [CHAR LIMIT=NONE] -->
+    <string name="title_selector_voice_profile">Voice profile</string>
+    <!--
+      Title for the screen of voice profiles: sets of speech settings, each with its own speech
+      engine, language, voice, volume, rate and pitch, that the user can switch between. [CHAR LIMIT=NONE]
+    -->
+    <string name="title_pref_voice_profiles">Voice profiles</string>
+    <!-- Name of the voice profile that uses the text-to-speech settings. It can't be removed. [CHAR LIMIT=NONE] -->
+    <string name="voice_profile_default">Backtalk default</string>
+    <!--
+      Summary under Voice profiles in the text-to-speech settings, naming the voice profile in use.
+      Shown only while one is, as the other text-to-speech settings then don't change how it sounds.
+      [CHAR LIMIT=NONE]
+    -->
+    <string name="voice_profile_in_use">In use: <xliff:g id="name" example="Reading">%1$s</xliff:g></string>
+    <!--
+      Said when the user tries to change the spoken language from the reading controls while a
+      voice profile is in use, as all speech then uses the profile's voice. [CHAR LIMIT=NONE]
+    -->
+    <string name="spoken_language_unavailable_with_profile">Spoken language unavailable while using a voice profile</string>
+    <!--
+      Item in the menu of voice profiles for the profile in use, opened from the Backtalk menu, a
+      gesture or a keyboard shortcut. [CHAR LIMIT=NONE]
+    -->
+    <string name="voice_profile_menu_item_in_use"><xliff:g id="name" example="Reading">%1$s</xliff:g>, in use</string>
+    <!-- Said when a shortcut that changes voice profile is used before any profile is added. [CHAR LIMIT=NONE] -->
+    <string name="no_voice_profiles">No voice profiles</string>
+    <!-- Gesture and keyboard shortcut action that opens a menu to choose the voice profile in use. [CHAR LIMIT=NONE] -->
+    <string name="shortcut_voice_profiles">Choose voice profile</string>
+    <!-- Gesture and keyboard shortcut action that changes to the previous voice profile. [CHAR LIMIT=NONE] -->
+    <string name="shortcut_previous_voice_profile">Previous voice profile</string>
+    <!-- Gesture and keyboard shortcut action that changes to the next voice profile. [CHAR LIMIT=NONE] -->
+    <string name="shortcut_next_voice_profile">Next voice profile</string>
+    <!-- Title for the setting that chooses the voice profile in use. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_voice_profile_in_use">Voice profile in use</string>
+    <!-- Title for the button that adds a voice profile. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_add_voice_profile">Add voice profile</string>
+    <!-- Name given to a new voice profile, with a number to tell it apart. [CHAR LIMIT=NONE] -->
+    <string name="voice_profile_new_name">Voice profile <xliff:g id="number" example="2">%1$d</xliff:g></string>
+    <!--
+      Error on the name field when the name entered is already another voice profile's, or Backtalk
+      default's. [CHAR LIMIT=NONE]
+    -->
+    <string name="voice_profile_name_taken">A voice profile is already called <xliff:g id="name" example="Reading">%1$s</xliff:g></string>
+    <!-- Title for the setting with a voice profile's name. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_voice_profile_name">Name</string>
+    <!-- Title for the setting with a voice profile's language. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_voice_profile_language">Language</string>
+    <!-- Title for the setting with a voice profile's voice. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_voice_profile_voice">Voice</string>
+    <!--
+      Choice of language or voice for a voice profile that uses the speech engine's own default.
+      [CHAR LIMIT=NONE]
+    -->
+    <string name="voice_profile_engine_default">Default</string>
+    <!-- Shown for a voice profile's language or voice while the speech engine lists its voices. [CHAR LIMIT=NONE] -->
+    <string name="voice_profile_loading">Loading</string>
+    <!-- A voice profile's engine or voice that is no longer installed. [CHAR LIMIT=NONE] -->
+    <string name="voice_profile_not_installed"><xliff:g id="name" example="Eloquence">%1$s</xliff:g>, not installed</string>
+    <!-- A voice, with its language, when the list shows voices in every language. [CHAR LIMIT=NONE] -->
+    <string name="voice_profile_voice_in_language"><xliff:g id="voice" example="en-us-x-tpf-local">%1$s</xliff:g>, <xliff:g id="language" example="English (United States)">%2$s</xliff:g></string>
+    <!-- Action that moves a voice profile up the list, so it comes sooner in the reading control. [CHAR LIMIT=NONE] -->
+    <string name="voice_profile_move_up">Move up</string>
+    <!-- Action that moves a voice profile down the list. [CHAR LIMIT=NONE] -->
+    <string name="voice_profile_move_down">Move down</string>
+    <!-- Action that renames a voice profile. [CHAR LIMIT=NONE] -->
+    <string name="voice_profile_rename">Rename</string>
+    <!-- Said after a voice profile moves up the list, with the profile it is now above. [CHAR LIMIT=NONE] -->
+    <string name="voice_profile_moved_above">Moved above <xliff:g id="name" example="Reading">%1$s</xliff:g></string>
+    <!-- Said after a voice profile moves down the list, with the profile it is now below. [CHAR LIMIT=NONE] -->
+    <string name="voice_profile_moved_below">Moved below <xliff:g id="name" example="Reading">%1$s</xliff:g></string>
+    <!-- Said after a voice profile is removed. [CHAR LIMIT=NONE] -->
+    <string name="voice_profile_deleted"><xliff:g id="name" example="Reading">%1$s</xliff:g> deleted</string>
+    <!-- Title for the button that removes a voice profile. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_delete_voice_profile">Delete voice profile</string>
+    <!-- Asks whether to remove a voice profile. [CHAR LIMIT=NONE] -->
+    <string name="voice_profile_delete_confirm">Delete <xliff:g id="name" example="Reading">%1$s</xliff:g>?</string>
+    <!-- Button that removes a voice profile. [CHAR LIMIT=NONE] -->
+    <string name="voice_profile_delete">Delete</string>
     <!--
       Source: Summary shown under the TTS engine preference when no engine is selected (use system default).
       Description: Indicates TalkBack is using the system default TTS engine. [CHAR LIMIT=NONE]
