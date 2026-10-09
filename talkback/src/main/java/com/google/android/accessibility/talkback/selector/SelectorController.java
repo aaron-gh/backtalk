@@ -71,6 +71,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import androidx.annotation.IdRes;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
+import androidx.annotation.StringRes;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import com.google.android.accessibility.talkback.ActorState;
@@ -95,6 +96,7 @@ import com.google.android.accessibility.talkback.focusmanagement.AccessibilityFo
 import com.google.android.accessibility.talkback.focusmanagement.LiftToActivateMode;
 import com.google.android.accessibility.talkback.focusmanagement.action.NavigationAction;
 import com.google.android.accessibility.talkback.focusmanagement.record.FocusActionInfo;
+import com.google.android.accessibility.talkback.gesture.GestureHints;
 import com.google.android.accessibility.talkback.gesture.GestureShortcutMapping;
 import com.google.android.accessibility.talkback.menurules.NodeMenuRuleCreator;
 import com.google.android.accessibility.talkback.monitor.VolumeMonitor;
@@ -572,11 +574,6 @@ public class SelectorController implements UserInputEventListener {
   @NonNull private final Compositor.TextComposer compositor;
 
   /**
-   * Keeps gestures to announce the usage hint for how to select setting (change quick menu item).
-   */
-  private @Nullable String cachedSelectSettingGestureNames;
-
-  /**
    * Keeps gestures to announce the usage hint for how to adjust selected setting (change quick menu
    * item action).
    */
@@ -657,7 +654,6 @@ public class SelectorController implements UserInputEventListener {
       (prefs, key) -> {
         // Clears selector gestures but doesn't update them now because GestureShortcutMapping
         // hasn't finished reloading yet.
-        cachedSelectSettingGestureNames = null;
         cachedAdjustSelectedSettingGestureNames = null;
       };
 
@@ -1547,58 +1543,35 @@ public class SelectorController implements UserInputEventListener {
   }
 
   /**
-   * Returns the usage hint when adjusting the selected setting, like "three-finger swipe left or
-   * three-finger swipe right to select a different setting."
+   * Returns the usage hint for choosing another reading control, for when the selected one can't
+   * be used: a line for each action with its gesture, such as "Next reading control: Swipe down
+   * then up".
    */
   @NonNull
   private String getSelectSettingGestures() {
-    String selectSettingGestureNames = getSelectSettingGestureNames();
-    if (selectSettingGestureNames.isEmpty()) {
-      // There is no gesture to select setting.
-      return context.getString(
-          R.string.no_adjust_setting_gesture,
-          Ascii.toLowerCase(context.getString(R.string.shortcut_select_next_setting)));
-    }
-    return context.getString(R.string.select_setting_hint, selectSettingGestureNames);
-  }
-
-  @NonNull
-  private String getSelectSettingGestureNames() {
-    String selectSettingGestureNames = cachedSelectSettingGestureNames;
-    if (selectSettingGestureNames == null) {
-      List<String> rawNames =
-          gestureMapping.getGestureTextsFromActionKeys(
-              context.getString(R.string.shortcut_value_select_previous_setting),
-              context.getString(R.string.shortcut_value_select_next_setting));
-      if (rawNames.isEmpty()) {
-        selectSettingGestureNames = "";
-      } else if (rawNames.size() == 1) {
-        selectSettingGestureNames = Ascii.toLowerCase(rawNames.get(0));
-      } else {
-        selectSettingGestureNames =
-            context.getString(
-                R.string.gesture_1_or_2,
-                Ascii.toLowerCase(rawNames.get(0)),
-                Ascii.toLowerCase(rawNames.get(1)));
-      }
-      cachedSelectSettingGestureNames = selectSettingGestureNames;
-    }
-    return selectSettingGestureNames;
+    return actionLines(
+        R.string.shortcut_value_select_previous_setting,
+        R.string.shortcut_value_select_next_setting);
   }
 
   /**
-   * Returns the usage hint when selecting a setting, like "swipe up or swipe down to to adjust the
-   * setting."
+   * Returns the usage hint when selecting or changing a setting: a line for each action with its
+   * gesture, such as "Move reading control down or forward: Swipe down".
    */
   private String getAdjustSelectedSettingGestures() {
-    String adjustSelectedSettingsGestureNames = getAdjustSelectedSettingGestureNames();
-    if (adjustSelectedSettingsGestureNames.isEmpty()) {
-      // There is no gesture to adjust setting.
-      return context.getString(
-          R.string.no_adjust_setting_gesture,
-          Ascii.toLowerCase(context.getString(R.string.shortcut_selected_setting_next_action)));
-    }
-    return context.getString(R.string.adjust_setting_hint, adjustSelectedSettingsGestureNames);
+    return actionLines(
+        R.string.shortcut_value_selected_setting_previous_action,
+        R.string.shortcut_value_selected_setting_next_action);
+  }
+
+  /**
+   * Returns a line for each of two gesture actions, named from translated action titles and
+   * gesture names, or the gesture settings for an action with no gesture.
+   */
+  private String actionLines(@StringRes int firstAction, @StringRes int secondAction) {
+    return GestureHints.actionLine(context, gestureMapping, firstAction)
+        + "\n"
+        + GestureHints.actionLine(context, gestureMapping, secondAction);
   }
 
   /**
@@ -1673,7 +1646,7 @@ public class SelectorController implements UserInputEventListener {
                 Ascii.toLowerCase(rawNames.get(0)),
                 Ascii.toLowerCase(rawNames.get(1)));
       }
-      cachedSelectSettingGestureNames = adjustSelectedSettingGestureNames;
+      cachedAdjustSelectedSettingGestureNames = adjustSelectedSettingGestureNames;
     }
     return adjustSelectedSettingGestureNames;
   }
@@ -1763,7 +1736,7 @@ public class SelectorController implements UserInputEventListener {
         return;
       }
       case SWITCH_VOICE_PROFILE -> {
-        changeVoiceProfile(eventId, isNext, getSelectSettingGestures());
+        changeVoiceProfile(eventId, isNext, getAdjustSelectedSettingGestures());
         return;
       }
       case GRANULARITY -> {
@@ -1981,7 +1954,7 @@ public class SelectorController implements UserInputEventListener {
         context.getString(
             R.string.template_speech_rate_change,
             actorState.getSpeechRateState().getSpeechRatePercentage());
-    announceSetting(eventId, displayText, getSelectSettingGestures());
+    announceSetting(eventId, displayText, getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(eventId, displayText);
   }
 
@@ -2026,7 +1999,7 @@ public class SelectorController implements UserInputEventListener {
     announceSetting(
         eventId,
         actorState.getLanguageState().getCurrentLanguageString(),
-        getSelectSettingGestures());
+        getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(eventId, actorState.getLanguageState().getCurrentLanguageString());
   }
 
@@ -2070,7 +2043,7 @@ public class SelectorController implements UserInputEventListener {
     announceSetting(
         eventId,
         VerbosityPreferences.getVerbosityChangeAnnouncement(newVerbosity, context),
-        getSelectSettingGestures());
+        getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(
         eventId, VerbosityPreferences.verbosityValueToName(newVerbosity, context));
   }
@@ -2092,7 +2065,7 @@ public class SelectorController implements UserInputEventListener {
     announceSetting(
         eventId,
         context.getString(R.string.emoji_speech_state, entries[index]),
-        getSelectSettingGestures());
+        getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(eventId, entries[index]);
   }
 
@@ -2119,7 +2092,7 @@ public class SelectorController implements UserInputEventListener {
     announceSetting(
         eventId,
         context.getString(R.string.punctuation_state, punctuationEntries[punctuationLevel]),
-        getSelectSettingGestures());
+        getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(eventId, punctuationEntries[punctuationLevel]);
   }
 
@@ -2144,7 +2117,7 @@ public class SelectorController implements UserInputEventListener {
     announceSetting(
         eventId,
         VerbosityPreferences.getVerbosityChangeAnnouncement(newVerbosity, context),
-        getSelectSettingGestures());
+        getAdjustSelectedSettingGestures());
   }
 
   private void toggleTextFormatting(EventId eventId) {
@@ -2164,7 +2137,7 @@ public class SelectorController implements UserInputEventListener {
             toggleTextFormatting
                 ? context.getString(R.string.value_on)
                 : context.getString(R.string.value_off)),
-        getSelectSettingGestures());
+        getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(
         eventId, context.getString(toggleTextFormatting ? R.string.value_on : R.string.value_off));
   }
@@ -2177,7 +2150,7 @@ public class SelectorController implements UserInputEventListener {
       announceSetting(
           eventId,
           context.getString(R.string.screen_brightness_restored),
-          getSelectSettingGestures());
+          getAdjustSelectedSettingGestures());
       showQuickMenuActionOverlay(eventId, context.getString(R.string.shortcut_disable_dimming));
     } else {
       // Dims the screen.
@@ -2204,7 +2177,7 @@ public class SelectorController implements UserInputEventListener {
             !audioFocusOn
                 ? context.getString(R.string.value_on)
                 : context.getString(R.string.value_off)),
-        getSelectSettingGestures());
+        getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(
         eventId, context.getString(!audioFocusOn ? R.string.value_on : R.string.value_off));
   }
@@ -2231,7 +2204,7 @@ public class SelectorController implements UserInputEventListener {
                       ? R.string.template_accessibility_volume_change_decrease
                       : R.string.template_accessibility_volume_change_increase,
                   percent);
-          announceSetting(lastChangeAccessibilityEventId, displayText, getSelectSettingGestures());
+          announceSetting(lastChangeAccessibilityEventId, displayText, getAdjustSelectedSettingGestures());
           TalkBackUI.Item item =
               value < prevValue
                   ? Item.ITEM_ACCESSIBILITY_VOLUME_DECREASE
@@ -2257,7 +2230,7 @@ public class SelectorController implements UserInputEventListener {
               decreaseVolume
                   ? R.string.template_volume_change_minimum
                   : R.string.template_volume_change_maximum);
-      announceSetting(eventId, displayText, getSelectSettingGestures());
+      announceSetting(eventId, displayText, getAdjustSelectedSettingGestures());
       TalkBackUI.Item item =
           decreaseVolume
               ? Item.ITEM_ACCESSIBILITY_VOLUME_MINIMUM
@@ -2284,7 +2257,7 @@ public class SelectorController implements UserInputEventListener {
                   ? R.string.template_volume_change_maximum
                   : R.string.template_volume_change_minimum);
     }
-    announceSetting(eventId, displayText, getSelectSettingGestures());
+    announceSetting(eventId, displayText, getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(eventId, displayText);
   }
 
@@ -2303,7 +2276,7 @@ public class SelectorController implements UserInputEventListener {
               decreaseLatency
                   ? R.string.template_touch_latency_reach_minimum
                   : R.string.template_touch_latency_reach_maximum);
-      announceSetting(eventId, displayText, getSelectSettingGestures());
+      announceSetting(eventId, displayText, getAdjustSelectedSettingGestures());
       showQuickMenuActionOverlay(eventId, displayText);
     }
   }
@@ -2323,7 +2296,7 @@ public class SelectorController implements UserInputEventListener {
               decreaseLatency
                   ? R.string.template_touch_latency_reach_minimum
                   : R.string.template_touch_latency_reach_maximum);
-      announceSetting(eventId, displayText, getSelectSettingGestures());
+      announceSetting(eventId, displayText, getAdjustSelectedSettingGestures());
       showQuickMenuActionOverlay(eventId, displayText);
     }
   }
@@ -2342,7 +2315,7 @@ public class SelectorController implements UserInputEventListener {
         context.getResources().getStringArray(R.array.pref_lift_to_activate_entries)[
             updated.ordinal()];
     String displayText = context.getString(R.string.template_lift_to_activate_changed, modeName);
-    announceSetting(eventId, displayText, getSelectSettingGestures());
+    announceSetting(eventId, displayText, getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(eventId, displayText);
   }
 
@@ -2415,7 +2388,7 @@ public class SelectorController implements UserInputEventListener {
     announceSetting(
         eventId,
         context.getString(switchedValue ? R.string.wrap_around_on : R.string.wrap_around_off),
-        getSelectSettingGestures());
+        getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(
         eventId, context.getString(switchedValue ? R.string.value_on : R.string.value_off));
   }
@@ -2429,7 +2402,7 @@ public class SelectorController implements UserInputEventListener {
             switchedValue
                 ? R.string.tablet_held_up_faces_away_on
                 : R.string.tablet_held_up_faces_away_off),
-        getSelectSettingGestures());
+        getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(
         eventId, context.getString(switchedValue ? R.string.value_on : R.string.value_off));
   }
@@ -2452,7 +2425,7 @@ public class SelectorController implements UserInputEventListener {
     } else {
       announcementText = context.getString(R.string.speak_time_off);
     }
-    announceSetting(eventId, announcementText, getSelectSettingGestures());
+    announceSetting(eventId, announcementText, getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(
         eventId, context.getString(switchedValue ? R.string.value_on : R.string.value_off));
   }
