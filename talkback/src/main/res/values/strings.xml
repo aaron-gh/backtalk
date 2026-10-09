@@ -1271,7 +1271,7 @@
       Source: Dialog title when choosing the audio output device.
       Description: Dialog title for selecting audio output target. [CHAR LIMIT=45]
     -->
-    <string name="dialog_title_audio_output_device">Choose where to play TalkBack sound</string>
+    <string name="dialog_title_audio_output_device">Choose where to play Backtalk sound</string>
     <!--
       Source: Entry in the audio output device list for using system default.
       Description: Follows Android system default audio routing. [CHAR LIMIT=30]
