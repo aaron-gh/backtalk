@@ -93,6 +93,9 @@
     <string name="pref_capital_letters_key">pref_capital_letters</string>
     <string name="pref_a11y_hints_key">pref_a11y_hints</string>
     <string name="pref_speak_container_element_positions_key">pref_speak_container_element_positions_key</string>
+    <string name="pref_table_headers_category_key">pref_table_headers_category_key</string>
+    <string name="pref_table_column_headers_key">pref_table_column_headers_key</string>
+    <string name="pref_table_speak_row_column_numbers_key">pref_table_speak_row_column_numbers_key</string>
     <string name="pref_speak_time_key">pref_speak_time_key</string>
     <string name="pref_on_device_ai_key" translatable="false">pref_on_device_ai</string>
     <string name="pref_speak_roles_key">pref_speak_roles_key</string>
@@ -758,6 +761,22 @@
     <string name="pref_node_desc_order_value_name_state_role_pos">pref_node_desc_order_value_name_state_role_pos</string>
     <string name="pref_node_desc_order_value_role_state_name_pos">pref_node_desc_order_value_role_state_name_pos</string>
     <string name="pref_node_desc_order_value_state_role_name_pos">pref_node_desc_order_value_state_role_name_pos</string>
+
+    <!-- Table column headers preferences -->
+    <string-array name="pref_table_column_headers_entries">
+        <item>@string/pref_table_column_headers_entry_after</item>
+        <item>@string/pref_table_column_headers_entry_before</item>
+        <item>@string/pref_table_column_headers_entry_off</item>
+    </string-array>
+    <string-array name="pref_table_column_headers_values">
+        <item>@string/pref_table_column_headers_value_after</item>
+        <item>@string/pref_table_column_headers_value_before</item>
+        <item>@string/pref_table_column_headers_value_off</item>
+    </string-array>
+    <string name="pref_table_column_headers_value_after">after</string>
+    <string name="pref_table_column_headers_value_before">before</string>
+    <string name="pref_table_column_headers_value_off">off</string>
+    <string name="pref_table_column_headers_default">@string/pref_table_column_headers_value_after</string>
 
     <!-- Time feedback format -->
     <string-array name="pref_time_feedback_format_entries">
@@ -1445,6 +1464,7 @@
     <bool name="pref_phonetic_letters_default">true</bool>
     <bool name="pref_a11y_hints_default">true</bool>
     <bool name="pref_speak_container_element_positions_default">true</bool>
+    <bool name="pref_table_speak_row_column_numbers_default">true</bool>
     <bool name="pref_tell_time_default">true</bool>
     <bool name="pref_speak_roles_default">true</bool>
     <bool name="pref_speak_system_window_titles_default">true</bool>

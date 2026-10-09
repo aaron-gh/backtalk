@@ -508,6 +508,15 @@
     -->
     <string name="pref_speak_container_element_positions_title">Speak container info</string>
 
+    <!-- Table reading preferences in Verbosity settings -->
+    <string name="pref_table_headers_category_title" tools:ignore="MissingTranslation">Table reading</string>
+    <string name="pref_table_column_headers_title" tools:ignore="MissingTranslation">Read column headers</string>
+    <string name="pref_table_column_headers_entry_after" tools:ignore="MissingTranslation">After cell data</string>
+    <string name="pref_table_column_headers_entry_before" tools:ignore="MissingTranslation">Before cell data</string>
+    <string name="pref_table_column_headers_entry_off" tools:ignore="MissingTranslation">Do not read</string>
+    <string name="pref_table_speak_row_column_numbers_title" tools:ignore="MissingTranslation">Speak row and column numbers</string>
+    <string name="pref_table_speak_row_column_numbers_summary" tools:ignore="MissingTranslation">Announce row and column numbers for table cells</string>
+
     <!--
       Source: Preference for speaking time.
       Description: The user can check or not check this. [CHAR LIMIT=40]

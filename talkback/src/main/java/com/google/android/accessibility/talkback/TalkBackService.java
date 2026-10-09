@@ -3556,6 +3556,24 @@ public class TalkBackService extends AccessibilityServiceCompat
               res.getBoolean(R.bool.pref_speak_container_element_positions_default));
       globalVariables.setSpeakCollectionInfo(speakCollectionInfo);
 
+      // Update preference: table column headers order/visibility.
+      String tableColumnHeaders =
+          SharedPreferencesUtils.getStringPref(
+              prefs,
+              res,
+              R.string.pref_table_column_headers_key,
+              R.string.pref_table_column_headers_default);
+      globalVariables.setTableColumnHeaders(tableColumnHeaders);
+
+      // Update preference: speak table row and column numbers.
+      boolean speakTableRowColNumbers =
+          VerbosityPreferences.getPreferenceValueBool(
+              prefs,
+              res,
+              res.getString(R.string.pref_table_speak_row_column_numbers_key),
+              res.getBoolean(R.bool.pref_table_speak_row_column_numbers_default));
+      globalVariables.setSpeakTableRowColumnNumbers(speakTableRowColNumbers);
+
       // Update preference: speak roles.
       boolean speakRoles =
           VerbosityPreferences.getPreferenceValueBool(

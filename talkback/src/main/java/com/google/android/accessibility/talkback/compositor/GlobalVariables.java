@@ -179,6 +179,13 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
   private boolean speakRoles = true;
   private boolean speakCollectionInfo = true;
 
+  public static final String TABLE_HEADERS_BEFORE = "before";
+  public static final String TABLE_HEADERS_AFTER = "after";
+  public static final String TABLE_HEADERS_OFF = "off";
+
+  private String tableColumnHeaders = TABLE_HEADERS_AFTER;
+  private boolean speakTableRowColumnNumbers = true;
+
   // Control sounds: whether they are heard, and the ones heard or felt for focused controls.
   private boolean controlSoundsOn = false;
   private Set<Integer> controlSounds = Collections.emptySet();
@@ -610,6 +617,22 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
     speakCollectionInfo = value;
   }
 
+  public String getTableColumnHeaders() {
+    return tableColumnHeaders;
+  }
+
+  public void setTableColumnHeaders(String value) {
+    tableColumnHeaders = value;
+  }
+
+  public boolean getSpeakTableRowColumnNumbers() {
+    return speakTableRowColumnNumbers;
+  }
+
+  public void setSpeakTableRowColumnNumbers(boolean value) {
+    speakTableRowColumnNumbers = value;
+  }
+
   public boolean getSpeakRoles() {
     return speakRoles;
   }
@@ -901,7 +924,11 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
   public CharSequence getCollectionItemTransitionDescription(
       @Nullable AccessibilityNodeInfoCompat focusedNode) {
     return CollectionStateFeedbackUtils.getCollectionItemTransitionDescription(
-        focusedNode, collectionState, mContext);
+        focusedNode, collectionState, mContext, tableColumnHeaders, speakTableRowColumnNumbers);
+  }
+
+  public int getCollectionRole() {
+    return collectionState.getCollectionRole();
   }
 
   /** Returns if the reading menu has actions settings. */

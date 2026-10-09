@@ -259,10 +259,11 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
     CharSequence eventDescription =
         AccessibilityEventFeedbackUtils.getEventContentDescriptionOrEventAggregateText(
             event, preferredLocale);
+    CharSequence contentDescription;
     if (!TextUtils.isEmpty(nodeUnlabelledState)) {
       CharSequence unlabelledDescription =
           TextUtils.isEmpty(eventDescription) ? nodeUnlabelledState : eventDescription;
-      outputJoinList.add(unlabelledDescription);
+      contentDescription = unlabelledDescription;
       logString
           .append(String.format("\n    unlabelledDescription={%s}", unlabelledDescription))
           .append(String.format(", eventDescription={%s}", eventDescription));
@@ -270,12 +271,36 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
       CharSequence nodeTreeDescription =
           treeNodesDescription.aggregateNodeTreeDescription(node, event);
       if (!TextUtils.isEmpty(nodeTreeDescription)) {
-        outputJoinList.add(nodeTreeDescription);
+        contentDescription = nodeTreeDescription;
         logString.append(String.format("\n    nodeTreeDescription={%s}", nodeTreeDescription));
       } else {
-        outputJoinList.add(eventDescription);
+        contentDescription = eventDescription;
         logString.append(String.format("\n    eventDescription={%s}", eventDescription));
       }
+    }
+
+    boolean speakCollectionInfo = globalVariables.getSpeakCollectionInfo();
+    boolean speakRoles = globalVariables.getSpeakRoles();
+    logString
+        .append(String.format("\n Verbosity speakCollectionInfo=%s", speakCollectionInfo))
+        .append(String.format(", speakRoles=%s", speakRoles));
+    CharSequence collectionItemTransition =
+        speakCollectionInfo ? globalVariables.getCollectionItemTransitionDescription(node) : "";
+
+    // In a table, the row and column can be spoken before the cell's contents.
+    boolean transitionBeforeContent =
+        !TextUtils.isEmpty(collectionItemTransition)
+            && globalVariables.getCollectionRole() == Role.ROLE_GRID
+            && GlobalVariables.TABLE_HEADERS_BEFORE.equals(globalVariables.getTableColumnHeaders());
+
+    if (transitionBeforeContent) {
+      outputJoinList.add(collectionItemTransition);
+      logString.append(
+          String.format("\n    collectionItemTransition={%s}", collectionItemTransition));
+    }
+
+    if (!TextUtils.isEmpty(contentDescription)) {
+      outputJoinList.add(contentDescription);
     }
 
     // Add phonetic spelling if necessary.
@@ -285,31 +310,26 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
     logString.append(String.format("\n    phoneticExample={%s}", phoneticExample));
 
     // Prepare Collection item transition state or Node role/heading description for feedback.
-    boolean speakCollectionInfo = globalVariables.getSpeakCollectionInfo();
-    boolean speakRoles = globalVariables.getSpeakRoles();
-    logString
-        .append(String.format("\n Verbosity speakCollectionInfo=%s", speakCollectionInfo))
-        .append(String.format(", speakRoles=%s", speakRoles));
-    CharSequence collectionItemTransition =
-        speakCollectionInfo ? globalVariables.getCollectionItemTransitionDescription(node) : "";
-    if (!TextUtils.isEmpty(collectionItemTransition)) {
-      outputJoinList.add(collectionItemTransition);
-      logString.append(
-          String.format("\n    collectionItemTransition={%s}", collectionItemTransition));
-    } else if (speakRoles
-        && !WebInterfaceUtils.isWebContainer(node)
-        && AccessibilityNodeInfoUtils.isHeading(node)) {
-      // If the source node has collection item transition, collectionItemTransition text would
-      // not be empty. And TalkBack should announce the collection item transition information or it
-      // should fallback to announce the role/heading description.
-      CharSequence nodeRoleDescription =
-          AccessibilityNodeFeedbackUtils.getNodeRoleDescription(node, context, globalVariables);
-      if (!TextUtils.isEmpty(nodeRoleDescription)) {
-        outputJoinList.add(nodeRoleDescription);
-        logString.append(String.format("\n    nodeRoleDescription={%s}", nodeRoleDescription));
-      } else {
-        outputJoinList.add(context.getString(R.string.heading_template));
-        logString.append("\n    heading");
+    if (!transitionBeforeContent) {
+      if (!TextUtils.isEmpty(collectionItemTransition)) {
+        outputJoinList.add(collectionItemTransition);
+        logString.append(
+            String.format("\n    collectionItemTransition={%s}", collectionItemTransition));
+      } else if (speakRoles
+          && !WebInterfaceUtils.isWebContainer(node)
+          && AccessibilityNodeInfoUtils.isHeading(node)) {
+        // If the source node has collection item transition, collectionItemTransition text would
+        // not be empty. And TalkBack should announce the collection item transition information or it
+        // should fallback to announce the role/heading description.
+        CharSequence nodeRoleDescription =
+            AccessibilityNodeFeedbackUtils.getNodeRoleDescription(node, context, globalVariables);
+        if (!TextUtils.isEmpty(nodeRoleDescription)) {
+          outputJoinList.add(nodeRoleDescription);
+          logString.append(String.format("\n    nodeRoleDescription={%s}", nodeRoleDescription));
+        } else {
+          outputJoinList.add(context.getString(R.string.heading_template));
+          logString.append("\n    heading");
+        }
       }
     }
 
