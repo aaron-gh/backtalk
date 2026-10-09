@@ -2410,6 +2410,24 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <string name="pref_node_desc_order_entry_role_state_name_pos">Type, state, name</string>
     <!-- Label for preference specifying that Backtalk should describe elements in order: state, type, name. -->
     <string name="pref_node_desc_order_entry_state_role_name_pos">State, type, name</string>
+    <!-- Order of item details settings: the item's name, such as the text of a button. [CHAR LIMIT=30] -->
+    <string name="item_detail_name">Name</string>
+    <!-- Order of item details settings: the item's type, such as "button" or "checkbox". [CHAR LIMIT=30] -->
+    <string name="item_detail_type">Type</string>
+    <!-- Order of item details settings: the item's state, such as "checked". [CHAR LIMIT=30] -->
+    <string name="item_detail_state">State</string>
+    <!-- Settings lists that can be reordered: accessibility action that moves an item earlier. [CHAR LIMIT=30] -->
+    <string name="action_move_up">Move up</string>
+    <!-- Settings lists that can be reordered: accessibility action that moves an item later. [CHAR LIMIT=30] -->
+    <string name="action_move_down">Move down</string>
+    <!-- Settings lists that can be reordered: spoken after an item moves. [CHAR LIMIT=NONE] -->
+    <string name="template_list_position">Position <xliff:g id="position" example="2">%1$d</xliff:g> of <xliff:g id="count" example="3">%2$d</xliff:g></string>
+    <!-- Order of item details settings: spoken when the user starts dragging a detail. The position is template_list_position. [CHAR LIMIT=NONE] -->
+    <string name="template_item_details_order_picked_up">Picked up <xliff:g id="detail" example="Name">%1$s</xliff:g>. <xliff:g id="position" example="Position 1 of 3">%2$s</xliff:g></string>
+    <!-- Order of item details settings: spoken when the user lets go of a dragged detail. The position is template_list_position. [CHAR LIMIT=NONE] -->
+    <string name="template_item_details_order_dropped">Dropped <xliff:g id="detail" example="Name">%1$s</xliff:g>. <xliff:g id="position" example="Position 2 of 3">%2$s</xliff:g></string>
+    <!-- Order of item details settings: text below the list that explains how to reorder it. [CHAR LIMIT=NONE] -->
+    <string name="item_details_order_footer">Backtalk says an item\'s details in this order. To change it, touch and hold a detail, then drag it up or down. With Backtalk on, double-tap and hold, then drag. You can also use the Move up and Move down actions.</string>
 
     <!-- Label for preference specifying that TalkBack should announce time in the format used by the paired device. [CHAR LIMIT=120] -->
     <string name="pref_time_feedback_format_entries_default">Use device time format</string>

@@ -308,6 +308,11 @@ public class VerbosityPrefFragment extends TalkbackBaseFragment {
             getString(R.string.pref_verbosity_preset_value_default));
     updateFragment(verbosityValueString);
 
+    Preference itemDetailsOrder = findPreference(R.string.pref_node_desc_order_key);
+    if (itemDetailsOrder != null) {
+      itemDetailsOrder.setSummary(ItemDetailsOrderFragment.getSummary(getContext()));
+    }
+
     // Attach listeners after verbosity values are copied to active, so that copying verbosity does
     // not invoke preference-change listener.
     attachPreferenceListeners();
