@@ -23,6 +23,7 @@ import android.graphics.Region
 import android.media.AudioAttributes
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.WindowManager
@@ -44,7 +45,9 @@ import com.google.android.accessibility.utils.input.WindowEventInterpreter.Event
 import com.google.android.accessibility.utils.monitor.DisplayMonitor
 import com.google.android.accessibility.utils.output.FeedbackItem.FLAG_FORCE_FEEDBACK_ALL
 import com.google.android.accessibility.utils.output.FeedbackItem.FLAG_NO_HISTORY
+import com.google.android.accessibility.utils.output.SpeechController.QUEUE_MODE_INTERRUPT
 import com.google.android.accessibility.utils.output.SpeechController.QUEUE_MODE_QUEUE
+import com.google.android.accessibility.utils.output.SpeechController.QUEUE_MODE_UNINTERRUPTIBLE_BY_NEW_SPEECH_CAN_IGNORE_INTERRUPTS
 import com.google.android.accessibility.utils.output.SpeechController.SpeakOptions
 import com.google.android.accessibility.utils.output.ThemeVibrations
 
@@ -91,6 +94,10 @@ class DirectTouchController(
 
   private val liftToActivateKey = service.getString(R.string.pref_lift_to_activate_key)
 
+  // The last navigation bar button spoken, so that the same tap reported twice is said once.
+  private var lastNavBarButton: CharSequence? = null
+  private var lastNavBarButtonTime = 0L
+
   init {
     DirectTouchSettings.migrateNavBarSetting(prefs, liftToActivateKey)
     prefs.registerOnSharedPreferenceChangeListener(prefsListener)
@@ -114,6 +121,9 @@ class DirectTouchController(
   fun onAccessibilityEvent(event: AccessibilityEvent) {
     if (!FeatureSupport.supportPassthrough()) {
       return
+    }
+    if (event.eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) {
+      speakNavBarButton(event)
     }
     if (DirectTouchRegions.reassertsRegion(event.eventType)) {
       // Look again once things settle, like the original did after every window change. The active
@@ -219,6 +229,56 @@ class DirectTouchController(
   private fun isNavBarDirect(): Boolean =
     LiftToActivateMode.fromPrefValue(prefs.getString(liftToActivateKey, null)) ==
       LiftToActivateMode.NAVIGATION_BAR
+
+  /**
+   * Says the navigation bar button that a tap pressed, such as Back or Home, when the navigation
+   * bar takes touches directly. Backtalk never sees those touches, so without this a tap on the
+   * bar would act without a word. The app that draws the bar reports the press, sometimes twice.
+   */
+  private fun speakNavBarButton(event: AccessibilityEvent) {
+    if (!isNavBarDirect() || !DirectTouchSettings.isNavBarSpeechEnabled(prefs)) {
+      return
+    }
+    val label =
+      event.contentDescription?.takeIf { it.isNotEmpty() }
+        ?: event.text.joinToString(" ").takeIf { it.isNotEmpty() }
+        ?: return
+    val window = service.windows.orEmpty().firstOrNull { it.id == event.windowId } ?: return
+    if (window.type != AccessibilityWindowInfo.TYPE_SYSTEM) {
+      return
+    }
+    val bounds = Rect()
+    window.getBoundsInScreen(bounds)
+    val display = displayBounds()
+    if (
+      !DirectTouchRegions.isNavigationBar(
+        bounds.left,
+        bounds.top,
+        bounds.right,
+        bounds.bottom,
+        display.width(),
+        display.height(),
+      )
+    ) {
+      return
+    }
+    val now = SystemClock.uptimeMillis()
+    if (label.toString() == lastNavBarButton?.toString() && now - lastNavBarButtonTime < REPEAT_MS) {
+      return
+    }
+    lastNavBarButton = label
+    lastNavBarButtonTime = now
+    // The press opens another screen at once, and that screen's announcement would cut the button
+    // off, so the button can't be interrupted, and the announcement follows it. It is also said
+    // over media, as a press always is.
+    val options =
+      SpeakOptions.create()
+        .setQueueMode(
+          QUEUE_MODE_INTERRUPT or QUEUE_MODE_UNINTERRUPTIBLE_BY_NEW_SPEECH_CAN_IGNORE_INTERRUPTS
+        )
+        .setFlags(FLAG_FORCE_FEEDBACK_ALL)
+    feedback.returnFeedback(Performance.EVENT_ID_UNTRACKED, Feedback.speech(label, options))
+  }
 
   /**
    * While direct touch is off, keeps the navigation bar alone in the passthrough region if lift to
@@ -384,6 +444,8 @@ class DirectTouchController(
 
   private companion object {
     const val DEBOUNCE_MS = 150L
+    // Longer than the gap between the two reports of one press, shorter than a second tap.
+    const val REPEAT_MS = 250L
     const val SYSTEM_UI = "com.android.systemui"
     // The names a sound theme replaces the on and off vibrations by.
     const val THEME_ON = "direct_touch_on"
