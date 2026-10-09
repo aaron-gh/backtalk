@@ -267,6 +267,12 @@
       Description: This is spoken to the user. [CHAR LIMIT=NONE]
     -->
     <!-- Spoken for the battery level, such as when the screen turns on or in the status readout. [CHAR LIMIT=NONE] -->
+    <!-- Spoken when a reading control is already at its lowest or highest value: "Minimum" or "Maximum", then the value, such as "Minimum, 0.15 seconds". [CHAR LIMIT=NONE] -->
+    <!-- Title of the setting that says Back, Home, or Overview when a single tap presses it, with lift to activate on the navigation bar. [CHAR LIMIT=NONE] -->
+    <string name="title_pref_speak_nav_bar_buttons">Speak navigation bar buttons</string>
+    <!-- Summary of the setting that says the navigation bar button a tap pressed. [CHAR LIMIT=NONE] -->
+    <string name="summary_pref_speak_nav_bar_buttons">With lift to activate on the navigation bar, say the button that a tap presses, such as Back or Home.</string>
+    <string name="template_setting_limit"><xliff:g id="limit" example="Minimum">%1$s</xliff:g>, <xliff:g id="value" example="0.15 seconds">%2$s</xliff:g></string>
     <string name="template_battery_level">Battery <xliff:g id="battery_level" example="73">%1$s</xliff:g> percent</string>
     <!-- Spoken instead of template_battery_level when the battery level isn't known. [CHAR LIMIT=NONE] -->
     <string name="template_battery_level_unknown">Battery level unknown</string>
@@ -501,6 +507,15 @@
       Description: The user can check or not check this. [CHAR LIMIT=40]
     -->
     <string name="pref_speak_container_element_positions_title">Speak container info</string>
+
+    <!-- Table reading preferences in Verbosity settings -->
+    <string name="pref_table_headers_category_title" tools:ignore="MissingTranslation">Table reading</string>
+    <string name="pref_table_column_headers_title" tools:ignore="MissingTranslation">Read column headers</string>
+    <string name="pref_table_column_headers_entry_after" tools:ignore="MissingTranslation">After cell data</string>
+    <string name="pref_table_column_headers_entry_before" tools:ignore="MissingTranslation">Before cell data</string>
+    <string name="pref_table_column_headers_entry_off" tools:ignore="MissingTranslation">Do not read</string>
+    <string name="pref_table_speak_row_column_numbers_title" tools:ignore="MissingTranslation">Speak row and column numbers</string>
+    <string name="pref_table_speak_row_column_numbers_summary" tools:ignore="MissingTranslation">Announce row and column numbers for table cells</string>
 
     <!--
       Source: Preference for speaking time.
@@ -743,6 +758,8 @@
     <string name="talkback_exit_watermark_text">Backtalk on. Hold 2 fingers on screen for 5 seconds to turn off. To stop showing this message, tap with 3 fingers to open the Backtalk menu.</string>
     <!-- The hint text of TalkBack mis-trigger-prevention watermark. [CHAR_LIMIT=NONE]-->
     <string name="talkback_exit_watermark_hint_text">Showing banner indicating Backtalk is on. To turn off Backtalk, hold 2 fingers on the screen for 5 seconds. To remove this banner, go to Backtalk Settings.</string>
+    <!-- The text of the Backtalk-on banner when no 3-finger tap opens the Backtalk menu. [CHAR_LIMIT=NONE]-->
+    <string name="talkback_exit_watermark_text_no_menu_gesture">Backtalk on. Hold 2 fingers on screen for 5 seconds to turn off. To stop showing this message, turn off Backtalk settings &gt; Advanced settings &gt; Show instructions for turning off Backtalk.</string>
 
     <!-- Label for the reset gesture settings. [CHAR_LIMIT=66] -->
     <string name="reset_gesture_settings_title">Reset gesture settings</string>

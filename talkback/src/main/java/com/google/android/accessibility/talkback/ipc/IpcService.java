@@ -44,14 +44,6 @@ public class IpcService extends Service {
   public static final String EXTRA_TRAINING_PAGE_ID = "training_page_id";
   public static final int MSG_REQUEST_GESTURES = 1;
   public static final String EXTRA_IS_ANY_GESTURE_CHANGED = "is_any_gesture_changed";
-  /** Followed by a gesture ID, the key of that gesture's action. */
-  public static final String EXTRA_GESTURE_ACTION_PREFIX = "gesture_action:";
-  /** Whether the keymap is the enhanced one with the Action key, as the keyboard tutorial says. */
-  public static final String EXTRA_KEYMAP_AS_WRITTEN = "keymap_as_written";
-  /** Followed by a keyboard shortcut's key, the text of its keys. */
-  public static final String EXTRA_KEY_COMBO_TEXT_PREFIX = "key_combo_text:";
-  /** Followed by a keyboard shortcut's key, whether it has its default keys. */
-  public static final String EXTRA_KEY_COMBO_DEFAULT_PREFIX = "key_combo_default:";
   public static final int MSG_TRAINING_FINISH = 2;
   public static final int MSG_ON_CLIENT_CONNECTED = 3;
   public static final int MSG_ON_CLIENT_DISCONNECTED = 4;

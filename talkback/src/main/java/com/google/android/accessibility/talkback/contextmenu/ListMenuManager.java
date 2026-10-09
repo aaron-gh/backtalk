@@ -276,6 +276,7 @@ public class ListMenuManager implements WindowEventHandler, AccessibilityEventLi
     GestureShortcutMapping mapping = service.getGestureShortcutMapping();
     if (mapping == null
         || GestureHints.isAssigned(
+            service,
             mapping,
             AccessibilityService.GESTURE_SWIPE_RIGHT,
             service.getString(R.string.shortcut_value_next))) {

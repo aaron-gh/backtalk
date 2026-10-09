@@ -162,6 +162,18 @@ TalkBack ignored the order for a row whose checkbox or switch has no text of its
 
 When you turn Backtalk off, it says "Backtalk off" at the accessibility volume, using your device's real volume levels. TalkBack only approximated that volume.
 
+### Table column headers
+
+In **Verbosity**, you can choose whether Backtalk reads table column headers before or after the cell's data, or leaves them out:
+
+*   **After cell data**, the default, keeps TalkBack's order: the cell's contents, then the row and column headers or numbers.
+*   **Before cell data** speaks the row and column headers or numbers before the cell's contents, along with "Column heading" or "Row heading" for a header cell. This applies to grids as well as tables, so an item in a photo grid says its row and column first. On a TV, Backtalk already speaks them first, so this option changes nothing there.
+*   **Do not read** leaves column headers out, and reads column numbers only when row and column numbers are on.
+
+Under preset settings in **Verbosity**, you can also turn off **Speak row and column numbers** to hear only named headers without row and column coordinates. The setting is on by default.
+
+Both settings only apply while **Speak container info** is on, because rows and columns aren't spoken at all when it's off.
+
 ## Notifications
 
 ### Samsung watch notification content
@@ -277,7 +289,7 @@ The rotor requires Android 13 or later and **Handle gestures in Backtalk** turne
 
 ### Lift to activate
 
-Backtalk can activate the item under your finger when you lift your finger after exploring by touch, as TalkBack already does for keys on the keyboard. In **Advanced settings** > **Lift to activate**, choose **Only on navigation bar** to use it for the Back, Home, and Overview buttons only, or **Entire screen** to use it everywhere. It's **Disabled** by default.
+Backtalk can activate the item under your finger when you lift your finger after exploring by touch, as TalkBack already does for keys on the keyboard. In **Advanced settings** > **Lift to activate**, choose **Only on navigation bar** to use it for the Back, Home, and Overview buttons only, or **Entire screen** to use it everywhere. It's **Disabled** by default. With **Only on navigation bar**, a single tap presses the button, and Backtalk says which one, such as "Back" or "Home". To stop this, turn off **Advanced settings** > **Speak navigation bar buttons**.
 
 With **Only on navigation bar** on Android 11 and later, touches on the navigation bar go straight to Android, so a single tap presses a button and holding Home holds it, as without a screen reader. Backtalk doesn't say the buttons as you touch them.
 

@@ -2679,9 +2679,6 @@ public class FocusProcessorForLogicalNavigation {
             ScrollTimeout.SCROLL_TIMEOUT_LONG,
             autoScrollChecker,
             eventId);
-    // Only a plain swipe continues early. Lists lay out the items a scroll brings in while it
-    // runs, so a search for a heading, link or control partway through the scroll can miss one
-    // that is still coming in and say there is none.
     if (scrolled
         && scrollCallback != null
         && navigationAction.targetType == NavigationTarget.TARGET_DEFAULT) {

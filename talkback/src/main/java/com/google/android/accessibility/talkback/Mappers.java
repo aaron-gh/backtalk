@@ -62,6 +62,7 @@ import com.google.android.accessibility.utils.FormFactorUtils;
 import com.google.android.accessibility.utils.LogDepth;
 import com.google.android.accessibility.utils.Performance.EventId;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
+import com.google.android.accessibility.utils.WebInterfaceUtils;
 import com.google.android.accessibility.utils.input.CursorGranularity;
 import com.google.android.accessibility.utils.output.FeedbackItem;
 import com.google.android.accessibility.utils.output.ScrollActionRecord;
@@ -282,7 +283,8 @@ public final class Mappers {
       }
       // Chrome moves accessibility focus along with input focus on its own, and speaks it with its
       // own event. Focusing the node again makes Chrome send a second event, so it is spoken twice.
-      if (targetedNode.isAccessibilityFocused()) {
+      if (WebInterfaceUtils.supportsWebActions(targetedNode)
+          && targetedNode.isAccessibilityFocused()) {
         LogDepth.log(LOG_TAG, depth, "Return, target already has accessibility focus");
         return null;
       }

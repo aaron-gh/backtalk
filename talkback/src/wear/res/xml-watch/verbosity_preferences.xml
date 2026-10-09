@@ -31,6 +31,12 @@
         android:key="@string/pref_speak_container_element_positions_key"
         android:title="@string/pref_speak_container_element_positions_title" />
 
+    <!-- Table row and column numbers -->
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+        android:defaultValue="@bool/pref_table_speak_row_column_numbers_default"
+        android:key="@string/pref_table_speak_row_column_numbers_key"
+        android:title="@string/pref_table_speak_row_column_numbers_title" />
+
     <!-- Scroll announcement verbosity -->
     <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
         android:defaultValue="@bool/pref_verbose_scroll_announcement_default"
@@ -208,5 +214,19 @@
       android:title="@string/pref_speak_time_title"
       android:summary="@string/pref_speak_time_summary"
       app:splitSummary="true" />
+
+  <!-- Table settings -->
+  <com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory
+      android:key="@string/pref_table_headers_category_key"
+      android:title="@string/pref_table_headers_category_title">
+
+    <ListPreference
+        android:defaultValue="@string/pref_table_column_headers_default"
+        android:entries="@array/pref_table_column_headers_entries"
+        android:entryValues="@array/pref_table_column_headers_values"
+        android:key="@string/pref_table_column_headers_key"
+        android:summary="%s"
+        android:title="@string/pref_table_column_headers_title" />
+  </com.google.android.accessibility.material.preference.AccessibilitySuitePreferenceCategory>
 
 </PreferenceScreen>

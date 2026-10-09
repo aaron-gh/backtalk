@@ -24,6 +24,11 @@
         android:summary="%s"
         android:title="@string/title_pref_lift_to_activate" />
     <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+        android:defaultValue="true"
+        android:key="pref_speak_nav_bar_buttons"
+        android:summary="@string/summary_pref_speak_nav_bar_buttons"
+        android:title="@string/title_pref_speak_nav_bar_buttons" />
+    <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
         android:defaultValue="@bool/pref_wrap_around_default"
         android:key="@string/pref_wrap_around_key"
         android:summary="@string/summary_pref_wrap_around"

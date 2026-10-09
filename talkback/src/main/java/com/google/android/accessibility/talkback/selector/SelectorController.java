@@ -63,6 +63,7 @@ import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Resources;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
@@ -2226,10 +2227,12 @@ public class SelectorController implements UserInputEventListener {
       refreshVolumeChangedListener(eventId);
     } else {
       String displayText =
-          context.getString(
+          atLimit(
               decreaseVolume
                   ? R.string.template_volume_change_minimum
-                  : R.string.template_volume_change_maximum);
+                  : R.string.template_volume_change_maximum,
+              context.getString(
+                  R.string.tb_template_percent, String.valueOf(accessibilityVolumePercent())));
       announceSetting(eventId, displayText, getAdjustSelectedSettingGestures());
       TalkBackUI.Item item =
           decreaseVolume
@@ -2252,10 +2255,12 @@ public class SelectorController implements UserInputEventListener {
               R.string.template_brightness_changed, ScreenBrightness.getPercent(context));
     } else {
       displayText =
-          context.getString(
+          atLimit(
               increase
                   ? R.string.template_volume_change_maximum
-                  : R.string.template_volume_change_minimum);
+                  : R.string.template_volume_change_minimum,
+              context.getString(
+                  R.string.template_brightness_changed, ScreenBrightness.getPercent(context)));
     }
     announceSetting(eventId, displayText, getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(eventId, displayText);
@@ -2272,10 +2277,11 @@ public class SelectorController implements UserInputEventListener {
       updateFocusDelayPreference(eventId);
     } else {
       String displayText =
-          context.getString(
+          atLimit(
               decreaseLatency
                   ? R.string.template_touch_latency_reach_minimum
-                  : R.string.template_touch_latency_reach_maximum);
+                  : R.string.template_touch_latency_reach_maximum,
+              focusDelayText());
       announceSetting(eventId, displayText, getAdjustSelectedSettingGestures());
       showQuickMenuActionOverlay(eventId, displayText);
     }
@@ -2292,10 +2298,11 @@ public class SelectorController implements UserInputEventListener {
       updateTypingFocusDelayPreference(eventId);
     } else {
       String displayText =
-          context.getString(
+          atLimit(
               decreaseLatency
                   ? R.string.template_touch_latency_reach_minimum
-                  : R.string.template_touch_latency_reach_maximum);
+                  : R.string.template_touch_latency_reach_maximum,
+              typingFocusDelayText());
       announceSetting(eventId, displayText, getAdjustSelectedSettingGestures());
       showQuickMenuActionOverlay(eventId, displayText);
     }
@@ -2317,6 +2324,57 @@ public class SelectorController implements UserInputEventListener {
     String displayText = context.getString(R.string.template_lift_to_activate_changed, modeName);
     announceSetting(eventId, displayText, getAdjustSelectedSettingGestures());
     showQuickMenuActionOverlay(eventId, displayText);
+  }
+
+  /**
+   * Says that a setting is at its lowest or highest, as {@code limitResId} does, followed by its
+   * value, so that each swipe past the end still says what the setting is.
+   */
+  private String atLimit(@StringRes int limitResId, CharSequence value) {
+    return context.getString(R.string.template_setting_limit, context.getString(limitResId), value);
+  }
+
+  private int accessibilityVolumePercent() {
+    AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+    int min =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+            ? audioManager.getStreamMinVolume(AudioManager.STREAM_ACCESSIBILITY)
+            : 0;
+    int max = audioManager.getStreamMaxVolume(AudioManager.STREAM_ACCESSIBILITY);
+    int volume = audioManager.getStreamVolume(AudioManager.STREAM_ACCESSIBILITY);
+    return max > min ? Math.round(100f * (volume - min) / (max - min)) : 100;
+  }
+
+  private String focusDelayText() {
+    int timeout =
+        SharedPreferencesUtils.getIntFromStringPref(
+            prefs,
+            context.getResources(),
+            R.string.pref_touch_focus_time_out_key,
+            R.string.pref_touch_focus_time_out_default);
+    for (FocusDelayPrefFragment.FocusDelayPref source :
+        FocusDelayPrefFragment.FocusDelayPref.values()) {
+      if (timeout == source.getDelay()) {
+        return context.getString(source.getTitleId());
+      }
+    }
+    return "";
+  }
+
+  private String typingFocusDelayText() {
+    int timeout =
+        SharedPreferencesUtils.getIntFromStringPref(
+            prefs,
+            context.getResources(),
+            R.string.pref_typing_focus_time_out_key,
+            R.string.pref_touch_explore_time_out_default);
+    for (TypingFocusDelayPrefFragment.TypingFocusDelayPref source :
+        TypingFocusDelayPrefFragment.TypingFocusDelayPref.values()) {
+      if (timeout == source.getDelay()) {
+        return context.getString(source.getTitleId());
+      }
+    }
+    return "";
   }
 
   private void updateFocusDelayPreference(EventId eventId) {
