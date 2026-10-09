@@ -41,6 +41,8 @@ import com.google.android.accessibility.talkback.compositor.rule.InputTextFeedba
 import com.google.android.accessibility.talkback.compositor.rule.MagnificationStateChangedFeedbackRule;
 import com.google.android.accessibility.talkback.controlsounds.ControlSounds;
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
+import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForTapAndTouchExploration;
+import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForTapAndTouchExploration.TypingMethod;
 import com.google.android.accessibility.talkback.keyboard.KeyComboManager;
 import com.google.android.accessibility.talkback.keyboard.KeyComboModel;
 import com.google.android.accessibility.talkback.selector.SelectorController;
@@ -161,7 +163,7 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
   private boolean isCurrentFocusInScrollableNode = false;
   private boolean isLastFocusInScrollableNode = false;
   private boolean isFocusPage = false;
-  private boolean isInterpretAsEntryKey = false;
+  @TypingMethod private int typingMethod = FocusProcessorForTapAndTouchExploration.LIFT_TO_TYPE;
   private boolean isDescribingSwipeTarget = false;
 
   private final @Nullable GestureShortcutProvider gestureShortcutProvider;
@@ -573,17 +575,30 @@ public class GlobalVariables extends TimedFlags implements ParseTree.VariableDel
         || checkAndClearRecentFlag(EVENT_SKIP_FOCUS_PROCESSING_AFTER_IME_CLOSED);
   }
 
-  /** Used by the hint decision. */
-  public void setInterpretAsEntryKey(boolean interpretAsEntryKey) {
-    isInterpretAsEntryKey = interpretAsEntryKey;
+  /** Sets the typing method, which the hint decision uses. */
+  public void setTypingMethod(@TypingMethod int typingMethod) {
+    this.typingMethod = typingMethod;
   }
 
   /**
    * Returns if it interprets all keys as entry keys. It is {@code true} when the typing method is
-   * {@link FocusProcessorForTapAndTouchExploration#FORCE_LIFT_TO_TYPE_ON_IME}
+   * {@link FocusProcessorForTapAndTouchExploration#FORCE_LIFT_TO_TYPE_ON_IME} or {@link
+   * FocusProcessorForTapAndTouchExploration#LIFT_TO_TYPE_EXCEPT_ACTION_KEY}.
    */
   public boolean isInterpretAsEntryKey() {
-    return isInterpretAsEntryKey;
+    return FocusProcessorForTapAndTouchExploration.liftsToTypeAnyKey(typingMethod);
+  }
+
+  /**
+   * Returns whether {@code node} is a keyboard key that types on lift with a typing method that
+   * interprets keyboard keys as entry keys, so it needs no hint to double-tap. The keyboard's
+   * action key needs a double-tap with {@link
+   * FocusProcessorForTapAndTouchExploration#LIFT_TO_TYPE_EXCEPT_ACTION_KEY}, so it isn't one.
+   */
+  public boolean liftsToType(@Nullable AccessibilityNodeInfoCompat node) {
+    return isInterpretAsEntryKey()
+        && AccessibilityNodeInfoUtils.isKeyboard(node)
+        && FocusProcessorForTapAndTouchExploration.liftsToType(typingMethod, node);
   }
 
   /**
