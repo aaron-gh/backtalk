@@ -76,7 +76,6 @@ import com.google.android.accessibility.utils.AccessibilityServiceCompatUtils;
 import com.google.android.accessibility.utils.AccessibilityWindowInfoUtils;
 import com.google.android.accessibility.utils.Performance;
 import com.google.android.accessibility.utils.Performance.EventId;
-import com.google.android.accessibility.utils.Role;
 import com.google.android.accessibility.utils.SharedPreferencesUtils;
 import com.google.android.accessibility.utils.gestures.GestureConfiguration;
 import com.google.android.accessibility.utils.gestures.GestureManifold;
@@ -288,9 +287,8 @@ public class TouchInteractionMonitor
       return false;
     }
 
-    return typingMethod == FocusProcessorForTapAndTouchExploration.FORCE_LIFT_TO_TYPE_ON_IME
-        || (typingMethod == FocusProcessorForTapAndTouchExploration.LIFT_TO_TYPE
-            && Role.getRole(accessibilityNodeInfoCompat) == Role.ROLE_TEXT_ENTRY_KEY);
+    return FocusProcessorForTapAndTouchExploration.liftsToType(
+        typingMethod, accessibilityNodeInfoCompat);
   }
   private static class CallerInfo {
     final int state;

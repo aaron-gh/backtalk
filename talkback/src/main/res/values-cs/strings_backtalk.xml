@@ -107,4 +107,5 @@
     <string name="pref_node_desc_order_entry_state_role_name_pos">Stav, typ, název</string>
     <string name="value_focus_delay_200ms_default">0,2 sekundy (výchozí)</string>
     <string name="value_focus_delay_300ms">0,3 sekundy</string>
+    <string name="value_type_confirmation_lift_to_type_except_action_key">Podržením prstu vyberte libovolnou klávesu, pak prst zvedněte. Pro Enter, Hotovo nebo Odeslat klepněte dvakrát.</string>
 </resources>

@@ -407,6 +407,12 @@ If you develop a game, add this `<meta-data>` element inside your `<application>
     android:value="true" />
 ```
 
+## On-screen keyboard
+
+### Lift to type, except to send
+
+In **On-screen keyboard** > **Typing method**, **Hold finger to select any key, then lift. Double-tap for Enter, Done, or Send.** types every key when you lift your finger, like **Hold finger to select any key, then lift**, but the key that sends or submits, such as Enter, Done, Send, Search, or Go, still needs a double-tap. This keeps you from sending a message by lifting your finger on the wrong key. Backtalk recognizes this key in Gboard. In other keyboards, every key types when you lift your finger.
+
 ## Braille keyboard
 
 ### Keyboard echo for the braille keyboard
