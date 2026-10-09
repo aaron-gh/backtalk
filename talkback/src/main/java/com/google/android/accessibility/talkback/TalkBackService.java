@@ -29,6 +29,9 @@ import static com.google.android.accessibility.talkback.TalkBackServiceDumpHelpe
 import static com.google.android.accessibility.talkback.TalkBackServiceDumpHelperKt.getConditionGivenArgs;
 import static com.google.android.accessibility.talkback.analytics.TalkBackAnalytics.GESTURE_SPLIT_TAP;
 import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_NAME_ROLE_STATE_POSITION;
+import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_NAME_STATE_ROLE_POSITION;
+import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_ROLE_STATE_NAME_POSITION;
+import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_STATE_ROLE_NAME_POSITION;
 import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_ROLE_NAME_STATE_POSITION;
 import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_STATE_NAME_ROLE_POSITION;
 import static com.google.android.accessibility.talkback.dynamicfeature.ModuleDownloadPrompter.Requester.ONBOARDING;
@@ -3545,6 +3548,15 @@ public class TalkBackService extends AccessibilityServiceCompat
     } else if (TextUtils.equals(
         value, resources.getString(R.string.pref_node_desc_order_value_name_role_state_pos))) {
       return DESC_ORDER_NAME_ROLE_STATE_POSITION;
+    } else if (TextUtils.equals(
+        value, resources.getString(R.string.pref_node_desc_order_value_name_state_role_pos))) {
+      return DESC_ORDER_NAME_STATE_ROLE_POSITION;
+    } else if (TextUtils.equals(
+        value, resources.getString(R.string.pref_node_desc_order_value_role_state_name_pos))) {
+      return DESC_ORDER_ROLE_STATE_NAME_POSITION;
+    } else if (TextUtils.equals(
+        value, resources.getString(R.string.pref_node_desc_order_value_state_role_name_pos))) {
+      return DESC_ORDER_STATE_ROLE_NAME_POSITION;
     } else {
       LogUtils.e(TAG, "Unhandled description order preference value \"%s\"", value);
       return DESC_ORDER_STATE_NAME_ROLE_POSITION;

@@ -146,6 +146,12 @@ TalkBack didn't recognize a two-finger tap made right after a swipe, or it pause
 
 TalkBack echoed a word such as "don't" as two words. Backtalk echoes it as one word. When a keyboard adds a word, its punctuation, and a space all at once, as the braille keyboard does in contracted braille, Backtalk echoes the word rather than just the space.
 
+### Order of item details
+
+**Advanced settings** > **Order of item details** sets the order in which Backtalk says an item's name, type, and state. TalkBack offers three orders. Backtalk offers all six, adding **Name, state, type**, **Type, state, name**, and **State, type, name**.
+
+TalkBack ignored the order for a row whose checkbox or switch has no text of its own, such as the rows in **Reading controls**, and always read the checkbox's type and state before the row's text. Backtalk reads such a row as one control, with the row's text as its name, in the order that you chose.
+
 ### "Backtalk off" at the right volume
 
 When you turn Backtalk off, it says "Backtalk off" at the accessibility volume, using your device's real volume levels. TalkBack only approximated that volume.

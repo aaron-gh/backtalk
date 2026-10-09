@@ -722,15 +722,24 @@
         <item>@string/pref_node_desc_order_entry_state_name_role_pos</item>
         <item>@string/pref_node_desc_order_entry_role_name_state_pos</item>
         <item>@string/pref_node_desc_order_entry_name_role_state_pos</item>
+        <item>@string/pref_node_desc_order_entry_name_state_role_pos</item>
+        <item>@string/pref_node_desc_order_entry_role_state_name_pos</item>
+        <item>@string/pref_node_desc_order_entry_state_role_name_pos</item>
     </string-array>
     <string-array name="pref_node_desc_order_values">
         <item>@string/pref_node_desc_order_value_state_name_role_pos</item>
         <item>@string/pref_node_desc_order_value_role_name_state_pos</item>
         <item>@string/pref_node_desc_order_value_name_role_state_pos</item>
+        <item>@string/pref_node_desc_order_value_name_state_role_pos</item>
+        <item>@string/pref_node_desc_order_value_role_state_name_pos</item>
+        <item>@string/pref_node_desc_order_value_state_role_name_pos</item>
     </string-array>
     <string name="pref_node_desc_order_value_state_name_role_pos">pref_node_desc_order_value_state_name_role_pos</string>
     <string name="pref_node_desc_order_value_role_name_state_pos">pref_node_desc_order_value_role_name_state_pos</string>
     <string name="pref_node_desc_order_value_name_role_state_pos">pref_node_desc_order_value_name_role_state_pos</string>
+    <string name="pref_node_desc_order_value_name_state_role_pos">pref_node_desc_order_value_name_state_role_pos</string>
+    <string name="pref_node_desc_order_value_role_state_name_pos">pref_node_desc_order_value_role_state_name_pos</string>
+    <string name="pref_node_desc_order_value_state_role_name_pos">pref_node_desc_order_value_state_role_name_pos</string>
 
     <!-- Time feedback format -->
     <string-array name="pref_time_feedback_format_entries">

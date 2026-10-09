@@ -2388,6 +2388,12 @@ Description: Explain that the feature is enabled for all images. [CHAR_LIMIT=NON
     <string name="pref_node_desc_order_entry_role_name_state_pos">Type, name, state</string>
     <!-- Label for preference specifying that TalkBack should describe elements in order: name, type, state. -->
     <string name="pref_node_desc_order_entry_name_role_state_pos">Name, type, state</string>
+    <!-- Label for preference specifying that Backtalk should describe elements in order: name, state, type. -->
+    <string name="pref_node_desc_order_entry_name_state_role_pos">Name, state, type</string>
+    <!-- Label for preference specifying that Backtalk should describe elements in order: type, state, name. -->
+    <string name="pref_node_desc_order_entry_role_state_name_pos">Type, state, name</string>
+    <!-- Label for preference specifying that Backtalk should describe elements in order: state, type, name. -->
+    <string name="pref_node_desc_order_entry_state_role_name_pos">State, type, name</string>
 
     <!-- Label for preference specifying that TalkBack should announce time in the format used by the paired device. [CHAR LIMIT=120] -->
     <string name="pref_time_feedback_format_entries_default">Use device time format</string>

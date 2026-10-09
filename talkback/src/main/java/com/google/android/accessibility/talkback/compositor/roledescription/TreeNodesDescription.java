@@ -19,9 +19,7 @@ import static android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_
 import static android.view.accessibility.AccessibilityNodeInfo.CollectionInfo.SELECTION_MODE_NONE;
 import static androidx.core.view.ViewCompat.ACCESSIBILITY_LIVE_REGION_NONE;
 import static com.google.android.accessibility.talkback.compositor.CompositorUtils.PRUNE_EMPTY;
-import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_NAME_ROLE_STATE_POSITION;
-import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_ROLE_NAME_STATE_POSITION;
-import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.DESC_ORDER_STATE_NAME_ROLE_POSITION;
+import static com.google.android.accessibility.talkback.compositor.roledescription.RoleDescriptionExtractor.isStateBeforeName;
 
 import android.content.Context;
 import android.graphics.Rect;
@@ -124,15 +122,11 @@ public class TreeNodesDescription {
             + String.format(", descriptionOrder=%s", descriptionOrder));
 
     // Disabled and read only state announcement should always be a postfix.
-    return switch (descriptionOrder) {
-      case DESC_ORDER_NAME_ROLE_STATE_POSITION, DESC_ORDER_ROLE_NAME_STATE_POSITION ->
-          CompositorUtils.joinCharSequences(
-              treeDescription, selectedState, disabledStateOrReadOnlyState);
-      case DESC_ORDER_STATE_NAME_ROLE_POSITION ->
-          CompositorUtils.joinCharSequences(
-              selectedState, treeDescription, disabledStateOrReadOnlyState);
-      default -> "";
-    };
+    return isStateBeforeName(descriptionOrder)
+        ? CompositorUtils.joinCharSequences(
+            selectedState, treeDescription, disabledStateOrReadOnlyState)
+        : CompositorUtils.joinCharSequences(
+            treeDescription, selectedState, disabledStateOrReadOnlyState);
   }
 
   /**
@@ -196,19 +190,15 @@ public class TreeNodesDescription {
       boolean shouldAppendChildNode) {
     int descriptionOrder = globalVariables.getDescriptionOrder();
     CharSequence treeDescription =
-        switch (descriptionOrder) {
-          case DESC_ORDER_NAME_ROLE_STATE_POSITION, DESC_ORDER_ROLE_NAME_STATE_POSITION ->
-              CompositorUtils.conditionalAppend(
-                  treeNodesDescription(node, event, shouldIterateChildren, shouldAppendChildNode),
-                  nodeStatusDescription(node),
-                  CompositorUtils.getSeparator());
-          case DESC_ORDER_STATE_NAME_ROLE_POSITION ->
-              CompositorUtils.conditionalPrepend(
-                  nodeStatusDescription(node),
-                  treeNodesDescription(node, event, shouldIterateChildren, shouldAppendChildNode),
-                  CompositorUtils.getSeparator());
-          default -> "";
-        };
+        isStateBeforeName(descriptionOrder)
+            ? CompositorUtils.conditionalPrepend(
+                nodeStatusDescription(node),
+                treeNodesDescription(node, event, shouldIterateChildren, shouldAppendChildNode),
+                CompositorUtils.getSeparator())
+            : CompositorUtils.conditionalAppend(
+                treeNodesDescription(node, event, shouldIterateChildren, shouldAppendChildNode),
+                nodeStatusDescription(node),
+                CompositorUtils.getSeparator());
 
     CharSequence accessibilityNodeError =
         AccessibilityNodeFeedbackUtils.getAccessibilityNodeErrorText(node, context);
@@ -407,11 +397,8 @@ public class TreeNodesDescription {
         CompositorUtils.joinCharSequences(
             roleDescription.nodeState(event, control, context, globalVariables),
             nodeStatusDescription(control));
-    return switch (globalVariables.getDescriptionOrder()) {
-      case DESC_ORDER_ROLE_NAME_STATE_POSITION -> CompositorUtils.dedupJoin(role, text, state);
-      case DESC_ORDER_STATE_NAME_ROLE_POSITION -> CompositorUtils.dedupJoin(state, text, role);
-      default -> CompositorUtils.dedupJoin(text, role, state);
-    };
+    return RoleDescriptionExtractor.joinInOrder(
+        globalVariables.getDescriptionOrder(), text, role, state);
   }
 
   /**
