@@ -380,7 +380,7 @@ Like VoiceOver on iPhone, Backtalk can move a call to the speaker when you take 
 Android lets only certain apps, such as smartwatch companions, change where call audio goes, so you need to grant Backtalk permission once, with adb or [Shizuku](https://shizuku.rikka.app):
 
 ```
-adb shell appops set fyi.quin.backtalk MANAGE_ONGOING_CALLS allow
+adb shell appops set io.github.aaron_gh.backtalk MANAGE_ONGOING_CALLS allow
 ```
 
 Then turn on **Sound and vibration** > **Speaker when away from your ear**. Until you grant the permission, the setting is unavailable and shows the command. This feature requires Android 12 or later.
