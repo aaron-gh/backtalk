@@ -44,6 +44,8 @@ public class IpcService extends Service {
   public static final String EXTRA_TRAINING_PAGE_ID = "training_page_id";
   public static final int MSG_REQUEST_GESTURES = 1;
   public static final String EXTRA_IS_ANY_GESTURE_CHANGED = "is_any_gesture_changed";
+  /** Followed by a gesture ID, the key of that gesture's action. */
+  public static final String EXTRA_GESTURE_ACTION_PREFIX = "gesture_action:";
   public static final int MSG_TRAINING_FINISH = 2;
   public static final int MSG_ON_CLIENT_CONNECTED = 3;
   public static final int MSG_ON_CLIENT_DISCONNECTED = 4;

@@ -37,6 +37,7 @@ import static com.google.android.accessibility.talkback.compositor.roledescripti
 import static com.google.android.accessibility.talkback.dynamicfeature.ModuleDownloadPrompter.Requester.ONBOARDING;
 import static com.google.android.accessibility.talkback.imagecaption.ImageCaptionUtils.CaptionType.ICON_LABEL;
 import static com.google.android.accessibility.talkback.imagecaption.ImageCaptionUtils.CaptionType.IMAGE_DESCRIPTION;
+import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_GESTURE_ACTION_PREFIX;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_ANY_GESTURE_CHANGED;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_ICON_DETECTION_UNAVAILABLE;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_IMAGE_DESCRIPTION_UNAVAILABLE;
@@ -412,7 +413,15 @@ public class TalkBackService extends AccessibilityServiceCompat
 
       Bundle data = new Bundle();
       actionKeyToGestureText.forEach(data::putString);
+      // So that the tutorial can tell whether the gestures its texts name still do their actions.
+      mapping
+          .getGestureActions()
+          .forEach(
+              (gestureId, action) ->
+                  data.putString(EXTRA_GESTURE_ACTION_PREFIX + gestureId, action));
       data.putBoolean(EXTRA_IS_ANY_GESTURE_CHANGED, GestureController.isAnyGestureChanged(context));
+      // The mapping listens to preference changes until unbound.
+      mapping.onUnbind();
       return data;
     }
 

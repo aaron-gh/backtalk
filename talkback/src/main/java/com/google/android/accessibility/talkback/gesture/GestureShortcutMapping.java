@@ -863,6 +863,11 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
     return matchedGestures;
   }
 
+  /** Returns the action of each gesture in the current gesture set, by gesture ID. */
+  public Map<Integer, String> getGestureActions() {
+    return new HashMap<>(gestureIdToActionKey.get(currentGestureSet));
+  }
+
   /**
    * Returns an action-gesture mapping including all actions. The map key is an action key. The map
    * value is the text of the gesture which is assigned to the action.

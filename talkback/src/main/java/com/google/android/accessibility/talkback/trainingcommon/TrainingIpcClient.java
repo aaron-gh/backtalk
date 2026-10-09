@@ -16,6 +16,7 @@
 
 package com.google.android.accessibility.talkback.trainingcommon;
 
+import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_GESTURE_ACTION_PREFIX;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_ANY_GESTURE_CHANGED;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_ICON_DETECTION_UNAVAILABLE;
 import static com.google.android.accessibility.talkback.ipc.IpcService.EXTRA_IS_IMAGE_DESCRIPTION_UNAVAILABLE;
@@ -29,6 +30,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Message;
 import android.text.TextUtils;
+import androidx.annotation.StringRes;
 import androidx.annotation.VisibleForTesting;
 import com.google.android.accessibility.talkback.ipc.IpcClient;
 import com.google.android.libraries.accessibility.utils.log.LogUtils;
@@ -83,6 +85,7 @@ public class TrainingIpcClient extends IpcClient {
     switch (msg.what) {
       case MSG_REQUEST_GESTURES -> {
         serviceData.actionKeyToGestureText.clear();
+        serviceData.gestureIdToAction.clear();
         Bundle data = msg.getData();
         data.keySet()
             .forEach(
@@ -91,6 +94,16 @@ public class TrainingIpcClient extends IpcClient {
                   if (TextUtils.equals(key, EXTRA_IS_ANY_GESTURE_CHANGED)) {
                     serviceData.isAnyGestureChanged =
                         data.getBoolean(EXTRA_IS_ANY_GESTURE_CHANGED, /* defaultValue= */ true);
+                    return;
+                  }
+                  if (key.startsWith(EXTRA_GESTURE_ACTION_PREFIX)) {
+                    try {
+                      int gestureId =
+                          Integer.parseInt(key.substring(EXTRA_GESTURE_ACTION_PREFIX.length()));
+                      serviceData.gestureIdToAction.put(gestureId, data.getString(key));
+                    } catch (NumberFormatException e) {
+                      LogUtils.w(TAG, "Bad gesture key %s", key);
+                    }
                     return;
                   }
                   @Nullable String gesture = data.getString(key);
@@ -129,6 +142,7 @@ public class TrainingIpcClient extends IpcClient {
     private final Context context;
     private boolean isAnyGestureChanged = true;
     private final HashMap<String, String> actionKeyToGestureText = new HashMap<>();
+    private final HashMap<Integer, String> gestureIdToAction = new HashMap<>();
     private final boolean showExitBanner;
     private boolean isIconDetectionUnavailable = false;
     private boolean isImageDescriptionUnavailable = false;
@@ -152,6 +166,17 @@ public class TrainingIpcClient extends IpcClient {
     /** Returns a gesture text for the given action. */
     public @Nullable String getGestureFromActionKey(int actionKey) {
       return actionKeyToGestureText.get(context.getString(actionKey));
+    }
+
+    /**
+     * Returns whether the gesture {@code gestureId} does the action {@code actionKey}. Returns true
+     * before the service has sent its gestures, so that texts naming the default gestures show.
+     */
+    public boolean isGestureAssigned(int gestureId, @StringRes int actionKey) {
+      if (gestureIdToAction.isEmpty()) {
+        return true;
+      }
+      return TextUtils.equals(gestureIdToAction.get(gestureId), context.getString(actionKey));
     }
 
     /**
