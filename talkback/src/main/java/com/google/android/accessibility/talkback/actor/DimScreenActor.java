@@ -23,7 +23,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.graphics.Insets;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.graphics.Point;
@@ -35,7 +34,6 @@ import android.view.WindowManager.LayoutParams;
 import android.view.WindowMetrics;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
-import androidx.core.view.WindowInsetsCompat;
 import com.google.android.accessibility.talkback.DimmingOverlayView;
 import com.google.android.accessibility.talkback.Feedback;
 import com.google.android.accessibility.talkback.Feedback.Part;
@@ -263,12 +261,10 @@ public class DimScreenActor implements OnConfigurationChangedListener {
     if (FeatureSupport.supportWindowMetrics()) {
       WindowMetrics windowMetrics = windowManager.getCurrentWindowMetrics();
 
-      Insets cutoutInsets =
-          windowMetrics.getWindowInsets().getInsets(WindowInsetsCompat.Type.displayCutout());
-      int cutoutHeight = cutoutInsets.top + cutoutInsets.bottom;
-
+      // The curtain lays out into the camera cutout, so it starts at the top of the display, and the
+      // bounds already include the cutout. Adding its height as well covered the pixel left below.
       width = windowMetrics.getBounds().width();
-      height = windowMetrics.getBounds().height() + cutoutHeight;
+      height = windowMetrics.getBounds().height();
     } else {
       Point point = new Point();
       windowManager.getDefaultDisplay().getRealSize(point);
