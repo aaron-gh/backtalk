@@ -30,12 +30,6 @@
 
     <!-- Title of the settings screen that chooses what the status gesture speaks. [CHAR LIMIT=40] -->
     <string name="title_pref_status_readout">Status readout</string>
-    <!-- Status readout settings: accessibility action that moves an item earlier. [CHAR LIMIT=30] -->
-    <string name="status_action_move_up">Move up</string>
-    <!-- Status readout settings: accessibility action that moves an item later. [CHAR LIMIT=30] -->
-    <string name="status_action_move_down">Move down</string>
-    <!-- Status readout settings: spoken after an item moves. [CHAR LIMIT=NONE] -->
-    <string name="template_status_item_position">Position <xliff:g id="position" example="2">%1$d</xliff:g> of <xliff:g id="count" example="6">%2$d</xliff:g></string>
 
     <!-- Status readout settings: title of the time item. [CHAR LIMIT=40] -->
     <string name="status_item_time">Time</string>

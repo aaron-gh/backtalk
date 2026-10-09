@@ -1396,6 +1396,7 @@ public class FailoverTextToSpeech {
   /** The player for speech, or null if speech should play the usual way. */
   private @Nullable LowLatencyAudio lowLatencyPlayer() {
     if (!lowLatencyAudio
+        || LowLatencyAudio.isMicrophoneInUse()
         || android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.R
         || (ttsEngine != null && enginesWithoutFileAudio.contains(ttsEngine))) {
       return null;
@@ -2002,6 +2003,24 @@ public class FailoverTextToSpeech {
     if (BuildVersionUtils.isM()) {
       tts.speak("", TextToSpeech.QUEUE_FLUSH, null, null);
     }
+  }
+
+  /**
+   * Stops starting another engine if {@code engine} is the one in use, such as when switching to a
+   * profile with another engine and back before it has started. Otherwise that engine would take
+   * over once it started.
+   */
+  private void cancelEngineSwitchAwayFrom(@Nullable String engine) {
+    if (tempTts == null || engine == null || !engine.equals(ttsEngine)
+        || engine.equals(tempTtsEngine)) {
+      return;
+    }
+    LogUtils.i(TAG, "Not switching to TTS engine %s, staying with %s", tempTtsEngine, engine);
+    TextToSpeechUtils.attemptTtsShutdown(tempTts);
+    tempTts = null;
+    tempTtsEngine = null;
+    // Its start-up callback is ignored.
+    tempTtsGeneration++;
   }
 
   /**

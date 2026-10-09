@@ -27,6 +27,15 @@
       android:key="@string/pref_use_audio_focus_key"
       android:title="@string/title_pref_use_audio_focus"
       android:summary="@string/summary_audio_ducking" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+      android:defaultValue="@bool/pref_proximity_default"
+      android:key="@string/pref_proximity_key"
+      android:title="@string/title_pref_cover_proximity_sensor" />
+  <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+      android:defaultValue="false"
+      android:key="@string/pref_speakerphone_away_from_ear_key"
+      android:title="@string/title_pref_speakerphone_away_from_ear"
+      android:summary="@string/summary_pref_speakerphone_away_from_ear" />
   <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
       android:fragment="com.google.android.accessibility.talkback.soundthemes.SoundThemesFragment"
       android:key="pref_sound_themes"
