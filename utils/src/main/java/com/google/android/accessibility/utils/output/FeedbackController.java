@@ -244,6 +244,9 @@ public class FeedbackController {
       // Even if the user turned this vibration off, the event's own vibration stays quiet.
       vibrate(patternResId, eventId);
       mSoundHapticCover.soundVibrated(eventId, SystemClock.uptimeMillis());
+    } else if (name != null && !isMuted(mMutedHapticNames, soundResId)) {
+      vibratePattern(new int[] {0, 35}, eventId);
+      mSoundHapticCover.soundVibrated(eventId, SystemClock.uptimeMillis());
     }
   }
 
@@ -292,7 +295,7 @@ public class FeedbackController {
 
     // Starting a vibration waits for the system, so it is done off the main thread, where it would
     // hold up the speech for the same gesture or focus change.
-    VIBRATION_EXECUTOR.execute(() -> mVibrator.vibrate(effect));
+    VIBRATION_EXECUTOR.execute(() -> AccessibilityVibration.play(mVibrator, effect));
 
     return true;
   }
@@ -383,16 +386,16 @@ public class FeedbackController {
   }
 
   /**
-   * Plays a sound without the vibration that goes with it, for sounds that should not be felt,
-   * such as repeating progress tones, or whose vibration is someone else's, such as braille.
+   * Legacy entry point. All sound feedback now includes its theme or fallback vibration.
    */
   public void playAuditoryWithoutHaptic(int resId, @Nullable EventId eventId) {
     playAuditoryWithoutHaptic(resId, 1.0f /* rate */, 1.0f /* volume */, eventId);
   }
 
-  /** Plays a sound with the given rate and volume, without its vibration. */
+  /** Plays a sound with the given rate and volume, with its vibration. */
   public void playAuditoryWithoutHaptic(
       int resId, float rate, float volume, @Nullable EventId eventId) {
+    playSoundHaptic(resId, eventId);
     playSound(resId, rate, volume, /* ignoreVolumeAdjustment= */ false, eventId);
   }
 
@@ -434,13 +437,14 @@ public class FeedbackController {
     playPlacedSound(resId, rate, volume, x, y, eventId);
   }
 
-  /** Plays a sound from a place on the screen, like {@link #playAuditory}, without its vibration. */
+  /** Plays a sound from a place on the screen, like {@link #playAuditory}, with its vibration. */
   public void playAuditoryWithoutHaptic(
       int resId, float rate, float volume, float x, float y, @Nullable EventId eventId) {
     if (x < 0 || y < 0) {
       playAuditoryWithoutHaptic(resId, rate, volume, eventId);
       return;
     }
+    playSoundHaptic(resId, eventId);
     playPlacedSound(resId, rate, volume, x, y, eventId);
   }
 

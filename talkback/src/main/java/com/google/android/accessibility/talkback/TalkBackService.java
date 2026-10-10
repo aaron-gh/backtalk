@@ -1830,6 +1830,11 @@ public class TalkBackService extends AccessibilityServiceCompat
     }
 
     boolean shouldShowTutorial = shouldShowTutorial();
+    if (!shouldShowTutorial) {
+      new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+          () -> com.google.android.accessibility.talkback.soundthemes.Build600Activity.showIfNeeded(this),
+          1500);
+    }
 
     if (shouldShowTutorial) {
       // Ignore Onboarding for the first-time user.

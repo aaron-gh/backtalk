@@ -110,12 +110,13 @@ public class BrailleImeGestureController {
       case NEXT_GRANULARITY,
           PREVIOUS_GRANULARITY,
           ADD_SPACE_OR_NEXT_ITEM,
-          DELETE_CHARACTER_OR_PREVIOUS_ITEM,
           MOVE_CURSOR_FORWARD,
           MOVE_CURSOR_BACKWARD ->
           BrailleImeVibrator.getInstance(context)
               .vibrate(VibrationType.SPACE_DELETE_OR_MOVE_CURSOR_OR_GRANULARITY);
-      case ADD_NEWLINE, DELETE_WORD ->
+      case DELETE_CHARACTER_OR_PREVIOUS_ITEM, DELETE_WORD ->
+          BrailleImeVibrator.getInstance(context).vibrate(VibrationType.DELETE);
+      case ADD_NEWLINE ->
           BrailleImeVibrator.getInstance(context).vibrate(VibrationType.NEWLINE_OR_DELETE_WORD);
       default -> {
         // do nothing.

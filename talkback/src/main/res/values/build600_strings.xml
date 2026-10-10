@@ -1,0 +1,30 @@
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="build600_title">What’s new with Backtalk build 600</string>
+    <string name="build600_intro">In this update, you will learn about new features that have been added to Backtalk.</string>
+    <string name="build600_page">Page %1$d of %2$d</string>
+    <string name="build600_next">Next page</string>
+    <string name="build600_previous">Previous page</string>
+    <string name="build600_close">Close</string>
+    <string name="build600_finish">Finish</string>
+    <string name="build600_close_title">Close what’s new?</string>
+    <string name="build600_close_message">Do you want to close the build 600 walkthrough?</string>
+    <string name="build600_keep_reading">Keep reading</string>
+    <string name="build600_create_title">Create your own sound themes</string>
+    <string name="build600_create">Open Sound themes in Backtalk settings, then choose Create new theme above the theme list. Enter a name and optionally a description, author and website. Choose OK to open the theme editor, or Cancel to discard it.</string>
+    <string name="build600_edit_title">Choose and preview sounds</string>
+    <string name="build600_edit">The theme editor lets you choose sound files for feedback such as Click, Window change and controls. Select a sound, choose a file and use Preview to hear it and feel its vibration. You can also adjust control sounds and spatial audio.</string>
+    <string name="build600_save_title">Save and share your theme</string>
+    <string name="build600_save">Choose Save at the top of a new theme’s editor to save it and start using it. Choose Save as ZIP to export a theme, then choose the location in Android’s file picker. Exporting a draft does not activate it. You can add licence information to theme.json later.</string>
+    <string name="build600_auto_title">Automatic sound vibrations</string>
+    <string name="build600_auto">Backtalk analyses custom sound files automatically and generates vibrations from their rhythm, pauses and rising or falling pitch. There is no extra switch to turn this analysis on. Quiet sounds are detected too. Digital silence stays silent, and long patterns are limited to one second.</string>
+    <string name="build600_all_title">Vibrations for more sounds</string>
+    <string name="build600_all">Theme vibrations now apply to all custom theme sounds, including braille display and braille keyboard sounds. Sound playback and previews include vibrations. Sounds without a built-in vibration receive a short fallback. Your vibration feedback and individual mute settings still apply during normal use.</string>
+    <string name="build600_strong_title">Stronger vibrations: try them</string>
+    <string name="build600_strong">Generated vibrations now use a stronger range of 200 to 255 while sound is active. Rising and falling sounds use firm waveforms. Existing themes are updated automatically. Try the samples below on a phone to feel a firm short pulse, a rising pattern and a rhythm with a pause. An emulator can run the samples but cannot reproduce the physical feeling. The current Click test uses your theme and normal feedback settings.</string>
+    <string name="build600_sample_short">Test firm short vibration</string>
+    <string name="build600_sample_rise">Test rising vibration</string>
+    <string name="build600_sample_rhythm">Test rhythm and pause</string>
+    <string name="build600_sample_click">Test current Click sound and vibration</string>
+    <string name="build600_no_motor">This device has no vibration motor.</string>
+    <string name="build600_sample_failed">This device could not play the vibration sample.</string>
+</resources>

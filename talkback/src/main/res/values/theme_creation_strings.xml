@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="theme_create">Create new theme</string>
+    <string name="theme_create_name">Name</string>
+    <string name="theme_create_description">Description</string>
+    <string name="theme_create_author">Author</string>
+    <string name="theme_create_website">Website</string>
+    <string name="theme_create_name_required">Enter a name for your theme.</string>
+    <string name="theme_create_duplicate">A theme with this name already exists. Choose another name.</string>
+    <string name="theme_create_save">Save</string>
+    <string name="theme_create_zip">Save as ZIP</string>
+    <string name="theme_create_save_failed">Could not save the theme. Please try again.</string>
+    <string name="theme_create_exported">Theme saved as ZIP.</string>
+</resources>

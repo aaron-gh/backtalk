@@ -20,8 +20,8 @@ android {
     namespace = "com.android.talkback"
     defaultConfig {
         applicationId = talkbackApplicationId
-        versionCode = backtalkVersionCodeBase + gitCommitCount
-        versionName = talkbackVersionName + "-" + BUILD_TIMESTAMP
+        versionCode = providers.gradleProperty("backtalkVersionCode").map { it.toInteger() }.getOrElse(backtalkVersionCodeBase + gitCommitCount)
+        versionName = "600"
         minSdk = 26
         targetSdk = 36
         testInstrumentationRunner = 'android.test.InstrumentationTestRunner'

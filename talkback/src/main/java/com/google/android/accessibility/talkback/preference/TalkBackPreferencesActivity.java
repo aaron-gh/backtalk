@@ -69,6 +69,8 @@ public class TalkBackPreferencesActivity extends PreferencesActivity
     getSupportFragmentManager().addFragmentOnAttachListener(this);
     super.onCreate(savedInstanceState);
 
+    com.google.android.accessibility.talkback.soundthemes.Build600Activity.showIfNeeded(this);
+
     // Check RTL.
     boolean isLocaleRTL =
         TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()) == View.LAYOUT_DIRECTION_RTL;

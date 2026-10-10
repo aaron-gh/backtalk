@@ -19,6 +19,11 @@ package com.google.android.accessibility.talkback.soundthemes
 import android.content.Context
 import android.content.SharedPreferences
 import android.media.AudioManager
+import android.util.AtomicFile
+import com.google.android.accessibility.utils.output.AudioDecoder
+import java.util.concurrent.Executors
+import java.util.concurrent.ConcurrentHashMap
+import org.json.JSONObject
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import androidx.core.content.ContextCompat
@@ -121,6 +126,74 @@ object SoundThemes {
   private const val STAGING_PREFIX = ".staging-"
   private const val STAGING_MAX_AGE_MS = 60L * 60 * 1000
   private const val TAG = "SoundThemes"
+  private const val GENERATED_FILE = ".automatic-vibrations.json"
+  private val vibrationWorker = Executors.newSingleThreadExecutor()
+  private val pendingVibrations = ConcurrentHashMap.newKeySet<String>()
+
+  /** Upgrades existing themes off the service thread, once per sound-file version. */
+  private fun scheduleVibrations(context: Context, prefs: SharedPreferences, id: String) {
+    if (!pendingVibrations.add(id)) return
+    val app = context.applicationContext
+    vibrationWorker.execute {
+      try {
+        if (generateVibrations(app, id)) changed(prefs)
+      } catch (e: Exception) {
+        LogUtils.w(TAG, "Cannot generate theme vibrations: %s", e)
+      } finally { pendingVibrations.remove(id) }
+    }
+  }
+
+  private fun generated(theme: SoundTheme): JSONObject = try {
+    JSONObject(File(theme.directory, GENERATED_FILE).readText())
+  } catch (e: Exception) { JSONObject() }
+
+  private fun soundSignature(file: File) = "v3:${file.name}:${file.length()}:${file.lastModified()}"
+
+  /** Analyse custom sounds; JSON-only vibrations without a sound remain as authored. */
+  fun generateVibrations(
+    context: Context,
+    id: String,
+    decode: (String) -> AudioDecoder.Decoded? = { AudioDecoder.decode(it) },
+  ): Boolean {
+    val theme = theme(context, id) ?: return false
+    return generateVibrations(theme, decode)
+  }
+
+  private fun generateVibrations(
+    theme: SoundTheme,
+    decode: (String) -> AudioDecoder.Decoded? = { AudioDecoder.decode(it) },
+  ): Boolean {
+    val markers = generated(theme)
+    var changed = false
+    for ((key, file) in soundFiles(theme)) {
+      if (key !in VIBRATION_NAMES) continue
+      val signature = soundSignature(file)
+      if (markers.optString(key) == signature) continue
+      val audio = decode(file.path) ?: continue
+      val vibration = SoundVibrationGenerator.generate(audio) ?: continue
+      synchronized(this) {
+        val latest = read(theme.directory) ?: if (theme.isBuiltIn) theme else return@synchronized
+        if (soundFiles(latest)[key]?.let { soundSignature(it) } != signature) return@synchronized
+        val currentMarkers = generated(latest)
+        if (currentMarkers.optString(key) == signature) return@synchronized
+        write(latest.copy(manifest = latest.manifest.copy(vibrations = latest.manifest.vibrations + (key to vibration))))
+        currentMarkers.put(key, signature)
+        File(latest.directory, GENERATED_FILE).writeText(currentMarkers.toString())
+        changed = true
+      }
+    }
+    return changed
+  }
+
+  private fun removeGenerated(theme: SoundTheme, keys: Set<String>) = synchronized(this) {
+    val latest = read(theme.directory) ?: return@synchronized
+    val markers = generated(latest)
+    val removed = keys.filter { markers.has(it) }.toSet()
+    if (removed.isEmpty()) return@synchronized
+    removed.forEach { markers.remove(it) }
+    write(latest.copy(manifest = latest.manifest.copy(vibrations = latest.manifest.vibrations - removed)))
+    File(latest.directory, GENERATED_FILE).writeText(markers.toString())
+  }
 
   /** The formats Android can play, as file extensions. */
   val EXTENSIONS = setOf("wav", "ogg", "oga", "opus", "mp3", "flac", "m4a", "aac")
@@ -175,7 +248,7 @@ object SoundThemes {
 
   /** The names of the vibrations a theme can replace. */
   val VIBRATION_NAMES: Set<String>
-    get() = SoundVibrations.themeNames(IndividualFeedbackSettings.SOUNDS.map { it.key })
+    get() = SoundVibrations.themeNames(SOUNDS.map { it.key })
 
   // ---------------------------------------------------------------------------------------------
   // Installed themes
@@ -237,6 +310,7 @@ object SoundThemes {
   @JvmStatic
   fun feedback(context: Context, prefs: SharedPreferences): ThemeFeedback {
     val theme = active(context, prefs)
+    scheduleVibrations(context, prefs, theme.id)
     val items = SOUNDS.associateBy { it.key }
     val paths = HashMap<String, String>()
     for ((key, file) in soundFiles(theme)) {
@@ -245,7 +319,7 @@ object SoundThemes {
     val vibrations =
       SoundVibrations.playedAs(
         theme.manifest.vibrationPatterns(),
-        IndividualFeedbackSettings.SOUNDS.associate { it.key to it.resourceNames },
+        SOUNDS.associate { it.key to it.resourceNames },
       )
     return ThemeFeedback(paths, vibrations)
   }
@@ -283,7 +357,7 @@ object SoundThemes {
 
   /** Saves the control sounds and 3D audio settings to the theme in use. */
   @JvmStatic
-  fun saveSettings(context: Context, prefs: SharedPreferences) {
+  fun saveSettings(context: Context, prefs: SharedPreferences) = synchronized(this) {
     val theme = active(context, prefs)
     val manifest =
       theme.manifest.copy(
@@ -294,10 +368,29 @@ object SoundThemes {
     if (manifest != theme.manifest) write(theme.copy(manifest = manifest))
   }
 
+  /** An unpublished theme, kept separate from the active theme while its sounds are edited. */
+  fun createDraft(context: Context, manifest: SoundThemeManifest): SoundTheme {
+    val id = STAGING_PREFIX + java.util.UUID.randomUUID()
+    val theme = SoundTheme(id, manifest, File(themesDirectory(context), id))
+    write(theme)
+    return theme
+  }
+
+  /** Publishes a draft without replacing a theme with the same name. */
+  @Throws(IOException::class)
+  fun saveDraft(context: Context, id: String): SoundTheme = synchronized(this) {
+    require(id.startsWith(STAGING_PREFIX))
+    val draft = theme(context, id) ?: throw IOException("Theme draft is missing")
+    val target = File(themesDirectory(context), idFor(draft.manifest.name))
+    if (target.exists()) throw IOException(context.getString(R.string.theme_create_duplicate))
+    if (!draft.directory.renameTo(target)) throw IOException("Cannot save theme")
+    draft.copy(id = target.name, directory = target)
+  }
+
   /** Removes the theme [id], and puts Backtalk's theme in use if it was in use. */
   @JvmStatic
-  fun delete(context: Context, prefs: SharedPreferences, id: String) {
-    if (id == BACKTALK) return
+  fun delete(context: Context, prefs: SharedPreferences, id: String) = synchronized(this) {
+    if (id == BACKTALK) return@synchronized
     if (activeId(prefs) == id) activate(context, prefs, BACKTALK, saveCurrent = false)
     File(themesDirectory(context), id).deleteRecursively()
   }
@@ -320,19 +413,25 @@ object SoundThemes {
     val result = copySound(input, file, MAX_SOUND_BYTES)
     if (result != Result.OK) return result
     old?.delete()
+    generateVibrations(context, theme.id)
     changed(prefs)
     return Result.OK
   }
 
   /** Makes [item] play Backtalk's sound again in the theme in use. */
   fun removeSound(context: Context, prefs: SharedPreferences, item: FeedbackItem) {
-    soundFiles(active(context, prefs))[item.key]?.delete()
+    val theme = active(context, prefs)
+    soundFiles(theme)[item.key]?.delete()
+    removeGenerated(theme, setOf(item.key))
     changed(prefs)
   }
 
   /** Makes every item play Backtalk's sound again in the theme in use. */
   fun removeAllSounds(context: Context, prefs: SharedPreferences) {
-    soundFiles(active(context, prefs)).values.forEach { it.delete() }
+    val theme = active(context, prefs)
+    val sounds = soundFiles(theme)
+    sounds.values.forEach { it.delete() }
+    removeGenerated(theme, sounds.keys)
     changed(prefs)
   }
 
@@ -347,6 +446,7 @@ object SoundThemes {
   @Throws(IOException::class)
   fun export(context: Context, prefs: SharedPreferences, id: String, output: OutputStream): Int {
     if (id == activeId(prefs)) saveSettings(context, prefs)
+    generateVibrations(context, id)
     val theme = theme(context, id) ?: throw IOException("No theme $id")
     var count = 0
     ZipOutputStream(output).use { zip ->
@@ -445,9 +545,10 @@ object SoundThemes {
           )
         }
         File(staging, SoundThemeManifest.FILE_NAME).writeText(manifest.toJson())
+        generateVibrations(SoundTheme(staging.name, manifest, staging))
         return StagedTheme(
           id = idFor(manifest.name),
-          manifest = manifest,
+          manifest = read(staging)!!.manifest,
           directory = staging,
           sounds = SOUNDS.filter { it.key in sounds },
           skipped = skipped + manifest.warnings,
@@ -470,7 +571,7 @@ object SoundThemes {
 
   /** Installs [staged], replacing a theme of the same name, and puts it in use if [use]. */
   @Throws(IOException::class)
-  fun install(context: Context, prefs: SharedPreferences, staged: StagedTheme, use: Boolean) {
+  fun install(context: Context, prefs: SharedPreferences, staged: StagedTheme, use: Boolean) = synchronized(this) {
     val target = File(themesDirectory(context), staged.id)
     val wasActive = activeId(prefs) == staged.id
     if (use && !wasActive) saveSettings(context, prefs)
@@ -562,7 +663,15 @@ object SoundThemes {
 
   private fun write(theme: SoundTheme) {
     theme.directory.mkdirs()
-    File(theme.directory, SoundThemeManifest.FILE_NAME).writeText(theme.manifest.toJson())
+    val atomic = AtomicFile(File(theme.directory, SoundThemeManifest.FILE_NAME))
+    val output = atomic.startWrite()
+    try {
+      output.write(theme.manifest.toJson().toByteArray(Charsets.UTF_8))
+      atomic.finishWrite(output)
+    } catch (e: Exception) {
+      atomic.failWrite(output)
+      throw e
+    }
   }
 
   /** An input stream that counts the bytes read from it. */

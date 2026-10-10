@@ -56,6 +56,7 @@ class BrailleImeVibrator private constructor(context: Context) {
       Step(PRIMITIVE_CLICK),
       Step(PRIMITIVE_CLICK, delayMs = 60),
     ),
+    DELETE("braille_keyboard_delete", 70, 150, Step(PRIMITIVE_CLICK)),
     HOLD("braille_keyboard_hold", 25, 200, Step(PRIMITIVE_LOW_TICK)),
     OTHER_GESTURES("braille_keyboard_gesture", 190, 210, Step(PRIMITIVE_QUICK_RISE)),
     NOTHING_TO_DELETE(

@@ -52,7 +52,7 @@ object ThemeVibrations {
         if (!vibrator.hasVibrator()) return@execute
         val effect = HapticPatternParser(vibrator).parse(pattern)
         @Suppress("DEPRECATION") // The attributes overload is the one that reaches API 26.
-        if (attributes != null) vibrator.vibrate(effect, attributes) else vibrator.vibrate(effect)
+        AccessibilityVibration.play(vibrator, effect)
       } catch (e: RuntimeException) {
         // A theme's pattern that the device refuses plays nothing.
       }

@@ -211,6 +211,10 @@
             </intent-filter>
         </activity-alias>
 
+        <activity android:name="com.google.android.accessibility.talkback.soundthemes.Build600Activity"
+            android:exported="false" android:label="@string/build600_title"
+            android:theme="@style/TalkBackSettings" />
+
         <!-- TalkBack subsettings Preferences -->
         <activity
             android:name="com.google.android.accessibility.talkback.preference.TalkBackPreferencesActivity$TalkBackSubSettings"

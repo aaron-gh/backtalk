@@ -68,10 +68,11 @@ internal fun convertToVirtualVersionCode(version: Version): Int {
 }
 
 internal fun convertToVersion(versionName: String?): Version {
-  try {
-    val splitVersion = versionName?.split(".") ?: return Versions.VERSION_FIRST_TIME_USER
-    return Version(splitVersion[0].toInt(), splitVersion[1].toInt(), splitVersion[2].toInt())
-  } catch (e: NumberFormatException) {
-    return VERSION_UNKNOWN
-  }
+  if (versionName == null) return Versions.VERSION_FIRST_TIME_USER
+  val parts = versionName.substringBefore('-').split(".")
+  // Backtalk releases can use a single build number, such as 600.
+  if (parts.size != 1 && parts.size != 3) return VERSION_UNKNOWN
+  val numbers = parts.map { it.toIntOrNull() ?: return VERSION_UNKNOWN }
+  if (numbers.any { it < 0 }) return VERSION_UNKNOWN
+  return Version(numbers[0], numbers.getOrElse(1) { 0 }, numbers.getOrElse(2) { 0 })
 }

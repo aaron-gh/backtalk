@@ -17,6 +17,7 @@
 package com.google.android.accessibility.talkback.soundthemes
 
 import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
@@ -24,6 +25,12 @@ import android.os.Bundle
 import android.text.InputType
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import android.text.InputFilter
+import com.google.android.accessibility.talkback.preference.TalkBackPreferencesActivity
+import com.google.android.accessibility.utils.preference.BasePreferencesActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -115,6 +122,8 @@ class SoundThemesFragment : TalkbackBaseFragment() {
     screen.removeAll()
     val active = SoundThemes.active(context, prefs)
 
+    screen.addPreference(action(context, getString(R.string.theme_create), null) { createTheme() })
+
     val installed = category(context, getString(R.string.sound_themes_installed_category))
     screen.addPreference(installed)
     for (theme in SoundThemes.installed(context)) {
@@ -147,6 +156,73 @@ class SoundThemesFragment : TalkbackBaseFragment() {
         askForLink()
       }
     )
+  }
+
+  private fun createTheme() {
+    val context = requireContext()
+    val form = LinearLayout(context).apply {
+      orientation = LinearLayout.VERTICAL
+      val padding = (24 * resources.displayMetrics.density).toInt()
+      setPadding(padding, 0, padding, 0)
+    }
+    fun field(label: Int, limit: Int, multiline: Boolean = false): EditText {
+      val input = EditText(context).apply {
+        id = android.view.View.generateViewId()
+        hint = getString(label)
+        inputType = InputType.TYPE_CLASS_TEXT or
+          if (multiline) InputType.TYPE_TEXT_FLAG_MULTI_LINE else InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        isSingleLine = !multiline
+        filters = arrayOf(InputFilter.LengthFilter(limit))
+      }
+      form.addView(TextView(context).apply { setText(label); labelFor = input.id })
+      form.addView(input)
+      return input
+    }
+    val name = field(R.string.theme_create_name, 100)
+    val description = field(R.string.theme_create_description, 2000, true)
+    val author = field(R.string.theme_create_author, 100)
+    val website = field(R.string.theme_create_website, 2000).apply {
+      inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+    }
+    val dialog = AlertDialog.Builder(context)
+      .setTitle(R.string.theme_create)
+      .setView(ScrollView(context).apply { addView(form) })
+      .setNegativeButton(android.R.string.cancel, null)
+      .setPositiveButton(android.R.string.ok, null)
+      .create()
+    dialog.setOnShowListener {
+      dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+        val title = name.text.toString().trim()
+        if (title.isEmpty()) {
+          name.error = getString(R.string.theme_create_name_required)
+          name.requestFocus()
+          return@setOnClickListener
+        }
+        if (SoundThemes.theme(context, SoundThemes.idFor(title)) != null) {
+          name.error = getString(R.string.theme_create_duplicate)
+          name.requestFocus()
+          return@setOnClickListener
+        }
+        try {
+          val draft = SoundThemes.createDraft(context, SoundThemeManifest(
+            name = title,
+            description = description.text.toString().trim().ifEmpty { null },
+            author = author.text.toString().trim().ifEmpty { null },
+            website = website.text.toString().trim().ifEmpty { null },
+          ))
+          startActivity(Intent(context, TalkBackPreferencesActivity.TalkBackSubSettings::class.java)
+            .putExtra(BasePreferencesActivity.FRAGMENT_NAME, ThemeSoundsFragment::class.java.name)
+            .putExtra(BasePreferencesActivity.FRAGMENT_ARGS, Bundle().apply {
+              putString(ThemeSoundsFragment.ARG_DRAFT, draft.id)
+            }))
+          dialog.dismiss()
+        } catch (e: IOException) {
+          name.error = getString(R.string.theme_create_save_failed)
+        }
+      }
+    }
+    dialog.show()
+    name.requestFocus()
   }
 
   /** The settings each theme has its own of, for the theme in use. */

@@ -31,6 +31,7 @@ import com.google.android.accessibility.talkback.preference.base.TalkbackBaseFra
 import com.google.android.accessibility.talkback.soundthemes.SoundThemes
 import com.google.android.accessibility.utils.FeatureSupport
 import com.google.android.accessibility.utils.SharedPreferencesUtils
+import com.google.android.accessibility.utils.output.AccessibilityVibration
 import com.google.android.accessibility.utils.output.HapticPatternParser
 
 /**
@@ -164,7 +165,7 @@ class IndividualFeedbackFragment : TalkbackBaseFragment() {
     if (pattern == null || pattern.isEmpty()) {
       return
     }
-    vibrator.vibrate(HapticPatternParser(vibrator).parse(pattern))
+    AccessibilityVibration.play(vibrator, HapticPatternParser(vibrator).parse(pattern))
     previewVibrator = vibrator
   }
 
