@@ -23,6 +23,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -32,6 +33,9 @@ import androidx.core.view.accessibility.AccessibilityViewCommand
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceViewHolder
+import com.google.android.accessibility.material.preference.AccessibilitySuiteListPreference
+import com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
+import com.google.android.accessibility.talkback.controlsounds.ControlSoundsSettings
 import com.google.android.accessibility.material.preference.AccessibilitySuitePreference
 import com.google.android.accessibility.talkback.R
 import com.google.android.accessibility.talkback.controlsounds.ControlSounds
@@ -48,9 +52,12 @@ import java.util.concurrent.Executors
  * to play in its place. Files are copied in on a background thread.
  */
 class ThemeSoundsFragment : TalkbackBaseFragment() {
+  private var draftId: String? = null
+  private var closing = false
+  private var discardDialog: AlertDialog? = null
   private lateinit var prefs: SharedPreferences
   private val soundPreview = SoundPreview()
-  private val executor: ExecutorService = Executors.newSingleThreadExecutor()
+  internal val executor: ExecutorService = executorFactory()
   private val rows = ArrayList<SoundRow>()
   private var resetPreference: Preference? = null
 
@@ -64,20 +71,96 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
       if (uri != null && item != null) setSound(item, uri)
     }
 
+  private val exportTheme = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+    if (uri != null) {
+      val context = requireContext().applicationContext
+      val activity = requireActivity()
+      val id = SoundThemes.activeId(prefs)
+      if (resolveTheme() != null && !closing) executor.execute {
+        val message = SoundThemeExport.message(context, prefs, id, uri)
+        activity.runOnUiThread { if (isAdded && !closing) showMessage(message) }
+      }
+    }
+  }
+
   public override fun getTitle(): CharSequence {
     val context = requireContext()
-    val theme = SoundThemes.active(context, SharedPreferencesUtils.getSharedPreferences(context))
+    val id = arguments?.getString(ARG_DRAFT)
+    val theme = if (id != null) SoundThemes.theme(context, id) else
+      SoundThemes.active(context, SharedPreferencesUtils.getSharedPreferences(context))
+    if (theme == null) { requireActivity().finish(); return getString(R.string.theme_create) }
     return getString(R.string.title_pref_theme_sounds_of, SoundThemesFragment.nameOf(context, theme))
   }
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     val context = requireContext()
-    prefs = SharedPreferencesUtils.getSharedPreferences(context)
+    draftId = arguments?.getString(ARG_DRAFT)
+    prefs = draftId?.let { id ->
+      context.createDeviceProtectedStorageContext().getSharedPreferences(SoundThemes.draftPreferencesName(id), Context.MODE_PRIVATE).apply {
+        edit().putString(SoundThemes.PREF_ACTIVE, id).apply()
+      }
+    } ?: SharedPreferencesUtils.getSharedPreferences(context)
     choosingFor = savedInstanceState?.getString(STATE_CHOOSING_FOR)
     // Like every settings screen, so that nothing is ever saved outside Backtalk's settings.
     preferenceManager.setStorageDeviceProtected()
+    draftId?.let { preferenceManager.sharedPreferencesName = SoundThemes.draftPreferencesName(it) }
     val screen = preferenceManager.createPreferenceScreen(context)
     preferenceScreen = screen
+
+    if (draftId != null) {
+      fun action(title: Int, click: () -> Unit) {
+        screen.addPreference(AccessibilitySuitePreference(context).apply {
+          setTitle(title)
+          isPersistent = false
+          isIconSpaceReserved = false
+          setOnPreferenceClickListener { click(); true }
+        })
+      }
+      requireActivity().onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() { confirmDiscard() }
+      })
+      action(R.string.theme_create_save) { saveDraft() }
+      action(R.string.sound_theme_export) {
+        try {
+          val theme = resolveTheme() ?: return@action
+          if (!closing) exportTheme.launch("${theme.manifest.name}.zip")
+        } catch (e: ActivityNotFoundException) {
+          showMessage(getString(R.string.sound_theme_no_picker))
+        }
+      }
+    }
+
+    if (draftId != null) {
+      screen.addPreference(AccessibilitySuiteSwitchPreference(context).apply {
+        key = ControlSoundsSettings.PREF_ON
+        isPersistent = false
+        isChecked = prefs.getBoolean(key, false)
+        setOnPreferenceChangeListener { _, value ->
+          if (closing || resolveTheme() == null) return@setOnPreferenceChangeListener false
+          prefs.edit().putBoolean(key, value as Boolean).apply()
+          true
+        }
+        setTitle(R.string.title_pref_control_sounds)
+        setSummary(R.string.summary_pref_control_sounds)
+        isIconSpaceReserved = false
+      })
+      screen.addPreference(AccessibilitySuiteListPreference(context).apply {
+        key = ControlSoundsSettings.PREF_3D
+        isPersistent = false
+        value = prefs.getString(key, ControlSoundsSettings.VALUE_3D_WITH_HEADPHONES)
+        setOnPreferenceChangeListener { _, value ->
+          if (closing || resolveTheme() == null) return@setOnPreferenceChangeListener false
+          prefs.edit().putString(key, value as String).apply()
+          true
+        }
+        setTitle(R.string.title_pref_control_sounds_3d)
+        setDialogTitle(R.string.title_pref_control_sounds_3d)
+        setEntries(R.array.pref_control_sounds_3d_entries)
+        setEntryValues(R.array.pref_control_sounds_3d_values)
+        summary = "%s"
+        isIconSpaceReserved = false
+      })
+    }
 
     val reset =
       AccessibilitySuitePreference(context).apply {
@@ -100,7 +183,7 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
     screen.addPreference(sounds)
     rows.clear()
     for (item in SoundThemes.SOUNDS) {
-      val row = SoundRow(context, item, preview = { soundPreview.play(context, prefs, item) })
+      val row = SoundRow(context, item, preview = { preview(item) })
       row.setOnPreferenceClickListener {
         showChoices(item)
         true
@@ -109,6 +192,7 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
       rows += row
     }
     refresh()
+
   }
 
   override fun onSaveInstanceState(outState: Bundle) {
@@ -123,13 +207,118 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
 
   override fun onDestroy() {
     super.onDestroy()
+    discardDialog?.dismiss()
     executor.shutdown()
+  }
+
+  override fun onResume() {
+    super.onResume()
+    if (::prefs.isInitialized) resolveTheme()
+  }
+
+  private fun resolveTheme(): SoundTheme? {
+    val context = context ?: return null
+    val theme = draftId?.let { SoundThemes.theme(context, it) }
+      ?: if (draftId == null) SoundThemes.active(context, prefs) else null
+    if (theme == null) {
+      closing = true
+      requireActivity().finish()
+    }
+    return theme
+  }
+
+  private fun preview(item: FeedbackItem) {
+    if (!closing && resolveTheme() != null) soundPreview.play(requireContext(), prefs, item)
+  }
+
+  private fun saveDraft() {
+    if (closing || resolveTheme() == null) return
+    closing = true
+    val activity = requireActivity()
+    val app = requireContext().applicationContext
+    val id = draftId!!
+    executor.execute {
+      var published = false
+      try {
+        SoundThemes.saveSettings(app, prefs)
+        val saved = SoundThemes.saveDraft(app, id)
+        published = true
+        SoundThemes.activate(app, SharedPreferencesUtils.getSharedPreferences(app), saved.id)
+      } catch (error: IOException) {
+        if (!published) activity.runOnUiThread {
+          closing = false
+          if (isAdded && resolveTheme() != null) {
+            if (error is SoundThemes.DuplicateThemeException) askForNewName()
+            else showMessage(getString(R.string.theme_create_save_failed))
+          }
+        }
+      } catch (error: RuntimeException) {
+        if (!published) activity.runOnUiThread {
+          closing = false
+          if (isAdded) showMessage(getString(R.string.theme_create_save_failed))
+        }
+      } finally {
+        // The draft no longer exists after publishing, even if activation failed.
+        if (published) activity.runOnUiThread { activity.finish() }
+      }
+    }
+  }
+
+  private fun askForNewName() {
+    val input = android.widget.EditText(requireContext()).apply {
+      setText(resolveTheme()?.manifest?.name)
+      contentDescription = getString(R.string.theme_create_name)
+      filters = arrayOf(android.text.InputFilter.LengthFilter(100))
+    }
+    val dialog = AlertDialog.Builder(requireContext())
+      .setTitle(R.string.theme_create_duplicate).setView(input)
+      .setNegativeButton(android.R.string.cancel, null)
+      .setPositiveButton(android.R.string.ok, null).create()
+    dialog.setOnShowListener {
+      dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+        if (closing || resolveTheme() == null) return@setOnClickListener
+        val name = input.text.toString().trim()
+        if (name.isEmpty()) { input.error = getString(R.string.theme_create_name_required); return@setOnClickListener }
+        try {
+          SoundThemes.renameDraft(requireContext(), draftId!!, name)
+          dialog.dismiss()
+          saveDraft()
+        } catch (error: IOException) {
+          if (resolveTheme() != null) showMessage(getString(R.string.theme_create_save_failed))
+        }
+      }
+    }
+    dialog.show()
+  }
+
+  private fun confirmDiscard() {
+    if (closing || discardDialog?.isShowing == true) return
+    discardDialog = AlertDialog.Builder(requireContext())
+      .setTitle(R.string.theme_create_discard_title)
+      .setPositiveButton(R.string.theme_create_discard) { _, _ ->
+        closing = true
+        val app = requireContext().applicationContext
+        val activity = requireActivity()
+        val id = draftId!!
+        // Finish copying any chosen sounds before deleting the draft.
+        executor.execute {
+          SoundThemes.discardDraft(app, id)
+          activity.runOnUiThread { activity.finish() }
+        }
+      }
+      .setNegativeButton(R.string.theme_create_keep_editing, null)
+      .show()
   }
 
   /** Shows which sounds the theme replaces, and offers resetting only when it replaces some. */
   private fun refresh() {
     val context = context ?: return
-    val custom = SoundThemes.soundFiles(SoundThemes.active(context, prefs))
+    val theme = resolveTheme() ?: return
+    val custom = SoundThemes.soundFiles(theme)
+    if (draftId != null && !prefs.contains(ControlSoundsSettings.PREF_ON)) {
+      findPreference<AccessibilitySuiteSwitchPreference>(ControlSoundsSettings.PREF_ON)?.isChecked =
+        custom.keys.any { it in ControlSounds.SOUNDS }
+    }
     for (row in rows) {
       row.summary =
         context.getString(
@@ -146,6 +335,7 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
 
   private fun showChoices(item: FeedbackItem) {
     val context = requireContext()
+    if (closing || resolveTheme() == null) return
     val hasCustom = SoundThemes.soundFile(context, prefs, item) != null
     val choices = ArrayList<Pair<Int, () -> Unit>>()
     choices +=
@@ -161,7 +351,7 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
           }
         }
     if (hasCustom || !isControlSound(item)) {
-      choices += R.string.theme_sound_preview to { soundPreview.play(context, prefs, item) }
+      choices += R.string.theme_sound_preview to { preview(item) }
     }
     if (hasCustom) {
       val label =
@@ -173,8 +363,10 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
       choices +=
         label to
           {
-            SoundThemes.removeSound(context, prefs, item)
-            refresh()
+            if (!closing && resolveTheme() != null) {
+              SoundThemes.removeSound(context, prefs, item)
+              refresh()
+            }
           }
     }
     AlertDialog.Builder(context)
@@ -191,14 +383,17 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
     AlertDialog.Builder(context)
       .setMessage(R.string.theme_sounds_reset_confirm)
       .setPositiveButton(R.string.theme_sounds_reset_button) { _, _ ->
-        SoundThemes.removeAllSounds(context, prefs)
-        refresh()
+        if (!closing && resolveTheme() != null) {
+          SoundThemes.removeAllSounds(context, prefs)
+          refresh()
+        }
       }
       .setNegativeButton(android.R.string.cancel, null)
       .show()
   }
 
   private fun setSound(item: FeedbackItem, uri: Uri) {
+    if (closing || resolveTheme() == null) return
     val context = requireContext().applicationContext
     val extension = extensionOf(context, uri)
     val activity = requireActivity()
@@ -214,10 +409,10 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
           SoundThemes.Result.FAILED
         }
       activity.runOnUiThread {
-        if (!isAdded) return@runOnUiThread
+        if (!isAdded || closing) return@runOnUiThread
         refresh()
         when (result) {
-          SoundThemes.Result.OK -> soundPreview.play(context, prefs, item)
+          SoundThemes.Result.OK -> preview(item)
           SoundThemes.Result.TOO_LARGE -> showMessage(getString(R.string.theme_sound_too_large))
           SoundThemes.Result.NOT_AUDIO -> showMessage(getString(R.string.theme_sound_not_audio))
           SoundThemes.Result.FAILED -> showMessage(getString(R.string.theme_sound_failed))
@@ -277,7 +472,9 @@ class ThemeSoundsFragment : TalkbackBaseFragment() {
     }
   }
 
-  private companion object {
+  companion object {
+    internal var executorFactory: () -> ExecutorService = { Executors.newSingleThreadExecutor() }
+    const val ARG_DRAFT = "theme_draft"
     val ACTION_PREVIEW = R.id.accessibility_custom_action_0
     const val STATE_CHOOSING_FOR = "choosing_for"
     const val DEFAULT_EXTENSION = "wav"
