@@ -23,6 +23,11 @@
         android:key="@string/pref_lift_to_activate_key"
         android:summary="%s"
         android:title="@string/title_pref_lift_to_activate" />
+    <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
+        android:key="@string/pref_scripts_key"
+        android:title="@string/title_pref_scripts"
+        android:summary="@string/summary_pref_scripts"
+        android:fragment="com.google.android.accessibility.talkback.scripting.ScriptsFragment" />
     <com.google.android.accessibility.material.preference.AccessibilitySuiteSwitchPreference
         android:defaultValue="true"
         android:key="pref_speak_nav_bar_buttons"

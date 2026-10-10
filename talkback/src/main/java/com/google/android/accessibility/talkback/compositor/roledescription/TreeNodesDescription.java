@@ -31,6 +31,7 @@ import com.google.android.accessibility.talkback.compositor.AccessibilityNodeFee
 import com.google.android.accessibility.talkback.compositor.CompositorUtils;
 import com.google.android.accessibility.talkback.compositor.GlobalVariables;
 import com.google.android.accessibility.talkback.imagecaption.ImageContents;
+import com.google.android.accessibility.talkback.scripting.Scripts;
 import com.google.android.accessibility.utils.AccessibilityEventUtils;
 import com.google.android.accessibility.utils.AccessibilityNodeInfoUtils;
 import com.google.android.accessibility.utils.Role;
@@ -277,6 +278,10 @@ public class TreeNodesDescription {
       AccessibilityEvent event,
       boolean shouldIterateChildren,
       boolean shouldAppendChildNode) {
+    List<AccessibilityNodeInfoCompat> groupItems = Scripts.groupItems(node);
+    if (groupItems != null) {
+      return groupDescription(node, event, groupItems);
+    }
     int role = Role.getRole(node);
     List<CharSequence> joinList = new ArrayList<>();
     // Join the role description text.
@@ -427,5 +432,21 @@ public class TreeNodesDescription {
     Rect bounds = new Rect();
     node.getBoundsInScreen(bounds);
     return bounds;
+  }
+
+  private CharSequence groupDescription(
+      AccessibilityNodeInfoCompat node,
+      AccessibilityEvent event,
+      List<AccessibilityNodeInfoCompat> items) {
+    List<CharSequence> joinList = new ArrayList<>();
+    for (AccessibilityNodeInfoCompat item : items) {
+      joinList.add(
+          AccessibilityNodeFeedbackUtils.getNodeTextDescription(item, context, globalVariables));
+      joinList.add(
+          AccessibilityNodeFeedbackUtils.getNodeStateDescription(item, context, globalVariables));
+      joinList.add(nodeStatusDescription(item));
+    }
+    joinList.add(roleDescriptionExtractor.nodeRoleDescriptionText(node, event));
+    return CompositorUtils.joinCharSequences(joinList, CompositorUtils.getSeparator(), PRUNE_EMPTY);
   }
 }

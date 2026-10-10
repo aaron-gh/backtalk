@@ -32,6 +32,7 @@ import com.google.android.accessibility.talkback.compositor.Compositor.HandleEve
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.talkback.imagecaption.ImageContents;
 import com.google.android.accessibility.talkback.imagecaption.Result;
+import com.google.android.accessibility.talkback.scripting.Scripts;
 import com.google.android.accessibility.utils.AccessibilityNodeInfoUtils;
 import com.google.android.accessibility.utils.BuildVersionUtils;
 import com.google.android.accessibility.utils.Filter;
@@ -93,6 +94,10 @@ public class AccessibilityNodeFeedbackUtils {
    */
   public static CharSequence getNodeTextDescription(
       AccessibilityNodeInfoCompat node, Context context, GlobalVariables globalVariables) {
+    CharSequence scriptLabel = Scripts.ruleLabel(node);
+    if (scriptLabel != null) {
+      return scriptLabel;
+    }
     CharSequence contentAndSupplementalDescription =
         getNodeContentAndSupplementalDescription(node, context, globalVariables);
     if (!TextUtils.isEmpty(contentAndSupplementalDescription)) {

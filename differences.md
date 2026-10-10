@@ -491,6 +491,30 @@ Backtalk can describe images and screens with a model that runs on your phone, s
 
 When Gemini can't describe something, TalkBack says "Something went wrong". Backtalk says what failed: the key wasn't accepted, the usage limit was reached, Gemini is busy, Gemini took too long, or there's no internet connection. For other errors, Backtalk says the error code and the first sentence of Google's message, in English. Describe screen speaks its errors instead of showing them in a toast.
 
+## Scripts
+
+### JavaScript scripts and plugins
+
+Like NVDA's app modules and global plugins, scripts change how Backtalk works in one app or in every app. A script can:
+
+*   Give unlabeled buttons names, hide clutter, group items, and change or silence what Backtalk says for an item.
+*   Read the screen, press buttons, speak, play sounds and vibrate.
+*   Add gestures, keyboard shortcuts, Backtalk menu items, reading controls, and items in an item's Actions menu.
+*   Change everything Backtalk says, and react to notifications, typing and screen changes.
+*   Use the internet and the clipboard, show dialogs, and keep its own data and settings.
+
+To install a script, go to **Advanced settings** > **Scripts** and choose **Import script**. Backtalk lists what the script asks to do before it installs or updates it. **Add the example script** adds a small script to start from.
+
+Each script has a page with an on and off switch, a switch for each permission and for each gesture, key, menu item and reading control it adds, its settings on their own screen, its log, and **Remove**. While a script runs, its gestures and keys come before Backtalk's.
+
+Scripts never change Backtalk's own screens, so the Scripts screen always works. **Turn off all scripts** on that screen stops every script at once, and so does the **Turn all scripts on or off** action, which you can assign to a gesture that scripts can't take over. Scripts don't run while the screen is off or Backtalk is paused, and Backtalk only starts the script engine once a script is turned on.
+
+Scripts run on phones and tablets only. [Writing Backtalk scripts](docs/scripting.md) describes the whole API, and [docs/scripting/examples](docs/scripting/examples) has a script to start from.
+
+### Inspect focused item and Copy screen tree
+
+**Inspect focused item** says the focused item's id, class, role, app, activity and window, and copies them, so that scripts can name the item. **Copy screen tree** copies every item on screen as JSON. Assign either to a gesture in gesture settings, or add it to the Backtalk menu in **Customize menus** > **Backtalk menu**.
+
 ## Settings
 
 ### Layout and wording

@@ -773,7 +773,12 @@ public class Role {
     if (node == null) {
       return ROLE_NONE;
     }
+    @Nullable Integer overridden = NodeOverrides.role(node);
+    return overridden != null ? overridden : getAppRole(node);
+  }
 
+  @RoleName
+  public static int getAppRole(AccessibilityNodeInfoCompat node) {
     // We check Text entry key from property instead of class, so it needs to be in the beginning.
     if (node.isTextEntryKey()) {
       return ROLE_TEXT_ENTRY_KEY;

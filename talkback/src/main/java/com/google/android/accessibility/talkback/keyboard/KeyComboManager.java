@@ -57,6 +57,7 @@ import com.google.android.accessibility.talkback.focusmanagement.AccessibilityFo
 import com.google.android.accessibility.talkback.focusmanagement.interpreter.ScreenStateMonitor;
 import com.google.android.accessibility.talkback.gesture.GestureShortcutMapping;
 import com.google.android.accessibility.talkback.monitor.BatteryMonitor;
+import com.google.android.accessibility.talkback.scripting.Scripts;
 import com.google.android.accessibility.talkback.selector.SelectorController;
 import com.google.android.accessibility.talkback.trainingcommon.TrainingActivity;
 import com.google.android.accessibility.utils.AccessibilityEventListener;
@@ -891,6 +892,22 @@ public class KeyComboManager
         isSequenceKeyInfraSupported()
             && previousKeyCombo.getPrefixKeyCode() != KeyComboModel.KEY_COMBO_CODE_UNASSIGNED;
     boolean enabledBrowseMode = isBrowseModeEnabled();
+    int scriptModifiers = (event.getModifiers() & KEY_EVENT_MODIFIER_MASK) & ~triggerModifier;
+    KeyCombo scriptKeyCombo =
+        new KeyCombo(
+            scriptModifiers,
+            KeyComboModel.NO_PREFIX_KEY_CODE,
+            getConvertedKeyCode(event),
+            pressedTriggerModifier);
+    if (Scripts.onKeys(
+        scriptModifiers,
+        getConvertedKeyCode(event),
+        pressedTriggerModifier,
+        () -> matchAndPerformKeyCombo(scriptKeyCombo, triggerModifier))) {
+      performedCombo = true;
+      hasPartialMatch = false;
+      return true;
+    }
     // Trigger modifier needs to be pressed for TalkBack to handle the key event unless:
     // * one of the prefix key combos in the sequenced key combos was pressed, or
     // * Browse mode is on.

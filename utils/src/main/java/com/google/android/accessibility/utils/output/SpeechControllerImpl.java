@@ -103,6 +103,18 @@ public class SpeechControllerImpl implements SpeechController {
 
   private static final String TAG = "SpeechControllerImpl";
 
+  public interface SpeechFilter {
+    @Nullable CharSequence filter(CharSequence text);
+  }
+
+  public static final String SPEECH_PARAM_FROM_SCRIPT = "backtalk.fromScript";
+
+  private static volatile @Nullable SpeechFilter speechFilter;
+
+  public static void setSpeechFilter(@Nullable SpeechFilter filter) {
+    speechFilter = filter;
+  }
+
   /** Prefix for utterance IDs. */
   private static final String UTTERANCE_ID_PREFIX = "talkback_";
 
@@ -1143,6 +1155,15 @@ public class SpeechControllerImpl implements SpeechController {
       return;
     }
 
+    @Nullable SpeechFilter filter = speechFilter;
+    boolean fromScript = speechParams != null && speechParams.containsKey(SPEECH_PARAM_FROM_SCRIPT);
+    if (filter != null && !fromScript && !TextUtils.isEmpty(text)) {
+      @Nullable CharSequence filtered = filter.filter(text);
+      if (filtered != null) {
+        text = filtered;
+      }
+    }
+
     if (TextUtils.isEmpty(text)
         && (earcons == null || earcons.isEmpty())
         && (haptics == null || haptics.isEmpty())) {
@@ -2030,10 +2051,10 @@ public class SpeechControllerImpl implements SpeechController {
       customFlags.put(FailoverTextToSpeech.RATE_PARAMETER_TYPE, FailoverTextToSpeech.ABSOLUTE);
     }
 
-    float pitch =
-        speechPitch * (mUseIntonation ? parseFloatParam(params, SpeechParam.PITCH, 1) : 1);
+    boolean applyParams = mUseIntonation || params.containsKey(SPEECH_PARAM_FROM_SCRIPT);
+    float pitch = speechPitch * (applyParams ? parseFloatParam(params, SpeechParam.PITCH, 1) : 1);
     final float rate =
-        speechRate * (mUseIntonation ? parseFloatParam(params, SpeechParam.RATE, 1) : 1);
+        speechRate * (applyParams ? parseFloatParam(params, SpeechParam.RATE, 1) : 1);
     CharSequence text;
 
     final boolean shouldSilenceFragment = shouldSilenceSpeech(feedbackItem);

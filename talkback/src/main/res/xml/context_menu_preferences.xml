@@ -207,6 +207,22 @@
             android:summary="@string/summary_pause_backtalk"/>
         <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
             android:layout="@layout/listitem_2texts"
+            android:defaultValue="@bool/pref_show_context_menu_inspect_item_default"
+            android:key="@string/pref_show_context_menu_inspect_item_setting_key"
+            android:order="26"
+            android:title="@string/shortcut_inspect_item"
+            app:singleLineTitle="false"
+            android:summary="@string/summary_inspect_item_menu"/>
+        <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
+            android:layout="@layout/listitem_2texts"
+            android:defaultValue="@bool/pref_show_context_menu_copy_screen_tree_default"
+            android:key="@string/pref_show_context_menu_copy_screen_tree_setting_key"
+            android:order="27"
+            android:title="@string/shortcut_copy_screen_tree"
+            app:singleLineTitle="false"
+            android:summary="@string/summary_copy_screen_tree_menu"/>
+        <com.google.android.accessibility.material.preference.AccessibilitySuiteCheckBoxPreference
+            android:layout="@layout/listitem_2texts"
             android:defaultValue="@bool/pref_show_context_menu_voice_commands_default"
             android:key="@string/pref_show_context_menu_voice_commands_setting_key"
             android:order="21"

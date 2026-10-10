@@ -554,6 +554,9 @@ public class GestureShortcutMapping implements GestureShortcutProvider {
     ANNOUNCE_BATTERY_STATE(
         R.string.shortcut_value_announce_battery_state, R.string.shortcut_announce_battery_state),
     ANNOUNCE_STATUS(R.string.shortcut_value_announce_status, R.string.shortcut_announce_status),
+    INSPECT_ITEM(R.string.shortcut_value_inspect_item, R.string.shortcut_inspect_item),
+    COPY_SCREEN_TREE(R.string.shortcut_value_copy_screen_tree, R.string.shortcut_copy_screen_tree),
+    TOGGLE_SCRIPTS(R.string.shortcut_value_toggle_scripts, R.string.shortcut_toggle_scripts),
     ANNOUNCE_PHONETIC_PRONUNCIATION(
         R.string.shortcut_value_announce_phonetic_pronunciation,
         R.string.shortcut_announce_phonetic_pronunciation),
