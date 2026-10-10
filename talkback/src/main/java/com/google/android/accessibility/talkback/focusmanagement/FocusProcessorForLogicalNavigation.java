@@ -372,9 +372,14 @@ public class FocusProcessorForLogicalNavigation {
    */
   private AccessibilityNodeInfoCompat getPivotNodeForNavigationAction(
       NavigationAction navigationAction) {
+    // While the saved reading order holds the focused node, Android's cached copy of the node is
+    // current: nothing that could change the window has happened since the order was read from the
+    // app. So the focus monitor need not ask the app for the node again then.
     AccessibilityNodeInfoCompat pivot =
         accessibilityFocusMonitor.getAccessibilityFocus(
-            navigationAction.useInputFocusAsPivotIfEmpty, /* requireEditable= */ false);
+            navigationAction.useInputFocusAsPivotIfEmpty,
+            /* requireEditable= */ false,
+            /* isCurrent= */ Filter.node(TraversalTreeCache::holds));
 
     // The focus monitor can return Android's cached copy of a node that was just removed, so check
     // with the app that the pivot is still there. Skip that round trip when the saved reading order
@@ -1160,13 +1165,17 @@ public class FocusProcessorForLogicalNavigation {
         || WebInterfaceUtils.supportsWebActions(pivot)) {
       return null;
     }
-    AccessibilityNodeInfoCompat rootNode = AccessibilityNodeInfoUtils.getRoot(pivot);
-    if (rootNode == null) {
-      return null;
-    }
     // Only with the saved reading order: building one takes from about 10 ms to, in a big app, a
     // few hundred, on the main thread, where a swipe that starts meanwhile would wait for it. A
-    // swipe saves the order it builds, so the next prediction has one.
+    // swipe saves the order it builds, so the next prediction has one. The root comes from the
+    // saved order too, as asking the window for it would wait for the app.
+    AccessibilityNodeInfoCompat rootNode = TraversalTreeCache.rootFor(pivot);
+    if (rootNode == null) {
+      // Remember where the next swipe starts all the same, as a search of the saved order does, so
+      // that a swipe after the focused node is removed carries on from here.
+      TraversalTreeCache.rememberPivot(pivot);
+      return null;
+    }
     TraversalStrategy traversalStrategy = TraversalTreeCache.get(rootNode, pivot);
     if (traversalStrategy == null) {
       return null;
@@ -1195,7 +1204,12 @@ public class FocusProcessorForLogicalNavigation {
         TraversalStrategyUtils.getLogicalDirection(
             searchDirection, WindowUtils.isScreenLayoutRTL(service));
 
-    AccessibilityNodeInfoCompat rootNode = AccessibilityNodeInfoUtils.getRoot(pivot);
+    // Asking the window for its root waits for the app on every swipe, so take the root of the
+    // saved reading order when that holds the pivot.
+    AccessibilityNodeInfoCompat rootNode = TraversalTreeCache.rootFor(pivot);
+    if (rootNode == null) {
+      rootNode = AccessibilityNodeInfoUtils.getRoot(pivot);
+    }
     if (rootNode == null) {
       LogUtils.w(TAG, "Cannot perform navigation action: unable to find root node.");
       return false;
