@@ -25,7 +25,7 @@ import com.google.android.accessibility.talkback.controlsounds.ControlSounds
  * vibration_backtalk.xml.
  */
 object SoundVibrations {
-  /** Braille display sounds that use the generic fallback unless a theme supplies a pattern. */
+  /** Sounds that play without a vibration: the braille display's sounds. */
   val WITHOUT_VIBRATION: Set<String> =
     setOf(
       "display_connected",
@@ -89,7 +89,7 @@ object SoundVibrations {
   /** The names of every vibration a sound theme can replace, as theme.json names them. */
   @JvmStatic
   fun themeNames(soundKeys: Collection<String>): Set<String> =
-    soundKeys.toSet() + VIBRATION_ONLY.keys
+    soundKeys.filter { it !in WITHOUT_VIBRATION }.toSet() + VIBRATION_ONLY.keys
 
   /**
    * Turns a theme's vibrations, by their theme.json names, into the names they play under: the
@@ -106,6 +106,7 @@ object SoundVibrations {
     for ((name, pattern) in themeVibrations) {
       VIBRATION_ONLY[name]?.let { played[it] = pattern }
       soundResources[name]?.forEach { sound ->
+        if (sound in WITHOUT_VIBRATION) return@forEach
         played[sound] = pattern
         PATTERNS[sound]?.let { played[it] = pattern }
       }

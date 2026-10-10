@@ -11,4 +11,8 @@
     <string name="theme_create_zip">Save as ZIP</string>
     <string name="theme_create_save_failed">Could not save the theme. Please try again.</string>
     <string name="theme_create_exported">Theme saved as ZIP.</string>
+    <string name="theme_create_discard_title">Discard this theme?</string>
+    <string name="theme_create_discard_message">Your chosen sounds and theme details have not been saved. Do you want to discard this draft?</string>
+    <string name="theme_create_discard">Discard</string>
+    <string name="theme_create_keep_editing">Keep editing</string>
 </resources>

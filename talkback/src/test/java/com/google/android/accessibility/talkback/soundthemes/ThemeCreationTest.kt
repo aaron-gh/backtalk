@@ -60,25 +60,53 @@ class ThemeCreationTest {
     assertArrayEquals(sound, entries.getValue("focus.wav"))
     assertFalse(SoundThemes.installed(context).any { it.id == draft.id })
   }
-  @Test fun automaticVibrationsReplaceSoundHapticsAndKeepUnrelatedAuthoredVibrations() {
-    val prefs = context.getSharedPreferences("haptic-test", Context.MODE_PRIVATE)
-    val draft = SoundThemes.createDraft(context, SoundThemeManifest("Automatic", vibrations = mapOf(
-      "focus" to "none", "announcement" to org.json.JSONObject().put("pattern", org.json.JSONArray(listOf(0, 30))))))
-    java.io.File(draft.directory, SoundThemes.fileName("focus", "wav", 10)).writeBytes(byteArrayOf(1))
-    val audio = com.google.android.accessibility.utils.output.AudioDecoder.Decoded(
-      FloatArray(320) { if (it % 20 < 10) 0.6f else -0.6f }, 1, 8000)
-    var calls = 0
-    assertTrue(SoundThemes.generateVibrations(context, draft.id) { calls++; audio })
-    assertFalse(SoundThemes.generateVibrations(context, draft.id) { calls++; audio })
-    assertEquals(1, calls)
-    val updated = SoundThemes.theme(context, draft.id)!!
-    assertTrue(updated.manifest.vibrations["focus"] is org.json.JSONObject)
-    assertEquals(30, updated.manifest.vibrationPatterns().getValue("announcement").sum())
-    prefs.edit().putString(SoundThemes.PREF_ACTIVE, draft.id).apply()
+
+  @Test fun untouchedSettingsRemainUnsetAndControlSoundsEnableOnActivation() {
+    val draft = SoundThemes.createDraft(context, SoundThemeManifest("Controls"))
+    java.io.File(draft.directory, SoundThemes.fileName("control_button", "wav", 1)).writeBytes(byteArrayOf(1))
+    val storage = context.createDeviceProtectedStorageContext()
+    val prefs = storage.getSharedPreferences(SoundThemes.draftPreferencesName(draft.id), Context.MODE_PRIVATE)
+    prefs.edit().putString(SoundThemes.PREF_ACTIVE, draft.id).commit()
+    SoundThemes.saveSettings(context, prefs)
+    val manifest = SoundThemes.theme(context, draft.id)!!.manifest
+    assertNull(manifest.controlSounds)
+    assertNull(manifest.audio3d)
+    val saved = SoundThemes.saveDraft(context, draft.id)
+    assertFalse(java.io.File(storage.dataDir, "shared_prefs/${SoundThemes.draftPreferencesName(draft.id)}.xml").exists())
+    val activePrefs = context.getSharedPreferences("activate-controls", Context.MODE_PRIVATE)
+    SoundThemes.activate(context, activePrefs, saved.id)
+    assertTrue(com.google.android.accessibility.talkback.controlsounds.ControlSoundsSettings.isOn(activePrefs))
+  }
+
+  @Test fun explicitControlSoundChoiceIsSaved() {
+    val draft = SoundThemes.createDraft(context, SoundThemeManifest("Explicit"))
+    val prefs = context.getSharedPreferences("explicit-controls", Context.MODE_PRIVATE)
+    prefs.edit().putString(SoundThemes.PREF_ACTIVE, draft.id)
+      .putBoolean(com.google.android.accessibility.talkback.controlsounds.ControlSoundsSettings.PREF_ON, false).commit()
+    SoundThemes.saveSettings(context, prefs)
+    assertEquals(false, SoundThemes.theme(context, draft.id)!!.manifest.controlSounds)
+  }
+
+  @Test fun discardRemovesDraftAndPreferences() {
+    val draft = SoundThemes.createDraft(context, SoundThemeManifest("Discard"))
+    val storage = context.createDeviceProtectedStorageContext()
+    val name = SoundThemes.draftPreferencesName(draft.id)
+    storage.getSharedPreferences(name, Context.MODE_PRIVATE).edit().putString(SoundThemes.PREF_ACTIVE, draft.id).commit()
+    SoundThemes.discardDraft(context, draft.id)
+    assertFalse(draft.directory.exists())
+    assertFalse(java.io.File(storage.dataDir, "shared_prefs/$name.xml").exists())
+  }
+
+  @Test fun authoredVibrationSurvivesFeedbackExportAndSoundRemoval() {
+    val draft = SoundThemes.createDraft(context, SoundThemeManifest("Authored", vibrations = mapOf("focus" to "none")))
+    java.io.File(draft.directory, SoundThemes.fileName("focus", "wav", 1)).writeBytes(byteArrayOf(1))
+    val prefs = context.getSharedPreferences("authored", Context.MODE_PRIVATE)
+    prefs.edit().putString(SoundThemes.PREF_ACTIVE, draft.id).commit()
+    SoundThemes.feedback(context, prefs)
+    SoundThemes.export(context, prefs, draft.id, ByteArrayOutputStream())
+    assertEquals("none", SoundThemes.theme(context, draft.id)!!.manifest.vibrations["focus"])
     SoundThemes.removeSound(context, prefs, SoundThemes.SOUNDS.first { it.key == "focus" })
-    val remaining = SoundThemes.theme(context, draft.id)!!.manifest.vibrations
-    assertFalse(remaining.containsKey("focus"))
-    assertTrue(remaining.containsKey("announcement"))
+    assertEquals("none", SoundThemes.theme(context, draft.id)!!.manifest.vibrations["focus"])
   }
 
 }

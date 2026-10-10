@@ -50,10 +50,9 @@ class SoundVibrationsTest {
   }
 
   @Test
-  fun brailleThemeSoundsRouteTheirVibrations() {
+  fun brailleSoundsDoNotVibrate() {
     for (sound in listOf("display_connected", "double_beep", "calibration_done")) {
-      val pattern = intArrayOf(0, 35)
-      assertTrue(SoundVibrations.playedAs(mapOf(sound to pattern), mapOf(sound to listOf(sound)))[sound] === pattern)
+      assertTrue(sound, sound !in SoundVibrations.PATTERNS)
     }
   }
 
@@ -138,13 +137,13 @@ class SoundVibrationsTest {
   }
 
   @Test
-  fun themesCanReplaceEverySoundVibration() {
+  fun themesCanReplaceEveryVibrationButNotBrailleDisplaySounds() {
     val names = SoundVibrations.themeNames(IndividualFeedbackSettings.SOUNDS.map { it.key })
     assertTrue("focus" in names)
     assertTrue("control_button" in names)
     assertTrue("announcement" in names)
     assertTrue("direct_touch_off" in names)
-    SoundVibrations.WITHOUT_VIBRATION.forEach { assertTrue(it, it in names) }
+    SoundVibrations.WITHOUT_VIBRATION.forEach { assertTrue(it, it !in names) }
   }
 
   @Test

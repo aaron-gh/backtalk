@@ -210,7 +210,7 @@ class SoundThemesFragment : TalkbackBaseFragment() {
             author = author.text.toString().trim().ifEmpty { null },
             website = website.text.toString().trim().ifEmpty { null },
           ))
-          startActivity(Intent(context, TalkBackPreferencesActivity.TalkBackSubSettings::class.java)
+          startActivity(Intent(context, ThemeDraftActivity::class.java)
             .putExtra(BasePreferencesActivity.FRAGMENT_NAME, ThemeSoundsFragment::class.java.name)
             .putExtra(BasePreferencesActivity.FRAGMENT_ARGS, Bundle().apply {
               putString(ThemeSoundsFragment.ARG_DRAFT, draft.id)

@@ -60,7 +60,9 @@ unchanged. Names must be different from an installed theme.
 The new theme opens in the sound editor. Choose your sounds and the control-sound and 3D audio
 settings. **Save**, at the top, saves the theme and puts it in use. **Save as ZIP** opens the system
 file picker so you can choose a filename and location; exporting alone does not put the theme in
-use. Licence information and files can be added to the exported ZIP later.
+use. Back or Navigate up asks before discarding the draft. Licence information and files can be
+added to the exported ZIP later. If you leave the Control sounds setting untouched, it is enabled
+automatically when the saved theme contains control sounds.
 
 ## Making a theme
 
@@ -189,27 +191,6 @@ Tips:
 *   Leave some headroom. Backtalk plays sounds at the volume of its **Sound feedback volume**
     setting, which can't make a quiet sound louder than it is.
 
-### Automatic vibrations from sounds
-
-Backtalk automatically analyses each custom sound when you choose it or install a theme. It
-follows the loudness and pauses of the sound, makes short sounds feel like firm clicks, and makes rising
-or falling tones feel like a rise or fall in vibration strength. There is no button or switch.
-Existing themes are analysed in the background when used or opened in the sound editor.
-
-For every custom theme sound, its generated vibration replaces the vibration for that
-sound in `theme.json`. Vibrations without a corresponding custom sound stay as authored. Generated
-vibrations are included when you save the theme as ZIP. Removing a custom sound removes its
-generated vibration and returns to the default. Silent sounds produce no vibration. Sounds that
-cannot be decoded keep their previous vibration. Long sounds are compressed to at most one second
-of vibration. Normal vibration-feedback settings and individual mute switches still apply.
-
-Quiet audio is normalised before analysis. Active pulses have a minimum strength of 200/255;
-short sounds use a full-strength click, while rising and falling sounds use firm waveforms.
-The updated analysis automatically regenerates existing themes.
-
-Devices with amplitude control feel the changing strength; simpler devices feel the on/off rhythm.
-The emulator can verify generated patterns, but a phone is needed to judge how they feel.
-
 ### Vibrations
 
 A theme can replace every vibration Backtalk plays, and define each pattern itself. A vibration
@@ -221,7 +202,7 @@ vibration everywhere it plays: with the sound, and wherever Backtalk plays the s
 without the sound, such as the click vibration of the circle menu and the focus vibration of
 selection. `radial_menu` replaces the vibrations of all eight circle menu notes. The braille display
 sounds (`display_connected`, `display_disconnected`, `double_beep`, `turn_on`, `turn_off` and
-`calibration_done`) also support automatically generated theme vibrations.
+`calibration_done`) have no vibration, so they can't have one in a theme either.
 
 These vibrations have no sound, and a theme replaces them by these names:
 

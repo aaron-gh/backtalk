@@ -21,11 +21,6 @@ import android.content.SharedPreferences
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
-import android.os.Vibrator
-import com.google.android.accessibility.talkback.R
-import com.google.android.accessibility.utils.SharedPreferencesUtils
-import com.google.android.accessibility.utils.output.AccessibilityVibration
-import com.google.android.accessibility.utils.output.HapticPatternParser
 import com.google.android.accessibility.talkback.soundthemes.SoundThemes
 import com.google.android.accessibility.utils.output.FailoverTextToSpeech
 import java.io.IOException
@@ -47,7 +42,6 @@ class SoundPreview {
         )
         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
         .build()
-    playVibration(context, prefs, item)
     val custom = SoundThemes.soundFile(context, prefs, item)
     if (custom == null) {
       // The braille keyboard's typing sounds are Android's keyboard sounds unless a theme has them.
@@ -83,28 +77,6 @@ class SoundPreview {
         it.release()
       }
       start()
-    }
-  }
-
-  /** Uses the same theme override, fallback and mute choices as real sound feedback. */
-  private fun playVibration(context: Context, prefs: SharedPreferences, item: FeedbackItem) {
-    val settings = SharedPreferencesUtils.getSharedPreferences(context)
-    if (!settings.getBoolean(context.getString(R.string.pref_vibration_key),
-        context.resources.getBoolean(R.bool.pref_vibration_default))) return
-    val vibrator = context.getSystemService(Vibrator::class.java) ?: return
-    val sound = item.resourceNames.first()
-    val muted = IndividualFeedbackSettings.mutedVibrationResources(settings)
-    if (SoundVibrations.switchOf(sound) in muted) return
-    val themePattern = SoundThemes.feedback(context, prefs).vibrationsPlaying(muted)[sound]
-    val pattern = themePattern ?: SoundVibrations.switchOf(sound)?.let { name ->
-      val resource = context.resources.getIdentifier(name, "array", context.packageName)
-      if (resource == 0) null else context.resources.getIntArray(resource)
-    } ?: intArrayOf(0, 35)
-    if (pattern.isEmpty()) return
-    try {
-      AccessibilityVibration.play(vibrator, HapticPatternParser(vibrator).parse(pattern))
-    } catch (e: RuntimeException) {
-      // A device refusing a theme's haptic must not stop its audio preview.
     }
   }
 
