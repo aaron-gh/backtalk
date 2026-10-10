@@ -109,4 +109,34 @@ class ThemeCreationTest {
     assertEquals("none", SoundThemes.theme(context, draft.id)!!.manifest.vibrations["focus"])
   }
 
+  @Test fun missingDraftNeverFallsBackToBacktalk() {
+    val draft = SoundThemes.createDraft(context, SoundThemeManifest("Missing"))
+    val prefs = context.getSharedPreferences("missing-draft", Context.MODE_PRIVATE)
+    prefs.edit().putString(SoundThemes.PREF_ACTIVE, draft.id).commit()
+    draft.directory.deleteRecursively()
+    assertThrows(IOException::class.java) { SoundThemes.active(context, prefs) }
+    assertThrows(IOException::class.java) { SoundThemes.removeAllSounds(context, prefs) }
+  }
+
+  @Test fun duplicateDraftCanBeRenamedWithoutLosingSounds() {
+    SoundThemes.saveDraft(context, SoundThemes.createDraft(context, SoundThemeManifest("Taken")).id)
+    val draft = SoundThemes.createDraft(context, SoundThemeManifest("Taken"))
+    val file = java.io.File(draft.directory, SoundThemes.fileName("focus", "wav", 1))
+    file.writeBytes(byteArrayOf(1, 2))
+    assertThrows(SoundThemes.DuplicateThemeException::class.java) { SoundThemes.saveDraft(context, draft.id) }
+    SoundThemes.renameDraft(context, draft.id, "Available")
+    val saved = SoundThemes.saveDraft(context, draft.id)
+    assertArrayEquals(byteArrayOf(1, 2), SoundThemes.soundFiles(saved).getValue("focus").readBytes())
+  }
+
+  @Test fun orphanPreferencesAreRemovedWhenListingThemes() {
+    val draft = SoundThemes.createDraft(context, SoundThemeManifest("Orphan"))
+    val storage = context.createDeviceProtectedStorageContext()
+    val name = SoundThemes.draftPreferencesName(draft.id)
+    storage.getSharedPreferences(name, Context.MODE_PRIVATE).edit().putString("test", "value").commit()
+    draft.directory.deleteRecursively()
+    SoundThemes.installed(context)
+    assertFalse(java.io.File(storage.dataDir, "shared_prefs/$name.xml").exists())
+  }
+
 }

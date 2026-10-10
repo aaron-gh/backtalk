@@ -213,6 +213,8 @@
 
         <activity
             android:name="com.google.android.accessibility.talkback.soundthemes.ThemeDraftActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout"
+            android:label="@string/talkback_preferences_title"
             android:exported="false"
             android:theme="@style/TalkBackSettings" />
 

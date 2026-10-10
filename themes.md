@@ -58,7 +58,7 @@ Choose **Create new theme** above the installed themes. Enter a **Name**, and op
 unchanged. Names must be different from an installed theme.
 
 The new theme opens in the sound editor. Choose your sounds and the control-sound and 3D audio
-settings. **Save**, at the top, saves the theme and puts it in use. **Save as ZIP** opens the system
+settings. **Save**, at the top, saves the theme and puts it in use. **Save as a theme file** opens the system
 file picker so you can choose a filename and location; exporting alone does not put the theme in
 use. Back or Navigate up asks before discarding the draft. Licence information and files can be
 added to the exported ZIP later. If you leave the Control sounds setting untouched, it is enabled

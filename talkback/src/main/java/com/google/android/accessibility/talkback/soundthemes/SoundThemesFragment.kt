@@ -29,7 +29,6 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.text.InputFilter
-import com.google.android.accessibility.talkback.preference.TalkBackPreferencesActivity
 import com.google.android.accessibility.utils.preference.BasePreferencesActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -168,7 +167,6 @@ class SoundThemesFragment : TalkbackBaseFragment() {
     fun field(label: Int, limit: Int, multiline: Boolean = false): EditText {
       val input = EditText(context).apply {
         id = android.view.View.generateViewId()
-        hint = getString(label)
         inputType = InputType.TYPE_CLASS_TEXT or
           if (multiline) InputType.TYPE_TEXT_FLAG_MULTI_LINE else InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
         isSingleLine = !multiline
@@ -347,23 +345,8 @@ class SoundThemesFragment : TalkbackBaseFragment() {
     val context = requireContext().applicationContext
     val activity = requireActivity()
     executor.execute {
-      val count =
-        try {
-          context.contentResolver.openOutputStream(uri)?.use {
-            SoundThemes.export(context, prefs, id, it)
-          }
-        } catch (e: IOException) {
-          null
-        } catch (e: SecurityException) {
-          null
-        }
-      activity.runOnUiThread {
-        if (!isAdded) return@runOnUiThread
-        showMessage(
-          if (count == null) getString(R.string.sound_theme_export_failed)
-          else resources.getQuantityString(R.plurals.sound_theme_exported, count, count)
-        )
-      }
+      val message = SoundThemeExport.message(context, prefs, id, uri)
+      activity.runOnUiThread { if (isAdded) showMessage(message) }
     }
   }
 

@@ -47,13 +47,28 @@ class ThemeDraftActivityTest {
     val discard = ShadowDialog.getLatestDialog() as AlertDialog
     discard.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick()
     shadowOf(Looper.getMainLooper()).idle()
-    val deadline = System.nanoTime() + 2_000_000_000L
-    while (!activity.isFinishing && System.nanoTime() < deadline) {
-      Thread.sleep(10)
-      shadowOf(Looper.getMainLooper()).idle()
-    }
+    val fragment = activity.supportFragmentManager.findFragmentById(android.R.id.content) as ThemeSoundsFragment
+    assertFalse(fragment.findPreference<androidx.preference.Preference>(ControlSoundsSettings.PREF_ON)!!.callChangeListener(true))
+    fragment.executor.submit {}.get()
+    shadowOf(Looper.getMainLooper()).idle()
     assertTrue(activity.isFinishing)
     assertFalse(draft.directory.exists())
+    controller.pause().stop().destroy()
+  }
+  @Test fun returningToAMissingDraftClosesEditor() {
+    val context = RuntimeEnvironment.getApplication()
+    com.google.android.accessibility.utils.FormFactorUtils.initialize(context)
+    val draft = SoundThemes.createDraft(context, SoundThemeManifest("Expired"))
+    val intent = Intent(context, ThemeDraftActivity::class.java)
+      .putExtra(BasePreferencesActivity.FRAGMENT_NAME, ThemeSoundsFragment::class.java.name)
+      .putExtra(BasePreferencesActivity.FRAGMENT_ARGS, Bundle().apply {
+        putString(ThemeSoundsFragment.ARG_DRAFT, draft.id)
+      })
+    val controller = Robolectric.buildActivity(ThemeDraftActivity::class.java, intent).setup()
+    controller.pause()
+    draft.directory.deleteRecursively()
+    controller.resume()
+    assertTrue(controller.get().isFinishing)
     controller.pause().stop().destroy()
   }
 }

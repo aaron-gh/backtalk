@@ -183,6 +183,7 @@ object SoundThemes {
   /** The installed themes, Backtalk's first and then by name. */
   @JvmStatic
   fun installed(context: Context): List<SoundTheme> {
+    removeOrphanDraftPreferences(context)
     val themes =
       themesDirectory(context)
         .listFiles()
@@ -207,8 +208,11 @@ object SoundThemes {
 
   /** The theme in use, or Backtalk's if the one in use is gone. */
   @JvmStatic
-  fun active(context: Context, prefs: SharedPreferences): SoundTheme =
-    theme(context, activeId(prefs)) ?: backtalk(context)
+  fun active(context: Context, prefs: SharedPreferences): SoundTheme {
+    val id = activeId(prefs)
+    return theme(context, id) ?: if (id.startsWith(STAGING_PREFIX))
+      throw IOException("Theme draft is missing") else backtalk(context)
+  }
 
   @JvmStatic
   fun theme(context: Context, id: String): SoundTheme? =
@@ -312,7 +316,7 @@ object SoundThemes {
     require(id.startsWith(STAGING_PREFIX))
     val draft = theme(context, id) ?: throw IOException("Theme draft is missing")
     val target = File(themesDirectory(context), idFor(draft.manifest.name))
-    if (target.exists()) throw IOException(context.getString(R.string.theme_create_duplicate))
+    if (target.exists()) throw DuplicateThemeException()
     if (!draft.directory.renameTo(target)) throw IOException("Cannot save theme")
     clearDraftPreferences(context, id)
     return draft.copy(id = target.name, directory = target)
@@ -324,6 +328,24 @@ object SoundThemes {
     File(themesDirectory(context), id).deleteRecursively()
     clearDraftPreferences(context, id)
   }
+
+  private fun removeOrphanDraftPreferences(context: Context) {
+    val storage = context.createDeviceProtectedStorageContext()
+    File(storage.dataDir, "shared_prefs").listFiles().orEmpty()
+      .filter { it.name.startsWith("theme_editor_$STAGING_PREFIX") && it.extension == "xml" }
+      .forEach { file ->
+        val id = file.nameWithoutExtension.removePrefix("theme_editor_")
+        if (!File(themesDirectory(context), id).isDirectory) clearDraftPreferences(context, id)
+      }
+  }
+
+  fun renameDraft(context: Context, id: String, name: String) {
+    require(id.startsWith(STAGING_PREFIX))
+    val draft = theme(context, id) ?: throw IOException("Theme draft is missing")
+    write(draft.copy(manifest = draft.manifest.copy(name = name)))
+  }
+
+  class DuplicateThemeException : IOException()
 
   private fun clearDraftPreferences(context: Context, id: String) {
     val storage = context.createDeviceProtectedStorageContext()
