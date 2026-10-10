@@ -112,6 +112,7 @@ import com.google.android.accessibility.talkback.selector.SelectorController.Ann
 import com.google.android.accessibility.talkback.selector.SelectorController.Setting;
 import com.google.android.accessibility.talkback.status.StatusReader;
 import com.google.android.accessibility.talkback.trainingcommon.TrainingActivity;
+import com.google.android.accessibility.talkback.trainingcommon.content.TutorialGestureUses;
 import com.google.android.accessibility.talkback.utils.DateTimeUtils;
 import com.google.android.accessibility.talkback.utils.DebugProperties;
 import com.google.android.accessibility.talkback.utils.FocusIndicatorUtils;
@@ -823,6 +824,15 @@ public class GestureController {
     // Checked last: it asks the app for the window's nodes, which holds up every gesture.
     if (!isOnTrainingPage()) {
       return false;
+    }
+
+    // An announcement says what the gesture does by default. If the user gave the gesture another
+    // action, say the gesture and that action instead.
+    if (!isFingerprintGesture
+        && feedbackResId != ANNOUNCE_REAL_ACTION
+        && !TutorialGestureUses.announcementStillTrue(
+            service, feedbackResId, gestureShortcutMapping.getActionKeyFromGestureId(gestureId))) {
+      feedbackResId = ANNOUNCE_REAL_ACTION;
     }
 
     String feedbackString;

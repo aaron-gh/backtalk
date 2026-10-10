@@ -1047,11 +1047,7 @@ public class FocusProcessorForLogicalNavigation {
     CharSequence keyword = searchState.getLastKeyword();
     if (TextUtils.isEmpty(keyword)) {
       LogUtils.d(TAG, "navigateToScreenSearchTarget  keyword empty");
-      announce(
-          FeatureSupport.isMultiFingerGestureSupported()
-              ? service.getString(R.string.screen_search_no_keyword_hint)
-              : service.getString(R.string.screen_search_no_keyword_hint_pre_r),
-          eventId);
+      announce(globalVariables.getScreenSearchNoKeywordHint(), eventId);
       return false;
     }
 

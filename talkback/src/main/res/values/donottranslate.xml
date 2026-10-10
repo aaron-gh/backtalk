@@ -4,6 +4,10 @@
     tools:ignore="InconsistentArrays">
     <!-- None of the strings here should be translated -->
     <!-- NOTE: When adding a preference here, it must also be added to the initialization in PreferenceDefaultsProxy.java -->
+    <!-- Names an action and the gesture that does it, built from translated parts. -->
+    <string name="template_action_and_gesture" translatable="false">%1$s: %2$s</string>
+    <!-- A settings screen inside another, built from translated titles. -->
+    <string name="template_settings_path" translatable="false">%1$s &gt; %2$s</string>
     <string name="pref_category_audio_key" translatable="false">pref_category_audio_key</string>
     <string name="pref_screenoff_key">pref_screenoff</string>
     <string name="pref_proximity_key">pref_proximity</string>
