@@ -183,6 +183,7 @@ object SoundThemes {
   /** The installed themes, Backtalk's first and then by name. */
   @JvmStatic
   fun installed(context: Context): List<SoundTheme> {
+    removeOrphanDraftPreferences(context)
     val themes =
       themesDirectory(context)
         .listFiles()
@@ -192,7 +193,7 @@ object SoundThemes {
           if (directory.name.startsWith(STAGING_PREFIX)) {
             // Left over from an install that never finished, unless one is still going on.
             if (System.currentTimeMillis() - directory.lastModified() > STAGING_MAX_AGE_MS) {
-              directory.deleteRecursively()
+              discardDraft(context, directory.name)
             }
             null
           } else {
@@ -207,8 +208,11 @@ object SoundThemes {
 
   /** The theme in use, or Backtalk's if the one in use is gone. */
   @JvmStatic
-  fun active(context: Context, prefs: SharedPreferences): SoundTheme =
-    theme(context, activeId(prefs)) ?: backtalk(context)
+  fun active(context: Context, prefs: SharedPreferences): SoundTheme {
+    val id = activeId(prefs)
+    return theme(context, id) ?: if (id.startsWith(STAGING_PREFIX))
+      throw IOException("Theme draft is missing") else backtalk(context)
+  }
 
   @JvmStatic
   fun theme(context: Context, id: String): SoundTheme? =
@@ -287,11 +291,68 @@ object SoundThemes {
     val theme = active(context, prefs)
     val manifest =
       theme.manifest.copy(
-        controlSounds = ControlSoundsSettings.isOn(prefs),
+        controlSounds = if (theme.id.startsWith(STAGING_PREFIX) && !prefs.contains(ControlSoundsSettings.PREF_ON))
+          theme.manifest.controlSounds else ControlSoundsSettings.isOn(prefs),
         audio3d =
-          prefs.getString(ControlSoundsSettings.PREF_3D, ControlSoundsSettings.VALUE_3D_WITH_HEADPHONES),
+          if (theme.id.startsWith(STAGING_PREFIX) && !prefs.contains(ControlSoundsSettings.PREF_3D))
+            theme.manifest.audio3d else prefs.getString(ControlSoundsSettings.PREF_3D, ControlSoundsSettings.VALUE_3D_WITH_HEADPHONES),
       )
     if (manifest != theme.manifest) write(theme.copy(manifest = manifest))
+  }
+
+  /** An unpublished theme kept separate from the active theme. */
+  fun createDraft(context: Context, manifest: SoundThemeManifest): SoundTheme {
+    val id = STAGING_PREFIX + java.util.UUID.randomUUID()
+    val theme = SoundTheme(id, manifest, File(themesDirectory(context), id))
+    write(theme)
+    return theme
+  }
+
+  fun draftPreferencesName(id: String): String = "theme_editor_$id"
+
+  /** Publishes a draft without overwriting an installed theme. */
+  @Throws(IOException::class)
+  fun saveDraft(context: Context, id: String): SoundTheme {
+    require(id.startsWith(STAGING_PREFIX))
+    val draft = theme(context, id) ?: throw IOException("Theme draft is missing")
+    val target = File(themesDirectory(context), idFor(draft.manifest.name))
+    if (target.exists()) throw DuplicateThemeException()
+    if (!draft.directory.renameTo(target)) throw IOException("Cannot save theme")
+    clearDraftPreferences(context, id)
+    return draft.copy(id = target.name, directory = target)
+  }
+
+  /** Discards both draft files and the editor's temporary preferences. */
+  fun discardDraft(context: Context, id: String) {
+    require(id.startsWith(STAGING_PREFIX))
+    File(themesDirectory(context), id).deleteRecursively()
+    clearDraftPreferences(context, id)
+  }
+
+  private fun removeOrphanDraftPreferences(context: Context) {
+    val storage = context.createDeviceProtectedStorageContext()
+    File(storage.dataDir, "shared_prefs").listFiles().orEmpty()
+      .filter { it.name.startsWith("theme_editor_$STAGING_PREFIX") && it.extension == "xml" }
+      .forEach { file ->
+        val id = file.nameWithoutExtension.removePrefix("theme_editor_")
+        if (!File(themesDirectory(context), id).isDirectory) clearDraftPreferences(context, id)
+      }
+  }
+
+  fun renameDraft(context: Context, id: String, name: String) {
+    require(id.startsWith(STAGING_PREFIX))
+    val draft = theme(context, id) ?: throw IOException("Theme draft is missing")
+    write(draft.copy(manifest = draft.manifest.copy(name = name)))
+  }
+
+  class DuplicateThemeException : IOException()
+
+  private fun clearDraftPreferences(context: Context, id: String) {
+    val storage = context.createDeviceProtectedStorageContext()
+    val name = draftPreferencesName(id)
+    // Finish any pending apply() writes before deleting the file, so they cannot recreate it.
+    storage.getSharedPreferences(name, Context.MODE_PRIVATE).edit().clear().commit()
+    storage.deleteSharedPreferences(name)
   }
 
   /** Removes the theme [id], and puts Backtalk's theme in use if it was in use. */
