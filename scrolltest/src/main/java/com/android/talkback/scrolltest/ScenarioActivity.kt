@@ -16,10 +16,14 @@
 
 package com.android.talkback.scrolltest
 
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -70,6 +74,50 @@ class ScenarioActivity : ComponentActivity() {
           }
         )
       Scenario.CHAT_LIST -> setContentView(list(reverse = true, label = "Message"))
+      Scenario.DRAWN_TEXT -> setContentView(drawnText())
+    }
+  }
+
+  private fun drawnText(): View {
+    val content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+    content.addView(DrawnTextView(this, "Message 1, Hello there, how are you today?", false))
+    content.addView(DrawnTextView(this, "Message 2, See you at the station at five.", false))
+    content.addView(DrawnTextView(this, "Message 3, Reply stub with a description.", true))
+    return ScrollView(this).apply { addView(content) }
+  }
+
+  /**
+   * Draws its text itself, as Telegram's message cells do, so the screen reader only gets the text
+   * from the node: as its text, with no movement granularities, or as its content description.
+   */
+  private inner class DrawnTextView(
+    context: Context,
+    private val message: String,
+    private val asContentDescription: Boolean,
+  ) : View(context) {
+    private val paint =
+      Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        textSize =
+          TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20f, resources.displayMetrics)
+      }
+
+    init {
+      isFocusable = true
+      importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+      layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(64))
+    }
+
+    override fun onDraw(canvas: Canvas) {
+      canvas.drawText(message, dp(16).toFloat(), dp(40).toFloat(), paint)
+    }
+
+    override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
+      super.onInitializeAccessibilityNodeInfo(info)
+      if (asContentDescription) {
+        info.contentDescription = message
+      } else {
+        info.text = message
+      }
     }
   }
 

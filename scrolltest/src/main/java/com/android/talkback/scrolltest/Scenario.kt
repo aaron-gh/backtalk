@@ -39,4 +39,8 @@ enum class Scenario(val title: String, val description: String) {
     "Chat list",
     "A RecyclerView with reverse layout, like a chat. Message 1 is the newest, at the bottom.",
   ),
+  DRAWN_TEXT(
+    "Drawn text",
+    "Messages drawn by a custom view that gives its text only through AccessibilityNodeInfo.setText, like Telegram. The last one gives it as a content description instead.",
+  ),
 }
