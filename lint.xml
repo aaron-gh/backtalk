@@ -6,6 +6,7 @@
       Keep MissingTranslation enabled globally and suppress it only for these exact resources.
     -->
     <issue id="MissingTranslation">
+        <ignore regexp="settings_backup_" />
         <ignore regexp="title_pref_mute_speech_while_recording" />
         <ignore regexp="summary_pref_mute_speech_while_recording" />
         <ignore regexp="title_pref_category_feedback" />
@@ -46,5 +47,16 @@
         <ignore regexp="phonetic_letters_mode_after_letter_delay" />
         <ignore regexp="phonetic_letters_mode_after_letter_no_delay" />
         <ignore regexp="phonetic_letters_mode_instead_of_letter" />
+        <ignore regexp="individual_sound_screen_on" />
+        <ignore regexp="individual_sound_rotor_" />
+        <ignore regexp="individual_sound_keyboard_show" />
+        <ignore regexp="individual_sound_keyboard_hide" />
+        <ignore regexp="individual_sound_direct_touch_enter" />
+        <ignore regexp="individual_sound_direct_touch_exit" />
+        <ignore regexp="individual_sound_wrap_forward" />
+        <ignore regexp="individual_sound_wrap_back" />
+        <ignore regexp="theme_sound_none" />
+        <ignore regexp="theme_sound_summary_no_sound" />
+        <ignore regexp="theme_sound_action_set_none" />
     </issue>
 </lint>

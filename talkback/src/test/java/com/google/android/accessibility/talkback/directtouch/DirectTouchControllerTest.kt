@@ -140,7 +140,10 @@ class DirectTouchControllerTest {
         service,
         prefs,
         Pipeline.FeedbackReturner { feedback ->
-          transcript += describe(feedback)
+          // The sounds a sound theme gives direct touch are not what these tests are about.
+          if (feedback.failovers().first().sound() == null) {
+            transcript += describe(feedback)
+          }
           true
         },
         interpreter,

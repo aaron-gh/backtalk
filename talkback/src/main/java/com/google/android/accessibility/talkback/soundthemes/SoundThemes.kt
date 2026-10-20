@@ -127,7 +127,7 @@ object SoundThemes {
   private const val TAG = "SoundThemes"
 
   /** The formats Android can play, as file extensions. */
-  val EXTENSIONS = setOf("wav", "ogg", "oga", "opus", "mp3", "flac", "m4a", "aac")
+  val EXTENSIONS = setOf("wav", "ogg", "oga", "opus", "mp3", "flac", "m4a", "aac", "mid", "midi")
 
   /** License, readme and credits files, which stay with the theme when it is shared again. */
   private val DOCUMENT = Regex("(license|licence|copying|readme|notice|authors|credits)(\\.(txt|md))?")
@@ -221,6 +221,25 @@ object SoundThemes {
   /** The key of the screen on sound, which plays only if the theme gives it a sound. */
   const val SCREEN_ON = "screen_on"
 
+  /** The keys of the rotor sounds, which play when the selected setting changes. */
+  const val ROTOR_NEXT = "rotor_next"
+  const val ROTOR_PREVIOUS = "rotor_previous"
+
+  /** The sounds that Backtalk has none of its own for, so that they play only from a theme. */
+  @JvmField
+  val THEME_ONLY: Set<String> =
+    setOf(
+      SCREEN_ON,
+      ROTOR_NEXT,
+      ROTOR_PREVIOUS,
+      "keyboard_show",
+      "keyboard_hide",
+      "direct_touch_enter",
+      "direct_touch_exit",
+      "wrap_forward",
+      "wrap_back",
+    )
+
   /** The sound files of [theme], by item key. */
   @JvmStatic
   fun soundFiles(theme: SoundTheme): Map<String, File> {
@@ -243,13 +262,13 @@ object SoundThemes {
     isNone(active(context, prefs), item)
 
   /**
-   * Whether [item] plays no sound in [theme]: it is set to "none", or it is the screen on sound,
-   * which has no sound of Backtalk's own and so plays nothing without a file.
+   * Whether [item] plays no sound in [theme]: it is set to "none", or it is a sound that has none
+   * of Backtalk's own, like screen on, and so plays nothing without a file.
    */
   @JvmStatic
   fun isNone(theme: SoundTheme, item: FeedbackItem): Boolean =
     theme.manifest.sounds[item.key] == SoundThemeManifest.NONE ||
-      (item.key == SCREEN_ON && soundFiles(theme)[item.key] == null)
+      (item.key in THEME_ONLY && soundFiles(theme)[item.key] == null)
 
   /**
    * The sounds and vibrations of the theme in use. An item with several sounds, like the circle

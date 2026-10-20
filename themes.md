@@ -118,7 +118,7 @@ Every field is optional.
 ### Sounds
 
 Name each sound file after one of these, with the extension of its format. WAV, OGG, MP3, FLAC,
-M4A, AAC and Opus all work, up to 5 MB each and 50 MB for the whole theme. A file Android can't
+M4A, AAC, Opus and MIDI all work, up to 5 MB each and 50 MB for the whole theme. A file Android can't
 play is left out when the theme is installed, and Backtalk says so.
 
 | Name | Plays for |
@@ -140,6 +140,14 @@ play is left out when the theme is installed, and Backtalk says so.
 | `formatting` | Formatted text |
 | `screen_off` | Screen off |
 | `screen_on` | Screen on (plays no sound by default in the Backtalk theme) |
+| `rotor_next` | Next setting, as when you turn the two-finger rotor clockwise (plays no sound by default in the Backtalk theme) |
+| `rotor_previous` | Previous setting, as when you turn the two-finger rotor counterclockwise (plays no sound by default in the Backtalk theme) |
+| `keyboard_show` | On-screen keyboard shown (plays no sound by default in the Backtalk theme) |
+| `keyboard_hide` | On-screen keyboard hidden (plays no sound by default in the Backtalk theme) |
+| `direct_touch_enter` | Direct touch turned on (plays no sound by default in the Backtalk theme) |
+| `direct_touch_exit` | Direct touch turned off (plays no sound by default in the Backtalk theme) |
+| `wrap_forward` | Moving forward wrapped to the first item (plays no sound by default in the Backtalk theme) |
+| `wrap_back` | Moving back wrapped to the last item (plays no sound by default in the Backtalk theme) |
 | `loading` | Loading |
 | `browse_mode_on_v4_2` | Browse mode on |
 | `browse_mode_off_v4_2` | Browse mode off |

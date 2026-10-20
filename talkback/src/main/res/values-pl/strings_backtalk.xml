@@ -209,16 +209,10 @@
   <string name="pref_direct_touch_master_summary">Przekazuj dotyk bezpośrednio do wybranych poniżej aplikacji. Backtalk ponownie przejmuje jego obsługę w oknach dialogowych, polach tekstowych, na klawiaturze i ekranach systemowych.</string>
   <string name="pref_direct_touch_speech">Odczytuj zmiany stanu dotyku bezpośredniego</string>
   <string name="pref_direct_touch_haptics">Wibruj przy zmianie stanu dotyku bezpośredniego</string>
-  <string name="pref_direct_touch_backup">Utwórz kopię zapasową ustawień</string>
-  <string name="pref_direct_touch_restore">Przywróć ustawienia</string>
   <string name="direct_touch_apps_category">Aplikacje</string>
   <string name="direct_touch_action_typing_on">Włącz pisanie bezpośrednie</string>
   <string name="direct_touch_action_typing_off">Wyłącz pisanie bezpośrednie</string>
   <string name="direct_touch_typing_summary_on">Pisanie bezpośrednie włączone</string>
-  <string name="direct_touch_backup_done">Ustawienia zapisane</string>
-  <string name="direct_touch_backup_failed">Nie udało się zapisać ustawień</string>
-  <string name="direct_touch_restore_done">Ustawienia przywrócone</string>
-  <string name="direct_touch_restore_failed">Nie udało się odczytać tego pliku</string>
   <string name="title_pref_gemini_api_key">Klucz API Gemini</string>
   <string name="summary_pref_gemini_api_key_set">Ustawiony. Funkcje „Opisz obraz” i „Opisz ekran” korzystają z Gemini</string>
   <string name="summary_pref_gemini_api_key_built_in">Korzystanie z klucza wbudowanego w aplikację</string>

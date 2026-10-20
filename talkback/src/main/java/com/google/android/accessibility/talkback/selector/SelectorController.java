@@ -1300,6 +1300,12 @@ public class SelectorController implements UserInputEventListener {
             ? settings.size() + controls.indexOf(currentControl)
             : settings.indexOf(getCurrentSetting(context, prefs));
 
+    // Only a sound theme gives this sound, so it plays nothing otherwise.
+    pipeline.returnFeedback(
+        eventId,
+        Feedback.part()
+            .setSound(Feedback.Sound.create(isNext ? R.id.rotor_next : R.id.rotor_previous)));
+
     // Change the selected setting.
     // If the current settings is not valid, the index (-1) will fall-back to 0 or settingsSize - 1
     // depending on isNext

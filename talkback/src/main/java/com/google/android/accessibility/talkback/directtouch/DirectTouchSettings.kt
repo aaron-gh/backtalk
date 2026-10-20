@@ -18,9 +18,6 @@ package com.google.android.accessibility.talkback.directtouch
 
 import android.content.SharedPreferences
 import com.google.android.accessibility.talkback.focusmanagement.LiftToActivateMode
-import org.json.JSONArray
-import org.json.JSONException
-import org.json.JSONObject
 
 /**
  * Settings for direct touch: which apps get raw touch, and how Backtalk reports changes. Apps that
@@ -39,7 +36,6 @@ object DirectTouchSettings {
   private const val PREF_APPS = "pref_direct_touch_apps"
   private const val PREF_SEEN = "pref_direct_touch_seen"
   private const val PREF_TYPING_PREFIX = "pref_direct_touch_typing_"
-  private const val BACKUP_VERSION = 1
 
   /**
    * The old "Navigation bar always direct" setting. Lift to activate on the navigation bar
@@ -113,60 +109,6 @@ object DirectTouchSettings {
     editor.apply()
   }
 
-  fun exportJson(prefs: SharedPreferences): String =
-    JSONObject()
-      .put("version", BACKUP_VERSION)
-      .put("master", isMasterEnabled(prefs))
-      .put("speech", isSpeechEnabled(prefs))
-      .put("haptics", isHapticsEnabled(prefs))
-      .put("apps", JSONArray(stringSet(prefs, PREF_APPS).sorted()))
-      .put("seen", JSONArray(stringSet(prefs, PREF_SEEN).sorted()))
-      .put("typing", JSONArray(typingPackages(prefs).sorted()))
-      .toString()
-
-  /** Replaces the settings with a backup from [exportJson]. Returns false and changes nothing if [json] is not one. */
-  fun importJson(prefs: SharedPreferences, json: String): Boolean {
-    val backup: JSONObject
-    val apps: Set<String>
-    val seen: Set<String>
-    val typing: Set<String>
-    try {
-      backup = JSONObject(json)
-      if (backup.getInt("version") != BACKUP_VERSION) {
-        return false
-      }
-      apps = strings(backup.getJSONArray("apps"))
-      seen = strings(backup.getJSONArray("seen"))
-      typing = strings(backup.getJSONArray("typing"))
-      backup.getBoolean("master")
-      backup.getBoolean("speech")
-      backup.getBoolean("haptics")
-    } catch (_: JSONException) {
-      return false
-    }
-    val editor = prefs.edit()
-    typingPackages(prefs).forEach { editor.remove(PREF_TYPING_PREFIX + it) }
-    typing.forEach { editor.putBoolean(PREF_TYPING_PREFIX + it, true) }
-    editor
-      .putBoolean(PREF_MASTER, backup.getBoolean("master"))
-      .putBoolean(PREF_SPEECH, backup.getBoolean("speech"))
-      .putBoolean(PREF_HAPTICS, backup.getBoolean("haptics"))
-      .putStringSet(PREF_APPS, apps)
-      .putStringSet(PREF_SEEN, seen)
-      .apply()
-    return true
-  }
-
   private fun stringSet(prefs: SharedPreferences, key: String): Set<String> =
     prefs.getStringSet(key, emptySet()).orEmpty().toSet()
-
-  private fun typingPackages(prefs: SharedPreferences): Set<String> =
-    prefs.all
-      .filter { (key, value) -> key.startsWith(PREF_TYPING_PREFIX) && value == true }
-      .keys
-      .map { it.removePrefix(PREF_TYPING_PREFIX) }
-      .toSet()
-
-  private fun strings(array: JSONArray): Set<String> =
-    (0 until array.length()).map { array.getString(it) }.toSet()
 }

@@ -125,6 +125,10 @@
         android:key="@string/pref_advanced_settings_key"
         android:title="@string/title_pref_advanced_settings" />
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
+        android:fragment="com.google.android.accessibility.talkback.backup.BackupRestoreFragment"
+        android:key="@string/pref_backup_restore_key"
+        android:title="@string/settings_backup_title" />
+    <com.google.android.accessibility.material.preference.AccessibilitySuitePreference
         android:key="@string/pref_tutorial_and_help_key"
         android:title="@string/title_pref_category_tutorial" />
     <com.google.android.accessibility.material.preference.AccessibilitySuitePreference

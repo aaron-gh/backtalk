@@ -28,6 +28,7 @@ class SoundThemesTest {
   fun soundsAreNamedAfterWhatTheyReplace() {
     assertEquals("focus" to "wav", SoundThemes.parseSoundName("focus.wav"))
     assertEquals("control_button" to "ogg", SoundThemes.parseSoundName("Control_Button.OGG"))
+    assertEquals("focus" to "mid", SoundThemes.parseSoundName("focus.mid"))
     assertNull(SoundThemes.parseSoundName("COPYING"))
     assertNull(SoundThemes.parseSoundName(".focus.wav"))
     assertNull(SoundThemes.parseSoundName("notes.txt"))
@@ -44,6 +45,7 @@ class SoundThemesTest {
   @Test
   fun screenOnIsAnEventSound() {
     assertTrue(SoundThemes.SOUND_KEYS.contains("screen_on"))
+    assertTrue(SoundThemes.SOUND_KEYS.containsAll(SoundThemes.THEME_ONLY))
     assertTrue(IndividualFeedbackSettings.SOUNDS.any { it.key == "screen_on" })
   }
 
