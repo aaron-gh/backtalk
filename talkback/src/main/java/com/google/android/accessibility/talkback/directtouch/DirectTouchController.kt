@@ -468,6 +468,11 @@ class DirectTouchController(
     Rect(service.getSystemService(WindowManager::class.java).currentWindowMetrics.bounds)
 
   private fun announce(on: Boolean) {
+    // Only a sound theme gives these sounds, so they play nothing otherwise.
+    feedback.returnFeedback(
+      Performance.EVENT_ID_UNTRACKED,
+      Feedback.sound(if (on) R.id.direct_touch_enter else R.id.direct_touch_exit),
+    )
     if (DirectTouchSettings.isSpeechEnabled(prefs)) {
       val text = service.getString(if (on) R.string.direct_touch_on else R.string.direct_touch_off)
       // A game is always playing audio, and speech is dropped while audio plays unless it is forced.

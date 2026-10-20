@@ -1354,6 +1354,15 @@ public class FocusProcessorForLogicalNavigation {
     if (reachEdge && navigationAction.shouldWrap && wrapAround && navigationResult.isEmpty()) {
       navigationResult =
           findTargetForWrapAround(rootNode, navigationAction, traversalStrategy, eventId);
+      if (!navigationResult.isEmpty()) {
+        // Only a sound theme gives these sounds, so they play nothing otherwise.
+        pipeline.returnFeedback(
+            eventId,
+            Feedback.sound(
+                navigationAction.searchDirection == SEARCH_FOCUS_BACKWARD
+                    ? R.id.wrap_back
+                    : R.id.wrap_forward));
+      }
       if (navigationResult.shouldSkipNavigation()) {
         if (navigationResult.isWebElement()) {
           reachEdge = false;
