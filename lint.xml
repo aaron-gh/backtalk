@@ -86,5 +86,11 @@
         <ignore regexp="new_theme_exists" />
         <ignore regexp="new_theme_needs_name" />
         <ignore regexp="sound_theme_customisation" />
+        <ignore regexp="title_pref_sound_theme_install_source" />
+        <ignore regexp="summary_pref_sound_theme_install_source" />
+        <ignore regexp="sound_theme_sources" />
+        <ignore regexp="sound_theme_source_empty" />
+        <ignore regexp="sound_theme_source_failed" />
+        <ignore regexp="sound_theme_source_remove_message" />
     </issue>
 </lint>

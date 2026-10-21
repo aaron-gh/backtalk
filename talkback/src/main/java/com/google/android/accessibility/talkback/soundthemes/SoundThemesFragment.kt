@@ -142,6 +142,17 @@ class SoundThemesFragment : TalkbackBaseFragment() {
         askForLink()
       }
     )
+    SoundThemeSourcesScreen.screen?.let { sources ->
+      install.addPreference(
+        action(
+          context,
+          getString(R.string.title_pref_sound_theme_install_source),
+          getString(R.string.summary_pref_sound_theme_install_source),
+        ) {
+          SoundThemeActions.open(this, sources)
+        }
+      )
+    }
   }
 
   /** Asks for the details of a new theme, then opens its sounds with the theme in use. */
