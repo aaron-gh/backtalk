@@ -2525,7 +2525,7 @@ public class TalkBackService extends AccessibilityServiceCompat
     compositor.setSpeaker(pipeline.getSpeaker());
 
     TouchExplorationInterpreter touchExplorationInterpreter =
-        new TouchExplorationInterpreter(inputModeTracker);
+        new TouchExplorationInterpreter(inputModeTracker, this);
 
     if (FeatureSupport.supportMagnificationController()) {
       processorMagnification =
