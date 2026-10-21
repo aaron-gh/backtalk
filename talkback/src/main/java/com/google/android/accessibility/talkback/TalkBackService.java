@@ -178,6 +178,7 @@ import com.google.android.accessibility.talkback.focusmanagement.AccessibilityFo
 import com.google.android.accessibility.talkback.focusmanagement.FocusFeedbackMapper;
 import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForLogicalNavigation;
 import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForScreenStateChange;
+import com.google.android.accessibility.talkback.focusmanagement.HomeScreenPages;
 import com.google.android.accessibility.talkback.focusmanagement.ScreenFocusRestorer;
 import com.google.android.accessibility.talkback.focusmanagement.TraversalTreeCache;
 import com.google.android.accessibility.talkback.focusmanagement.interpreter.ScreenStateMonitor;
@@ -1153,6 +1154,14 @@ public class TalkBackService extends AccessibilityServiceCompat
       screenFocusRestorer.onAccessibilityEvent(event);
     }
     int eventType = event.getEventType();
+    // Some launchers, such as Hyperion, don't report that their home screen is shown again after
+    // the apps list, so Android's copy of its nodes keeps them hidden, and only the dock can be
+    // reached until the copy is cleared.
+    if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+        && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        && HomeScreenPages.isHomePackage(this, event.getPackageName())) {
+      clearCache();
+    }
     TraversalTreeCache.onAccessibilityEvent(event);
     PreparedFocusSpeech.onAccessibilityEvent(event);
     if (directTouchController != null) {
