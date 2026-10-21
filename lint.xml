@@ -86,5 +86,7 @@
         <ignore regexp="new_theme_exists" />
         <ignore regexp="new_theme_needs_name" />
         <ignore regexp="sound_theme_customisation" />
+        <ignore regexp="shortcut_scroll_to_top" />
+        <ignore regexp="shortcut_scroll_to_bottom" />
     </issue>
 </lint>
