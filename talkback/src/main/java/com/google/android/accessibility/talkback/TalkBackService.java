@@ -79,6 +79,8 @@ import android.media.AudioManager;
 import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
@@ -750,6 +752,13 @@ public class TalkBackService extends AccessibilityServiceCompat
   /** Keeps track of whether we need to run the locked-boot-completed callback when connected. */
   private boolean lockedBootCompletedPending;
 
+  // Whether onUnlockedBootCompleted() has run, since both checkUnlockedBoot() and BOOT_COMPLETED
+  // call it.
+  private boolean unlockedBootCompleted;
+
+  private final Handler unlockedBootHandler = new Handler(Looper.getMainLooper());
+  private final Runnable checkUnlockedBoot = this::checkUnlockedBoot;
+
   private final InputModeTracker inputModeTracker = new InputModeTracker();
   private WindowEventInterpreter windowEventInterpreter;
   private ScreenFeedbackManager processorScreen;
@@ -840,9 +849,6 @@ public class TalkBackService extends AccessibilityServiceCompat
 
   @Override
   public void onCreate() {
-    if (BuildConfig.DEBUG) {
-      MainThreadStallLogger.install();
-    }
     bootReceiver = new BootReceiver();
     ContextCompat.registerReceiver(this, bootReceiver, BootReceiver.getFilter(), RECEIVER_EXPORTED);
     super.onCreate();
@@ -944,6 +950,7 @@ public class TalkBackService extends AccessibilityServiceCompat
 
   @Override
   public void onDestroy() {
+    unlockedBootHandler.removeCallbacks(checkUnlockedBoot);
     if (userInterface != null) {
       userInterface.unregisterAllListeners();
     }
@@ -963,6 +970,10 @@ public class TalkBackService extends AccessibilityServiceCompat
 
     if (pauseController != null) {
       pauseController.shutdown();
+    }
+
+    if (gestureController != null) {
+      gestureController.shutdown();
     }
 
     if (directTouchController != null) {
@@ -1119,6 +1130,10 @@ public class TalkBackService extends AccessibilityServiceCompat
     if (eventType == AccessibilityEvent.TYPE_TOUCH_INTERACTION_START
         || eventType == AccessibilityEvent.TYPE_TOUCH_INTERACTION_END) {
       RecentUserInput.mark();
+    }
+    if (eventType == AccessibilityEvent.TYPE_TOUCH_INTERACTION_START
+        && gestureController != null) {
+      gestureController.onUserInputStarted();
     }
     if (eventType == AccessibilityEvent.TYPE_TOUCH_INTERACTION_START) {
       // TODO: Could move the logic of TOUCH_INTERACTION related event handling out of
@@ -1345,6 +1360,9 @@ public class TalkBackService extends AccessibilityServiceCompat
   protected boolean onKeyEventInternal(KeyEvent keyEvent) {
     if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
       RecentUserInput.mark();
+      if (gestureController != null) {
+        gestureController.onUserInputStarted();
+      }
     }
     if (pauseController != null) {
       // While paused, keys pass to apps except the ones that resume Backtalk.
@@ -3828,12 +3846,14 @@ public class TalkBackService extends AccessibilityServiceCompat
         SharedPreferencesUtils.getIntFromStringPref(
             prefs, getResources(), R.string.pref_log_level_key, R.string.pref_log_level_default));
     enforceDiagnosisModeLogging();
+    MainThreadStallLogger.setEnabled(LogUtils.shouldLog(Log.DEBUG));
   }
 
   private void enforceDiagnosisModeLogging() {
     if ((LogUtils.getLogLevel() != Log.VERBOSE)
         && PreferencesActivityUtils.isDiagnosisModeOn(prefs, getResources())) {
       LogUtils.setLogLevel(Log.VERBOSE);
+      MainThreadStallLogger.setEnabled(true);
     }
   }
 
@@ -4157,9 +4177,31 @@ public class TalkBackService extends AccessibilityServiceCompat
     // engine list when TalkBack initialized during system boot, so we want the change to be
     // invisible to the user.
     pipeline.onBoot(/* quiet= */ true);
+    checkUnlockedBoot();
+  }
+
+  /**
+   * Runs onUnlockedBootCompleted() as soon as the user is unlocked. BOOT_COMPLETED comes after the
+   * rest of the boot's broadcasts, many seconds later on a slow device, and until then Backtalk
+   * speaks with the engine it could use while locked instead of the user's own.
+   */
+  private void checkUnlockedBoot() {
+    if (unlockedBootCompleted) {
+      return;
+    }
+    if (UserManagerCompat.isUserUnlocked(this)) {
+      onUnlockedBootCompleted();
+    } else {
+      unlockedBootHandler.postDelayed(checkUnlockedBoot, 1000);
+    }
   }
 
   public void onUnlockedBootCompleted() {
+    if (unlockedBootCompleted) {
+      return;
+    }
+    unlockedBootCompleted = true;
+    unlockedBootHandler.removeCallbacks(checkUnlockedBoot);
     // Update TTS and allow announcement.
     // If the TTS changes here, it is probably a non-FBE TTS that is available after the user
     // unlocks their phone. In this case, the user heard Google TTS at the lock screen, so we
