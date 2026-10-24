@@ -102,5 +102,38 @@
         <ignore regexp="ai_service_error_with_code" />
         <ignore regexp="ai_service_error_with_details" />
         <ignore regexp="summary_pref_gemini_api_key_other_service" />
+        <ignore regexp="title_pref_touch_stops_speech" />
+        <ignore regexp="title_pref_selector_links_controls_web_only" />
+        <ignore regexp="shortcut_scroll_to_top" />
+        <ignore regexp="shortcut_scroll_to_bottom" />
+        <ignore regexp="title_pref_notification_list" />
+        <ignore regexp="title_pref_notification_parts" />
+        <ignore regexp="notification_part_title" />
+        <ignore regexp="notification_part_text" />
+        <ignore regexp="notification_part_app" />
+        <ignore regexp="notification_part_time" />
+        <ignore regexp="notification_part_playback" />
+        <ignore regexp="notification_list_title" />
+        <ignore regexp="notification_list_empty" />
+        <ignore regexp="notification_list_no_access" />
+        <ignore regexp="notification_list_grant_access" />
+        <ignore regexp="notification_list_quick_settings" />
+        <ignore regexp="notification_list_dismiss" />
+        <ignore regexp="notification_list_clear_all" />
+        <ignore regexp="notification_list_send" />
+        <ignore regexp="notification_list_playing" />
+        <ignore regexp="notification_list_paused" />
+        <ignore regexp="notification_list_play" />
+        <ignore regexp="notification_list_pause" />
+        <ignore regexp="notification_list_previous" />
+        <ignore regexp="notification_list_next" />
+        <ignore regexp="notification_list_group_count" />
+        <ignore regexp="shortcut_system_notifications" />
     </issue>
+    <!--
+      R8 minifies the published builds, but their resources aren't shrunk, since the compositor,
+      sound themes and other code look resources up by name. Lint's quick fix for this check
+      also crashes the report (it looks for minifyEnabled in settings.gradle), failing the build.
+    -->
+    <issue id="NotShrinkingResources" severity="ignore" />
 </lint>

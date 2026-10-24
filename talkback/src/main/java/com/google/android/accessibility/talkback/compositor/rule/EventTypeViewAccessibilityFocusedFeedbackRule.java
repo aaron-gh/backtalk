@@ -364,7 +364,7 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
       logString.append(String.format("\n    windowTransition={%s}", windowTransition));
     }
 
-    LogUtils.v(TAG, "viewAccessibilityFocusedDescription: %s", logString.toString());
+    LogUtils.v(TAG, "viewAccessibilityFocusedDescription: %s", logString);
 
     return CompositorUtils.joinCharSequences(
         outputJoinList, CompositorUtils.getSeparator(), PRUNE_EMPTY);
@@ -423,7 +423,7 @@ public final class EventTypeViewAccessibilityFocusedFeedbackRule {
       windowTransitionState = "";
     }
 
-    LogUtils.v(TAG, "windowTransitionState: %s", logString.toString());
+    LogUtils.v(TAG, "windowTransitionState: %s", logString);
     return windowTransitionState;
   }
 
