@@ -1652,4 +1652,14 @@
   <string name="permission_braille_display_label">запрашивать разрешение на работу в качестве дисплея Брайля для Backtalk</string>
   <string name="permission_braille_display_description">Позволяет приложению запрашивать разрешение на работу в качестве дисплея Брайля для Backtalk. Если вы предоставите разрешение в Backtalk, приложение сможет читать всё содержимое экрана и управлять устройством. Backtalk сначала запросит ваше согласие.</string>
   <string name="title_clear_selection">Снять выделение</string>
+
+  <string name="title_pref_category_apps">Приложения</string>
+  <string name="title_pref_touch_activation">Касания и активация</string>
+  <string name="title_pref_navigation">Навигация</string>
+  <string name="action_copy_command">Скопировать команду</string>
+  <string name="command_copied">Команда скопирована</string>
+  <string name="title_pref_focus_new_windows">Перемещать фокус в новые окна</string>
+  <string name="title_pref_volume_keys_adjust_sliders">Изменять значения ползунков кнопками громкости</string>
+  <string name="summary_pref_volume_keys_adjust_sliders">Когда фокус находится на ползунке, кнопки увеличения и уменьшения громкости изменяют его значение вместо громкости</string>
+  <string name="title_pref_first_item_interrupts_window_name">Озвучивать первый элемент, не дожидаясь окончания озвучивания названия окна</string>
 </resources>

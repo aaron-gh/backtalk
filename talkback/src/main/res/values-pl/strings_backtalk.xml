@@ -209,16 +209,10 @@
   <string name="pref_direct_touch_master_summary">Przekazuj dotyk bezpośrednio do wybranych poniżej aplikacji. Backtalk ponownie przejmuje jego obsługę w oknach dialogowych, polach tekstowych, na klawiaturze i ekranach systemowych.</string>
   <string name="pref_direct_touch_speech">Odczytuj zmiany stanu dotyku bezpośredniego</string>
   <string name="pref_direct_touch_haptics">Wibruj przy zmianie stanu dotyku bezpośredniego</string>
-  <string name="pref_direct_touch_backup">Utwórz kopię zapasową ustawień</string>
-  <string name="pref_direct_touch_restore">Przywróć ustawienia</string>
   <string name="direct_touch_apps_category">Aplikacje</string>
   <string name="direct_touch_action_typing_on">Włącz pisanie bezpośrednie</string>
   <string name="direct_touch_action_typing_off">Wyłącz pisanie bezpośrednie</string>
   <string name="direct_touch_typing_summary_on">Pisanie bezpośrednie włączone</string>
-  <string name="direct_touch_backup_done">Ustawienia zapisane</string>
-  <string name="direct_touch_backup_failed">Nie udało się zapisać ustawień</string>
-  <string name="direct_touch_restore_done">Ustawienia przywrócone</string>
-  <string name="direct_touch_restore_failed">Nie udało się odczytać tego pliku</string>
   <string name="title_pref_gemini_api_key">Klucz API Gemini</string>
   <string name="summary_pref_gemini_api_key_set">Ustawiony. Funkcje „Opisz obraz” i „Opisz ekran” korzystają z Gemini</string>
   <string name="summary_pref_gemini_api_key_built_in">Korzystanie z klucza wbudowanego w aplikację</string>
@@ -417,10 +411,7 @@
   <string name="script_log_copy">Kopiuj dziennik</string>
   <string name="script_log_copied">Dziennik skopiowany</string>
   <string xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" name="script_log_entry"><xliff:g id="time">%1$s</xliff:g>, <xliff:g id="level">%2$s</xliff:g></string>
-  <string xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" name="script_api_too_old">Wymaga API skryptów w wersji <xliff:g id="needed">%1$d</xliff:g> lub nowszej. Ta wersja Backtalka udostępnia API <xliff:g id="current">%2$d</xliff:g>, więc niektóre funkcje mogą nie działać.</string>
-  <string xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" name="script_api_untested">Przetestowano z API skryptów do wersji <xliff:g id="tested">%1$d</xliff:g>. Ta wersja Backtalka udostępnia API <xliff:g id="current">%2$d</xliff:g>, więc skrypt może nie działać zgodnie z oczekiwaniami.</string>
   <string name="script_state_incompatible">Może nie działać z tą wersją Backtalka</string>
-  <string xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" name="script_api_range">API skryptów: wersje od <xliff:g id="min">%1$d</xliff:g> do <xliff:g id="tested">%2$d</xliff:g></string>
   <string name="script_compatibility_title">Zgodność</string>
   <string name="script_install_anyway">Zainstaluj mimo to</string>
   <string name="script_update_anyway">Zaktualizuj mimo to</string>
@@ -486,7 +477,6 @@
   </plurals>
   <string name="sound_theme_control_sounds_on">Włącza dźwięki i wibracje kontrolek.</string>
   <string name="sound_theme_control_sounds_off">Wyłącza dźwięki i wibracje kontrolek.</string>
-  <string name="sound_theme_use">Użyj tego tematu</string>
   <string name="sound_theme_about">Informacje o temacie</string>
   <string name="sound_theme_export">Zapisz jako plik tematu</string>
   <string name="sound_theme_remove">Usuń</string>
@@ -593,4 +583,107 @@
   <string xmlns:tools="http://schemas.android.com/tools" name="alternate_help" tools:ignore="HardCodedNumber">Możesz też otworzyć stronę https://support.google.com/accessibility/android/answer/6283677?hl=pl</string>
   <string name="title_pref_mute_speech_while_recording">Wyłączaj mowę podczas nagrywania</string>
   <string name="summary_pref_mute_speech_while_recording">Gdy aplikacja rozpocznie nagrywanie bez podłączonych słuchawek, mowa zostanie wyłączona, aby nie trafiła do nagrania. Włączy się ponownie po jego zakończeniu. Możesz przywrócić ją wcześniej gestem włączania lub wyłączania mowy.</string>
+  <string name="title_selector_switch_tts_engine">Syntezator mowy</string>
+  <string name="summary_selector_switch_tts_engine">Przełączaj między zainstalowanymi syntezatorami mowy</string>
+  <string name="speech_engine_unavailable_with_profile">Zmiana syntezatora mowy jest niedostępna podczas korzystania z profilu głosowego</string>
+  <string name="battery_optimization_notification_title">Optymalizacja baterii może zatrzymać Backtalka</string>
+  <string name="battery_optimization_notification_text">Na tym telefonie oszczędzanie baterii może zatrzymać Backtalka po wyłączeniu ekranu. Czytnik przestanie wtedy mówić do czasu ponownego uruchomienia. Kliknij, aby otworzyć optymalizację baterii. Wybierz „Wszystkie aplikacje”, znajdź Backtalk i wybierz „Nie optymalizuj”.</string>
+  <string name="title_pref_category_apps">Aplikacje</string>
+  <string name="title_pref_touch_activation">Dotyk i aktywowanie</string>
+  <string name="title_pref_navigation">Nawigacja</string>
+  <string name="action_copy_command">Skopiuj polecenie</string>
+  <string name="command_copied">Skopiowano polecenie</string>
+  <string name="permission_braille_display_label">zgłaszanie prośby o działanie jako monitor brajlowski Backtalka</string>
+  <string name="permission_braille_display_description">Umożliwia aplikacji zgłoszenie prośby o działanie jako monitor brajlowski Backtalka. Jeśli udzielisz jej zgody w Backtalku, będzie mogła odczytywać całą zawartość ekranu i sterować urządzeniem. Backtalk najpierw poprosi Cię o zgodę.</string>
+  <string name="title_pref_phonetic_letters_mode">Odczytuj litery z przykładami</string>
+  <string name="phonetic_letters_mode_off">Wyłączone</string>
+  <string name="phonetic_letters_mode_after_letter_delay">Po literze, z opóźnieniem, np. „h, Henryk”</string>
+  <string name="phonetic_letters_mode_after_letter_no_delay">Po literze, bez opóźnienia, np. „h Henryk”</string>
+  <string name="phonetic_letters_mode_instead_of_letter">Zamiast litery, np. „Henryk”</string>
+  <string name="title_pref_notification_list">Używaj listy powiadomień Backtalka</string>
+  <string name="title_pref_notification_parts">Szczegóły powiadomień</string>
+  <string name="notification_part_title">Tytuł</string>
+  <string name="notification_part_text">Treść</string>
+  <string name="notification_part_app">Nazwa aplikacji</string>
+  <string name="notification_part_time">Godzina</string>
+  <string name="notification_part_playback">Stan odtwarzania</string>
+  <string name="notification_list_title">Powiadomienia</string>
+  <string name="notification_list_empty">Brak powiadomień</string>
+  <string name="notification_list_no_access">Dostęp do powiadomień jest wyłączony</string>
+  <string name="notification_list_grant_access">Włącz dostęp do powiadomień</string>
+  <string name="notification_list_quick_settings">Szybkie ustawienia</string>
+  <string name="notification_list_dismiss">Usuń</string>
+  <string name="notification_list_clear_all">Usuń wszystkie</string>
+  <string name="notification_list_send">Wyślij</string>
+  <string name="notification_list_playing">Odtwarzanie</string>
+  <string name="notification_list_paused">Wstrzymano</string>
+  <string name="notification_list_play">Odtwórz</string>
+  <string name="notification_list_pause">Wstrzymaj</string>
+  <string name="notification_list_previous">Poprzedni</string>
+  <string name="notification_list_next">Następny</string>
+  <plurals name="notification_list_group_count">
+    <item quantity="one">%d powiadomienie</item>
+    <item quantity="few">%d powiadomienia</item>
+    <item quantity="many">%d powiadomień</item>
+    <item quantity="other">%d powiadomienia</item>
+  </plurals>
+  <string name="shortcut_scroll_to_top">Przewiń na początek</string>
+  <string name="shortcut_scroll_to_bottom">Przewiń na koniec</string>
+  <string name="shortcut_system_notifications">Systemowy panel powiadomień</string>
+  <string name="title_clear_selection">Usuń zaznaczenie</string>
+  <string name="title_pref_focus_new_windows">Przenoś fokus do nowych okien</string>
+  <string name="title_pref_volume_keys_adjust_sliders">Reguluj suwaki przyciskami głośności</string>
+  <string name="summary_pref_volume_keys_adjust_sliders">Gdy suwak ma fokus, przyciski głośności zmieniają jego wartość zamiast poziomu głośności</string>
+  <string name="title_pref_first_item_interrupts_window_name">Odczytuj pierwszy element bez czekania na nazwę okna</string>
+  <string name="individual_sound_screen_on">Ekran włączony</string>
+  <string name="individual_sound_rotor_next">Pokrętło: następne ustawienie</string>
+  <string name="individual_sound_rotor_previous">Pokrętło: poprzednie ustawienie</string>
+  <string name="individual_sound_keyboard_show">Wyświetlenie klawiatury</string>
+  <string name="individual_sound_keyboard_hide">Ukrycie klawiatury</string>
+  <string name="individual_sound_direct_touch_enter">Dotyk bezpośredni włączony</string>
+  <string name="individual_sound_direct_touch_exit">Dotyk bezpośredni wyłączony</string>
+  <string name="individual_sound_wrap_forward">Zawinięcie na początek</string>
+  <string name="individual_sound_wrap_back">Zawinięcie na koniec</string>
+  <string name="script_sources">Źródła skryptów</string>
+  <string name="script_sources_none">Nie dodano źródeł</string>
+  <string name="script_source_add">Dodaj źródło</string>
+  <string name="script_source_add_button">Dodaj</string>
+  <string name="script_source_hint">github.com/uzytkownik/repozytorium</string>
+  <string name="script_source_invalid">To nie jest adres repozytorium w serwisie GitHub, GitLab, Codeberg, Gitea ani Bitbucket.</string>
+  <string name="script_source_exists">To źródło jest już dodane.</string>
+  <string name="script_source_loading">Ładowanie</string>
+  <string name="script_source_empty">Brak skryptów w tym źródle</string>
+  <string name="script_source_failed">Nie udało się wczytać skryptów. <xliff:g id="reason">%1$s</xliff:g></string>
+  <string name="script_source_retry">Spróbuj ponownie</string>
+  <string name="script_source_downloading">Pobieranie <xliff:g id="name">%1$s</xliff:g></string>
+  <string name="script_source_remove">Usuń źródło</string>
+  <string name="script_source_remove_title">Usunąć <xliff:g id="name">%1$s</xliff:g>?</string>
+  <string name="script_source_remove_message">Zainstalowane z niego skrypty pozostaną w aplikacji.</string>
+  <string name="settings_backup_title">Kopia zapasowa i przywracanie</string>
+  <string name="settings_backup_export">Eksportuj ustawienia</string>
+  <string name="settings_backup_export_summary">Zapisz wszystkie ustawienia do pliku.</string>
+  <string name="settings_backup_import">Importuj ustawienia</string>
+  <string name="settings_backup_import_summary">Zastąp bieżące ustawienia ustawieniami z wyeksportowanego pliku. Ustawienia powiązane z tym telefonem, np. sparowane monitory brajlowskie i klucz API Gemini, pozostaną bez zmian.</string>
+  <string name="settings_backup_export_done">Ustawienia wyeksportowane</string>
+  <string name="settings_backup_export_failed">Nie udało się wyeksportować ustawień</string>
+  <string name="settings_backup_import_done">Ustawienia zaimportowane</string>
+  <string name="settings_backup_import_restart">Aby część zaimportowanych ustawień zaczęła działać, wyłącz Backtalka i włącz go ponownie.</string>
+  <string name="settings_backup_import_failed">Nie udało się odczytać tego pliku</string>
+  <string name="theme_sound_none">Brak dźwięku</string>
+  <string name="theme_sound_summary_no_sound">Brak dźwięku</string>
+  <string name="theme_sound_action_set_none">Wyłącz dźwięk</string>
+  <string name="title_pref_sound_scheme">Temat dźwiękowy</string>
+  <string name="title_pref_manage_sound_themes">Zarządzaj tematami dźwiękowymi</string>
+  <string name="summary_pref_manage_sound_themes">Twórz, instaluj, eksportuj i usuwaj tematy dźwiękowe oraz zmieniaj ich ustawienia i dźwięki.</string>
+  <string name="title_pref_new_sound_theme">Nowy temat</string>
+  <string name="summary_pref_new_sound_theme">Utwórz własny temat i wybierz jego dźwięki, odsłuchując je podczas ustawiania.</string>
+  <string name="new_theme_title">Nowy temat dźwiękowy</string>
+  <string name="new_theme_name_hint">Nazwa</string>
+  <string name="new_theme_description_hint">Opis</string>
+  <string name="new_theme_author_hint">Autor</string>
+  <string name="new_theme_control_sounds">Obsługa dźwięków kontrolek</string>
+  <string name="new_theme_create">Utwórz</string>
+  <string name="new_theme_exists">Temat o tej nazwie już istnieje.</string>
+  <string name="new_theme_needs_name">Wpisz nazwę.</string>
+  <string name="sound_theme_customisation">Dostosowywanie dźwięków</string>
 </resources>

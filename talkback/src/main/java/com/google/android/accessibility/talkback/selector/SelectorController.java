@@ -1300,6 +1300,12 @@ public class SelectorController implements UserInputEventListener {
             ? settings.size() + controls.indexOf(currentControl)
             : settings.indexOf(getCurrentSetting(context, prefs));
 
+    // Only a sound theme gives this sound, so it plays nothing otherwise.
+    pipeline.returnFeedback(
+        eventId,
+        Feedback.part()
+            .setSound(Feedback.Sound.create(isNext ? R.id.rotor_next : R.id.rotor_previous)));
+
     // Change the selected setting.
     // If the current settings is not valid, the index (-1) will fall-back to 0 or settingsSize - 1
     // depending on isNext
@@ -1491,6 +1497,17 @@ public class SelectorController implements UserInputEventListener {
         // we mask off the LINE granularity temporarily.
         return FeatureSupport.supportInputConnectionByA11yService()
             || !actorState.getDirectionNavigation().isSelectionModeActive();
+      }
+      case GRANULARITY_LINKS, GRANULARITY_CONTROLS -> {
+        if (!prefs.getBoolean(
+            context.getString(R.string.pref_selector_links_controls_web_only_key),
+            context.getResources().getBoolean(R.bool.pref_selector_links_controls_web_only_default))) {
+          return true;
+        }
+        if (node == null) {
+          node = accessibilityFocusMonitor.getAccessibilityFocus(/* useInputFocusIfEmpty= */ false);
+        }
+        return WebInterfaceUtils.hasNavigableWebContent(node);
       }
       case GRANULARITY_ROW_COLUMN -> {
         return FeatureFlagReader.enableRowAndColumnOneGranularity(context)

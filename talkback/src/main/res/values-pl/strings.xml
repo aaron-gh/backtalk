@@ -41,7 +41,7 @@
   <string name="summary_pref_verbose_scroll_announcement">Odczytuj liczbę elementów niezależnie od metody przewijania</string>
   <string name="title_pref_cover_proximity_sensor">Zakryj czujnik zbliżeniowy, by zatrzymać wypowiedź</string>
   <string name="title_pref_phonetic_letters">Odczytuj litery z przykładami</string>
-  <string name="summary_pref_phonetic_letters">Podczas wybierania przycisków klawiatury ekranowej lub przechodzenia po poszczególnych znakach usłyszysz każdą literę wraz z przykładem, np. „h – hotel”.</string>
+  <string name="summary_pref_phonetic_letters">Podczas wybierania przycisków klawiatury ekranowej lub przechodzenia po poszczególnych znakach usłyszysz każdą literę wraz z przykładem, np. „h – Henryk”.</string>
   <string name="title_pref_punctuation">Odczytuj znaki interpunkcyjne i symbole</string>
   <string name="punctuation_all">Wszystkie</string>
   <string name="punctuation_most">Większość</string>
@@ -1036,7 +1036,7 @@ Wybranie opóźnienia poniżej 0,3 sekundy spowoduje zmianę sposobu aktywowani
   <string name="tutorial_link">Ustawienia Backtalka &gt; Samouczek Backtalka</string>
   <string name="tutorial_link_tts">Ustawienia Backtalka, a następnie Samouczek Backtalka</string>
   <string name="tutorial_entry_point_title">Samouczek</string>
-  <string name="welcome_to_talkback_title">Witamy w Backtalku</string>
+  <string name="welcome_to_talkback_title">Witamy w Backtalk</string>
   <string name="talkback_is_on">Funkcja Backtalk jest włączona</string>
   <string name="talkback_turn_off_description">Backtalk odczytuje na głos treści z ekranu i zmienia sposób działania nawigacji na urządzeniu. Aby wyłączyć tę funkcję, 2 razy kliknij „Wyłącz Backtalka”.</string>
   <string name="turn_off_talkback">Wyłącz Backtalka</string>
@@ -1107,7 +1107,7 @@ Wybranie opóźnienia poniżej 0,3 sekundy spowoduje zmianę sposobu aktywowani
   <string name="change_typing_preference_text">Zmień ustawienia pisania</string>
   <string name="moving_cursor_title">Przenoszenie kursora</string>
   <string name="moving_cursor_text">Po aktywowaniu pola tekstowego możesz przenosić kursor między literami, przesuwając palcem w górę lub w dół.\n\nSpróbuj zrobić to teraz w polu tekstowym poniżej.</string>
-  <string name="edit_box_text">Witamy w Backtalku</string>
+  <string name="edit_box_text">Witamy w Backtalk</string>
   <string name="selecting_text_title">Zaznaczanie tekstu</string>
   <string name="selecting_text_text">W polu tekstowym przesuń kursor na początek tekstu, który chcesz zaznaczyć.\n\nKliknij dwukrotnie i przytrzymaj 2 palcami, aby uruchomić tryb zaznaczania. Następnie przenieś kursor na koniec tekstu. Ponownie kliknij dwukrotnie i przytrzymaj 2 palcami, by zamknąć tryb zaznaczania.\n\nW polu tekstowym poniżej spróbuj zaznaczyć słowo „Witamy”.</string>
   <string name="selecting_text_text_pre_r">W polu tekstowym przenieś kursor na początek tekstu, który chcesz zaznaczyć.\n\nPrzesuń palcem w dół, a następnie w prawo, aby otworzyć menu Backtalka. Kliknij dwukrotnie „Czynności”, a następnie uruchom tryb zaznaczania. Przesuń kursor na koniec tekstu.\n\nPonownie otwórz menu Backtalka i kliknij dwukrotnie „Czynności”, aby zakończyć tryb zaznaczania.\n\nW polu tekstowym poniżej spróbuj zaznaczyć słowo „Witamy”.</string>

@@ -18,6 +18,7 @@ package com.google.android.accessibility.talkback.scripting
 
 import android.content.Context
 import androidx.annotation.StringRes
+import com.google.android.accessibility.talkback.BuildConfig
 import com.google.android.accessibility.talkback.R
 
 enum class ScriptPermission(val key: String, val sensitive: Boolean, @StringRes val text: Int) {
@@ -207,12 +208,6 @@ data class ScriptCommand(
         )
 }
 
-enum class ApiCompatibility {
-  COMPATIBLE,
-  BACKTALK_TOO_OLD,
-  UNTESTED,
-}
-
 data class ScriptManifest(
   val id: String,
   val name: String,
@@ -220,26 +215,24 @@ data class ScriptManifest(
   val description: String?,
   val author: String,
   val homepage: String?,
-  val minApiVersion: Int,
-  val testedApiVersion: Int,
+  /** The oldest Backtalk build the script works with, or null if it works with any. */
+  val minBuild: Int?,
   val apps: List<AppMatcher>,
   val permissions: Set<ScriptPermission>,
   val settings: List<ScriptSetting>,
   val rules: List<ScriptRule>,
   val commands: List<ScriptCommand>,
   val navigation: List<ScriptNavigation>,
+  /** What this Backtalk left out, since it doesn't know these fields. See [ManifestParser]. */
+  val unsupported: List<String> = emptyList(),
   val json: String,
 ) {
   val isGlobal: Boolean
     get() = apps.isEmpty()
 
-  val compatibility: ApiCompatibility
-    get() =
-      when {
-        API_VERSION < minApiVersion -> ApiCompatibility.BACKTALK_TOO_OLD
-        API_VERSION > testedApiVersion -> ApiCompatibility.UNTESTED
-        else -> ApiCompatibility.COMPATIBLE
-      }
+  /** Whether all of the script works with this Backtalk. */
+  val isCompatible: Boolean
+    get() = (minBuild ?: 0) <= BUILD && unsupported.isEmpty()
 
   fun translated(text: (String) -> String): ScriptManifest =
     copy(
@@ -273,16 +266,26 @@ data class ScriptManifest(
   fun runsIn(packageName: String?): Boolean = isGlobal || apps.any { it.packageName == packageName }
 
   fun compatibilityWarning(context: Context): String? =
-    when (compatibility) {
-      ApiCompatibility.COMPATIBLE -> null
-      ApiCompatibility.BACKTALK_TOO_OLD ->
-        context.getString(R.string.script_api_too_old, minApiVersion, API_VERSION)
-      ApiCompatibility.UNTESTED ->
-        context.getString(R.string.script_api_untested, testedApiVersion, API_VERSION)
-    }
+    listOfNotNull(
+        minBuild
+          ?.takeIf { it > BUILD }
+          ?.let { context.getString(R.string.script_needs_build, it, BUILD) },
+        unsupported
+          .takeIf { it.isNotEmpty() }
+          ?.let { context.getString(R.string.script_unsupported, it.joinToString()) },
+      )
+      .joinToString("\n")
+      .ifEmpty { null }
 
   companion object {
-    const val API_VERSION = 5
+    /** This Backtalk's build number, which [minBuild] is compared with. */
+    @JvmField val BUILD = BuildConfig.COMMIT_COUNT
+
+    /**
+     * What backtalk.apiVersion has said since script API versions were replaced by [minBuild], so
+     * that scripts that check it keep working.
+     */
+    const val LEGACY_API_VERSION = 4
 
     fun parse(json: String, strict: Boolean = true): ScriptManifest =
       ManifestParser(strict).parse(json)
