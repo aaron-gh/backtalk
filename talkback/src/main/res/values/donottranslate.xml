@@ -22,6 +22,8 @@
     <string name="pref_check_for_updates_key" translatable="false">pref_check_for_updates</string>
     <string name="pref_auto_update_check_key" translatable="false">pref_auto_update_check</string>
     <string name="pref_show_exit_watermark_key">pref_show_exit_watermark</string>
+    <string name="pref_notification_list_key">pref_notification_list</string>
+    <string name="pref_notification_parts_key">pref_notification_parts</string>
     <string name="pref_speech_rate_key">pref_rate_volume</string>
     <string name="pref_speech_rate_seekbar_key_int">pref_speech_rate_seekbar_key_int</string>
     <string name="pref_speech_pitch_key">pref_pitch_volume</string>
@@ -1055,6 +1057,8 @@
         <item>@string/shortcut_next_window</item>
         <item>@string/shortcut_scroll_back</item>
         <item>@string/shortcut_scroll_forward</item>
+        <item>@string/shortcut_scroll_to_top</item>
+        <item>@string/shortcut_scroll_to_bottom</item>
     </string-array>
 
     <!-- Shortcut preference value of basic navigation -->
@@ -1071,6 +1075,8 @@
         <item>@string/shortcut_value_next_window</item>
         <item>@string/shortcut_value_scroll_back</item>
         <item>@string/shortcut_value_scroll_forward</item>
+        <item>@string/shortcut_value_scroll_to_top</item>
+        <item>@string/shortcut_value_scroll_to_bottom</item>
     </string-array>
 
     <!-- Shortcut preference of system actions -->
@@ -1079,6 +1085,7 @@
         <item>@string/shortcut_back</item>
         <item>@string/shortcut_overview</item>
         <item>@string/shortcut_notifications</item>
+        <item>@string/shortcut_system_notifications</item>
         <item>@string/shortcut_quick_settings</item>
     </string-array>
 
@@ -1088,6 +1095,7 @@
         <item>@string/shortcut_value_back</item>
         <item>@string/shortcut_value_overview</item>
         <item>@string/shortcut_value_notifications</item>
+        <item>@string/shortcut_value_system_notifications</item>
         <item>@string/shortcut_value_quick_settings</item>
     </string-array>
 
@@ -1182,6 +1190,8 @@
   <string name="shortcut_value_next_window">NEXT_WINDOW</string>
   <string name="shortcut_value_scroll_back">SCROLL_BACK</string>
   <string name="shortcut_value_scroll_forward">SCROLL_FORWARD</string>
+  <string name="shortcut_value_scroll_to_top">SCROLL_TO_TOP</string>
+  <string name="shortcut_value_scroll_to_bottom">SCROLL_TO_BOTTOM</string>
   <string name="shortcut_value_scroll_up">SCROLL_UP</string>
   <string name="shortcut_value_scroll_down">SCROLL_DOWN</string>
   <string name="shortcut_value_scroll_left">SCROLL_LEFT</string>
@@ -1189,6 +1199,7 @@
   <string name="shortcut_value_home">HOME</string>
   <string name="shortcut_value_overview">OVERVIEW</string>
   <string name="shortcut_value_notifications">NOTIFICATIONS</string>
+  <string name="shortcut_value_system_notifications">SYSTEM_NOTIFICATIONS</string>
   <string name="shortcut_value_quick_settings">QUICK_SETTINGS</string>
   <string name="shortcut_value_show_custom_actions">SHOW_CUSTOM_ACTIONS</string>
   <string name="shortcut_value_editing">EDITING</string>
@@ -1469,6 +1480,7 @@
     <bool name="pref_proximity_default">false</bool>
     <bool name="pref_auto_update_check_default">true</bool>
     <bool name="pref_show_exit_watermark_default">true</bool>
+    <bool name="pref_notification_list_default">false</bool>
     <bool name="pref_cache_keyboard_keys_default">false</bool>
     <bool name="pref_vibration_default">true</bool>
     <bool name="pref_soundback_default">true</bool>
