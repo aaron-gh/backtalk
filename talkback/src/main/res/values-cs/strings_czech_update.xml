@@ -52,4 +52,8 @@
     <string name="title_pref_navigation">Navigace</string>
     <string name="title_pref_focus_new_windows">Přesunout focus do nových oken</string>
     <string name="title_pref_category_apps">Aplikace</string>
+
+    <!-- Gesture actions. -->
+    <string name="shortcut_scroll_to_top">Posunout nahoru</string>
+    <string name="shortcut_scroll_to_bottom">Posunout dolů</string>
 </resources>
