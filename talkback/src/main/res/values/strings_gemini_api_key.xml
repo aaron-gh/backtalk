@@ -45,6 +45,10 @@
     <string name="ai_service_error_busy">The AI service is busy right now. Try again in a moment.</string>
     <!-- Spoken when the other AI service does not answer in time. [CHAR LIMIT=NONE] -->
     <string name="ai_service_error_timeout">The AI service took too long to answer. Try again.</string>
+    <!-- Spoken when the other AI service answers with an HTTP error that has no explanation. [CHAR LIMIT=NONE] -->
+    <string name="ai_service_error_with_code">The AI service couldn\'t answer, error <xliff:g id="http_status" example="404">%1$d</xliff:g>.</string>
+    <!-- Spoken when the other AI service answers with an HTTP error and its explanation, which may be in English. [CHAR LIMIT=NONE] -->
+    <string name="ai_service_error_with_details">The AI service couldn\'t answer, error <xliff:g id="http_status" example="404">%1$d</xliff:g>: <xliff:g id="details" example="The model does not exist.">%2$s</xliff:g></string>
     <!-- Summary of the Gemini API key setting while another AI service is set up. [CHAR LIMIT=NONE] -->
     <string name="summary_pref_gemini_api_key_other_service">Not used while Other AI service is set</string>
 </resources>

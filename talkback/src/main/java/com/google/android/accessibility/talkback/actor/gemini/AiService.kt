@@ -125,7 +125,10 @@ object AiService {
     val message = choice.optJSONObject("message")
     val raw = message?.let { textOf(it.opt("content")) }.orEmpty()
     val text = if (wantsJson) LocalGemmaRunner.extractJson(raw) else raw.trim()
-    val finish = choice.optString("finish_reason", FINISH_STOP)
+    // Some services send a null finish reason with a whole answer, which optString would read as
+    // "null".
+    val finish =
+      if (choice.isNull("finish_reason")) FINISH_STOP else choice.getString("finish_reason")
     val builder = DataFieldUtils.GeminiResponse.builder()
     if (text.isNotEmpty()) builder.setText(text)
     val finished = finish == FINISH_STOP || finish == FINISH_LENGTH

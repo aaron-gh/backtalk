@@ -94,8 +94,18 @@ class GeminiFailure(
         when {
           statusCode < 400 -> context.getString(R.string.gemini_error_message)
           shortMessage.isEmpty() ->
-            context.getString(R.string.gemini_error_with_code, statusCode)
-          else -> context.getString(R.string.gemini_error_with_details, statusCode, shortMessage)
+            context.getString(
+              if (aiService) R.string.ai_service_error_with_code
+              else R.string.gemini_error_with_code,
+              statusCode,
+            )
+          else ->
+            context.getString(
+              if (aiService) R.string.ai_service_error_with_details
+              else R.string.gemini_error_with_details,
+              statusCode,
+              shortMessage,
+            )
         }
       }
     }

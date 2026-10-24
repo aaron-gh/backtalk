@@ -102,7 +102,7 @@ class AiServiceTest {
     )
   }
 
-  private fun chatResponse(content: Any, finish: String = "stop") =
+  private fun chatResponse(content: Any, finish: Any = "stop") =
     JSONObject()
       .put(
         "choices",
@@ -126,6 +126,13 @@ class AiServiceTest {
   fun answerCutOffAtTheLengthLimitIsStillAnAnswer() {
     val response = AiService.parseChatResponse(chatResponse("A cat on", "length"), false)
     assertEquals("A cat on", response.text())
+    assertEquals(DataFieldUtils.FINISH_REASON_STOP, response.finishReason())
+  }
+
+  @Test
+  fun answerWithANullFinishReasonIsAnAnswer() {
+    val response = AiService.parseChatResponse(chatResponse("A cat.", JSONObject.NULL), false)
+    assertEquals("A cat.", response.text())
     assertEquals(DataFieldUtils.FINISH_REASON_STOP, response.finishReason())
   }
 

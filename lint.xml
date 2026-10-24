@@ -99,6 +99,8 @@
         <ignore regexp="ai_service_error_quota" />
         <ignore regexp="ai_service_error_busy" />
         <ignore regexp="ai_service_error_timeout" />
+        <ignore regexp="ai_service_error_with_code" />
+        <ignore regexp="ai_service_error_with_details" />
         <ignore regexp="summary_pref_gemini_api_key_other_service" />
     </issue>
 </lint>
