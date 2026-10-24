@@ -175,6 +175,7 @@ import com.google.android.accessibility.talkback.feedbackpolicy.ScreenFeedbackMa
 import com.google.android.accessibility.talkback.flags.FeatureFlagReader;
 import com.google.android.accessibility.talkback.flags.Flags;
 import com.google.android.accessibility.talkback.focusmanagement.AccessibilityFocusMonitor;
+import com.google.android.accessibility.talkback.focusmanagement.FocusFeedbackMapper;
 import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForLogicalNavigation;
 import com.google.android.accessibility.talkback.focusmanagement.FocusProcessorForScreenStateChange;
 import com.google.android.accessibility.talkback.focusmanagement.TraversalTreeCache;
@@ -2547,6 +2548,11 @@ public class TalkBackService extends AccessibilityServiceCompat
                 }
                 interruptFullScreenReadActor();
                 clearQueues();
+                if (imageCaptioner != null) {
+                  // The pause drops a description from Gemini on its way to the caption that
+                  // waits for it, which would then hold every later screenshot for good.
+                  imageCaptioner.clearRequests();
+                }
               }
 
               @Override
@@ -3366,6 +3372,9 @@ public class TalkBackService extends AccessibilityServiceCompat
 
     FocusProcessorForLogicalNavigation.setWrapAround(
         getBooleanPref(R.string.pref_wrap_around_key, R.bool.pref_wrap_around_default));
+    FocusFeedbackMapper.setTouchStopsSpeech(
+        getBooleanPref(
+            R.string.pref_touch_stops_speech_key, R.bool.pref_touch_stops_speech_default));
     // TV navigation relies on focus following input focus, so the switch is hidden there.
     FocusProcessorForScreenStateChange.setFocusNewWindows(
         FormFactorUtils.isAndroidTv()

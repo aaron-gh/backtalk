@@ -86,6 +86,7 @@
         <ignore regexp="new_theme_exists" />
         <ignore regexp="new_theme_needs_name" />
         <ignore regexp="sound_theme_customisation" />
+        <ignore regexp="title_pref_touch_stops_speech" />
         <ignore regexp="title_pref_selector_links_controls_web_only" />
         <ignore regexp="shortcut_scroll_to_top" />
         <ignore regexp="shortcut_scroll_to_bottom" />
