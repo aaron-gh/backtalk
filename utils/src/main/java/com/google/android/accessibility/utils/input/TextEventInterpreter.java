@@ -261,7 +261,8 @@ public class TextEventInterpreter {
           if (!sourceEqualsLastNode(event)) {
             mHistory.setLastFromIndex(source.getTextSelectionStart());
             mHistory.setLastToIndex(source.getTextSelectionEnd());
-            mHistory.setLastText(event.getSource(), source.getText());
+            mHistory.setLastText(
+                event.getSource(), source.isShowingHintText() ? "" : source.getText());
             setHistoryLastNode(event);
           }
         }
@@ -272,7 +273,7 @@ public class TextEventInterpreter {
       }
     }
     if (eventType != AccessibilityEvent.TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY) {
-      mHistory.setLastText(event.getSource(), getEventText(event));
+      mHistory.setLastText(event.getSource(), getFieldText(event));
     }
 
     switch (interpretation.getEvent()) {
@@ -1068,6 +1069,26 @@ public class TextEventInterpreter {
         && index + 1 < text.length()
         && Character.isLetterOrDigit(text.charAt(index - 1))
         && Character.isLetterOrDigit(text.charAt(index + 1));
+  }
+
+  /**
+   * Returns the text of the field an event is from. An empty field reports its hint as its text,
+   * so its text is empty when a selection event counts no characters, or a text change leaves none.
+   */
+  private static CharSequence getFieldText(AccessibilityEvent event) {
+    boolean empty =
+        switch (event.getEventType()) {
+          case AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED ->
+              event.getItemCount() == 0 && !event.isPassword();
+          case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED ->
+              event.getBeforeText() != null
+                  && event.getBeforeText().length()
+                          - event.getRemovedCount()
+                          + event.getAddedCount()
+                      == 0;
+          default -> false;
+        };
+    return empty ? "" : getEventText(event);
   }
 
   /**
