@@ -1465,7 +1465,8 @@ public class FailoverTextToSpeech {
     if (!lowLatencyAudio
         || LowLatencyAudio.isMicrophoneInUse()
         || inCall()
-        || audioModeSettling()
+        // The usual way can't leave the earpiece Android keeps after a call; the player can.
+        || (audioModeSettling() && !LowLatencyAudio.isAvoidingEarpiece())
         || android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.R
         || (ttsEngine != null && enginesWithoutFileAudio.contains(ttsEngine))) {
       return null;
@@ -1813,8 +1814,12 @@ public class FailoverTextToSpeech {
       return;
     }
     checkAudioMode();
-    if (quiet < ENGINE_BUSY_HANG_MS && audioModeChangedAt >= since) {
-      // The audio mode changed while the engine had the speech, such as when a call started.
+    long modeChangedAt = audioModeChangedAt;
+    if (quiet < ENGINE_BUSY_HANG_MS
+        && modeChangedAt != 0
+        && modeChangedAt >= since - AUDIO_MODE_SETTLE_MS) {
+      // The audio mode changed while the engine had the speech, such as when a call started, or
+      // shortly before.
       mHandler.postDelayed(checkEngineHang, ENGINE_HANG_MS);
       return;
     }
