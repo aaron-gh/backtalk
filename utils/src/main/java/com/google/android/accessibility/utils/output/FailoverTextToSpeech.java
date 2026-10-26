@@ -409,6 +409,15 @@ public class FailoverTextToSpeech {
 
   private int tempTtsGeneration;
 
+  /** Whether engines started now are for a change of voice profile. */
+  private boolean switchingForVoiceProfile;
+
+  /** Whether the engine loading into the temporary TTS is for a change of voice profile. */
+  private boolean tempTtsForVoiceProfile;
+
+  /** Whether the engine in use was started for a change of voice profile. */
+  private boolean engineForVoiceProfile;
+
   /** The rate adjustment specified in {@link Settings}. */
   private float defaultRate;
 
@@ -1082,7 +1091,12 @@ public class FailoverTextToSpeech {
     }
     cancelEngineSwitchAwayFrom(getTargetEngine());
     // A new engine sets its voice once it starts.
-    updateDefaultEngine();
+    switchingForVoiceProfile = true;
+    try {
+      updateDefaultEngine();
+    } finally {
+      switchingForVoiceProfile = false;
+    }
     if (tts != null && tempTts == null) {
       synchronized (ttsLock) {
         cachedTtsLocale = null;
@@ -2109,6 +2123,7 @@ public class FailoverTextToSpeech {
 
     final int generation = ++tempTtsGeneration;
     tempTtsEngine = engine;
+    tempTtsForVoiceProfile = switchingForVoiceProfile;
     tempTts =
         new TextToSpeech(context, status -> mHandler.onTtsInitialized(status, generation), engine);
   }
@@ -2215,6 +2230,7 @@ public class FailoverTextToSpeech {
 
     LogUtils.i(TAG, "Switched to TTS engine: %s", tempTtsEngine);
 
+    engineForVoiceProfile = tempTtsForVoiceProfile;
     for (FailoverTtsListener mListener : listeners) {
       mListener.onTtsInitialized(isSwitchingEngines, tempTtsEngine);
     }
@@ -2373,6 +2389,11 @@ public class FailoverTextToSpeech {
     return (preferred != null && installedTtsEngines.contains(preferred))
         ? preferred
         : defaultTtsEngine;
+  }
+
+  /** Whether the engine in use was started for a change of voice profile. */
+  public boolean isEngineForVoiceProfile() {
+    return engineForVoiceProfile;
   }
 
   public void updateDefaultEngine() {
