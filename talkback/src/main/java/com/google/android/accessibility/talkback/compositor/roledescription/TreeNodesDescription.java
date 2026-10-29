@@ -334,76 +334,73 @@ public class TreeNodesDescription {
       // shortcut moves to, is read with the names of the links in it, such as its author's.
       boolean outerReadWebLinks = readWebLinks;
       readWebLinks = readWebLinks || isFocusableWebContainer(node);
-      try {
-        // Append the node description if needed. It recurse on all visible & un-focusable children,
-        // ascending.
-        ReorderedChildrenIterator childIterator =
-            ReorderedChildrenIterator.createAscendingIterator(node);
-        if (!childIterator.hasNext()) {
-          logString.append(", hasNoNextChildNode");
-        }
-        while (childIterator.hasNext()) {
-          AccessibilityNodeInfoCompat childNode = childIterator.next();
-          if (childNode == null) {
-            logString.append(
-                String.format("error: sourceNode (%s) has a null child.", node.hashCode()));
-          } else {
-            boolean isVisible =
-                AccessibilityNodeInfoUtils.isVisible(childNode)
-                    || (globalVariables.isDescribingSwipeTarget() && isOffScreen(childNode));
-            boolean isAccessibilityFocusable =
-                AccessibilityNodeInfoUtils.isAccessibilityFocusable(childNode);
-            logString
-                .append(String.format("\n        childNode:(%s)", childNode.hashCode()))
-                .append(String.format(", isVisible=%b", isVisible))
-                .append(
-                    globalVariables.isDescribingSwipeTarget()
-                        ? String.format(", bounds=%s", boundsOf(childNode))
-                        : "")
-                .append(String.format(", isAccessibilityFocusable=%b", isAccessibilityFocusable));
+      // Append the node description if needed. It recurse on all visible & un-focusable children,
+      // ascending.
+      ReorderedChildrenIterator childIterator =
+          ReorderedChildrenIterator.createAscendingIterator(node);
+      if (!childIterator.hasNext()) {
+        logString.append(", hasNoNextChildNode");
+      }
+      while (childIterator.hasNext()) {
+        AccessibilityNodeInfoCompat childNode = childIterator.next();
+        if (childNode == null) {
+          logString.append(
+              String.format("error: sourceNode (%s) has a null child.", node.hashCode()));
+        } else {
+          boolean isVisible =
+              AccessibilityNodeInfoUtils.isVisible(childNode)
+                  || (globalVariables.isDescribingSwipeTarget() && isOffScreen(childNode));
+          boolean isAccessibilityFocusable =
+              AccessibilityNodeInfoUtils.isAccessibilityFocusable(childNode);
+          logString
+              .append(String.format("\n        childNode:(%s)", childNode.hashCode()))
+              .append(String.format(", isVisible=%b", isVisible))
+              .append(
+                  globalVariables.isDescribingSwipeTarget()
+                      ? String.format(", bounds=%s", boundsOf(childNode))
+                      : "")
+              .append(String.format(", isAccessibilityFocusable=%b", isAccessibilityFocusable));
 
-            if (isVisible
-                && isAccessibilityFocusable
-                && !shouldAppendChildNode
-                && readWebLinks
-                && AccessibilityNodeInfoUtils.isChromeRoleLink(childNode)) {
-              CharSequence linkName =
-                  AccessibilityNodeFeedbackUtils.getNodeTextOrLabelDescription(
-                      childNode, context, imageContents, globalVariables);
-              logString.append(String.format("\n        > appendLinkName= {%s}", linkName));
-              joinList.add(linkName);
+          if (isVisible
+              && isAccessibilityFocusable
+              && !shouldAppendChildNode
+              && readWebLinks
+              && AccessibilityNodeInfoUtils.isChromeRoleLink(childNode)) {
+            CharSequence linkName =
+                AccessibilityNodeFeedbackUtils.getNodeTextOrLabelDescription(
+                    childNode, context, imageContents, globalVariables);
+            logString.append(String.format("\n        > appendLinkName= {%s}", linkName));
+            joinList.add(linkName);
+            continue;
+          }
+          if (isVisible && (!isAccessibilityFocusable || shouldAppendChildNode)) {
+            if (namelessControl == null
+                && isContentDescriptionEmpty
+                && role != Role.ROLE_GRID
+                && role != Role.ROLE_LIST
+                && role != Role.ROLE_PAGER
+                && isNamelessControl(childNode, event)) {
+              namelessControl = childNode;
               continue;
             }
-            if (isVisible && (!isAccessibilityFocusable || shouldAppendChildNode)) {
-              if (namelessControl == null
-                  && isContentDescriptionEmpty
-                  && role != Role.ROLE_GRID
-                  && role != Role.ROLE_LIST
-                  && role != Role.ROLE_PAGER
-                  && isNamelessControl(childNode, event)) {
-                namelessControl = childNode;
-                continue;
-              }
-              // White space between the elements of a web page would be read as "Space".
-              if (isWhiteSpaceText(childNode)
-                  && (readWebLinks
-                      || !TextUtils.isEmpty(AccessibilityNodeInfoUtils.getChromeRole(node))
-                      || !TextUtils.isEmpty(AccessibilityNodeInfoUtils.getChromeRole(childNode)))) {
-                continue;
-              }
-              // Join the tree description of child node.
-              CharSequence description =
-                  getAppendedTreeDescription(
-                      childNode, event, shouldIterateChildren, shouldAppendChildNode);
-              logString.append(
-                  String.format("\n        > appendChildNodeDescription= {%s}", description));
-              joinList.add(description);
+            // White space between the elements of a web page would be read as "Space".
+            if (isWhiteSpaceText(childNode)
+                && (readWebLinks
+                    || !TextUtils.isEmpty(AccessibilityNodeInfoUtils.getChromeRole(node))
+                    || !TextUtils.isEmpty(AccessibilityNodeInfoUtils.getChromeRole(childNode)))) {
+              continue;
             }
+            // Join the tree description of child node.
+            CharSequence description =
+                getAppendedTreeDescription(
+                    childNode, event, shouldIterateChildren, shouldAppendChildNode);
+            logString.append(
+                String.format("\n        > appendChildNodeDescription= {%s}", description));
+            joinList.add(description);
           }
         }
-      } finally {
-        readWebLinks = outerReadWebLinks;
       }
+      readWebLinks = outerReadWebLinks;
     }
 
     LogUtils.v(TAG, "      treeNodesDescription:  %s", logString);
