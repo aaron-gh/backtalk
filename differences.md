@@ -201,6 +201,10 @@ The **High** preset uses **After the letter, delayed** and the **Low** preset us
 
 With **Controls** > **Touch and activation** > **Stop speech when touching the screen** on, which is the default, touching the screen stops speech, even notifications and messages that new speech doesn't cut off. Activating an item, with a double tap, the activation key or a braille display, stops it too, so that what the item says when activated, such as a switch's new state, is said at once rather than after the rest of the item. Turn the switch off to keep speech going until touch moves focus to another item.
 
+### Sounds while speech is off
+
+When you turn speech off with its gesture or keyboard shortcut, TalkBack also dropped the sounds and vibrations that go with each item, so moving focus or activating an item gave no feedback at all. Backtalk still plays them, so you can tell that focus moved while speech is off.
+
 ## Notifications
 
 ### Samsung watch notification content
