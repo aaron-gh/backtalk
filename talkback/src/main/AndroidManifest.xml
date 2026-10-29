@@ -35,7 +35,7 @@
     <!-- Required for App Enumeration -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission"/>
 
-    <!-- Required for sending data to Google Analytics. -->
+    <!-- AI services, feedback, updates and downloads. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
