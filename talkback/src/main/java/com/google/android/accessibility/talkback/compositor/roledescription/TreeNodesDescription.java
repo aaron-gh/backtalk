@@ -386,6 +386,8 @@ public class TreeNodesDescription {
         && role != Role.ROLE_GRID
         && role != Role.ROLE_LIST
         && role != Role.ROLE_PAGER
+        // A pager page says its position and "page" around its contents.
+        && !(roleDescriptionExtractor.getRoleDescription(node) instanceof PagerPageDescription)
         && isNamedByChildren(node)) {
       RoleDescription roleDescription = roleDescriptionExtractor.getRoleDescription(node);
       CharSequence childrenText =
