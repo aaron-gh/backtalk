@@ -516,11 +516,6 @@ public class TextEventInterpreter {
         mHistory.setLastToIndex(NO_INDEX);
         setHistoryLastNode(event);
         return interpretation;
-      } else if (isSelectionBeforeTextChange(event, text)) {
-        mHistory.setLastFromIndex(fromIndex);
-        mHistory.setLastToIndex(toIndex);
-        mHistory.setSelectionBeforeTextChange(event);
-        return interpretation.setInvalid("Selection event came before its text change event.");
       } else if (actionHistory.hasCutActionAtTime(eventTime) && fromIndex == toIndex) {
         interpretation.setEvent(TextEventInterpretation.SELECTION_CUT);
         interpretation.setReason("Cut action ongoing and from==to");
@@ -533,6 +528,11 @@ public class TextEventInterpreter {
         interpretation.setEvent(TextEventInterpretation.SET_TEXT_BY_ACTION);
         interpretation.setReason("Set text action ongoing.");
         return interpretation;
+      } else if (isSelectionBeforeTextChange(event, text)) {
+        mHistory.setLastFromIndex(fromIndex);
+        mHistory.setLastToIndex(toIndex);
+        mHistory.setSelectionBeforeTextChange(event);
+        return interpretation.setInvalid("Selection event came before its text change event.");
       } else if (fromIndex == 0
           && toIndex == 0
           && previousCursorPos == 0
