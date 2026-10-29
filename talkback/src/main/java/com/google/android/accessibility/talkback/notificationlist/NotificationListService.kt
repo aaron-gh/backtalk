@@ -16,29 +16,32 @@
 
 package com.google.android.accessibility.talkback.notificationlist
 
+import android.content.ComponentName
+import android.content.Context
 import android.content.SharedPreferences
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import com.google.android.accessibility.talkback.R
+import com.google.android.accessibility.talkback.TalkBackService
 import com.google.android.accessibility.utils.SharedPreferencesUtils
 
 /**
  * Receives the notifications for [NotificationList]. Android binds it while the user has given
- * Backtalk notification access. It unbinds itself while the list is turned off, and the list binds
- * it again when it opens.
+ * Backtalk notification access. It unbinds itself while the list is turned off or Backtalk is off,
+ * and Backtalk and the list bind it again when they start.
  */
 class NotificationListService : NotificationListenerService() {
 
   private val switchListener =
     SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-      if (key == getString(R.string.pref_notification_list_key) && !NotificationList.isEnabled(this)) {
+      if (key == getString(R.string.pref_notification_list_key) && !isNeeded(this)) {
         unbind()
       }
     }
 
   override fun onListenerConnected() {
-    if (!NotificationList.isEnabled(this)) {
+    if (!isNeeded(this)) {
       unbind()
       return
     }
@@ -90,6 +93,35 @@ class NotificationListService : NotificationListenerService() {
 
   companion object {
     private const val TAG = "NotificationListService"
+
+    /**
+     * Whether the listener is needed: while the list is on and Backtalk is on. A bound listener
+     * keeps Backtalk's process running, and with it the audio and speech engine it held, after
+     * Backtalk is turned off, which can leave another screen reader turned on then silent.
+     */
+    fun isNeeded(context: Context): Boolean =
+      TalkBackService.getInstance() != null && NotificationList.isEnabled(context)
+
+    /** Connects the listener when Backtalk starts, if it is needed. */
+    @JvmStatic
+    fun onBacktalkStarted(context: Context) {
+      if (instance == null && isNeeded(context) && NotificationList.isAccessGranted(context)) {
+        rebind(context)
+      }
+    }
+
+    /** Disconnects the listener when Backtalk stops. */
+    @JvmStatic
+    fun onBacktalkStopped() {
+      instance?.unbind()
+    }
+
+    /** Asks Android to connect the listener again. */
+    fun rebind(context: Context) {
+      runCatching {
+        requestRebind(ComponentName(context, NotificationListService::class.java))
+      }.onFailure { Log.w(TAG, "Can't rebind", it) }
+    }
 
     /** The connected listener, through which notifications are dismissed. */
     var instance: NotificationListService? = null
