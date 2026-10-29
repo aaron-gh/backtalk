@@ -164,8 +164,10 @@ public class HintEventInterpreter implements AccessibilityEventListener, Interpr
       if (event == TEXT_ADD) {
         // Don't actively perform spell check to avoid the increase of latency for typing.
         sendSpellingSuggestionHint(interpretation.eventId, node, currentCursorPosition, false);
-      } else {
-        // The spell checker can take 500 ms or more to answer, or not answer at all.
+      } else if (!AccessibilityNodeInfoUtils.hasNoSuggestionsNeed(node.getInputType())
+          && node.getTextSelectionStart() == node.getTextSelectionEnd()) {
+        // The spell checker can take 500 ms or more to answer, or not answer at all. Only fields
+        // that getSpellingSuggestions would check are sent to it.
         SpellChecker.checkInBackground(
             context,
             node.getText(),
@@ -181,6 +183,11 @@ public class HintEventInterpreter implements AccessibilityEventListener, Interpr
       AccessibilityNodeInfoCompat node,
       int cursorPosition,
       boolean activeSpellCheck) {
+    // The answer can come after focus has left the field, and then the hint is for nothing.
+    if (activeSpellCheck
+        && !(node.refresh() && (node.isAccessibilityFocused() || node.isFocused()))) {
+      return;
+    }
     boolean noSpellingSuggestion =
         cursorPosition == NO_POSITION
             ? AccessibilityNodeInfoUtils.getSpellingSuggestions(context, node, activeSpellCheck)
