@@ -60,8 +60,10 @@ public class BtConnectStateReceiver
       } else if (bondState == BluetoothDevice.BOND_NONE) {
         if (extras.getInt(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.BOND_NONE)
             == BluetoothDevice.BOND_BONDING) {
-          // The reason is a hidden extra: 1 authentication failed, 2 rejected by the remote
-          // device, 3 canceled, 4 remote device down, 9 authentication timeout.
+          // The reason is a hidden extra (BluetoothDevice.UNBOND_REASON_*): 1 authentication
+          // failed, 2 rejected, 3 canceled, 4 remote device down, 5 discovery in progress,
+          // 6 authentication timeout, 7 repeated attempts, 8 canceled by the remote device,
+          // 9 removed.
           BrailleDisplayLog.e(
               TAG,
               "Pairing failed, reason "
