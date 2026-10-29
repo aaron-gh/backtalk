@@ -81,6 +81,8 @@ object AiServicePreference {
         AiService.apiKey(prefs),
         InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
       )
+    // Android offers Paste only for a field with input focus.
+    apiKey.post { apiKey.requestFocus() }
     // Lines the fields up with the dialog's message.
     val padding = (24 * context.resources.displayMetrics.density).toInt()
     val container =
