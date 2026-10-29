@@ -235,6 +235,10 @@ When you choose Bluetooth headphones that already play your media, Backtalk play
 
 To switch quickly, add **Audio output device** in **Reading controls**. Swiping up or down with it goes through **System default**, **Phone speaker** and each connected device, and changes the same setting.
 
+### Media controls
+
+To control music, podcasts and other audio playing in the background without leaving the app you're in, add **Media controls** in **Reading controls**. Swipe up or down to choose **Previous track**, **Rewind**, **Play/pause**, **Fast forward**, **Next track** or **Stop**, and double-tap to do it. **Media volume**, also in **Reading controls**, changes the media volume with a swipe up or down, as **Accessibility volume** does for Backtalk's own. Both are off by default. **Previous track**, **Next track**, **Rewind**, **Fast forward** and **Stop media** are also gesture actions, next to **Play or pause media**.
+
 ### Accessibility volume on Bluetooth headphones
 
 On some phones, such as Samsung's, TalkBack's accessibility volume gestures, its **Accessibility volume** reading control, and volume keys pressed while touching the screen change the media volume instead of the accessibility volume while Bluetooth headphones are connected. Backtalk changes the accessibility volume the way the system volume panel's slider does, so these work the same with or without headphones.
@@ -703,3 +707,7 @@ On Samsung watches, turn on **Controls** > **Touch and activation** > **Reserve 
 ### Backtalk menu on watches
 
 The Backtalk menu scrolls on watches, so you can reach every item. **Describe screen** is off in the watch menu by default, and **Pause Backtalk** isn't available on watches.
+
+### Updates over Wi-Fi on watches
+
+A watch near its phone usually goes online through the phone over Bluetooth, which is slow for an update. When you install an update on a watch, Backtalk turns on the watch's Wi-Fi and downloads the update over a saved network in range, then lets the watch go back to its phone. If Wi-Fi doesn't connect within 20 seconds, the update downloads through the phone as before. If the download over Wi-Fi fails, for example because the connection drops, Backtalk says so, and you can install the update again.
