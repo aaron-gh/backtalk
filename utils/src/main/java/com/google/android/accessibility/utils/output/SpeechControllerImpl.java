@@ -1776,6 +1776,8 @@ public class SpeechControllerImpl implements SpeechController {
     LogUtils.v(TAG, "interruptInternal, stopTtsSpeechCompletely=" + stopTtsSpeechCompletely);
 
     clearUtteranceRangeStartCallbacks();
+    // The interrupted utterances don't start.
+    mUtteranceStartActions.clear();
     // Clear and post all remaining completion actions.
     clearUtteranceCompletionActions(true);
 
@@ -2649,6 +2651,13 @@ public class SpeechControllerImpl implements SpeechController {
       if (runnable != null) {
         runUtteranceCompleteRunnable(runnable, status);
       }
+    }
+    // An utterance that ended before it started, such as one silenced or interrupted first, never
+    // starts: its start action would otherwise run when a later utterance starts.
+    UtteranceStartAction startAction;
+    while (((startAction = mUtteranceStartActions.peek()) != null)
+        && (startAction.utteranceIndex <= utteranceIndex)) {
+      mUtteranceStartActions.remove(startAction);
     }
 
     mUtteranceRangeStartCallbacks.remove(utteranceIndex);
