@@ -50,6 +50,8 @@ With low-latency audio on, Backtalk also watches for a speech engine that stops 
 
 Low-latency audio is on by default, except on Wear OS watches. If you used an earlier version of Backtalk with the setting off, Backtalk turns it on once when you update. If speech or sounds break up, turn the setting off. Low-latency speech requires Android 11 or later; on older versions, only Backtalk's sounds use the fast path. Speech falls back to the usual path for engines that play their own audio or that report errors. Each sound plays the usual way the first time that Backtalk uses it, and 3D sounds still play through the 3D player.
 
+On some phones, such as Samsung's, speech came out of the earpiece after a phone call. Backtalk now waits up to 3 seconds after a call for Android to leave the call's audio, and sends low-latency speech to the media output if Android still holds it on the earpiece.
+
 ### Less lag while scrolling
 
 After each scroll event, TalkBack searched the list for a new item to focus. The search blocked touch exploration and could make gestures fail. Backtalk searches once, after scrolling stops.
