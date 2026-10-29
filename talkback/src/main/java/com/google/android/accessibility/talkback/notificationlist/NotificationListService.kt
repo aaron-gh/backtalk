@@ -19,6 +19,9 @@ package com.google.android.accessibility.talkback.notificationlist
 import android.content.ComponentName
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
@@ -46,6 +49,7 @@ class NotificationListService : NotificationListenerService() {
       return
     }
     instance = this
+    rebindHandler.removeCallbacksAndMessages(null)
     SharedPreferencesUtils.getSharedPreferences(this)
       .registerOnSharedPreferenceChangeListener(switchListener)
     val active = runCatching { activeNotifications }.onFailure { Log.w(TAG, "No notifications", it) }
@@ -116,12 +120,40 @@ class NotificationListService : NotificationListenerService() {
       instance?.unbind()
     }
 
-    /** Asks Android to connect the listener again. */
+    /**
+     * Asks Android to connect the listener again. Android ignores that while it takes the listener
+     * for connected, as it can after an update killed Backtalk's process twice, so if the listener
+     * hasn't connected soon after, it is unbound and asked for again.
+     */
     fun rebind(context: Context) {
-      runCatching {
-        requestRebind(ComponentName(context, NotificationListService::class.java))
-      }.onFailure { Log.w(TAG, "Can't rebind", it) }
+      val appContext = context.applicationContext
+      val component = ComponentName(appContext, NotificationListService::class.java)
+      runCatching { requestRebind(component) }.onFailure { Log.w(TAG, "Can't rebind", it) }
+      rebindHandler.removeCallbacksAndMessages(null)
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        rebindHandler.postDelayed(
+          {
+            if (
+              instance == null &&
+                isNeeded(appContext) &&
+                NotificationList.isAccessGranted(appContext)
+            ) {
+              Log.w(TAG, "Not connected after a rebind; unbinding and rebinding")
+              runCatching {
+                requestUnbind(component)
+                requestRebind(component)
+              }.onFailure { Log.w(TAG, "Can't rebind", it) }
+            }
+          },
+          REBIND_CHECK_MS,
+        )
+      }
     }
+
+    private val rebindHandler = Handler(Looper.getMainLooper())
+
+    /** How long the listener has to connect after a rebind before it is unbound and asked again. */
+    private const val REBIND_CHECK_MS = 3_000L
 
     /** The connected listener, through which notifications are dismissed. */
     var instance: NotificationListService? = null
